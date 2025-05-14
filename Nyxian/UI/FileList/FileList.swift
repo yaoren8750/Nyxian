@@ -120,9 +120,11 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                         }
                     }
                     
-                    self.entries = FileListEntry.getEntries(ofPath: self.path)
+                    self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
                     
-                    self.tableView.reloadData()
+                    let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+                    
+                    self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                 })
                 
                 self.present(alert, animated: true)

@@ -20,28 +20,37 @@ struct FileListEntry: Identifiable {
     let isLink: Bool
     let type: FileListEntryType
     
+    static func getEntry(ofPath path: String) -> FileListEntry {
+        var entry = FileListEntry(name: "N/A", path: path, isLink: false, type: .file)
+        var path = path
+        do {
+            var isDirectory: ObjCBool = false
+            let exists = FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+            if exists {
+                let attributes = try FileManager.default.attributesOfItem(atPath: path)
+                if let fileType = attributes[.type] as? FileAttributeType {
+                    let isLink: Bool = (fileType == .typeSymbolicLink) ? true : false
+                    if isLink { path = try FileManager.default.destinationOfSymbolicLink(atPath: path) }
+                    
+                    entry = FileListEntry(name: URL(fileURLWithPath: path).lastPathComponent,
+                                                 path: path,
+                                                 isLink: isLink,
+                                                 type: isDirectory.boolValue ? .dir : .file)
+                }
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        return entry
+    }
+    
     static func getEntries(ofPath path: String) -> [FileListEntry] {
         var entries: [FileListEntry] = []
         
         do {
             let rawEntries: [String] = try FileManager.default.contentsOfDirectory(atPath: path)
-            for rawEntry in rawEntries {
-                var path: String = "\(path)/\(rawEntry)"
-                var isDirectory: ObjCBool = false
-                let exists = FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
-                if exists {
-                    let attributes = try FileManager.default.attributesOfItem(atPath: path)
-                    if let fileType = attributes[.type] as? FileAttributeType {
-                        let isLink: Bool = (fileType == .typeSymbolicLink) ? true : false
-                        if isLink { path = try FileManager.default.destinationOfSymbolicLink(atPath: path) }
-                        
-                        entries.append(FileListEntry(name: URL(fileURLWithPath: path).lastPathComponent,
-                                                     path: path,
-                                                     isLink: isLink,
-                                                     type: isDirectory.boolValue ? .dir : .file))
-                    }
-                }
-            }
+            for rawEntry in rawEntries { entries.append(FileListEntry.getEntry(ofPath: "\(path)/\(rawEntry)")) }
         } catch {
             print(error)
         }

@@ -162,7 +162,7 @@ import UIKit
         lastProjectWasSelected = true
     }
     
-    func tableView(_ tableView: UITableView,
+    /*func tableView(_ tableView: UITableView,
                    contextMenuConfigurationForRowAt indexPath: IndexPath,
                    point: CGPoint) -> UIContextMenuConfiguration? {
         
@@ -179,6 +179,27 @@ import UIKit
 
             return UIMenu(title: "", children: [deleteAction])
         }
+    }*/
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let project = self.projects[indexPath.row]
+            
+            let alert: UIAlertController = UIAlertController(
+                title: "Warning",
+                message: "Are you sure you want to remove \"\(project.projectConfig.displayname)\"?",
+                preferredStyle: .alert
+            )
+            
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { _ in
+                AppProject.removeProject(project: project)
+                self.projects = AppProject.listProjects(ofPath: self.path)
+                self.tableView.deleteRows(at: [indexPath], with: .automatic)
+            })
+            
+            self.present(alert, animated: true)
+        }
     }
     
     @objc func PlusTabbed() {
@@ -194,9 +215,7 @@ import UIKit
             textField.placeholder = "Bundle Identifier"
         }
         
-        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel) { action -> Void in
-            // noop
-        }
+        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
         
         let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
             let name = (alert.textFields![0]).text!
@@ -208,7 +227,9 @@ import UIKit
                 bundleid: bundleid
             ))
             
-            self.tableView.reloadData()
+            let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
+            
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
         }
         
         alert.addAction(cancelAction)
