@@ -35,16 +35,35 @@ class Installer: Identifiable, ObservableObject {
         case sendingPayload
         case completed(Result<Void, Error>)
         case broken(Error)
-    }
-    
-    enum StatusNyxian: Equatable {
-        case none
-        case sendingPayload
-        case completed
+        
+        static func == (lhs: Status, rhs: Status) -> Bool {
+            switch (lhs, rhs) {
+            case (.ready, .ready),
+                (.sendingManifest, .sendingManifest),
+                (.sendingPayload, .sendingPayload):
+                return true
+                
+            case (.completed(let lhsResult), .completed(let rhsResult)):
+                switch (lhsResult, rhsResult) {
+                case (.success, .success):
+                    return true
+                case (.failure(let lhsError), .failure(let rhsError)):
+                    return lhsError.localizedDescription == rhsError.localizedDescription
+                default:
+                    return false
+                }
+                
+            case (.broken(let lhsError), .broken(let rhsError)):
+                return lhsError.localizedDescription == rhsError.localizedDescription
+                
+            default:
+                return false
+            }
+        }
     }
     
     var status: Status = .ready
-    var statusnyxian: StatusNyxian = .none
+    var completed: Bool = false
 
     var needsShutdown = false
     
@@ -82,14 +101,13 @@ class Installer: Identifiable, ObservableObject {
                 ], body: .init(data: displayImageLargeData))
             case payloadEndpoint.path:
                 DispatchQueue.main.async {
-                    self.statusnyxian = .sendingPayload
                     self.status = .sendingPayload
                 }
                 return req.fileio.streamFile(
                     at: self.package.path
                 ) { result in
                     DispatchQueue.main.async {
-                        self.statusnyxian = .completed
+                        self.completed = true
                         self.status = .completed(result)
                         self.onCompletion()
                     }
