@@ -52,21 +52,9 @@ import UIKit
         self.title = "Projects"
         
         let barbutton: UIBarButtonItem = UIBarButtonItem()
-        barbutton.image = UIImage(systemName: "ellipsis.circle")
-        
-        var elements: [UIMenuElement] = []
-        
-        elements.append(UIAction(title: "Create Project", image: UIImage(systemName: "plus"), handler: { _ in
-            self.PlusTabbed()
-        }))
-        
-        elements.append(UIAction(title: "Settings", image: UIImage(systemName: "gear"), handler: { _ in
-            self.GearTabbed()
-        }))
-        
-        let sectionMenu = UIMenu(options: .displayInline, children: elements)
-        
-        barbutton.menu = sectionMenu
+        barbutton.image = UIImage(systemName: "plus")
+        barbutton.target = self
+        barbutton.action = #selector(PlusTabbed)
         
         self.navigationItem.setRightBarButton(barbutton, animated: false)
         

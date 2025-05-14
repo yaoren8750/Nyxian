@@ -22,9 +22,20 @@
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
+    UITabBarController *tabBarController = [[UITabBarController alloc] init];
+    
     ContentViewController *vc = [[ContentViewController alloc] initWithPath:[NSString stringWithFormat:@"%@/Documents/Projects", NSHomeDirectory()]];
     UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:vc];
-    self.window.rootViewController = nvc;
+    
+    SettingsViewController *settingsViewControler = [[SettingsViewController alloc] init];
+    UINavigationController *settingsNavigationController = [[UINavigationController alloc] initWithRootViewController:settingsViewControler];
+    
+    nvc.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Projects" image:[UIImage systemImageNamed:@"square.grid.2x2.fill"] tag:0];
+    settingsNavigationController.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Settings" image:[UIImage systemImageNamed:@"gear"] tag:1];
+    
+    tabBarController.viewControllers = @[nvc, settingsNavigationController];
+    
+    self.window.rootViewController = tabBarController;
     
     [self.window makeKeyAndVisible];
 
