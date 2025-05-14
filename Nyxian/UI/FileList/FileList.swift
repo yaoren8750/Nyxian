@@ -20,6 +20,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         project: AppProject,
         path: String = ""
     ) {
+        Author.shared.setTargetProject(project.projectConfig.displayname)
         
         self.project = project
         self.path = path
@@ -98,7 +99,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                     case .folder:
                         try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
                     case .file:
-                        try? String("").write(to: destination, atomically: true, encoding: .utf8)
+                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
                     }
                     
                     self.entries = FileListEntry.getEntries(ofPath: self.path)
