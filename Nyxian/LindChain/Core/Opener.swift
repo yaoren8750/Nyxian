@@ -94,6 +94,10 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         /// We reset the shown progress of `XCButtonGlob`
         ///
         XCodeButton.resetProgress()
+        
+        ///
+        /// Now we wait on the popup to go away the popup invoked by the system
+        ///
         if !waitTillPopup() {
             completion(false)
             return
@@ -107,23 +111,16 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
             return
         }
         
-        workspace.uninstallApplication(installer.metadata.id, withOptions: [])
-        
         ///
         /// Installer checks
         ///
-        if installer.statusnyxian != .completed,
-           installer.statusnyxian != .sendingPayload {
-            
+        if installer.statusnyxian == .sendingPayload {
+            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+            installer.installCompletionHandler { semaphore.signal() }
+            semaphore.wait()
+        } else if installer.statusnyxian != .completed {
             completion(false)
             return
-        }
-        
-        ///
-        /// In-case payload is sending we wait lol
-        ///
-        while installer.statusnyxian == .sendingPayload {
-            Thread.sleep(forTimeInterval: 0.1)
         }
         
         ///
@@ -137,8 +134,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         var attempt: Int = 0
         let maxAttempts: Int = 10
         while progress == nil {
-            progress = workspace.installProgress(forBundleID: installer.metadata.id,
-                                                 makeSynchronous: 0) as? Progress
+            progress = workspace.installProgress(forBundleID: installer.metadata.id, makeSynchronous: 0) as? Progress
             
             attempt += 1
             if attempt > maxAttempts {
@@ -148,8 +144,6 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
             
             Thread.sleep(forTimeInterval: 0.1)
         }
-        
-        
         
         func hookedCompletion(_ value: Bool) {
             workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
@@ -161,30 +155,23 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         ///
         if let progress = progress {
             
-            var lastProgress = progress.fractionCompleted
-            var lastProgressUpdateTime = Date()
+            var oldProgress: Double = 0.0
+            var oldDate: Date = Date()
             
             ///
             /// Now our loop
             ///
             while true {
-                let currentProgress = progress.fractionCompleted
-                        
-                if currentProgress != lastProgress {
-                            lastProgress = currentProgress
-                            lastProgressUpdateTime = Date()
-                    
+                if oldProgress < progress.fractionCompleted {
+                    XCodeButton.updateProgressIncrement(progress: progress.fractionCompleted)
+                    oldProgress = progress.fractionCompleted
+                    oldDate = Date()
                 } else {
-                    if Date().timeIntervalSince(lastProgressUpdateTime) > 5.0 {
+                    if oldDate.addingTimeInterval(20) < Date() {
                         hookedCompletion(false)
                         return
                     }
                 }
-                
-                ///
-                /// If progress is diff
-                ///
-                XCodeButton.updateProgressIncrement(progress: progress.fractionCompleted)
                 
                 if progress.isFinished {
     

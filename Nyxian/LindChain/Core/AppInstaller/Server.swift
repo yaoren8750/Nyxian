@@ -27,6 +27,8 @@ class Installer: Identifiable, ObservableObject {
     let metadata: AppData
     let image: UIImage?
     
+    var onCompletion: () -> Void = {}
+    
     enum Status {
         case ready
         case sendingManifest
@@ -89,6 +91,7 @@ class Installer: Identifiable, ObservableObject {
                     DispatchQueue.main.async {
                         self.statusnyxian = .completed
                         self.status = .completed(result)
+                        self.onCompletion()
                     }
                 }
             default:
@@ -105,7 +108,6 @@ class Installer: Identifiable, ObservableObject {
     }
 
     func shutdownServer() {
-        print("already down")
         if needsShutdown {
             needsShutdown = false
             app.server.shutdown()
@@ -113,6 +115,9 @@ class Installer: Identifiable, ObservableObject {
         }
     }
     
+    func installCompletionHandler(handler: @escaping () -> Void) {
+        self.onCompletion = handler
+    }
 }
 
 extension Installer {
