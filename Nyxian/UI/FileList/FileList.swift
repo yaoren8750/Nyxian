@@ -14,6 +14,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
     let path: String
     var entries: [FileListEntry]
     let isSublink: Bool
+    let refreshControl: UIRefreshControl
     
     init(
         isSublink: Bool = false,
@@ -27,8 +28,47 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         self.entries = FileListEntry.getEntries(ofPath: self.path)
         self.tableView = UITableView(frame: CGRectNull, style: .plain)
         self.isSublink = isSublink
-        
+        self.refreshControl = UIRefreshControl()
         super.init(nibName: nil, bundle: nil)
+        
+        self.refreshControl.addTarget(self, action: #selector(performRefresh), for: .valueChanged)
+        self.tableView.refreshControl = self.refreshControl
+    }
+    
+    @objc func performRefresh() {
+        guard let visibleRows = tableView.indexPathsForVisibleRows else { return }
+
+        UIView.animate(withDuration: 0.3, animations: {
+            for indexPath in visibleRows {
+                if let cell = self.tableView.cellForRow(at: indexPath) {
+                    cell.alpha = 0
+                    cell.transform = CGAffineTransform(translationX: 0, y: 20)
+                }
+            }
+        }, completion: { _ in
+            self.entries = FileListEntry.getEntries(ofPath: self.path)
+            self.tableView.reloadData()
+            self.tableView.layoutIfNeeded()
+
+            let newVisibleRows = self.tableView.indexPathsForVisibleRows ?? []
+            for indexPath in newVisibleRows {
+                if let cell = self.tableView.cellForRow(at: indexPath) {
+                    cell.alpha = 0
+                    cell.transform = CGAffineTransform(translationX: 0, y: 20)
+                }
+            }
+
+            UIView.animate(withDuration: 0.4, delay: 0, options: [.curveEaseOut], animations: {
+                for indexPath in newVisibleRows {
+                    if let cell = self.tableView.cellForRow(at: indexPath) {
+                        cell.alpha = 1
+                        cell.transform = .identity
+                    }
+                }
+            }, completion: nil)
+
+            self.refreshControl.endRefreshing()
+        })
     }
     
     required init?(coder: NSCoder) {

@@ -64,6 +64,28 @@ struct FileListEntry: Identifiable {
         
         return entries
     }
+    
+    static func getEntries(ofPath path: String, perEntryHandler: (FileListEntry) -> Void) {
+        var entries: [FileListEntry] = []
+        
+        do {
+            let rawEntries: [String] = try FileManager.default.contentsOfDirectory(atPath: path)
+            for rawEntry in rawEntries { entries.append(FileListEntry.getEntry(ofPath: "\(path)/\(rawEntry)")) }
+        } catch {
+            print(error)
+        }
+        
+        entries.sort {
+            if $0.type == $1.type {
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            return $0.type == .dir
+        }
+        
+        for item in entries {
+            perEntryHandler(item)
+        }
+    }
 }
 
 class FileAction: ObservableObject {
