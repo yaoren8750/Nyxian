@@ -99,7 +99,25 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                     case .folder:
                         try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
                     case .file:
-                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                        if FileManager.default.fileExists(atPath: destination.path) {
+                            let alert: UIAlertController = UIAlertController(
+                                title: "Warning",
+                                message: "File with the name \"\(destination.lastPathComponent)\" exists already. Do you want to overwrite it?",
+                                preferredStyle: .alert
+                            )
+                            
+                            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                            alert.addAction(UIAlertAction(
+                                title: "Overwrite",
+                                style: .destructive
+                            ) { _ in
+                                try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                            })
+                            
+                            self.present(alert, animated: true)
+                        } else {
+                            try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                        }
                     }
                     
                     self.entries = FileListEntry.getEntries(ofPath: self.path)
