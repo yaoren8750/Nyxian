@@ -1,0 +1,114 @@
+/*
+ Copyright (C) 2025 SeanIsTethered
+
+ This file is part of Nyxian.
+
+ FridaCodeManager is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ FridaCodeManager is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with FridaCodeManager. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dlfcn.h>
+#include <mach-o/dyld.h>
+#include <mach-o/dyld_images.h>
+#include "fishhook.h"
+
+extern void dy_exit(int status);
+extern int dy_atexit(void (*func)(void));
+
+void dy_free(void *ptr);
+void* dy_malloc(size_t size);
+void* dy_malloc_zone_malloc(malloc_zone_t *zone, size_t size);
+void* dy_calloc(size_t count, size_t size);
+void* dy_realloc(void *ptr, size_t size);
+void* dy_reallocf(void *ptr, size_t size);
+void* dy_valloc(size_t size);
+
+char *dy_strdup(const char *s);
+
+void dy_fprintf(FILE *fptr, const char *format, ...);
+
+///
+/// Function to get dylib slide to avoid fucking around with our own symbols
+///
+intptr_t get_dylib_slide(const char *dylib_name) {
+    for (uint32_t i = 0; i < _dyld_image_count(); i++) {
+        const char *image_name = _dyld_get_image_name(i);
+        if (image_name && strstr(image_name, dylib_name)) {
+            intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+            return slide;
+        }
+    }
+    return 0;
+}
+
+/**
+ * @brief Function to create rebinding structs
+ *
+ */
+struct rebinding genrebind(const char *orig, void *symbol)
+{
+    struct rebinding rebind = {
+        .name = orig,
+        .replacement = symbol,
+    };
+    
+    return rebind;
+}
+
+/**
+ * @brief Set up the hooks
+ *
+ * This function hooks certain symbols like exit and atexit to make a dylib behave like a binariy
+ * For example instead of calling real exit it would call our own implementation of it
+ */
+int hooker(const char *path, void *dylib)
+{
+    struct rebinding rebindings[] = {
+        // to escape exit
+        genrebind("exit", dy_exit),
+        genrebind("_exit", dy_exit),
+        genrebind("atexit", dy_atexit),
+        
+        // to handle file pointer the way we want to
+        //genrebind("fprintf", dy_fprintf),
+        
+        /*genrebind("malloc", dy_malloc),
+        genrebind("_malloc", dy_malloc),
+        genrebind("_Znwm", dy_malloc),
+        genrebind("malloc_zone_malloc", dy_malloc_zone_malloc),
+        genrebind("_malloc_zone_malloc", dy_malloc_zone_malloc),
+        genrebind("valloc", dy_valloc),
+        genrebind("_valloc", dy_valloc),
+        genrebind("calloc", dy_calloc),
+        genrebind("_calloc", dy_calloc),
+        genrebind("realloc", dy_realloc),
+        genrebind("_realloc", dy_realloc),
+        genrebind("reallocf", dy_reallocf),
+        genrebind("_reallocf", dy_reallocf),
+        genrebind("strdup", dy_strdup),
+        genrebind("free", dy_free),
+        genrebind("_free", dy_free),*/
+    };
+
+    // getting mach header
+    const struct mach_header *header = (const struct mach_header *)dlsym(dylib, "_mh_execute_header");
+    if (header == NULL) {
+        printf("Failed to get mach_header\n");
+        return -1;
+    }
+    
+    return rebind_symbols_image((void*)header, get_dylib_slide(path), rebindings, sizeof(rebindings) / sizeof(rebindings[0]));
+}

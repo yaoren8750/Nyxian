@@ -1,0 +1,559 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */ = {isa = PBXBuildFile; productRef = AF9919572DC9175A00DDF895 /* TreeSitterObjc */; };
+		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
+		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
+		AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */ = {isa = PBXBuildFile; fileRef = AF99171F2DC8EA3C00DDF895 /* Shared */; };
+		AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB302DCA566000B1B5F9 /* OpenSSL */; };
+		AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB652DCA5C9200B1B5F9 /* Vapor */; };
+		AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */; };
+		AFF4E0442DCBA35400B1B5F9 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */; };
+		AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AF99171F2DC8EA3C00DDF895 /* Shared */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Shared; sourceTree = "<group>"; };
+		AF99172E2DC910DA00DDF895 /* Nyxian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nyxian.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AFF4DBE32DCA5DF900B1B5F9 /* Exceptions for "Nyxian" folder in "Nyxian" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				LindChain/Dybin/ld.dylib,
+				LindChain/Dybin/libcrypto.3.dylib,
+				LindChain/Dybin/libiosexec.1.dylib,
+				LindChain/Dybin/libncursesw.6.dylib,
+				LindChain/Dybin/libtapi.dylib,
+				LindChain/Dybin/libxar.1.dylib,
+				LindChain/Dybin/libzstd.1.dylib,
+			);
+			target = AF9916D82DC8C42200DDF895 /* Nyxian */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			attributesByRelativePath = {
+				LindChain/Dybin/ld.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libcrypto.3.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libiosexec.1.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libncursesw.6.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libtapi.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libxar.1.dylib = (CodeSignOnCopy, );
+				LindChain/Dybin/libzstd.1.dylib = (CodeSignOnCopy, );
+				LindChain/Synpush/libclang.dylib = (CodeSignOnCopy, );
+			};
+			buildPhase = AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */;
+			membershipExceptions = (
+				LindChain/Dybin/ld.dylib,
+				LindChain/Dybin/libcrypto.3.dylib,
+				LindChain/Dybin/libiosexec.1.dylib,
+				LindChain/Dybin/libncursesw.6.dylib,
+				LindChain/Dybin/libtapi.dylib,
+				LindChain/Dybin/libxar.1.dylib,
+				LindChain/Dybin/libzstd.1.dylib,
+				LindChain/Synpush/libclang.dylib,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AF9916DB2DC8C42200DDF895 /* Nyxian */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AFF4DBE32DCA5DF900B1B5F9 /* Exceptions for "Nyxian" folder in "Nyxian" target */,
+				AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */,
+			);
+			path = Nyxian;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AF9916D62DC8C42200DDF895 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */,
+				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
+				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
+				AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */,
+				AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */,
+				AFF4E0442DCBA35400B1B5F9 /* MobileCoreServices.framework in Frameworks */,
+				AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */,
+				AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AF9916D02DC8C42200DDF895 = {
+			isa = PBXGroup;
+			children = (
+				AF99171F2DC8EA3C00DDF895 /* Shared */,
+				AF9916DB2DC8C42200DDF895 /* Nyxian */,
+				AF99172E2DC910DA00DDF895 /* Nyxian.app */,
+				AFF4E0422DCBA35300B1B5F9 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		AFF4E0422DCBA35300B1B5F9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AF9916D82DC8C42200DDF895 /* Nyxian */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF9916E72DC8C42400DDF895 /* Build configuration list for PBXNativeTarget "Nyxian" */;
+			buildPhases = (
+				AF9916D52DC8C42200DDF895 /* Sources */,
+				AF9916D62DC8C42200DDF895 /* Frameworks */,
+				AF9916D72DC8C42200DDF895 /* Resources */,
+				AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AF9916DB2DC8C42200DDF895 /* Nyxian */,
+			);
+			name = Nyxian;
+			packageProductDependencies = (
+				AF9919572DC9175A00DDF895 /* TreeSitterObjc */,
+				AF99195A2DC9176900DDF895 /* TreeSitterC */,
+				AF9FD5882DC935F400411E1A /* Runestone */,
+				AFF4DB302DCA566000B1B5F9 /* OpenSSL */,
+				AFF4DB652DCA5C9200B1B5F9 /* Vapor */,
+				AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */,
+				AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */,
+			);
+			productName = LindDE;
+			productReference = AF99172E2DC910DA00DDF895 /* Nyxian.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AF9916D12DC8C42200DDF895 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					AF9916D82DC8C42200DDF895 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = AF9916D42DC8C42200DDF895 /* Build configuration list for PBXProject "Nyxian" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AF9916D02DC8C42200DDF895;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */,
+				AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */,
+				AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */,
+				AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */,
+				AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */,
+				AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AF9916D02DC8C42200DDF895;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AF9916D82DC8C42200DDF895 /* Nyxian */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AF9916D72DC8C42200DDF895 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AF9916D52DC8C42200DDF895 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AF9916E52DC8C42400DDF895 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AF9916E62DC8C42400DDF895 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AF9916E82DC8C42400DDF895 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Nyxian/entitlements.xml;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Nyxian/Preview Content\"";
+				DEVELOPMENT_TEAM = L4A6CKH3TV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Nyxian/LindChain;
+				INFOPLIST_FILE = Nyxian/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Runtime/LLVM/FCM/MessyLinker",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/Synpush",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/LLVM/Compiler/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Synpush",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Dybin",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.loverflows.LindseyDE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF9916E92DC8C42400DDF895 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Nyxian/entitlements.xml;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Nyxian/Preview Content\"";
+				DEVELOPMENT_TEAM = L4A6CKH3TV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Nyxian/LindChain;
+				INFOPLIST_FILE = Nyxian/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Runtime/LLVM/FCM/MessyLinker",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/Synpush",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/LLVM/Compiler/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Runtime/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Dybin",
+					"$(PROJECT_DIR)/LindDE/LindChain/Synpush",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Dybin",
+					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.loverflows.LindseyDE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AF9916D42DC8C42200DDF895 /* Build configuration list for PBXProject "Nyxian" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF9916E52DC8C42400DDF895 /* Debug */,
+				AF9916E62DC8C42400DDF895 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF9916E72DC8C42400DDF895 /* Build configuration list for PBXNativeTarget "Nyxian" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF9916E82DC8C42400DDF895 /* Debug */,
+				AF9916E92DC8C42400DDF895 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tree-sitter-grammars/tree-sitter-objc.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tree-sitter/tree-sitter-c.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.16.1;
+			};
+		};
+		AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simonbs/Runestone.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.1;
+			};
+		};
+		AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.180;
+			};
+		};
+		AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/vapor/vapor";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.114.1;
+			};
+		};
+		AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
+		AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tree-sitter-grammars/tree-sitter-xml.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AF9919572DC9175A00DDF895 /* TreeSitterObjc */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */;
+			productName = TreeSitterObjc;
+		};
+		AF99195A2DC9176900DDF895 /* TreeSitterC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */;
+			productName = TreeSitterC;
+		};
+		AF9FD5882DC935F400411E1A /* Runestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */;
+			productName = Runestone;
+		};
+		AFF4DB302DCA566000B1B5F9 /* OpenSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */;
+			productName = OpenSSL;
+		};
+		AFF4DB652DCA5C9200B1B5F9 /* Vapor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */;
+			productName = Vapor;
+		};
+		AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+		AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */;
+			productName = TreeSitterXML;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AF9916D12DC8C42200DDF895 /* Project object */;
+}
