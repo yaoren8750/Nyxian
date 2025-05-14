@@ -30,7 +30,7 @@ func getFileContentForName(filename: String) -> String {
         let macroname: String = filename.uppercased().replacingOccurrences(of: ".", with: "_").replacingOccurrences(of: " ", with: "_")
         
         // now append
-        content.append("\n#ifndef \(macroname)\n#define \(macroname)\n\n#endif")
+        content.append("#ifndef \(macroname)\n#define \(macroname)\n\n#endif /* \(macroname) */")
     }
     
     return content
