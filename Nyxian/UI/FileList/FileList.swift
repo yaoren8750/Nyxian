@@ -154,7 +154,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
             let entry = self.entries[indexPath.row]
             if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
                 self.entries.remove(at: indexPath.row)
-                self.tableView.reloadData()
+                self.tableView.deleteRows(at: [indexPath], with: .automatic)
             }
         }
     }
