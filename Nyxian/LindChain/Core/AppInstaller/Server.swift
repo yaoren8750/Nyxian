@@ -29,22 +29,14 @@ class Installer: Identifiable, ObservableObject {
     
     var onCompletion: () -> Void = {}
     
-    enum Status {
+    enum Status: Equatable {
         case ready
         case sendingManifest
-        case sendingPayload
-        case completed(Result<Void, Error>)
-        case broken(Error)
-    }
-    
-    enum StatusNyxian: Equatable {
-        case none
         case sendingPayload
         case completed
     }
     
     var status: Status = .ready
-    var statusnyxian: StatusNyxian = .none
 
     var needsShutdown = false
     
@@ -82,15 +74,13 @@ class Installer: Identifiable, ObservableObject {
                 ], body: .init(data: displayImageLargeData))
             case payloadEndpoint.path:
                 DispatchQueue.main.async {
-                    self.statusnyxian = .sendingPayload
                     self.status = .sendingPayload
                 }
                 return req.fileio.streamFile(
                     at: self.package.path
                 ) { result in
                     DispatchQueue.main.async {
-                        self.statusnyxian = .completed
-                        self.status = .completed(result)
+                        self.status = .completed
                         self.onCompletion()
                     }
                 }

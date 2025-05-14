@@ -114,11 +114,11 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         ///
         /// Installer checks
         ///
-        if installer.statusnyxian == .sendingPayload {
+        if installer.status == .sendingPayload {
             let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
             installer.installCompletionHandler { semaphore.signal() }
             semaphore.wait()
-        } else if installer.statusnyxian != .completed {
+        } else if installer.status != .completed {
             completion(false)
             return
         }
