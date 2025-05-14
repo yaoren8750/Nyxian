@@ -34,11 +34,6 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
     /// Helper function to know if app is in focus
     ///
     func isAppNotInFocus() -> Bool {
-        if Thread.isMainThread {
-            let appState = UIApplication.shared.applicationState
-            return appState == .background || appState == .inactive
-        }
-        
         return DispatchQueue.main.sync {
             let appState = UIApplication.shared.applicationState
             return appState == .background || appState == .inactive

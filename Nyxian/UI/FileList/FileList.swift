@@ -12,7 +12,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
     let tableView: UITableView
     let project: AppProject
     let path: String
-    let entries: [FileListEntry]
+    var entries: [FileListEntry]
     let isSublink: Bool
     
     init(
@@ -72,7 +72,57 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
             }))
         }
         
-        elements.append(UIAction(title: "Create", handler: { _ in print("Option 1 selected") }))
+        elements.append(UIAction(title: "Create", handler: { _ in
+            
+            enum CreateEntryMode {
+                case file
+                case folder
+            }
+            
+            func createEntry(mode: CreateEntryMode) {
+                let alert: UIAlertController = UIAlertController(
+                    title: "Create \((mode == .file) ? "File" : "Folder")",
+                    message: nil,
+                    preferredStyle: .alert
+                )
+                
+                alert.addTextField { textField in
+                    textField.placeholder = "Name"
+                }
+                
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
+                    let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
+                    
+                    switch mode {
+                    case .folder:
+                        try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+                    case .file:
+                        try? String("").write(to: destination, atomically: true, encoding: .utf8)
+                    }
+                    
+                    self.entries = FileListEntry.getEntries(ofPath: self.path)
+                    
+                    self.tableView.reloadData()
+                })
+                
+                self.present(alert, animated: true)
+            }
+            
+            let actionSheet: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            
+            actionSheet.addAction(UIAlertAction(title: "File", style: .default){ _ in
+                createEntry(mode: .file)
+            })
+            
+            actionSheet.addAction(UIAlertAction(title: "Folder", style: .default) { _ in
+                createEntry(mode: .folder)
+            })
+            
+            actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            
+            self.present(actionSheet, animated: true)
+        }))
         
         let sectionMenu = UIMenu(title: "Actions", options: .displayInline, children: elements)
         
