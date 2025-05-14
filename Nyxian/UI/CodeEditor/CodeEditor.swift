@@ -9,6 +9,7 @@ import UIKit
 import Runestone
 import TreeSitterC
 import TreeSitterObjc
+import TreeSitterXML
 
 // MARK: - OnDissapear Container
 class OnDisappearUIView: UIView {
@@ -125,12 +126,24 @@ class CodeEditorViewController: UIViewController {
             let combinedHighlightsQueryString = (objcHighlightsQueryString ?? "") + "\n" + (cHighlightsQueryString ?? "")
             let combinedHighlightsQuery = TreeSitterLanguage.Query(string: combinedHighlightsQueryString)
             let objcInjectionURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/injections.scm")
-            let cInjectionURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/injections.scm")
             let objcInjectionQueryString = try? String(contentsOf: objcInjectionURL)
-            let cInjectionQueryString = try? String(contentsOf: cInjectionURL)
-            let combinedInjectionsQueryString = (objcInjectionQueryString ?? "") + "\n" + (cInjectionQueryString ?? "")
+            let combinedInjectionsQueryString = (objcInjectionQueryString ?? "")
             let combinedInjectionsQuery = TreeSitterLanguage.Query(string: combinedInjectionsQueryString)
             let language = TreeSitterLanguage(tree_sitter_objc(), highlightsQuery: combinedHighlightsQuery, injectionsQuery: combinedInjectionsQuery)
+            let languageMode = TreeSitterLanguageMode(language: language)
+            self.textView.setLanguageMode(languageMode)
+        } else if fileURL.pathExtension == "c" {
+            let cHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm")
+            let cHighlightsQueryString = try? String(contentsOf: cHighlightsURL)
+            let cHighlightsQuery = TreeSitterLanguage.Query(string: cHighlightsQueryString ?? "")
+            let language = TreeSitterLanguage(tree_sitter_c(), highlightsQuery: cHighlightsQuery, injectionsQuery: nil)
+            let languageMode = TreeSitterLanguageMode(language: language)
+            self.textView.setLanguageMode(languageMode)
+        } else if fileURL.pathExtension == "xml" || fileURL.pathExtension == "plist" {
+            let xmlHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterXML_TreeSitterXML.bundle/xml/highlights.scm")
+            let xmlHighlightsQueryString = try? String(contentsOf: xmlHighlightsURL)
+            let xmlHighlightsQuery = TreeSitterLanguage.Query(string: xmlHighlightsQueryString ?? "")
+            let language = TreeSitterLanguage(tree_sitter_xml(), highlightsQuery: xmlHighlightsQuery, injectionsQuery: nil)
             let languageMode = TreeSitterLanguageMode(language: language)
             self.textView.setLanguageMode(languageMode)
         }
