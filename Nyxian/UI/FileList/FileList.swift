@@ -101,6 +101,19 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                         self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                     }
                     
+                    func replaceFile() {
+                        let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
+                        if let index {
+                            self.entries.remove(at: index)
+                            let oldIndexPath = IndexPath(row: index, section: 0)
+                            self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
+                        }
+                        
+                        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+                        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+                        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+                    }
+                    
                     switch mode {
                     case .folder:
                         try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
@@ -118,6 +131,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                                 style: .destructive
                             ) { _ in
                                 try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                                replaceFile()
                             })
                             
                             self.present(alert, animated: true)
