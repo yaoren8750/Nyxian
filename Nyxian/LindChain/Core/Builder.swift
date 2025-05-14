@@ -167,10 +167,6 @@ class Builder {
                     return
                 }
                 
-                lock.lock()
-                if Builder.abort { return }
-                lock.unlock()
-                
                 let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: file.URLGet())
                 let eobject = expectedObjectFile(forPath: rpath)
                 
@@ -195,10 +191,6 @@ class Builder {
                     threader.lockdown()
                     return
                 }
-                
-                lock.lock()
-                if Builder.abort { return }
-                lock.unlock()
                 
                 lock.lock()
                 XCodeButton.incrementProgress(progress: pstep)

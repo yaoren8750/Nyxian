@@ -62,8 +62,8 @@
             filePath = "Nyxian/LindChain/Core/Builder.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "242"
-            endingLineNumber = "242"
+            startingLineNumber = "234"
+            endingLineNumber = "234"
             landmarkName = "link()"
             landmarkType = "7">
          </BreakpointContent>
