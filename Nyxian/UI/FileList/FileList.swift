@@ -131,6 +131,16 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         self.navigationItem.setRightBarButton(barbutton, animated: true)
     }
     
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let entry = self.entries[indexPath.row]
+            if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
+                self.entries.remove(at: indexPath.row)
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.entries.count
     }
