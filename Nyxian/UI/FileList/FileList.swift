@@ -95,6 +95,12 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                 alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
                     let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
                     
+                    func addFile() {
+                        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+                        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+                        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+                    }
+                    
                     switch mode {
                     case .folder:
                         try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
@@ -117,14 +123,9 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                             self.present(alert, animated: true)
                         } else {
                             try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                            addFile()
                         }
                     }
-                    
-                    self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-                    
-                    let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-                    
-                    self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                 })
                 
                 self.present(alert, animated: true)
