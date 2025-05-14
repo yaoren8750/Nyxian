@@ -106,7 +106,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
             elements.append(UIAction(title: "Build", handler: { _ in
                 self.buildProject()
             }))
-            elements.append(UIAction(title: "Open Log", handler: { _ in
+            elements.append(UIAction(title: "Log", handler: { _ in
                 let loggerView = LoggerView()
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
