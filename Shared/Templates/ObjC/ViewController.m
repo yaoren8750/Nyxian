@@ -5,13 +5,23 @@
 - (void)viewDidLoad {
 	[super viewDidLoad];
 
-	self.view.backgroundColor = [UIColor whiteColor];
+	self.view.backgroundColor = [UIColor systemBackgroundColor];
 
-	UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(50, 200, 300, 50)];
+	UILabel *label = [[UILabel alloc] init];
+	label.translatesAutoresizingMaskIntoConstraints = NO;
 	label.text = @"Hello, World!";
-	label.textColor = [UIColor blackColor];
-	label.font = [UIFont systemFontOfSize:24];
+	label.textAlignment = NSTextAlignmentCenter;
+	label.textColor = [UIColor labelColor];
+	label.font = [UIFont systemFontOfSize:16];
+
 	[self.view addSubview:label];
+
+	[NSLayoutConstraint activateConstraints:@[
+		[label.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+		[label.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+		[label.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+		[label.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
+	]];
 }
 
 @end
