@@ -7,14 +7,12 @@
 
 import UIKit
 
-class FileListViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class FileListViewController: UITableViewController {
     static var buildCancelled: Bool = false
-    let tableView: UITableView
     let project: AppProject
     let path: String
     var entries: [FileListEntry]
     let isSublink: Bool
-    let refreshControl: UIRefreshControl
     
     init(
         isSublink: Bool = false,
@@ -26,13 +24,11 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         self.project = project
         self.path = path
         self.entries = FileListEntry.getEntries(ofPath: self.path)
-        self.tableView = UITableView(frame: CGRectNull, style: .plain)
         self.isSublink = isSublink
-        self.refreshControl = UIRefreshControl()
         super.init(nibName: nil, bundle: nil)
         
-        self.refreshControl.addTarget(self, action: #selector(performRefresh), for: .valueChanged)
-        self.tableView.refreshControl = self.refreshControl
+        self.refreshControl = UIRefreshControl()
+        self.refreshControl?.addTarget(self, action: #selector(performRefresh), for: .valueChanged)
     }
     
     @objc func performRefresh() {
@@ -67,7 +63,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
                 }
             }, completion: nil)
 
-            self.refreshControl.endRefreshing()
+            self.refreshControl?.endRefreshing()
         })
     }
     
@@ -80,20 +76,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         
         self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
         self.view.backgroundColor = .systemBackground
-        
-        self.tableView.delegate = self
-        self.tableView.dataSource = self
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        self.tableView.translatesAutoresizingMaskIntoConstraints = false
-        
-        self.view.addSubview(tableView)
-        
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
         
         let barbutton: UIBarButtonItem = UIBarButtonItem()
         barbutton.image = UIImage(systemName: "ellipsis.circle")
@@ -206,7 +189,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         self.navigationItem.setRightBarButton(barbutton, animated: true)
     }
     
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let entry = self.entries[indexPath.row]
             if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
@@ -216,11 +199,11 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         }
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.entries.count
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
         
         if !self.navigationItem.hidesBackButton {
@@ -245,7 +228,7 @@ class FileListViewController: UIViewController, UITableViewDataSource, UITableVi
         }
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
         let entry = self.entries[indexPath.row]
