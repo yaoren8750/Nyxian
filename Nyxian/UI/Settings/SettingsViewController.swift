@@ -30,7 +30,7 @@ class SettingsViewController: UITableViewController {
         case 1:
             return 1
         case 2:
-            return 1
+            return 2
         case 3:
             return 2
         default:
@@ -78,7 +78,11 @@ class SettingsViewController: UITableViewController {
             cell = SwitchTableCell(title: "Incremental Build", key: "LDEIncrementalBuild", defaultValue: true)
             break
         case 2:
-            cell = SwitchTableCell(title: "Threaded Build", key: "LDEThreadedBuild", defaultValue: true)
+            if indexPath.row == 0 {
+                cell = SwitchTableCell(title: "Threaded Build", key: "LDEThreadedBuild", defaultValue: true)
+            } else {
+                cell = StepperTableCell(title: "Use Threads", key: "cputhreads", defaultValue: 0, minValue: 1, maxValue: getOptimalThreadCount())
+            }
             break
         case 3:
             cell = ButtonTableCell(title: (indexPath.row == 0) ? "Import Certificate" : "Reset All")
