@@ -202,11 +202,4 @@ class ContentViewController: UITableViewController {
         
         self.present(alert, animated: true)
     }
-    
-    @objc func GearTabbed() {
-        let vc = SettingsViewController()
-        let navc = UINavigationController(rootViewController: vc)
-        navc.modalPresentationStyle = .formSheet
-        self.present(navc, animated: true)
-    }
 }

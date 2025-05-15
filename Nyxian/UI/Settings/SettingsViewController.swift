@@ -8,35 +8,21 @@
 import Foundation
 import UIKit
 
-class SettingsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    let tableView = UITableView(frame: CGRectNull, style: .insetGrouped)
-    
+class SettingsViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.title = "Settings"
-        self.view.backgroundColor = .systemBackground
         
-        self.tableView.dataSource = self
-        self.tableView.delegate = self
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
-        
-        self.view.addSubview(tableView)
-        
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 2
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
         
         let button: UIButton = UIButton()

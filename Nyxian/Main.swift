@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let tabViewController: UITabBarController = UITabBarController()
         
         let contentViewController: ContentViewController = ContentViewController(path: "\(NSHomeDirectory())/Documents/Projects")
-        let settingsViewController: SettingsViewController = SettingsViewController()
+        let settingsViewController: SettingsViewController = SettingsViewController(style: .insetGrouped)
         
         let projectsNavigationController: UINavigationController = UINavigationController(rootViewController: contentViewController)
         let settingsNavigationController: UINavigationController = UINavigationController(rootViewController: settingsViewController)
