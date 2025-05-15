@@ -26,6 +26,7 @@ class IconViewController: UIViewController, UITableViewDelegate, UITableViewData
         self.tableView.dataSource = self
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
         self.tableView.isScrollEnabled = false
+        self.tableView.rowHeight = 65
         self.view.addSubview(self.tableView)
         
         NSLayoutConstraint.activate([
@@ -58,8 +59,31 @@ class IconViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
-        cell.textLabel?.text = icons[indexPath.row]
-        
+        let iconName = icons[indexPath.row]
+        if let image = UIImage(named: "IconPreview\(iconName)") {
+            let customImageView = UIImageView(image: image)
+            customImageView.layer.cornerRadius = 10
+            customImageView.layer.masksToBounds = true
+            customImageView.translatesAutoresizingMaskIntoConstraints = false
+            customImageView.contentMode = .scaleAspectFit
+            cell.contentView.addSubview(customImageView)
+            
+            NSLayoutConstraint.activate([
+                customImageView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16),
+                customImageView.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+                customImageView.widthAnchor.constraint(equalToConstant: 50),
+                customImageView.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
+
+        cell.textLabel?.text = iconName
+        cell.textLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        cell.textLabel?.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            cell.textLabel!.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+            cell.textLabel!.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 80) // room for image
+        ])
+
         return cell
     }
     
