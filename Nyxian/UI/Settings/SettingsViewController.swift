@@ -32,7 +32,7 @@ class SettingsViewController: UITableViewController {
         case 2:
             return 1
         case 3:
-            return 2
+            return 3
         default:
             return 0
         }
@@ -81,9 +81,21 @@ class SettingsViewController: UITableViewController {
             cell = StepperTableCell(title: "Use Threads", key: "cputhreads", defaultValue: 1, minValue: 1, maxValue: getOptimalThreadCount())
             break
         case 3:
-            cell = ButtonTableCell(title: (indexPath.row == 0) ? "Import Certificate" : "Reset All")
+            cell = ButtonTableCell(title: {
+                switch indexPath.row {
+                case 0:
+                    return "Import Certificate"
+                case 1:
+                    return "Change AppIcon"
+                case 2:
+                    return "Reset All"
+                default:
+                    return "Unknown"
+                }
+            }())
             (cell as! ButtonTableCell).button?.addAction(UIAction(handler: { _ in
-                if indexPath.row == 0 {
+                switch indexPath.row {
+                case 0:
                     let importPopup: CertificateImporter = CertificateImporter()
                     let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
                     importSettings.modalPresentationStyle = .pageSheet
@@ -104,7 +116,30 @@ class SettingsViewController: UITableViewController {
                     }
                     
                     self.present(importSettings, animated: true)
-                } else {
+                    break
+                case 1:
+                    let importPopup: IconViewController = IconViewController()
+                    let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
+                    importSettings.modalPresentationStyle = .pageSheet
+                    
+                    // dynamic size
+                    if #available(iOS 16.0, *) {
+                        if let sheet = importSettings.sheetPresentationController {
+                            sheet.animateChanges {
+                                sheet.detents = [
+                                    .custom { _ in
+                                        return 200
+                                    }
+                                ]
+                            }
+                            
+                            sheet.prefersGrabberVisible = true
+                        }
+                    }
+                    
+                    self.present(importSettings, animated: true)
+                    break
+                case 2:
                     let alert: UIAlertController = UIAlertController(
                         title: "Warning",
                         message: "All projects and preferences will be wiped! Are you sure you wanna proceed?",
@@ -124,6 +159,9 @@ class SettingsViewController: UITableViewController {
                     })
                     
                     self.present(alert, animated: true)
+                    break
+                default:
+                    break
                 }
             }), for: .touchUpInside)
             break
