@@ -7,8 +7,7 @@
 
 import UIKit
 
-class IconViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
-    let tableView: UITableView = UITableView(frame: .zero, style: .insetGrouped)
+class IconViewController: UITableViewController {
     var textField: UITextField?
     
     var icons: [String] = [
@@ -20,43 +19,14 @@ class IconViewController: UIViewController, UITableViewDelegate, UITableViewData
         super.viewDidLoad()
         
         self.title = "Icons"
-        self.view.backgroundColor = .systemBackground
-        
-        self.tableView.delegate = self
-        self.tableView.dataSource = self
-        self.tableView.translatesAutoresizingMaskIntoConstraints = false
-        self.tableView.isScrollEnabled = false
         self.tableView.rowHeight = 65
-        self.view.addSubview(self.tableView)
-        
-        NSLayoutConstraint.activate([
-            self.tableView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            self.tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            self.tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            self.tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
-        ])
-        
-        if #available(iOS 16.0, *) {
-            if let sheet = self.navigationController?.sheetPresentationController {
-                DispatchQueue.main.async {
-                    sheet.animateChanges {
-                        sheet.detents = [
-                            .custom { context in
-                                let contentHeight = self.tableView.contentSize.height + 50
-                                return contentHeight
-                            }
-                        ]
-                    }
-                }
-            }
-        }
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.icons.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
         let iconName = icons[indexPath.row]
@@ -87,7 +57,7 @@ class IconViewController: UIViewController, UITableViewDelegate, UITableViewData
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
         
         let iconName: String = self.icons[indexPath.row]
