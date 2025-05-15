@@ -29,6 +29,15 @@ class Builder {
     
     static var abort: Bool = false
     
+    var doIncremental: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil {
+                return UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
+            }
+            return true
+        }
+    }
+    
     init(project: AppProject) {
         project.projectConfig.plistHelper?.reloadIfNeeded()
         
@@ -52,10 +61,13 @@ class Builder {
         try? syncFolderStructure(from: project.getPath().URLGet(), to: cachePath.1.URLGet())
         
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
-        for item in self.dirtySourceFiles {
-            if !amIDirty(item) {
-                guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
-                self.dirtySourceFiles.remove(at: index)
+        
+        if self.doIncremental {
+            for item in self.dirtySourceFiles {
+                if !amIDirty(item) {
+                    guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
+                    self.dirtySourceFiles.remove(at: index)
+                }
             }
         }
     }

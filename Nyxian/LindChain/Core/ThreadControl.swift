@@ -56,27 +56,44 @@ class ThreadDispatchLimiter {
         get { syncQueue.sync { _isLockdown } }
         set { syncQueue.sync(flags: .barrier) { _isLockdown = newValue } }
     }
+    var doThreading: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: "LDEThreadedBuild") != nil {
+                return UserDefaults.standard.bool(forKey: "LDEThreadedBuild")
+            }
+            return true
+        }
+    }
 
     func spawn(_ code: @escaping () -> Void, completion: @escaping () -> Void) {
-        
-        if self.isLockdown {
-            completion()
-            self.semaphore.signal()
-            return
-        }
-        
-        semaphore.wait()
-        
-        if self.isLockdown {
-            completion()
-            self.semaphore.signal()
-            return
-        }
-        
-        pthread_dispatch {
+        if self.doThreading {
+            if self.isLockdown {
+                completion()
+                self.semaphore.signal()
+                return
+            }
+            
+            semaphore.wait()
+            
+            if self.isLockdown {
+                completion()
+                self.semaphore.signal()
+                return
+            }
+            
+            pthread_dispatch {
+                code()
+                completion()
+                self.semaphore.signal()
+            }
+        } else {            
+            if self.isLockdown {
+                completion()
+                return
+            }
+            
             code()
             completion()
-            self.semaphore.signal()
         }
     }
     
