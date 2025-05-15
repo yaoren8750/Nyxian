@@ -33,4 +33,16 @@ class SettingsViewController: UITableViewController {
         
         return cell
     }
+    
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Toolchain Libraries"
+    }
+
+    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        return "Compilers translate human readable source code into machine code, while linkers combine compiled code and libraries into a final executable file."
+    }
 }
