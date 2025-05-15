@@ -84,9 +84,25 @@ class SettingsViewController: UITableViewController {
             cell = ButtonTableCell(title: (indexPath.row == 0) ? "Import Certificate" : "Reset All")
             (cell as! ButtonTableCell).button?.addAction(UIAction(handler: { _ in
                 if indexPath.row == 0 {
-                    let importPopup: CertificateImporter = CertificateImporter() {}
+                    let importPopup: CertificateImporter = CertificateImporter()
                     let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
                     importSettings.modalPresentationStyle = .pageSheet
+                    
+                    // dynamic size
+                    if #available(iOS 16.0, *) {
+                        if let sheet = importSettings.sheetPresentationController {
+                            sheet.animateChanges {
+                                sheet.detents = [
+                                    .custom { _ in
+                                        return 200
+                                    }
+                                ]
+                            }
+                            
+                            sheet.prefersGrabberVisible = true
+                        }
+                    }
+                    
                     self.present(importSettings, animated: true)
                 } else {
                     let alert: UIAlertController = UIAlertController(

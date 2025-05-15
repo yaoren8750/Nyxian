@@ -11,7 +11,6 @@ import UniformTypeIdentifiers
 class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDataSource, UIDocumentPickerDelegate, UITextFieldDelegate {
     let tableView: UITableView = UITableView(frame: .zero, style: .insetGrouped)
     var textField: UITextField?
-    var completion: () -> Void
     
     var loc: Int = 0
     var cert: String = ""
@@ -22,15 +21,6 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         "Mobileprovision",
         "Password"
     ]
-    
-    init(completion: @escaping () -> Void) {
-        self.completion = completion
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,14 +49,13 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
             self.tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
         ])
         
-        // dynamic size
         if #available(iOS 16.0, *) {
             if let sheet = self.navigationController?.sheetPresentationController {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.async {
                     sheet.animateChanges {
                         sheet.detents = [
                             .custom { context in
-                                let contentHeight = self.tableView.contentSize.height + 32
+                                let contentHeight = self.tableView.contentSize.height + 50
                                 return contentHeight
                             }
                         ]
@@ -75,7 +64,7 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
             }
         }
     }
-    
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 1
     }

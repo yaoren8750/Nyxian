@@ -28,10 +28,8 @@ class PlistHelper {
     }
     
     func reloadIfNeeded() {
-        print("[*] Hello LindDE:PlistHelper")
         let modDate = self.lastModificationDate
         if self.savedModificationDate < modDate {
-            print("[*] plist was modified")
             let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
             onReload(dict)
             self.savedModificationDate = modDate
