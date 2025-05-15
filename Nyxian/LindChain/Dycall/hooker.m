@@ -25,19 +25,11 @@
 #include <mach-o/dyld_images.h>
 #include "fishhook.h"
 
+///
+/// Definitions of modified functions used to hook existing ones in a dylib
+///
 extern void dy_exit(int status);
 extern int dy_atexit(void (*func)(void));
-
-void dy_free(void *ptr);
-void* dy_malloc(size_t size);
-void* dy_malloc_zone_malloc(malloc_zone_t *zone, size_t size);
-void* dy_calloc(size_t count, size_t size);
-void* dy_realloc(void *ptr, size_t size);
-void* dy_reallocf(void *ptr, size_t size);
-void* dy_valloc(size_t size);
-
-char *dy_strdup(const char *s);
-
 void dy_fprintf(FILE *fptr, const char *format, ...);
 
 ///
@@ -83,24 +75,7 @@ int hooker(const char *path, void *dylib)
         genrebind("atexit", dy_atexit),
         
         // to handle file pointer the way we want to
-        //genrebind("fprintf", dy_fprintf),
-        
-        /*genrebind("malloc", dy_malloc),
-        genrebind("_malloc", dy_malloc),
-        genrebind("_Znwm", dy_malloc),
-        genrebind("malloc_zone_malloc", dy_malloc_zone_malloc),
-        genrebind("_malloc_zone_malloc", dy_malloc_zone_malloc),
-        genrebind("valloc", dy_valloc),
-        genrebind("_valloc", dy_valloc),
-        genrebind("calloc", dy_calloc),
-        genrebind("_calloc", dy_calloc),
-        genrebind("realloc", dy_realloc),
-        genrebind("_realloc", dy_realloc),
-        genrebind("reallocf", dy_reallocf),
-        genrebind("_reallocf", dy_reallocf),
-        genrebind("strdup", dy_strdup),
-        genrebind("free", dy_free),
-        genrebind("_free", dy_free),*/
+        genrebind("fprintf", dy_fprintf)
     };
 
     // getting mach header
