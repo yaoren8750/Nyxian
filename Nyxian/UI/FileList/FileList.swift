@@ -137,14 +137,28 @@ class FileListViewController: UITableViewController {
                         self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                     }
                     
+                    // TODO: Implement a function that manages the case that the file overwrite would mean to overwrite a folder and handle it appropriately
                     switch mode {
                     case .folder:
-                        try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+                        if FileManager.default.fileExists(atPath: destination.path) {
+                            let alert: UIAlertController = UIAlertController(
+                                title: "Error",
+                                message: "Folder with the name \"\(destination.lastPathComponent)\" already exists.",
+                                preferredStyle: .alert
+                            )
+                            
+                            alert.addAction(UIAlertAction(title: "Close", style: .default))
+                            
+                            self.present(alert, animated: true)
+                        } else {
+                            try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+                            addFile()
+                        }
                     case .file:
                         if FileManager.default.fileExists(atPath: destination.path) {
                             let alert: UIAlertController = UIAlertController(
                                 title: "Warning",
-                                message: "File with the name \"\(destination.lastPathComponent)\" exists already. Do you want to overwrite it?",
+                                message: "File with the name \"\(destination.lastPathComponent)\" already exists. Do you want to overwrite it?",
                                 preferredStyle: .alert
                             )
                             
