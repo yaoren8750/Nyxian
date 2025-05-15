@@ -8,8 +8,7 @@
 import Foundation
 import UIKit
 
-@objc class ContentViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    let tableView = UITableView(frame: CGRectNull, style: .plain)
+class ContentViewController: UITableViewController {
     var projects: [AppProject] = []
     var path: String
     
@@ -55,25 +54,10 @@ import UIKit
         barbutton.image = UIImage(systemName: "plus")
         barbutton.target = self
         barbutton.action = #selector(PlusTabbed)
-        
         self.navigationItem.setRightBarButton(barbutton, animated: false)
         
-        self.view.backgroundColor = .systemBackground
-        
-        self.tableView.dataSource = self
-        self.tableView.delegate = self
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        self.tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.rowHeight = 70
-        
-        self.view.addSubview(tableView)
-        
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
+        self.tableView.rowHeight = 70
         
         self.projects = AppProject.listProjects(ofPath: self.path)
         
@@ -95,11 +79,11 @@ import UIKit
         lastProjectWasSelected = false
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return projects.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
         
         cell.textLabel?.text = self.projects[indexPath.row].projectConfig.executable
@@ -150,7 +134,7 @@ import UIKit
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
         let selectedProject = projects[indexPath.row]
@@ -162,26 +146,7 @@ import UIKit
         lastProjectWasSelected = true
     }
     
-    /*func tableView(_ tableView: UITableView,
-                   contextMenuConfigurationForRowAt indexPath: IndexPath,
-                   point: CGPoint) -> UIContextMenuConfiguration? {
-        
-        return UIContextMenuConfiguration(identifier: nil,
-                                          previewProvider: nil) { _ in
-
-            let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
-                AppProject.removeProject(project: self.projects[indexPath.row])
-                
-                self.projects.remove(at: indexPath.row)
-                
-                self.tableView.reloadData()
-            }
-
-            return UIMenu(title: "", children: [deleteAction])
-        }
-    }*/
-    
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let project = self.projects[indexPath.row]
             
