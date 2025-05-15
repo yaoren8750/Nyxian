@@ -382,7 +382,7 @@
 					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.loverflows.LindseyDE;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seanistethered.nyxian;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;
@@ -426,7 +426,7 @@
 					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.loverflows.LindseyDE;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seanistethered.nyxian;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;

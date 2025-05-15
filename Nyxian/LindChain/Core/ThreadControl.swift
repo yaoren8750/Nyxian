@@ -44,56 +44,43 @@ func pthread_dispatch(_ code: @escaping () -> Void) {
     }, blockPointer)
 }
 
-class ThreadDispatchLimiter {
-    private let semaphore: DispatchSemaphore = DispatchSemaphore(value: (UserDefaults.standard.object(forKey: "cputhreads") != nil)
-                                                                 ? UserDefaults.standard.integer(forKey: "cputhreads")
-                                                                 : getOptimalThreadCount()
-    )
+func getCpuThreads() -> Int {
+    let value = (UserDefaults.standard.object(forKey: "cputhreads") != nil)
+    ? UserDefaults.standard.integer(forKey: "cputhreads")
+    : 1
     
+    if value == 0 { return 1 }
+    return value
+}
+
+class ThreadDispatchLimiter {
+    private let semaphore: DispatchSemaphore = DispatchSemaphore(value: getCpuThreads())
     private let syncQueue = DispatchQueue(label: "threadLimiter.lockdown.queue", attributes: .concurrent)
     private var _isLockdown: Bool = false
     private(set) var isLockdown: Bool {
         get { syncQueue.sync { _isLockdown } }
         set { syncQueue.sync(flags: .barrier) { _isLockdown = newValue } }
     }
-    var doThreading: Bool {
-        get {
-            if UserDefaults.standard.object(forKey: "LDEThreadedBuild") != nil {
-                return UserDefaults.standard.bool(forKey: "LDEThreadedBuild")
-            }
-            return true
-        }
-    }
 
     func spawn(_ code: @escaping () -> Void, completion: @escaping () -> Void) {
-        if self.doThreading {
-            if self.isLockdown {
-                completion()
-                self.semaphore.signal()
-                return
-            }
-            
-            semaphore.wait()
-            
-            if self.isLockdown {
-                completion()
-                self.semaphore.signal()
-                return
-            }
-            
-            pthread_dispatch {
-                code()
-                completion()
-                self.semaphore.signal()
-            }
-        } else {            
-            if self.isLockdown {
-                completion()
-                return
-            }
-            
+        if self.isLockdown {
+            completion()
+            self.semaphore.signal()
+            return
+        }
+        
+        semaphore.wait()
+        
+        if self.isLockdown {
+            completion()
+            self.semaphore.signal()
+            return
+        }
+        
+        pthread_dispatch {
             code()
             completion()
+            self.semaphore.signal()
         }
     }
     

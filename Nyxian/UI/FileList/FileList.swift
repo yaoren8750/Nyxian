@@ -369,6 +369,7 @@ class FileListViewController: UITableViewController {
     }
     
     @objc func buildProject() {
+        XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
         LDELogger.clear()
         guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
         let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)

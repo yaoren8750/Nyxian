@@ -263,7 +263,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Server doesnt run!"]
+                userInfo: [NSLocalizedDescriptionKey: "Certificate server doesnt run! Either restart app or reimport certificate!"]
             )
         }
         
@@ -402,7 +402,7 @@ class Builder {
                 } else {
                     try? builder.clean()
                 }
-                print(error.localizedDescription)
+                ls_nsprint(error.localizedDescription)
             }
             
             completion(result)

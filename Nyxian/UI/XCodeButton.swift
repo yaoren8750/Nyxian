@@ -55,22 +55,47 @@ class XCodeButton {
         }
     }
     
-    static func switchImage(systemName: String) {
+    static func switchImage(systemName: String, animated: Bool = true, duration: Double = 0.6) {
         DispatchQueue.main.async {
             guard let imageView = XCodeButton.shared.XCImageView else { return }
             
+            if animated {
+                let currentAlpha = imageView.layer.presentation()?.opacity ?? Float(imageView.alpha)
+                imageView.layer.removeAllAnimations()
+                imageView.alpha = CGFloat(currentAlpha)
+                
+                UIView.animate(withDuration: duration / 2, animations: {
+                    imageView.alpha = 0.0
+                }) { _ in
+                    imageView.image = UIImage(systemName: systemName)
+                    UIView.animate(withDuration: duration / 2) {
+                        imageView.alpha = 1.0
+                    }
+                }
+            } else {
+                imageView.image = UIImage(systemName: systemName)
+            }
+        }
+    }
+    
+    static func switchImageSync(systemName: String, animated: Bool = true, duration: Double = 0.6) {
+        guard let imageView = XCodeButton.shared.XCImageView else { return }
+        
+        if animated {
             let currentAlpha = imageView.layer.presentation()?.opacity ?? Float(imageView.alpha)
             imageView.layer.removeAllAnimations()
             imageView.alpha = CGFloat(currentAlpha)
             
-            UIView.animate(withDuration: 0.3, animations: {
+            UIView.animate(withDuration: duration / 2, animations: {
                 imageView.alpha = 0.0
             }) { _ in
                 imageView.image = UIImage(systemName: systemName)
-                UIView.animate(withDuration: 0.3) {
+                UIView.animate(withDuration: duration / 2) {
                     imageView.alpha = 1.0
                 }
             }
+        } else {
+            imageView.image = UIImage(systemName: systemName)
         }
     }
 }
