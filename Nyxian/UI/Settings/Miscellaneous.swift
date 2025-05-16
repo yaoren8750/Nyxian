@@ -34,7 +34,7 @@ class MiscellaneousController: UITableViewController {
         cell.button?.addAction(UIAction(handler: { _ in
             switch indexPath.row {
             case 0:
-                let importPopup: CertificateImporter = CertificateImporter()
+                let importPopup: CertificateImporter = CertificateImporter(style: .insetGrouped)
                 let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
                 importSettings.modalPresentationStyle = .pageSheet
                 

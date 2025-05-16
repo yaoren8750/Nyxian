@@ -8,8 +8,7 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
-    let tableView: UITableView = UITableView(frame: .zero, style: .insetGrouped)
+class CertificateImporter: UITableViewController, UITextFieldDelegate {
     var textField: UITextField?
     
     var cert: ImportTableCell?
@@ -25,7 +24,6 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         super.viewDidLoad()
         
         self.title = "Import Certificate"
-        self.view.backgroundColor = .systemBackground
         
         let importButton: UIBarButtonItem = UIBarButtonItem(
             title: "Submit",
@@ -35,19 +33,9 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         )
         self.navigationItem.setRightBarButton(importButton, animated: true)
         
-        self.tableView.delegate = self
-        self.tableView.dataSource = self
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
         self.tableView.isScrollEnabled = false
         self.tableView.rowHeight = 44
-        self.view.addSubview(self.tableView)
-        
-        NSLayoutConstraint.activate([
-            self.tableView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            self.tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            self.tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            self.tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
-        ])
         
         if #available(iOS 16.0, *) {
             if let sheet = self.navigationController?.sheetPresentationController {
@@ -65,15 +53,15 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         }
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 1
     }
     
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return sectionTitles[section]
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: UITableViewCell
         
         switch indexPath.section {
@@ -100,11 +88,11 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    func numberOfSections(in tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return 3
     }
     
