@@ -35,4 +35,8 @@ class PlistHelper {
             self.savedModificationDate = modDate
         }
     }
+    
+    func overWritePlist(dict: [String:Any]) {
+        NSDictionary(dictionary: dict).write(to: URL(fileURLWithPath: plistPath), atomically: true)
+    }
 }

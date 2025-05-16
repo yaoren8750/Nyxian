@@ -119,7 +119,7 @@ class CodeEditorConfig {
     }
 }
 
-struct AppProject: Identifiable {
+class AppProject: Identifiable {
     let id: UUID = UUID()
 
     let projectConfig: ProjectConfig
@@ -257,5 +257,27 @@ struct AppProject: Identifiable {
             return (true,path)
         }
         return (false,path)
+    }
+    
+    ///
+    /// Public
+    ///
+    func writeBack() {
+        self.projectConfig.plistHelper?.overWritePlist(dict: [
+            "LDEExecutable": self.projectConfig.executable,
+            "LDEDisplayName": self.projectConfig.displayname,
+            "LDEBundleIdentifier": self.projectConfig.bundleid,
+            "LDEMinimumVersion": self.projectConfig.minimum_version,
+            "LDECompilerFlags": self.projectConfig.compiler_flags,
+            "LDELinkerFlags": self.projectConfig.linker_flags
+        ])
+        
+        self.codeEditorConfig.plistHelper?.overWritePlist(dict: [
+            "LDEShowLines": self.codeEditorConfig.showLine,
+            "LDEShowSpace": self.codeEditorConfig.showSpaces,
+            "LDEShowReturn": self.codeEditorConfig.showReturn,
+            "LDEWrapLine": self.codeEditorConfig.wrapLine,
+            "LDEFontSize": self.codeEditorConfig.fontSize
+        ])
     }
 }
