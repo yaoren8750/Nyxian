@@ -19,6 +19,7 @@
 */
 
 import Foundation
+import UIKit
 
 ///
 /// Certblob structure that holds the coded values of a `.certblob`
@@ -32,12 +33,22 @@ struct CertBlob: Codable, Identifiable {
     
     static var signer: zsign? = nil
     static var isReady: Bool = false
+    static var firstBoot: Bool = false
     
     static func startSigner() {
         if CertBlob.getSelectedCertBlobID().0 {
             signer = zsign()
             CertBlob.isReady = signer?.prepsign(CertBlob.getSelectedCertBlobPath()) ?? false
-            print("[*] Certificate server runs")
+            
+            if CertBlob.firstBoot {
+                if CertBlob.isReady {
+                    NotificationServer.NotifyUser(level: .note, notification: "ZSign server runs!", delay: 1.0)
+                } else {
+                    NotificationServer.NotifyUser(level: .error, notification: "ZSign server start failed! Please import a valid certificate, including the correct password.", delay: 1.0)
+                }
+            } else {
+                CertBlob.firstBoot = true
+            }
         }
     }
     

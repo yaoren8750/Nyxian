@@ -8,13 +8,12 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDataSource, UIDocumentPickerDelegate, UITextFieldDelegate {
+class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
     let tableView: UITableView = UITableView(frame: .zero, style: .insetGrouped)
     var textField: UITextField?
     
-    var loc: Int = 0
-    var cert: String = ""
-    var prov: String = ""
+    var cert: ImportTableCell?
+    var prov: ImportTableCell?
     
     let sectionTitles: [String] = [
         "Certificate",
@@ -40,6 +39,7 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         self.tableView.dataSource = self
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
         self.tableView.isScrollEnabled = false
+        self.tableView.rowHeight = 44
         self.view.addSubview(self.tableView)
         
         NSLayoutConstraint.activate([
@@ -74,19 +74,26 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
+        let cell: UITableViewCell
         
         switch indexPath.section {
         case 0:
-            cell.textLabel?.text = "Import"
+            cert = ImportTableCell(parent: self)
+            cell = cert!
+            //cell.textLabel?.text = "Import"
+            break
         case 1:
-            cell.textLabel?.text = "Import"
+            prov = ImportTableCell(parent: self)
+            cell = prov!
+            break
         case 2:
+            cell = UITableViewCell()
             self.textField = UITextField(frame: CGRect(x: 15, y: 0, width: tableView.frame.width - 30, height: 44))
             self.textField?.placeholder = "ie. 123456"
             self.textField?.delegate = self
             cell.contentView.addSubview(textField!)
         default:
+            cell = UITableViewCell()
             break
         }
         
@@ -95,28 +102,10 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
-        
-        self.loc = indexPath.section
-        print(self.loc)
-        
-        let docpick: UIDocumentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
-        docpick.modalPresentationStyle = .pageSheet
-        docpick.delegate = self
-        docpick.allowsMultipleSelection = false
-        self.present(docpick, animated: true)
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return 3
-    }
-    
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        guard let selectedURL = urls.first else { return }
-        
-        if self.loc == 0 { self.cert = selectedURL.path }
-        if self.loc == 1 { self.prov = selectedURL.path }
-        
-        print("Picked file: \(selectedURL)")
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -128,8 +117,8 @@ class CertificateImporter: UIViewController, UITableViewDelegate, UITableViewDat
         try? FileManager.default.removeItem(atPath: CertBlob.getSelectedCertBlobPath())
         
         CertBlob.createCertBlob(
-            p12Path: self.cert,
-            mpPath: self.prov,
+            p12Path: self.cert!.url!.path,
+            mpPath: self.prov!.url!.path,
             password: textField?.text ?? "",
             name: "Meow"
         )
