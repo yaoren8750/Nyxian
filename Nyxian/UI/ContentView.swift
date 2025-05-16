@@ -77,6 +77,12 @@ class ContentViewController: UITableViewController {
         super.viewWillAppear(animated)
         
         lastProjectWasSelected = false
+
+        for cell in tableView.visibleCells {
+            if let projectCell = cell as? ProjectTableCell {
+                projectCell.reload()
+            }
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -84,54 +90,7 @@ class ContentViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        
-        cell.textLabel?.text = self.projects[indexPath.row].projectConfig.executable
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 14, weight: .heavy)
-        cell.detailTextLabel?.text = self.projects[indexPath.row].projectConfig.bundleid
-        cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 10)
-        
-        cell.textLabel?.numberOfLines = 1
-        cell.detailTextLabel?.numberOfLines = 1
-        
-        cell.imageView?.image = UIImage(named: "DefaultIcon")
-        
-        cell.imageView?.translatesAutoresizingMaskIntoConstraints = false
-        cell.textLabel?.translatesAutoresizingMaskIntoConstraints = false
-        cell.detailTextLabel?.translatesAutoresizingMaskIntoConstraints = false
-        
-        let imageSize: CGFloat = 50
-        NSLayoutConstraint.activate([
-            cell.imageView!.widthAnchor.constraint(equalToConstant: imageSize),
-            cell.imageView!.heightAnchor.constraint(equalToConstant: imageSize),
-            cell.imageView!.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16),
-            cell.imageView!.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
-            cell.textLabel!.leadingAnchor.constraint(equalTo: cell.imageView!.trailingAnchor, constant: 16),
-            cell.textLabel!.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 16),
-            cell.textLabel!.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16)
-        ])
-        
-        NSLayoutConstraint.activate([
-            cell.detailTextLabel!.leadingAnchor.constraint(equalTo: cell.textLabel!.leadingAnchor),
-            cell.detailTextLabel!.topAnchor.constraint(equalTo: cell.textLabel!.bottomAnchor, constant: 0),
-            cell.detailTextLabel!.trailingAnchor.constraint(equalTo: cell.textLabel!.trailingAnchor),
-            cell.detailTextLabel!.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -20)
-        ])
-        
-        cell.imageView?.layer.cornerRadius = 10
-        cell.imageView?.clipsToBounds = true
-        cell.imageView?.layer.borderWidth = 0.5
-        cell.imageView?.layer.borderColor = UIColor.gray.cgColor
-        
-        cell.separatorInset = UIEdgeInsets.zero
-        cell.layoutMargins = .zero
-        cell.preservesSuperviewLayoutMargins = false
-        cell.accessoryType = .disclosureIndicator
-        
-        return cell
+        return ProjectTableCell(project: self.projects[indexPath.row])
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

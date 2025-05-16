@@ -277,6 +277,15 @@ class FileListViewController: UITableViewController {
         self.navigationItem.setRightBarButton(barbutton, animated: true)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if let customTitleLabel = self.navigationItem.titleView as? UIButton {
+            self.project.projectConfig.plistHelper?.reloadIfNeeded()
+            customTitleLabel.setTitle(self.project.projectConfig.displayname, for: .normal)
+        }
+    }
+    
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let entry = self.entries[indexPath.row]
