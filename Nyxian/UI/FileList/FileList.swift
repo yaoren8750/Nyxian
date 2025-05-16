@@ -74,18 +74,26 @@ class FileListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
         self.view.backgroundColor = .systemBackground
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
-        let barbutton: UIBarButtonItem = UIBarButtonItem()
-        barbutton.image = UIImage(systemName: "ellipsis.circle")
+        // TESTING
+        // Label
+        let customTitleLabel = self.isSublink ? UILabel() : UIButton()
         
-        var elements: [UIMenuElement] = []
-        
-        if !self.isSublink {
-            LDELogger.log(forProject: self.project)
+        if let customTitleLabel = customTitleLabel as? UILabel {
+            customTitleLabel.text = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
+            customTitleLabel.textColor = .label
+            customTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        } else if let customTitleLabel = customTitleLabel as? UIButton {
+            customTitleLabel.setTitle(self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname, for: .normal)
+            customTitleLabel.setTitleColor(.label, for: .normal)
+            customTitleLabel.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
             
+            var elements: [UIMenuElement] = []
+            
+            LDELogger.log(forProject: self.project)
+                
             elements.append(UIAction(title: "Build", handler: { _ in
                 self.buildProject()
             }))
@@ -94,7 +102,52 @@ class FileListViewController: UITableViewController {
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))
+            
+            let sectionMenu = UIMenu(children: elements)
+            
+            customTitleLabel.menu = sectionMenu
+            customTitleLabel.showsMenuAsPrimaryAction = true
         }
+        
+        if !self.isSublink {
+            let circleDimensions: CGFloat = 20
+            
+            // Circle
+            let circle: UIView = UIView()
+            circle.backgroundColor = .systemGray5
+            circle.layer.cornerRadius = circleDimensions / 2
+            circle.layer.masksToBounds = true
+            circle.translatesAutoresizingMaskIntoConstraints = false
+            customTitleLabel.addSubview(circle)
+            
+            // Image
+            let config: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+            let image: UIImage? = UIImage(systemName: "chevron.down", withConfiguration: config)
+            let imageView: UIImageView = UIImageView(image: image)
+            imageView.tintColor = .systemGray // MARK: Use systemGray5 for the circle
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            circle.addSubview(imageView)
+            
+            // Constraints
+            NSLayoutConstraint.activate([
+                circle.topAnchor.constraint(equalTo: customTitleLabel.topAnchor),
+                circle.bottomAnchor.constraint(equalTo: customTitleLabel.bottomAnchor),
+                circle.leadingAnchor.constraint(equalTo: customTitleLabel.trailingAnchor, constant: 4),
+                circle.heightAnchor.constraint(equalToConstant: circleDimensions),
+                circle.widthAnchor.constraint(equalToConstant: circleDimensions),
+                
+                imageView.centerXAnchor.constraint(equalTo: circle.centerXAnchor),
+                imageView.centerYAnchor.constraint(equalTo: circle.centerYAnchor)
+            ])
+        }
+            
+        self.navigationItem.titleView = customTitleLabel
+        
+        let barbutton: UIBarButtonItem = UIBarButtonItem()
+        barbutton.image = UIImage(systemName: "ellipsis.circle")
+        // TESTING END
+        
+        var elements: [UIMenuElement] = []
         
         elements.append(UIAction(title: "Create", handler: { _ in
             
@@ -200,9 +253,10 @@ class FileListViewController: UITableViewController {
             self.present(actionSheet, animated: true)
         }))
         
-        let sectionMenu = UIMenu(title: "Actions", options: .displayInline, children: elements)
+        let sectionMenu = UIMenu(children: elements)
         
         barbutton.menu = sectionMenu
+        
         self.navigationItem.setRightBarButton(barbutton, animated: true)
     }
     
