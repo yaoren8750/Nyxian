@@ -223,6 +223,10 @@ class AppProject: Identifiable {
         return path
     }
     
+    func getUUID() -> String {
+        return URL(fileURLWithPath: self.path).lastPathComponent
+    }
+    
     func getCachePath() -> (Bool,String) {
         let uuidUsedInGeneration: String = self.path.URLGet().lastPathComponent
         

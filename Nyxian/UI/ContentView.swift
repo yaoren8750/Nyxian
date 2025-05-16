@@ -20,14 +20,15 @@ class ContentViewController: UITableViewController {
             UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelectedEven")
         }
     }
-    var lastProjectSelected: Int {
+    var lastProjectSelected: String {
         get {
-            return UserDefaults.standard.integer(forKey: "LDELastProjectSelected")
+            return UserDefaults.standard.string(forKey: "LDELastProjectSelected") ?? "0"
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelected")
         }
     }
+    var cellSelected: Int = 0
     
     @objc init(path: String) {
         RevertUI()
@@ -64,12 +65,14 @@ class ContentViewController: UITableViewController {
         self.tableView.reloadData()
         
         if lastProjectWasSelected {
-            if lastProjectSelected < projects.count {
-                let selectedProject = projects[lastProjectSelected]
-                let fileVC = FileListViewController(project: selectedProject,
-                                                    path: selectedProject.getPath())
-                self.navigationController?.pushViewController(fileVC, animated: false)
-            }
+            let selectedProject = AppProject(path: "\(self.path)/\(lastProjectSelected)")
+            
+            let fileVC = FileListViewController(project: selectedProject,
+                                                path: selectedProject.getPath())
+            
+            self.navigationController?.pushViewController(fileVC, animated: false)
+            
+            return
         }
     }
     
@@ -77,11 +80,9 @@ class ContentViewController: UITableViewController {
         super.viewWillAppear(animated)
         
         lastProjectWasSelected = false
-
-        for cell in tableView.visibleCells {
-            if let projectCell = cell as? ProjectTableCell {
-                projectCell.reload()
-            }
+        
+        if let projectCell = tableView.visibleCells[self.cellSelected] as? ProjectTableCell {
+            projectCell.reload()
         }
     }
     
@@ -101,7 +102,8 @@ class ContentViewController: UITableViewController {
                                             path: selectedProject.getPath())
         self.navigationController?.pushViewController(fileVC, animated: true)
         
-        lastProjectSelected = indexPath.row
+        self.cellSelected = indexPath.row
+        lastProjectSelected = selectedProject.getUUID()
         lastProjectWasSelected = true
     }
     
