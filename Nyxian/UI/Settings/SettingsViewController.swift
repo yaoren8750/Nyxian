@@ -39,7 +39,7 @@ class SettingsViewController: UITableViewController {
         }
         
         cell.accessoryType = .disclosureIndicator
-        //cell.imageView?.tintColor = .label
+        cell.imageView?.tintColor = .label
         
         return cell
     }
