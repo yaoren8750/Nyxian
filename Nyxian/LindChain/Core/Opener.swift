@@ -64,20 +64,6 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         return true
     }
     
-    func openAppURL(_ urlscheme: String,
-                    _ workspace: LSApplicationWorkspace) -> Bool {
-        
-        guard let urlscheme: URL = URL(string: urlscheme) else { return false }
-        
-        if Thread.isMainThread {
-            return workspace.openURL(urlscheme)
-        }
-        
-        return DispatchQueue.main.sync {
-            return workspace.openURL(urlscheme)
-        }
-    }
-    
     let queue = DispatchQueue.global()
     
     ///

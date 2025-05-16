@@ -303,7 +303,6 @@ class Builder {
         
         let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
-            print(installer.iTunesLink)
             if UIApplication.shared.canOpenURL(installer.iTunesLink) {
                 UIApplication.shared.open(installer.iTunesLink, options: [:], completionHandler: { success in
                     if success {
@@ -330,8 +329,6 @@ class Builder {
         waitonmebaby.wait()
         
         installer.shutdownServer()
-        
-        try Builder.isAbortedCheck()
     }
     
     static private func isAbortedCheck() throws {
@@ -350,9 +347,9 @@ class Builder {
     static func buildProject(withProject project: AppProject,
                              completion: @escaping (Bool) -> Void) {
         pthread_dispatch {
-            getCertificates()
-            
             Bootstrap.shared.waitTillDone()
+            
+            project.projectConfig.plistHelper?.reloadIfNeeded()
             
             Builder.abort = false
             
