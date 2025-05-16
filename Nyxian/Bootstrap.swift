@@ -74,7 +74,6 @@ class Bootstrap {
                     self.clearPath(path: "/")
                 }
                 
-                // TODO: If we change the boot architecture we need a system to handle bootstrap upgrades
                 do {
                     if self.bootstrapVersion == 0 {
                         // Create the folder structure
