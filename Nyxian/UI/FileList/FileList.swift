@@ -137,7 +137,6 @@ class FileListViewController: UITableViewController {
                         self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                     }
                     
-                    // TODO: Implement a function that manages the case that the file overwrite would mean to overwrite a folder and handle it appropriately
                     switch mode {
                     case .folder:
                         if FileManager.default.fileExists(atPath: destination.path) {
@@ -155,21 +154,25 @@ class FileListViewController: UITableViewController {
                             addFile()
                         }
                     case .file:
-                        if FileManager.default.fileExists(atPath: destination.path) {
+                        var isDirectory: ObjCBool = ObjCBool(false)
+                        if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
                             let alert: UIAlertController = UIAlertController(
-                                title: "Warning",
-                                message: "File with the name \"\(destination.lastPathComponent)\" already exists. Do you want to overwrite it?",
+                                title: isDirectory.boolValue ? "Error" : "Warning",
+                                message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
                                 preferredStyle: .alert
                             )
                             
                             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                            alert.addAction(UIAlertAction(
-                                title: "Overwrite",
-                                style: .destructive
-                            ) { _ in
-                                try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                                replaceFile()
-                            })
+                            
+                            if !isDirectory.boolValue {
+                                alert.addAction(UIAlertAction(
+                                    title: "Overwrite",
+                                    style: .destructive
+                                ) { _ in
+                                    try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                                    replaceFile()
+                                })
+                            }
                             
                             self.present(alert, animated: true)
                         } else {
