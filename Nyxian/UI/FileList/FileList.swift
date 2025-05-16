@@ -94,16 +94,33 @@ class FileListViewController: UITableViewController {
             
             LDELogger.log(forProject: self.project)
                 
-            elements.append(UIAction(title: "Build", handler: { _ in
+            elements.append(UIAction(title: "Build", image: UIImage(systemName: "hammer.fill"), handler: { _ in
                 self.buildProject()
             }))
-            elements.append(UIAction(title: "Log", handler: { _ in
+            elements.append(UIAction(title: "Log", image: UIImage(systemName: "apple.terminal.fill"), handler: { _ in
+                let loggerView = LoggerView()
+                loggerView.modalPresentationStyle = .formSheet
+                self.present(loggerView, animated: true)
+            }))
+            elements.append(UIAction(title: "Settings", image: {
+                if #available(iOS 17.0, *) {
+                    return UIImage(systemName: "gearshape.fill")
+                } else {
+                    return UIImage(systemName: "gear")
+                }
+            }(), handler: { _ in
                 let loggerView = LoggerView()
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))
             
-            let sectionMenu = UIMenu(children: elements)
+            let sectionMenu: UIMenu
+            
+            if #available(iOS 17.0, *) {
+                sectionMenu = UIMenu(options: .displayAsPalette, children: elements)
+            } else {
+                sectionMenu = UIMenu(children: elements)
+            }
             
             customTitleLabel.menu = sectionMenu
             customTitleLabel.showsMenuAsPrimaryAction = true
@@ -124,7 +141,7 @@ class FileListViewController: UITableViewController {
             let config: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
             let image: UIImage? = UIImage(systemName: "chevron.down", withConfiguration: config)
             let imageView: UIImageView = UIImageView(image: image)
-            imageView.tintColor = .systemGray // MARK: Use systemGray5 for the circle
+            imageView.tintColor = .systemGray
             imageView.translatesAutoresizingMaskIntoConstraints = false
             circle.addSubview(imageView)
             
@@ -140,7 +157,7 @@ class FileListViewController: UITableViewController {
                 imageView.centerYAnchor.constraint(equalTo: circle.centerYAnchor)
             ])
         }
-            
+        
         self.navigationItem.titleView = customTitleLabel
         
         let barbutton: UIBarButtonItem = UIBarButtonItem()
@@ -425,7 +442,8 @@ class FileListViewController: UITableViewController {
         ])
     }
     
-    @objc func buildProject() {
+    func buildProject() {
+        self.navigationItem.titleView?.isUserInteractionEnabled = false
         XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
         LDELogger.clear()
         guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
@@ -446,6 +464,8 @@ class FileListViewController: UITableViewController {
             DispatchQueue.main.async {
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
+                
+                self.navigationItem.titleView?.isUserInteractionEnabled = true
                 
                 if !result {
                     let loggerView = LoggerView()
