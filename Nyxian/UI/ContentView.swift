@@ -76,12 +76,19 @@ class ContentViewController: UITableViewController {
         }
     }
     
+    var firstAppear: Bool = true
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        lastProjectWasSelected = false
+        print("I will appear")
         
-        if let projectCell = tableView.visibleCells[self.cellSelected] as? ProjectTableCell {
+        if !self.firstAppear {
+            lastProjectWasSelected = false
+        } else {
+            self.firstAppear = false
+        }
+        
+        if let projectCell = self.projects[self.cellSelected] as? ProjectTableCell {
             projectCell.reload()
         }
     }
