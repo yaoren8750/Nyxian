@@ -227,6 +227,14 @@ class FileListViewController: UITableViewController {
             
             self.present(actionSheet, animated: true)
         }))
+        fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "plus"), handler: { _ in
+            PasteBoardServices.paste(path: self.path)
+            
+            // TODO: Handle overwrite
+            self.entries.append(FileListEntry.getEntry(ofPath: PasteBoardServices.path))
+            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+        }))
         rootMenuChildren.append(UIMenu(title: "File", options: [.displayInline], children: fileMenuElements))
         
         return UIMenu(children: rootMenuChildren)
@@ -238,6 +246,23 @@ class FileListViewController: UITableViewController {
         if !self.isSublink {
             self.project.projectConfig.plistHelper?.reloadIfNeeded()
             self.title = self.project.projectConfig.displayname
+        }
+        
+        // TODO: Handle removal
+    }
+    
+    // Swift
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            
+            let copyAction = UIAction(title: "Copy", image: UIImage(systemName: "document.on.clipboard")) { action in
+                PasteBoardServices.copy(mode: .copy, path: self.entries[indexPath.row].path)
+            }
+            let moveAction = UIAction(title: "Move", image: UIImage(systemName: "arrow.right")) { action in
+                PasteBoardServices.copy(mode: .move, path: self.entries[indexPath.row].path)
+            }
+            
+            return UIMenu(title: "", children: [copyAction, moveAction])
         }
     }
     
