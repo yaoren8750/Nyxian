@@ -228,8 +228,7 @@ class FileListViewController: UITableViewController {
             self.present(actionSheet, animated: true)
         }))
         fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "plus"), handler: { _ in
-            let pastePath: String = PasteBoardServices.path
-            let destination: URL = URL(fileURLWithPath: PasteBoardServices.path)
+            let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
             func addFile() {
                 self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
