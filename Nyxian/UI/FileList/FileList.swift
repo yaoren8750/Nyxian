@@ -228,13 +228,55 @@ class FileListViewController: UITableViewController {
             self.present(actionSheet, animated: true)
         }))
         fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "plus"), handler: { _ in
-            PasteBoardServices.paste(path: self.path)
+            let pastePath: String = PasteBoardServices.path
+            let destination: URL = URL(fileURLWithPath: PasteBoardServices.path)
             
-            // TODO: Handle overwrite
-            self.entries.append(FileListEntry.getEntry(ofPath: PasteBoardServices.path))
-            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+            func addFile() {
+                self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+                let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+            }
+            
+            func replaceFile() {
+                let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
+                if let index {
+                    self.entries.remove(at: index)
+                    let oldIndexPath = IndexPath(row: index, section: 0)
+                    self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
+                }
+                
+                self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+                let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+            }
+            
+            var isDirectory: ObjCBool = ObjCBool(false)
+            if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
+                let alert: UIAlertController = UIAlertController(
+                    title: isDirectory.boolValue ? "Error" : "Warning",
+                    message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
+                    preferredStyle: .alert
+                )
+                
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                
+                if !isDirectory.boolValue {
+                    alert.addAction(UIAlertAction(
+                        title: "Overwrite",
+                        style: .destructive
+                    ) { _ in
+                        PasteBoardServices.paste(path: self.path)
+                        replaceFile()
+                    })
+                }
+                
+                self.present(alert, animated: true)
+            } else {
+                PasteBoardServices.paste(path: self.path)
+                addFile()
+            }
         }))
+        
         rootMenuChildren.append(UIMenu(title: "File", options: [.displayInline], children: fileMenuElements))
         
         return UIMenu(children: rootMenuChildren)
@@ -247,8 +289,6 @@ class FileListViewController: UITableViewController {
             self.project.projectConfig.plistHelper?.reloadIfNeeded()
             self.title = self.project.projectConfig.displayname
         }
-        
-        // TODO: Handle removal
     }
     
     // Swift
@@ -259,6 +299,10 @@ class FileListViewController: UITableViewController {
                 PasteBoardServices.copy(mode: .copy, path: self.entries[indexPath.row].path)
             }
             let moveAction = UIAction(title: "Move", image: UIImage(systemName: "arrow.right")) { action in
+                PasteBoardServices.onMove = {
+                    self.entries.remove(at: indexPath.row)
+                    self.tableView.deleteRows(at: [indexPath], with: .automatic)
+                }
                 PasteBoardServices.copy(mode: .move, path: self.entries[indexPath.row].path)
             }
             
