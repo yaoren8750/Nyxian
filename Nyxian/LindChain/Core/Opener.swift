@@ -32,7 +32,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
     ///
     /// Helper function to know if app is in focus
     ///
-    func isAppNotInFocus() -> Bool {
+    func isAppInFocus() -> Bool {
         return DispatchQueue.main.sync {
             let appState = UIApplication.shared.applicationState
             return appState == .background || appState == .inactive
@@ -46,7 +46,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         // wait till app goes to background
         var attempt: Int = 0
         let maxAttempt: Int = 10
-        while !isAppNotInFocus() {
+        while isAppInFocus() {
             attempt += 1
             if attempt > maxAttempt {
                 return false
@@ -56,7 +56,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         }
         
         // wait till app goes to foreground
-        while isAppNotInFocus() {
+        while !isAppInFocus() {
             Thread.sleep(forTimeInterval: 0.1)
         }
         
