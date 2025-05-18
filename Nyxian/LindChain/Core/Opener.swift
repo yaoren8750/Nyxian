@@ -27,8 +27,7 @@ import UIKit
 // Will dig deeper
 //
 func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
-                                           _ info: AppProject,
-                                           completion: @escaping (Bool) -> Void) {
+                                           _ info: AppProject) -> Bool {
     
     ///
     /// Helper function to know if app is in focus
@@ -64,117 +63,104 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         return true
     }
     
-    let queue = DispatchQueue.global()
+    ///
+    /// We reset the shown progress of `XCButtonGlob`
+    ///
+    XCodeButton.resetProgress()
     
     ///
-    /// We dispatch after 1.0 seconds, thats the amount of time in general needed for the popup to appear
+    /// Now we wait on the popup to go away the popup invoked by the system
     ///
-    queue.async {
+    if !waitTillPopup() {
+        return false
+    }
+    
+    ///
+    /// We need workspace
+    ///
+    guard let workspace = LSApplicationWorkspace.default() else {
+        return false
+    }
+    
+    ///
+    /// Installer checks
+    ///
+    if installer.status == .sendingPayload {
+        let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+        installer.installCompletionHandler { semaphore.signal() }
+        semaphore.wait()
+    } else if !installer.completed {
+        return false
+    }
+    
+    ///
+    /// Progress placeholder for the installation progress NSObject
+    ///
+    var progress: Progress?
+    
+    ///
+    /// Now we wait till the progress is available
+    ///
+    var attempt: Int = 0
+    let maxAttempts: Int = 10
+    while progress == nil {
+        progress = workspace.installProgress(forBundleID: installer.metadata.id, makeSynchronous: 0) as? Progress
         
-        ///
-        /// We reset the shown progress of `XCButtonGlob`
-        ///
-        XCodeButton.resetProgress()
-        
-        ///
-        /// Now we wait on the popup to go away the popup invoked by the system
-        ///
-        if !waitTillPopup() {
-            completion(false)
-            return
+        attempt += 1
+        if attempt > maxAttempts {
+            return false
         }
         
-        ///
-        /// We need workspace
-        ///
-        guard let workspace = LSApplicationWorkspace.default() else {
-            completion(false)
-            return
-        }
+        Thread.sleep(forTimeInterval: 0.1)
+    }
+    
+    func hookedCompletion() {
+        workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
+    }
+    
+    ///
+    /// Now we unwrap progress
+    ///
+    if let progress = progress {
+        
+        var oldProgress: Double = 0.0
+        var oldDate: Date = Date()
         
         ///
-        /// Installer checks
+        /// Now our loop
         ///
-        if installer.status == .sendingPayload {
-            let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-            installer.installCompletionHandler { semaphore.signal() }
-            semaphore.wait()
-        } else if !installer.completed {
-            completion(false)
-            return
-        }
-        
-        ///
-        /// Progress placeholder for the installation progress NSObject
-        ///
-        var progress: Progress?
-        
-        ///
-        /// Now we wait till the progress is available
-        ///
-        var attempt: Int = 0
-        let maxAttempts: Int = 10
-        while progress == nil {
-            progress = workspace.installProgress(forBundleID: installer.metadata.id, makeSynchronous: 0) as? Progress
+        while true {
+            if oldProgress < progress.fractionCompleted {
+                XCodeButton.updateProgressIncrement(progress: progress.fractionCompleted)
+                oldProgress = progress.fractionCompleted
+                oldDate = Date()
+            } else {
+                if oldDate.addingTimeInterval(20) < Date() {
+                    workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
+                    return false
+                }
+            }
             
-            attempt += 1
-            if attempt > maxAttempts {
-                completion(false)
-                return
+            if progress.isFinished {
+                
+                ///
+                /// We attempt to open the application with the bundle identifier stored in `installed.metadata.id`
+                ///
+                while !workspace.openApplication(withBundleID: installer.metadata.id) {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                
+                ///
+                /// Nice, were done!
+                ///
+                workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
+                return true
             }
             
             Thread.sleep(forTimeInterval: 0.1)
         }
-        
-        func hookedCompletion(_ value: Bool) {
-            workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
-            completion(value)
-        }
-        
-        ///
-        /// Now we unwrap progress
-        ///
-        if let progress = progress {
-            
-            var oldProgress: Double = 0.0
-            var oldDate: Date = Date()
-            
-            ///
-            /// Now our loop
-            ///
-            while true {
-                if oldProgress < progress.fractionCompleted {
-                    XCodeButton.updateProgressIncrement(progress: progress.fractionCompleted)
-                    oldProgress = progress.fractionCompleted
-                    oldDate = Date()
-                } else {
-                    if oldDate.addingTimeInterval(20) < Date() {
-                        hookedCompletion(false)
-                        return
-                    }
-                }
-                
-                if progress.isFinished {
-    
-                    ///
-                    /// We attempt to open the application with the bundle identifier stored in `installed.metadata.id`
-                    ///
-                    while !workspace.openApplication(withBundleID: installer.metadata.id) {
-                        Thread.sleep(forTimeInterval: 0.1)
-                    }
-                    
-                    ///
-                    /// Nice, were done!
-                    ///
-                    hookedCompletion(true)
-                    return
-                }
-                
-                Thread.sleep(forTimeInterval: 0.1)
-            }
-        } else {
-            hookedCompletion(false)
-            return
-        }
+    } else {
+        workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
+        return false
     }
 }

@@ -301,34 +301,39 @@ class Builder {
             image: nil
         )
         
+        var invokedInstallationPopup: Bool = false
         let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
             if UIApplication.shared.canOpenURL(installer.iTunesLink) {
                 UIApplication.shared.open(installer.iTunesLink, options: [:], completionHandler: { success in
                     if success {
-                        OpenAppAfterReinstallTrampolineSwitch(
-                            installer,
-                            self.project
-                        ) { result in
-                            
-                            if result {
-                                exit(0)
-                            }
-                            
-                            waitonmebaby.signal()
-                        }
-                    } else {
-                        waitonmebaby.signal()
+                        invokedInstallationPopup = true
                     }
+                    waitonmebaby.signal()
                 })
-            } else {
-                waitonmebaby.signal()
             }
         }
-        
         waitonmebaby.wait()
         
-        installer.shutdownServer()
+        if invokedInstallationPopup {
+            if OpenAppAfterReinstallTrampolineSwitch(
+                installer,
+                self.project) {
+                exit(0)
+            } else {
+                throw NSError(
+                    domain: "",
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "Open failed!"]
+                )
+            }
+        } else {
+            throw NSError(
+                domain: "",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Install failed!"]
+            )
+        }
     }
     
     static private func isAbortedCheck() throws {
