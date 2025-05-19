@@ -30,20 +30,22 @@
  */
 void *threadripper(void *arg)
 {
+    // Getting the arguments passed to the thread by assumingly dyexec()
     dyargs *data = (dyargs *)arg;
     void *handle = data->handle;
 
+    // Getting the main symbol of the dylib by dynamic loader symbol
     int (*dylib_main)(int, char**) = dlsym(handle, "main");
-    char *error = dlerror();
-    if (error != NULL) {
-        fprintf(stderr, "[!] error: %s\n", error);
-        pthread_exit(NULL);
-        return NULL;
+    
+    // Finding out of dynamic loader symbol found its main symbol
+    if(!dylib_main) {
+        fprintf(stderr, "[!] error: %s\n", dlerror());
+        pthread_exit((void*)(intptr_t)-1);
     }
     
+    // Finally, running the dylibs main symbol
     int status = dylib_main(data->argc, data->argv);
 
+    // Returning the value returned by the dylibs main symbol
     pthread_exit((void*)(intptr_t)status);
-    
-    return NULL;
 }
