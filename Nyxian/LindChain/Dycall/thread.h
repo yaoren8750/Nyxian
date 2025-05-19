@@ -20,8 +20,6 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#import <Foundation/Foundation.h>
-
 /**
  * @brief This Struct holds the args of the threadripper
  */

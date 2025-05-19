@@ -29,4 +29,6 @@
 int dyexec(NSString *dylibPath,
            NSArray *arguments);
 
+NSString* dytest(NSString *dylibPath);
+
 #endif // DYEXEC_H

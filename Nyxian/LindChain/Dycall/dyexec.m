@@ -18,7 +18,6 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <LogService/LogService.h>
 
 #include <dlfcn.h>
 #include <stdio.h>
@@ -29,6 +28,18 @@
 #include "hooker.h"
 #include "thread.h"
 
+int hooked = 0;
+
+int is_dylib_loaded(const char *name) {
+    void *check_handle = dlopen(name, RTLD_NOLOAD);
+    
+    if (check_handle == NULL) {
+        return 0;
+    }
+    
+    return 1;
+}
+
 /**
  * @brief This function is for dybinary execution
  *
@@ -38,28 +49,18 @@ int dyexec(NSString *dylibPath,
 {
     dyargs data;
     
-    // Dont load if its already loaded
-    data.handle = dlopen([dylibPath UTF8String], RTLD_NOLOAD);
-    
-    // If its not loaded yet then load it from that path
-    if(!data.handle)
+    if(!is_dylib_loaded([dylibPath UTF8String]))
     {
         data.handle = dlopen([dylibPath UTF8String], RTLD_LAZY);
-        
-        if (!data.handle)
+        if (!data.handle) {
+            printf("[!] error: %s\n", dlerror());
             return -1;
-        
-        if(!hooker([dylibPath UTF8String], data.handle))
-            return -1;
-        
+        }
+        hooker([dylibPath UTF8String], data.handle);
         dlerror();
     }
-    
-    // If its still not loaded then abort
-    if(!data.handle)
-        return -1;
 
-    // Prepare Argv for the dybinary
+    //argv prepare
     data.argc = (int)[arguments count];
     data.argv = (char **)malloc((data.argc + 1) * sizeof(char *));
     for (int i = 0; i < data.argc; i++) {
@@ -67,21 +68,27 @@ int dyexec(NSString *dylibPath,
     }
     data.argv[data.argc] = NULL;
 
-    // Threadripper approach to handle the exit() function call
-    void *status = NULL;
+    //threadripper approach (exit loop bypass)
     pthread_t thread;
     if (pthread_create(&thread, NULL, threadripper, (void *)&data) != 0) {
-        ls_nsprint(@"[!] error creating thread\n");
-        status = (void*)(intptr_t) -1;
+        dprintf(6, "[!] error creating thread\n");
+        return 1;
     }
+    sleep(1);
+    void *status = NULL;
     pthread_join(thread, &status);
-    
-    // When the thread is done we close the handle
+
+    //if reference count wont hit 0 it wont free
     dlclose(data.handle);
 
-    // Now we free the memory argv needs
     for (int i = 0; i < data.argc; i++) free(data.argv[i]);
     free(data.argv);
 
     return (int)(intptr_t)status;
+}
+
+NSString* dytest(NSString *dylibPath)
+{
+    dlopen([dylibPath UTF8String], RTLD_LAZY);
+    return [NSString stringWithFormat:@"%s", dlerror()];
 }
