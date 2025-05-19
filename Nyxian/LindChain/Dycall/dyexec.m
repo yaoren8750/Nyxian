@@ -18,6 +18,7 @@
 */
 
 #import <Foundation/Foundation.h>
+#import <LogService/LogService.h>
 
 #include <dlfcn.h>
 #include <stdio.h>
@@ -42,7 +43,7 @@ int dyexec(NSString *dylibPath,
     {
         data.handle = dlopen([dylibPath UTF8String], RTLD_LAZY);
         if (!data.handle) {
-            printf("[!] error: %s\n", dlerror());
+            ls_nsprint([NSString stringWithFormat:@"[!] error: %s\n", dlerror()]);
             return -1;
         }
         hooker([dylibPath UTF8String], data.handle);
@@ -60,7 +61,7 @@ int dyexec(NSString *dylibPath,
     //threadripper approach (exit loop bypass)
     pthread_t thread;
     if (pthread_create(&thread, NULL, threadripper, (void *)&data) != 0) {
-        dprintf(6, "[!] error creating thread\n");
+        ls_nsprint(@"[!] error creating thread\n");
         return 1;
     }
     void *status = NULL;
@@ -73,10 +74,4 @@ int dyexec(NSString *dylibPath,
     free(data.argv);
 
     return (int)(intptr_t)status;
-}
-
-NSString* dytest(NSString *dylibPath)
-{
-    dlopen([dylibPath UTF8String], RTLD_LAZY);
-    return [NSString stringWithFormat:@"%s", dlerror()];
 }
