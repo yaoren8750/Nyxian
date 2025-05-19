@@ -28,18 +28,6 @@
 #include "hooker.h"
 #include "thread.h"
 
-int hooked = 0;
-
-int is_dylib_loaded(const char *name) {
-    void *check_handle = dlopen(name, RTLD_NOLOAD);
-    
-    if (check_handle == NULL) {
-        return 0;
-    }
-    
-    return 1;
-}
-
 /**
  * @brief This function is for dybinary execution
  *
@@ -48,8 +36,9 @@ int dyexec(NSString *dylibPath,
            NSArray *arguments)
 {
     dyargs data;
+    data.handle = dlopen([dylibPath UTF8String], RTLD_NOLOAD);
     
-    if(!is_dylib_loaded([dylibPath UTF8String]))
+    if(!data.handle)
     {
         data.handle = dlopen([dylibPath UTF8String], RTLD_LAZY);
         if (!data.handle) {
@@ -74,7 +63,6 @@ int dyexec(NSString *dylibPath,
         dprintf(6, "[!] error creating thread\n");
         return 1;
     }
-    sleep(1);
     void *status = NULL;
     pthread_join(thread, &status);
 
