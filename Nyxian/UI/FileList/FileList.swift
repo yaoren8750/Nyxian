@@ -310,11 +310,13 @@ class FileListViewController: UITableViewController {
             self.project.projectConfig.plistHelper?.reloadIfNeeded()
             self.title = self.project.projectConfig.displayname
             
-            if self.openTheLogSheet {
-                let loggerView = LoggerView()
-                loggerView.modalPresentationStyle = .formSheet
-                self.present(loggerView, animated: true)
-                self.openTheLogSheet = false
+            if self.doReopen {
+                if self.openTheLogSheet {
+                    let loggerView = LoggerView()
+                    loggerView.modalPresentationStyle = .formSheet
+                    self.present(loggerView, animated: true)
+                    self.openTheLogSheet = false
+                }
             }
         }
     }
