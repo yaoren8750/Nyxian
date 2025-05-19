@@ -13,6 +13,17 @@ class FileListViewController: UITableViewController {
     let path: String
     var entries: [FileListEntry]
     let isSublink: Bool
+    var openTheLogSheet: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: "LDEReopened") != nil {
+                return UserDefaults.standard.bool(forKey: "LDEReopened")
+            }
+            return false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "LDEReopened")
+        }
+    }
     
     init(
         isSublink: Bool = false,
@@ -287,6 +298,13 @@ class FileListViewController: UITableViewController {
         if !self.isSublink {
             self.project.projectConfig.plistHelper?.reloadIfNeeded()
             self.title = self.project.projectConfig.displayname
+            
+            if self.openTheLogSheet {
+                let loggerView = LoggerView()
+                loggerView.modalPresentationStyle = .formSheet
+                self.present(loggerView, animated: true)
+                self.openTheLogSheet = false
+            }
         }
     }
     
@@ -500,9 +518,17 @@ class FileListViewController: UITableViewController {
                 self.navigationItem.titleView?.isUserInteractionEnabled = true
                 
                 if !result {
-                    let loggerView = LoggerView()
-                    loggerView.modalPresentationStyle = .formSheet
-                    self.present(loggerView, animated: true)
+                    self.openTheLogSheet = true
+                    pthread_dispatch {
+                        pthread_dispatch {
+                            while true {
+                                LSApplicationWorkspace.default().openApplication(withBundleID: Bundle.main.bundleIdentifier)
+                            }
+                        }
+                        
+                        usleep(500)
+                        exit(0)
+                    }
                 }
             }
         }

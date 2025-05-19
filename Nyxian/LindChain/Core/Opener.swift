@@ -34,8 +34,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
     ///
     func isAppInFocus() -> Bool {
         return DispatchQueue.main.sync {
-            let appState = UIApplication.shared.applicationState
-            return appState == .background || appState == .inactive
+            return UIApplication.shared.applicationState == .active
         }
     }
     
@@ -72,6 +71,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
     /// Now we wait on the popup to go away the popup invoked by the system
     ///
     if !waitTillPopup() {
+        ls_nsprint("[!] Popup appareance failure\n")
         return false
     }
     
@@ -79,17 +79,27 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
     /// We need workspace
     ///
     guard let workspace = LSApplicationWorkspace.default() else {
+        ls_nsprint("[!] Failed to get application workspace\n")
         return false
     }
     
     ///
     /// Installer checks
     ///
+    let startTime = Date()
+    while installer.status == .sendingManifest {
+        if Date().timeIntervalSince(startTime) > 5.0 {
+            return false
+        }
+        Thread.sleep(forTimeInterval: 0.1)
+    }
+    
     if installer.status == .sendingPayload {
         let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
         installer.installCompletionHandler { semaphore.signal() }
         semaphore.wait()
     } else if !installer.completed {
+        ls_nsprint("[!] Installer status doesnt add up\n")
         return false
     }
     
@@ -108,6 +118,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
         
         attempt += 1
         if attempt > maxAttempts {
+            ls_nsprint("[!] Failed to get progress object from lsd\n")
             return false
         }
         
@@ -137,6 +148,7 @@ func OpenAppAfterReinstallTrampolineSwitch(_ installer: Installer,
             } else {
                 if oldDate.addingTimeInterval(20) < Date() {
                     workspace.clearCreatedProgress(forBundleID: installer.metadata.id)
+                    ls_nsprint("[!] Progress seemed to have frozen\n")
                     return false
                 }
             }
