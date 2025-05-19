@@ -46,7 +46,13 @@ int dyexec(NSString *dylibPath,
             ls_nsprint([NSString stringWithFormat:@"[!] error: %s\n", dlerror()]);
             return -1;
         }
-        hooker([dylibPath UTF8String], data.handle);
+        
+        if(!hooker([dylibPath UTF8String]))
+        {
+            ls_nsprint(@"[!] hooker failed to hook dylib\n");
+            return -1;
+        }
+        
         dlerror();
     }
 
