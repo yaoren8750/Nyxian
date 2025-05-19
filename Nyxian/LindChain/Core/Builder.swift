@@ -27,7 +27,17 @@ class Builder {
     
     private(set) var dirtySourceFiles: [String] = []
     
-    static var abort: Bool = false
+    static var abortHandler: () -> Void = {}
+    static var _abort: Bool = false
+    static var abort: Bool {
+        get {
+            return _abort
+        }
+        set {
+            _abort = newValue
+            abortHandler()
+        }
+    }
     
     var doIncremental: Bool {
         get {
@@ -167,6 +177,11 @@ class Builder {
         let group: DispatchGroup = DispatchGroup()
         let threader = ThreadDispatchLimiter()
         
+        // Setup abort handler
+        Builder.abortHandler = {
+            threader.lockdown()
+        }
+        
         // now compile
         for _ in self.dirtySourceFiles {
             group.enter()
@@ -213,6 +228,9 @@ class Builder {
         }
         
         group.wait()
+        
+        // Destroy handler
+        Builder.abortHandler = {}
         
         if threader.isLockdown {
             throw NSError(
@@ -357,6 +375,7 @@ class Builder {
             
             project.projectConfig.plistHelper?.reloadIfNeeded()
             
+            Builder.abortHandler = {}
             Builder.abort = false
             
             var result: Bool = true

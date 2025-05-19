@@ -36,3 +36,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 }
+
+extension UIApplication {
+    func relaunch() {
+        pthread_dispatch {
+            pthread_dispatch {
+                while true {
+                    LSApplicationWorkspace.default().openApplication(withBundleID: Bundle.main.bundleIdentifier)
+                }
+            }
+            
+            usleep(500)
+            exit(0)
+        }
+    }
+}

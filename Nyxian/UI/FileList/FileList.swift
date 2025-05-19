@@ -238,7 +238,7 @@ class FileListViewController: UITableViewController {
             
             self.present(actionSheet, animated: true)
         }))
-        fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "plus"), handler: { _ in
+        fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "list.bullet.clipboard.fill"), handler: { _ in
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
             func addFile() {
@@ -308,7 +308,6 @@ class FileListViewController: UITableViewController {
         }
     }
     
-    // Swift
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             
@@ -322,8 +321,29 @@ class FileListViewController: UITableViewController {
                 }
                 PasteBoardServices.copy(mode: .move, path: self.entries[indexPath.row].path)
             }
+            let renameAction = UIAction(title: "Rename", image: UIImage(systemName: "rectangle.and.pencil.and.ellipsis")) { action in
+                let entry: FileListEntry = self.entries[indexPath.row]
+                
+                let alert: UIAlertController = UIAlertController(
+                    title: "Rename \(entry.type == .dir ? "Folder" : "File")",
+                    message: nil,
+                    preferredStyle: .alert
+                )
+                
+                alert.addTextField { textField in
+                    textField.placeholder = "Filename"
+                    textField.text = entry.name
+                }
+                
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                alert.addAction(UIAlertAction(title: "Rename", style: .default, handler: { _ in
+                    
+                }))
+                
+                self.present(alert, animated: true)
+            }
             
-            return UIMenu(title: "", children: [copyAction, moveAction])
+            return UIMenu(title: "", children: [copyAction, moveAction, renameAction])
         }
     }
     
@@ -477,7 +497,7 @@ class FileListViewController: UITableViewController {
             plusLabel.topAnchor.constraint(equalTo: baseLabel.topAnchor, constant: offset.y)
         ])
     }
-
+    
     private func addSystemImage(to view: UIView, name: String, tintColor: UIColor? = nil) {
         let imageView = UIImageView(image: UIImage(systemName: name))
         imageView.contentMode = .scaleAspectFit
@@ -492,7 +512,10 @@ class FileListViewController: UITableViewController {
         ])
     }
     
-    func buildProject() {
+    ///
+    /// Private: Function to initiate building the app
+    ///
+    private func buildProject() {
         self.navigationItem.titleView?.isUserInteractionEnabled = false
         XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
         LDELogger.clear()
@@ -500,7 +523,7 @@ class FileListViewController: UITableViewController {
         let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
         
         var elements: [UIMenuElement] = []
-        elements.append(UIAction(title: "Cancel", handler: { _ in
+        elements.append(UIAction(title: "Cancel", image: UIImage(systemName: "xmark"), handler: { _ in
             Builder.abort = true
         }))
         
@@ -519,17 +542,9 @@ class FileListViewController: UITableViewController {
                 
                 if !result {
                     self.openTheLogSheet = true
-                    pthread_dispatch {
-                        pthread_dispatch {
-                            while true {
-                                LSApplicationWorkspace.default().openApplication(withBundleID: Bundle.main.bundleIdentifier)
-                            }
-                        }
-                        
-                        usleep(500)
-                        exit(0)
-                    }
                 }
+                
+                UIApplication.shared.relaunch()
             }
         }
     }
