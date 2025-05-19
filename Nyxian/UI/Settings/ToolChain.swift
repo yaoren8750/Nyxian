@@ -30,6 +30,8 @@ class ToolChainController: UITableViewController {
             return 1
         case 2:
             return 1
+        case 3:
+            return 1
         default:
             return 0
         }
@@ -43,6 +45,8 @@ class ToolChainController: UITableViewController {
             return "An incremental build compiles only the parts of the code that have changed, reducing build times by avoiding a full rebuild of the entire project."
         case 2:
             return "Threading in compilation refers to the compiler's ability to perform tasks in parallel like parsing, code generation, and optimization across multiple CPU threads to speed up the build process."
+        case 3:
+            return "The functionality makes sense when you want perfect memory management, this basically relaunches Nyxian in a smart way while preserving the UI state and restoring it very fast on reopening, this is stock on success although there is a trick that allows us to programatically relaunch the app, this might work on your device."
         default:
             return nil
         }
@@ -75,6 +79,8 @@ class ToolChainController: UITableViewController {
         case 2:
             cell = StepperTableCell(title: "Use Threads", key: "cputhreads", defaultValue: 1, minValue: 1, maxValue: getOptimalThreadCount())
             break
+        case 3:
+            cell = SwitchTableCell(title: "Restart App", key: "LDEReopen", defaultValue: false)
         default:
             cell = UITableViewCell()
         }

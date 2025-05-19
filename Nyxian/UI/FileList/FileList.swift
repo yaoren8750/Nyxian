@@ -24,6 +24,17 @@ class FileListViewController: UITableViewController {
             UserDefaults.standard.set(newValue, forKey: "LDEReopened")
         }
     }
+    var doReopen: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: "LDEReopen") != nil {
+                return UserDefaults.standard.bool(forKey: "LDEReopen")
+            }
+            return false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "LDEReopen")
+        }
+    }
     
     init(
         isSublink: Bool = false,
@@ -541,10 +552,18 @@ class FileListViewController: UITableViewController {
                 self.navigationItem.titleView?.isUserInteractionEnabled = true
                 
                 if !result {
-                    self.openTheLogSheet = true
+                    if self.doReopen {
+                        self.openTheLogSheet = true
+                    } else {
+                        let loggerView = LoggerView()
+                        loggerView.modalPresentationStyle = .formSheet
+                        self.present(loggerView, animated: true)
+                    }
                 }
                 
-                UIApplication.shared.relaunch()
+                if self.doReopen {
+                    UIApplication.shared.relaunch()
+                }
             }
         }
     }
