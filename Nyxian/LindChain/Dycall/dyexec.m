@@ -36,27 +36,33 @@
 int dyexec(NSString *dylibPath,
            NSArray *arguments)
 {
+    // The arguments for the thread to take in
     dyargs data;
+    
+    // Setting the handle in-case the dybinary is already loaded
     data.handle = dlopen([dylibPath UTF8String], RTLD_NOLOAD);
     
+    // Checking if the handle of the thread args contains a valid memory address that points to a dybinary image
     if(!data.handle)
     {
+        // Its not loaded into memory so we load is lazily into memory, lazy because it should not bother our currently available symbols
         data.handle = dlopen([dylibPath UTF8String], RTLD_LAZY);
+        
+        // If the handle is still not a valid memory address that points to a dybinary image we abort and return a error
         if (!data.handle) {
             ls_nsprint([NSString stringWithFormat:@"[!] error: %s\n", dlerror()]);
             return -1;
         }
         
+        // Hooking the dybinary image so it doesnt call some symbols and calls our own version of them such as preventing them to exit
         if(!hooker([dylibPath UTF8String]))
         {
             ls_nsprint(@"[!] hooker failed to hook dylib\n");
             return -1;
         }
-        
-        dlerror();
     }
 
-    //argv prepare
+    // Preparing Argv for the dybinaries main symbol
     data.argc = (int)[arguments count];
     data.argv = (char **)malloc((data.argc + 1) * sizeof(char *));
     for (int i = 0; i < data.argc; i++) {
@@ -64,20 +70,26 @@ int dyexec(NSString *dylibPath,
     }
     data.argv[data.argc] = NULL;
 
-    //threadripper approach (exit loop bypass)
+    // Here we utilitse the threadripper approach because usually a exit() call is no return. The hooker previously hooked it to call pthread_exit(0) which bypasses the resulting performance issues
     pthread_t thread;
     if (pthread_create(&thread, NULL, threadripper, (void *)&data) != 0) {
         ls_nsprint(@"[!] error creating thread\n");
         return 1;
     }
+    
+    // The status of the dybinary resulting by its main threads return value
     void *status = NULL;
+    
+    // Joining the thread the dybinary runs on to catch its return value
     pthread_join(thread, &status);
 
-    //if reference count wont hit 0 it wont free
+    // Closing the dybinary to release its static memory and get rid of it being loaded in memory
     dlclose(data.handle);
 
+    // Releasing the memory containing the main symbols argv
     for (int i = 0; i < data.argc; i++) free(data.argv[i]);
     free(data.argv);
 
+    // Returning the status of the dybinary finally
     return (int)(intptr_t)status;
 }
