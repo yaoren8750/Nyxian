@@ -26,6 +26,6 @@
  * This function hooks certain symbols like exit and atexit to make a dylib behave like a binariy
  * For example instead of calling real exit it would call our own implementation of it
  */
-int hooker(const char *path, void *dylib);
+bool hooker(const char *path, void *dylib);
 
 #endif // HOOKER_H

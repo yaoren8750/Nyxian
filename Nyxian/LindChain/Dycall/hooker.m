@@ -66,8 +66,16 @@ struct rebinding genrebind(const char *orig, void *symbol)
  * This function hooks certain symbols like exit and atexit to make a dylib behave like a binariy
  * For example instead of calling real exit it would call our own implementation of it
  */
-int hooker(const char *path, void *dylib)
+bool hooker(const char *path)
 {
+    // Getting handle
+    void *handle = dlopen(path, RTLD_NOLOAD);
+    
+    // Checking if we have handle
+    if(!handle)
+        return false;
+    
+    // Crafting needed rebindings
     struct rebinding rebindings[] = {
         // to escape exit
         genrebind("exit", dy_exit),
@@ -78,12 +86,9 @@ int hooker(const char *path, void *dylib)
         genrebind("fprintf", dy_fprintf)
     };
 
-    // getting mach header
-    const struct mach_header *header = (const struct mach_header *)dlsym(dylib, "_mh_execute_header");
-    if (header == NULL) {
-        printf("Failed to get mach_header\n");
-        return -1;
-    }
+    // Getting mach header
+    const struct mach_header *header = (const struct mach_header *)dlsym(handle, "_mh_execute_header");
     
-    return rebind_symbols_image((void*)header, get_dylib_slide(path), rebindings, sizeof(rebindings) / sizeof(rebindings[0]));
+    // Doing the entire job
+    return (header != NULL) && (rebind_symbols_image((void*)header, get_dylib_slide(path), rebindings, sizeof(rebindings) / sizeof(rebindings[0])) == 0);
 }
