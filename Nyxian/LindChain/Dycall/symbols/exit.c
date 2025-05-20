@@ -26,7 +26,7 @@
  *
  */
 typedef void (*atexit_func)(void);
-atexit_func registered_func = NULL;
+static atexit_func registered_func = NULL;
 
 /**
  * @brief This function is not meant to be called. Its our own implementation of the function for our hooker

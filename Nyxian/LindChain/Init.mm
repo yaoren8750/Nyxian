@@ -21,8 +21,20 @@
 #include <stdio.h>
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Support/TargetSelect.h"
-#include <Interpreter/ErrorHandler.h>
 #include "llvm/Support/FileSystem.h"
+#import <Foundation/Foundation.h>
+#include <stdio.h>
+
+extern "C" {
+
+int ls_getfd(void);
+
+}
+
+void NyxLLVMErrorHandler(void *userData, const char *reason, bool genCrashDiag) {
+    dprintf(ls_getfd(), "LLVM trapped fatal error: %s\n", reason);
+}
+
 
 __attribute__((constructor))
 void llvm_init(void)

@@ -50,14 +50,14 @@ int dyexec(NSString *dylibPath,
         
         // If the handle is still not a valid memory address that points to a dybinary image we abort and return a error
         if (!data.handle) {
-            ls_nsprint([NSString stringWithFormat:@"[!] error: %s\n", dlerror()]);
+            ls_printf("[!] error: %s\n", dlerror());
             return -1;
         }
         
         // Hooking the dybinary image so it doesnt call some symbols and calls our own version of them such as preventing them to exit
         if(!hooker([dylibPath UTF8String]))
         {
-            ls_nsprint(@"[!] hooker failed to hook dylib\n");
+            ls_printf("[!] hooker failed to hook dylib\n");
             return -1;
         }
     }
@@ -73,7 +73,7 @@ int dyexec(NSString *dylibPath,
     // Here we utilitse the threadripper approach because usually a exit() call is no return. The hooker previously hooked it to call pthread_exit(0) which bypasses the resulting performance issues
     pthread_t thread;
     if (pthread_create(&thread, NULL, threadripper, (void *)&data) != 0) {
-        ls_nsprint(@"[!] error creating thread\n");
+        ls_printf("[!] error creating thread\n");
         return 1;
     }
     

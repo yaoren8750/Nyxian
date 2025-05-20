@@ -90,7 +90,7 @@ bool hooker(const char *path)
     const struct mach_header *header = (const struct mach_header *)dlsym(handle, "_mh_execute_header");
     
     // Saving the result of the hooking process
-    bool result = (header != NULL) && (rebind_symbols_image((void*)header, get_dylib_slide(path), rebindings, sizeof(rebindings) / sizeof(rebindings[0])) == 0);
+    const bool result = (header != NULL) && (rebind_symbols_image((void*)header, get_dylib_slide(path), rebindings, sizeof(rebindings) / sizeof(rebindings[0])) == 0);
     
     // Closing the handle
     dlclose(handle);
