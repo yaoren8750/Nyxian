@@ -564,7 +564,7 @@ class FileListViewController: UITableViewController {
                 }
                 
                 if self.doReopen {
-                    UIApplication.shared.relaunch()
+                    restartProcess()
                 }
             }
         }
