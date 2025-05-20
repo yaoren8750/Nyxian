@@ -51,7 +51,8 @@ class CodeEditorViewController: UIViewController {
                     "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
                 ]
                 
-                genericCompilerFlags.append(contentsOf: project.projectConfig.compiler_flags)
+                project.projectConfig.plistHelper?.reloadIfNeeded()
+                genericCompilerFlags.append(contentsOf: project.projectConfig.getCompilerFlags())
                 
                 print(genericCompilerFlags)
                 

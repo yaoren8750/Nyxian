@@ -17,7 +17,6 @@
  along with FridaCodeManager. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <Compiler/TripleHelper.h>
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/SourceManager.h"
@@ -52,7 +51,10 @@ void initCIMutex(void)
 using namespace clang;
 using namespace clang::driver;
 
-int CompileObject(int argc, const char **argv) {
+int CompileObject(int argc,
+                  const char **argv,
+                  const char *platformTripple)
+{
     std::string errorString;
     llvm::raw_string_ostream errorOutputStream(errorString);
 
@@ -66,7 +68,10 @@ int CompileObject(int argc, const char **argv) {
     auto DiagID = llvm::makeIntrusiveRefCnt<DiagnosticIDs>();
     DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient.get());
 
-    llvm::Triple TargetTriple(getHostTriple());
+    std::string triplePrefix = "arm64-apple-ios";
+    std::string tripleSuffix = platformTripple;
+    llvm::Triple TargetTriple(triplePrefix + tripleSuffix);
+    
     Driver TheDriver(Path, TargetTriple.str(), Diags);
 
     SmallVector<const char *, 16> Args(argv, argv + argc);

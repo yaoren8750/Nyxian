@@ -65,6 +65,13 @@ class ProjectConfig {
         
         self.plistHelper?.onReload(dict)
     }
+    
+    func getCompilerFlags() -> [String] {
+        var flags: [String] = self.compiler_flags
+        flags.append("-target")
+        flags.append("arm64-apple-ios\(self.minimum_version)")
+        return flags
+    }
 }
 
 class CodeEditorConfig {
@@ -76,9 +83,7 @@ class CodeEditorConfig {
     var wrapLine: Bool = true
     var fontSize: Double = 0.0
     
-    init() {
-        
-    }
+    init() {}
     
     init(
         showLine: Bool,

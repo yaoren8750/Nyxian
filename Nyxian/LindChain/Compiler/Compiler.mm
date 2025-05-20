@@ -28,7 +28,9 @@
 #import <Compiler/Compiler.h>
 
 // TODO: Might want to extract a header
-int CompileObject(int argc, const char **argv);
+int CompileObject(int argc,
+                  const char **argv,
+                  const char *platformTripple);
 
 @interface Compiler ()
 
@@ -60,6 +62,7 @@ int CompileObject(int argc, const char **argv);
 /// Method that compiles a object file for a given file path
 ///
 - (int)compileObject:(nonnull NSString*)filePath
+      platformTriple:(NSString*)platformTriple
 {
     NSMutableArray<NSString *> *args = [NSMutableArray arrayWithArray:@[
         @"clang",
@@ -74,7 +77,9 @@ int CompileObject(int argc, const char **argv);
         argv[i] = (char *)[[args objectAtIndex:i] UTF8String];
     }
 
-    int result = CompileObject(argc, argv);
+    int result = CompileObject(argc,
+                               argv,
+                               [platformTriple UTF8String]);
     
     free(argv);
     

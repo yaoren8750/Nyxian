@@ -27,7 +27,8 @@
 
 - (nonnull instancetype)init:(nonnull NSArray*)flags;
 
-- (int)compileObject:(nonnull NSString*)filePath;
+- (int)compileObject:(nonnull NSString*)filePath
+      platformTriple:(NSString*)platformTriple;
 
 @end
 

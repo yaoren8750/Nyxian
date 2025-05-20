@@ -59,7 +59,7 @@ class Builder {
             "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
         ]
         
-        genericCompilerFlags.append(contentsOf: self.project.projectConfig.compiler_flags)
+        genericCompilerFlags.append(contentsOf: self.project.projectConfig.getCompilerFlags())
         
         self.compiler = Compiler(genericCompilerFlags)
         
@@ -189,7 +189,7 @@ class Builder {
         
         for file in self.dirtySourceFiles {
             threader.spawn {
-                if self.compiler.compileObject(file) != 0 {
+                if self.compiler.compileObject(file, platformTriple: self.project.projectConfig.minimum_version) != 0 {
                     threader.lockdown()
                     return
                 }
