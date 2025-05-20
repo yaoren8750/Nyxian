@@ -42,6 +42,11 @@ std::vector<uint8_t> base64Decode(const std::string &in) {
 ///
 bool CertBlob::parseFromJson(const std::string& jsonPath) {
     FILE *file = std::fopen(jsonPath.c_str(), "r");
+    
+    // MARK: Bugfix -> fixes that it proceeds to load a none existent certblob
+    if(!file)
+        return false;
+    
     int fd = fileno(file);
     struct stat stat;
     fstat(fd, &stat);

@@ -49,6 +49,12 @@ struct CertBlob: Codable, Identifiable {
             } else {
                 CertBlob.firstBoot = true
             }
+        } else {
+            if CertBlob.firstBoot {
+                NotificationServer.NotifyUser(level: .error, notification: "Certificate does not exist, Internal fatal fault. Its recommended to Reset All in this case.", delay: 1.0)
+            } else {
+                CertBlob.firstBoot = true
+            }
         }
     }
     
@@ -80,7 +86,7 @@ struct CertBlob: Codable, Identifiable {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             if let jsonData = try? encoder.encode(blob) {
-                try jsonData.write(to: URL(fileURLWithPath: "\(NSHomeDirectory())/tmp/.cert/\(blob.id).certblob"))
+                try jsonData.write(to: URL(fileURLWithPath: Bootstrap.shared.bootstrapPath("/Certificates/\(blob.id).certblob")))
             }
             
             // now we set the selected blob
@@ -104,7 +110,7 @@ struct CertBlob: Codable, Identifiable {
     static func getSelectedCertBlobPath() -> String {
         let certBlobID = CertBlob.getSelectedCertBlobID()
         
-        return "\(NSHomeDirectory())/tmp/.cert/\(certBlobID.1).certblob"
+        return Bootstrap.shared.bootstrapPath("/Certificates/\(certBlobID.1).certblob")
     }
     
     static func setCurrentBlob(blob: CertBlob) {

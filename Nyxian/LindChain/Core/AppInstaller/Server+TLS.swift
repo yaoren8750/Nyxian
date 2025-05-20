@@ -17,9 +17,9 @@ extension Installer {
     ///
     /// Getting the SNI to tell later on to what we wanna connect
     ///
-    static let sni: String = (try? String(contentsOfFile: URL(fileURLWithPath: "\(NSHomeDirectory())/tmp/.cert/commonName.txt").path, encoding: .utf8)) ?? ""
-    static let documentsKeyURL = URL(fileURLWithPath: "\(NSHomeDirectory())/tmp/.cert/server.pem")
-    static let documentsCrtURL = URL(fileURLWithPath: "\(NSHomeDirectory())/tmp/.cert/server.crt")
+    static let sni: String = (try? String(contentsOfFile: URL(fileURLWithPath: Bootstrap.shared.bootstrapPath("/Certificates/commonName.txt")).path, encoding: .utf8)) ?? ""
+    static let documentsKeyURL = URL(fileURLWithPath: Bootstrap.shared.bootstrapPath("/Certificates/server.pem"))
+    static let documentsCrtURL = URL(fileURLWithPath: Bootstrap.shared.bootstrapPath("/Certificates/server.crt"))
 
     ///
     /// here we go setting up TLS

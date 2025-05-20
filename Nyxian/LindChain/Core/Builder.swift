@@ -249,7 +249,6 @@ class Builder {
         
         // Preparing arguments for the linker
         let ldArgs: [String] = [
-            "ld",
             "-syslibroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
             "-o",

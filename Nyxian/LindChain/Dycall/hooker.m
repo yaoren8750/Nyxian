@@ -50,7 +50,8 @@ intptr_t get_dylib_slide(const char *dylib_name) {
  * @brief Function to create rebinding structs
  *
  */
-struct rebinding genrebind(const char *orig, void *symbol)
+struct rebinding genrebind(const char *orig,
+                           void *symbol)
 {
     struct rebinding rebind = {
         .name = orig,
@@ -72,8 +73,7 @@ bool hooker(const char *path)
     void *handle = dlopen(path, RTLD_LAZY);
     
     // If we didnt got any handle we return failure
-    if(!handle)
-        return false;
+    if(!handle) return false;
     
     // Preparing the rebinding hooks
     struct rebinding rebindings[] = {

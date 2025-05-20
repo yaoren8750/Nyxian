@@ -23,8 +23,8 @@ import ZIPFoundation
 
 class Bootstrap {
     var semaphore: DispatchSemaphore?
-    let bootstrapPath: String = "\(NSHomeDirectory())/Documents"
-    let newestBootstrapVersion: Int = 5
+    let rootPath: String = "\(NSHomeDirectory())/Documents"
+    let newestBootstrapVersion: Int = 7
     
     var bootstrapVersion: Int {
         get {
@@ -44,7 +44,15 @@ class Bootstrap {
     }
     
     func bootstrapPath(_ path: String) -> String {
-        return "\(bootstrapPath)\(path)"
+        var path: String = path
+        
+        if path.hasPrefix("/") {
+            path.removeFirst()
+        }
+        
+        path = URL(fileURLWithPath: path, relativeTo: URL(fileURLWithPath: rootPath)).path
+        print("[*] requested: \(path)")
+        return path
     }
     
     func clearPath(path: String) {
@@ -117,7 +125,19 @@ class Bootstrap {
                         self.bootstrapVersion = 5
                     }
                     
-                    print("[*] Setting version \(self.bootstrapVersion) -> \(self.newestBootstrapVersion)")
+                    if self.bootstrapVersion == 5 {
+                        print("[*] bootstrap upgrade patch for version 5")
+                        try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Certificates"), withIntermediateDirectories: false)
+                        self.bootstrapVersion = 6
+                    }
+                    
+                    if self.bootstrapVersion == 6 {
+                        print("[*] bootstrap upgrade patch for version 6")
+                        // MARK: Placeholder Bootstrap upgrade
+                        //getCertificates()
+                        self.bootstrapVersion = 7
+                    }
+                    
                     self.bootstrapVersion = self.newestBootstrapVersion
                 } catch {
                     print("[!] failed: \(error.localizedDescription)")
@@ -128,6 +148,8 @@ class Bootstrap {
                     }
                 }
             }
+            print("[*] Request Certificates")
+            getCertificates()
             print("[*] Done")
         }
     }

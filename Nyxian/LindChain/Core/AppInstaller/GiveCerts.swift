@@ -12,17 +12,6 @@ import Foundation
 
 func getCertificates() {
     ///
-    /// Creating .cert folder if not existing yet
-    ///
-    do {
-        if(!FileManager.default.fileExists(atPath: "\(NSHomeDirectory())/tmp/.cert")) {
-            try FileManager.default.createDirectory(atPath: "\(NSHomeDirectory())/tmp/.cert", withIntermediateDirectories: false)
-        }
-    } catch {
-        print(error)
-    }
-    
-    ///
     /// basically a structure of helper functions that make it easier to get something like a certificate
     ///
     let sourceGET = SourceGET()
@@ -33,7 +22,7 @@ func getCertificates() {
     /// Another helper function, i think this is to then initially write out the backloop.dev certificate
     ///
     func writeToFile(content: String, filename: String) throws {
-        let path = URL(fileURLWithPath: "\(NSHomeDirectory())/tmp").appendingPathComponent(filename)
+        let path = URL(fileURLWithPath: Bootstrap.shared.bootstrapPath("/Certificates")).appendingPathComponent(filename)
         try content.write(to: path, atomically: true, encoding: .utf8)
     }
     
@@ -60,9 +49,9 @@ func getCertificates() {
                     ///
                     /// Yep here we are writing out the server certificates
                     ///
-                    try writeToFile(content: serverPack.key, filename: ".cert/server.pem")
-                    try writeToFile(content: serverPack.cert, filename: ".cert/server.crt")
-                    try writeToFile(content: serverPack.info.domains.commonName, filename: ".cert/commonName.txt")
+                    try writeToFile(content: serverPack.key, filename: "server.pem")
+                    try writeToFile(content: serverPack.cert, filename: "server.crt")
+                    try writeToFile(content: serverPack.info.domains.commonName, filename: "commonName.txt")
                 } catch {
                     print("Error writing files: \(error.localizedDescription)")
                 }
