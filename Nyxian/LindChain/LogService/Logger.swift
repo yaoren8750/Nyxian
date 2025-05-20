@@ -38,7 +38,7 @@ import Foundation
     static func setup() {
         self.pipe.fileHandleForReading.readabilityHandler = { handle in
             let logData = handle.availableData
-            if !logData.isEmpty, var logString = String(data: logData, encoding: .utf8) {
+            if !logData.isEmpty, let logString = String(data: logData, encoding: .utf8) {
                 self.log.append(logString)
             }
         }
