@@ -307,8 +307,9 @@ class FileListViewController: UITableViewController {
         super.viewWillAppear(animated)
         
         if !self.isSublink {
-            self.project.projectConfig.plistHelper?.reloadIfNeeded()
-            self.title = self.project.projectConfig.displayname
+            if self.project.reload() {
+                self.title = self.project.projectConfig.displayname
+            }
             
             if self.doReopen {
                 if self.openTheLogSheet {

@@ -122,6 +122,7 @@ class CodeEditorConfig {
 class AppProject: Identifiable {
     let id: UUID = UUID()
 
+    private(set) var projectTableCell: ProjectTableCell!
     let projectConfig: ProjectConfig
     let codeEditorConfig: CodeEditorConfig
     
@@ -134,6 +135,7 @@ class AppProject: Identifiable {
         // validate if the project plist exists and extract information
         self.projectConfig = ProjectConfig(withPath: "\(self.path)/Config/Project.plist")
         self.codeEditorConfig = CodeEditorConfig(withPath: "\(self.path)/Config/Editor.plist")
+        self.projectTableCell = ProjectTableCell(project: self)
     }
     
     static func createAppProject(atPath path: String,
@@ -283,5 +285,13 @@ class AppProject: Identifiable {
             "LDEWrapLine": self.codeEditorConfig.wrapLine,
             "LDEFontSize": self.codeEditorConfig.fontSize
         ])
+    }
+    
+    @discardableResult func reload() -> Bool {
+        let needsUIReload: Bool = self.projectConfig.plistHelper?.reloadIfNeeded() ?? false
+        if needsUIReload {
+            self.projectTableCell.reload()
+        }
+        return needsUIReload
     }
 }

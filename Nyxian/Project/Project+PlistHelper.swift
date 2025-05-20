@@ -27,13 +27,15 @@ class PlistHelper {
         self.savedModificationDate = self.lastModificationDate
     }
     
-    func reloadIfNeeded() {
+    @discardableResult func reloadIfNeeded() -> Bool {
         let modDate = self.lastModificationDate
-        if self.savedModificationDate < modDate {
+        let needsReload: Bool = self.savedModificationDate < modDate
+        if needsReload {
             let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
             onReload(dict)
             self.savedModificationDate = modDate
         }
+        return needsReload
     }
     
     func overWritePlist(dict: [String:Any]) {

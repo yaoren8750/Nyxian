@@ -79,14 +79,6 @@ class ContentViewController: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if self.lastProjectWasSelected {
-            if let cells = self.tableView.visibleCells as? [ProjectTableCell] {
-                for cell in cells {
-                    cell.reload()
-                }
-            }
-        }
-        
         self.lastProjectWasSelected = false
     }
     
@@ -95,7 +87,7 @@ class ContentViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return ProjectTableCell(project: self.projects[indexPath.row])
+        return self.projects[indexPath.row].projectTableCell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

@@ -49,7 +49,7 @@ class Builder {
     }
     
     init(project: AppProject) {
-        project.projectConfig.plistHelper?.reloadIfNeeded()
+        project.reload()
         
         self.project = project
         
@@ -371,8 +371,6 @@ class Builder {
                              completion: @escaping (Bool) -> Void) {
         pthread_dispatch {
             Bootstrap.shared.waitTillDone()
-            
-            project.projectConfig.plistHelper?.reloadIfNeeded()
             
             Builder.abortHandler = {}
             Builder.abort = false
