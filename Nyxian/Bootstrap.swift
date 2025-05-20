@@ -45,14 +45,8 @@ class Bootstrap {
     
     func bootstrapPath(_ path: String) -> String {
         var path: String = path
-        
-        if path.hasPrefix("/") {
-            path.removeFirst()
-        }
-        
-        path = URL(fileURLWithPath: path, relativeTo: URL(fileURLWithPath: rootPath)).path
-        print("[*] requested: \(path)")
-        return path
+        if path.hasPrefix("/") { path.removeFirst() }
+        return URL(fileURLWithPath: path, relativeTo: URL(fileURLWithPath: rootPath)).path
     }
     
     func clearPath(path: String) {
