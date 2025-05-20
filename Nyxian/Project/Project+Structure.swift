@@ -54,7 +54,7 @@ class ProjectConfig {
         
         self.plistHelper?.onReload = { [weak self] dict in
             self?.executable = (dict["LDEExecutable"] as? String) ?? "Unknown"
-            self?.displayname = (dict["LDEDisplayName"] as? String) ?? "Unknown"
+            self?.displayname = (dict["LDEDisplayName"] as? String) ?? (self?.executable ?? "Unknown")
             self?.bundleid = (dict["LDEBundleIdentifier"] as? String) ?? "com.unknown.fallback.app"
             self?.minimum_version = (dict["LDEMinimumVersion"] as? String) ?? "16.5"
             self?.compiler_flags = (dict["LDECompilerFlags"] as? [String]) ?? []
