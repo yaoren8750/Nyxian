@@ -35,7 +35,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Support/TargetSelect.h"
-#include <Interpreter/ErrorHandler.h>
 #include <pthread.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -61,10 +60,6 @@ int CompileObject(int argc, const char **argv) {
     std::string Path = llvm::sys::fs::getMainExecutable(argv[0], MainAddr);
 
     auto DiagOpts = llvm::makeIntrusiveRefCnt<DiagnosticOptions>();
-    
-    //DiagOpts.get()->ShowColors = true;
-    //DiagOpts.get()->UseANSIEscapeCodes = true;
-    //DiagOpts.get()->ShowLocation = false;
     
     errorOutputStream.raw_ostream::enable_colors(true);
     auto DiagClient = std::make_unique<TextDiagnosticPrinter>(errorOutputStream, &*DiagOpts);
@@ -124,21 +119,16 @@ int CompileObject(int argc, const char **argv) {
     auto Act = std::make_unique<EmitObjAction>();
     
     pthread_mutex_lock(&CIMutex);
-    
     llvm::cl::ResetAllOptionOccurrences();
-    
     pthread_mutex_unlock(&CIMutex);
     
-    setjmp(JumpBuf);
     Clang.ExecuteAction(*Act);
     
     errorString = errorOutputStream.str();
     DiagnosticsEngine &diagnostics = Clang.getDiagnostics();
     
     if(diagnostics.getNumWarnings() > 0 || diagnostics.getNumErrors() > 0)
-    {
         ls_printf("%s\n", errorString.c_str());
-    }
 
     return Clang.getDiagnostics().hasErrorOccurred() ? 1 : 0;
 }
