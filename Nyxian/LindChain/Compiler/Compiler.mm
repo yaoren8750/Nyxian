@@ -34,7 +34,8 @@ int CompileObject(int argc,
 
 @interface Compiler ()
 
-@property (nonatomic, strong) NSArray * _Nonnull flags;
+@property (nonatomic,strong) NSArray * _Nonnull flags;
+@property (nonatomic,strong) NSLock *lock;
 
 @end
 
@@ -46,14 +47,8 @@ int CompileObject(int argc,
 - (instancetype)init:(NSArray*)flags
 {
     self = [super init];
-    
-    NSString *sdkPath = [NSString stringWithFormat:@"%@/Documents/.bootstrap/iPhoneOS16.5.sdk", NSHomeDirectory()];
-    NSString *includePath = [NSString stringWithFormat:@"-I%@/Documents/.bootstrap/include", NSHomeDirectory()];
-    
     _flags = [flags copy];
-    [_flags arrayByAddingObject:@"-isysroot"];
-    [_flags arrayByAddingObject:sdkPath];
-    [_flags arrayByAddingObject:includePath];
+    self.lock = [[NSLock alloc] init];
     
     return self;
 }
@@ -64,24 +59,36 @@ int CompileObject(int argc,
 - (int)compileObject:(nonnull NSString*)filePath
       platformTriple:(NSString*)platformTriple
 {
+    // Securing the concurrency
+    [self.lock lock];
+    
+    // Allocating the NSMutableArray with the file that is targetted for the compilation and add the flags previously given to the array
     NSMutableArray<NSString *> *args = [NSMutableArray arrayWithArray:@[
         @"clang",
         [filePath copy]
     ]];
-
     [args addObjectsFromArray:_flags];
-
-    int argc = (int)[args count];
-    const char **argv = (const char **)malloc(sizeof(char*) * argc);
-    for (int i = 0; i < argc; i++) {
-        argv[i] = (char *)[[args objectAtIndex:i] UTF8String];
-    }
-
-    int result = CompileObject(argc,
-                               argv,
-                               [platformTriple UTF8String]);
     
+    // Allocating a C array by the given NSMutableArray
+    const int argc = (int)[args count];
+    char **argv = (char **)malloc(sizeof(char*) * argc);
+    for(int i = 0; i < argc; i++) argv[i] = strdup([[args objectAtIndex:i] UTF8String]);
+    
+    // Letting compilation run concurrent
+    [self.lock unlock];
+
+    // Compile and get the resulting integer
+    const int result = CompileObject(argc, (const char**)argv, [platformTriple UTF8String]);
+    
+    // Securing the concurrency
+    [self.lock lock];
+    
+    // Deallocating the entire C array
+    for(int i = 0; i < argc; i++) free(argv[i]);
     free(argv);
+    
+    // Letting the resulting integer return concurrent
+    [self.lock unlock];
     
     return result;
 }
