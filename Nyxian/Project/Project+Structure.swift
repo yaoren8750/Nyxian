@@ -29,7 +29,10 @@ class ProjectConfig {
     var displayname: String = "Unknown"
     var bundleid: String = "com.unknown.fallback.app"
     var minimum_version: String = "16.5"
+    var version: String = "1.0"
+    var shortVersion: String = "1.0"
     
+    var infoDictionary: [String:Any] = [:]
     var compiler_flags: [String] = []
     var linker_flags: [String] = []
     
@@ -37,7 +40,6 @@ class ProjectConfig {
     var threads: Int = 1
     var increment: Bool = false
     var restartApp: Bool = false
-    var infoDictionary: [String:Any] = [:]
     
     init(
         executable: String,
@@ -65,6 +67,8 @@ class ProjectConfig {
             self?.minimum_version = (dict["LDEMinimumVersion"] as? String) ?? "16.5"
             self?.compiler_flags = (dict["LDECompilerFlags"] as? [String]) ?? []
             self?.linker_flags = (dict["LDELinkerFlags"] as? [String]) ?? []
+            self?.version = (dict["LDEBundleVersion"] as? String) ?? "1.0"
+            self?.shortVersion = (dict["LDEBundleShortVersion"] as? String) ?? "1.0"
             
             let maxThreads: Int = getOptimalThreadCount()
             self?.threads = (dict["LDEOverwriteThreads"] as? Int) ?? 0
@@ -182,7 +186,10 @@ class AppProject: Identifiable {
             "LDEBundleIdentifier": bundleid,
             "LDEMinimumVersion": getPlatformTriple(),
             "LDECompilerFlags": ["-fobjc-arc"],
-            "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"]
+            "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"],
+            "LDEBundleInfo": [:],
+            "LDEBundleVersion": "1.0",
+            "LDEBundleShortVersion": "1.0"
         ]
         
         let editordict: [String: Any] = [
