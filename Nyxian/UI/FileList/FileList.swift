@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import UniformTypeIdentifiers
 
 class FileListViewController: UITableViewController {
     static var buildCancelled: Bool = false
@@ -325,6 +326,9 @@ class FileListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             
+            let infoAction = UIAction(title: "Information", image: UIImage(systemName: "info.square.fill")) { _ in
+                // TODO: Add Information sheet
+            }
             let copyAction = UIAction(title: "Copy", image: UIImage(systemName: "document.on.clipboard")) { action in
                 PasteBoardServices.copy(mode: .copy, path: self.entries[indexPath.row].path)
             }
@@ -356,18 +360,25 @@ class FileListViewController: UITableViewController {
                 
                 self.present(alert, animated: true)
             }
-            
-            return UIMenu(title: "", children: [copyAction, moveAction, renameAction])
-        }
-    }
-    
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            let entry = self.entries[indexPath.row]
-            if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
-                self.entries.remove(at: indexPath.row)
-                self.tableView.deleteRows(at: [indexPath], with: .automatic)
+            let shareAction = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up.fill")) { action in
+                let entry: FileListEntry = self.entries[indexPath.row]
+                share(url: URL(fileURLWithPath: "\(self.path)/\(entry.name)"), remove: false)
             }
+            let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { action in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                    let entry = self.entries[indexPath.row]
+                    if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
+                        self.entries.remove(at: indexPath.row)
+                        self.tableView.deleteRows(at: [indexPath], with: .automatic)
+                    }
+                }
+            }
+            
+            let infoMenu: UIMenu = UIMenu(options: .displayInline, children:  [infoAction])
+            let firstMenu: UIMenu = UIMenu(options: .displayInline, children: [copyAction, moveAction, renameAction])
+            let secondMenu: UIMenu = UIMenu(options: .displayInline, children: [shareAction, deleteAction])
+            
+            return UIMenu(children: [infoMenu, firstMenu, secondMenu])
         }
     }
     
@@ -536,23 +547,27 @@ class FileListViewController: UITableViewController {
         guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
         let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
         
-        var elements: [UIMenuElement] = []
-        elements.append(UIAction(title: "Cancel", image: UIImage(systemName: "xmark"), handler: { _ in
+        XCodeButton.shared.addAction(UIAction { _ in
             Builder.abort = true
-        }))
+        }, for: .touchUpInside)
         
-        let sectionMenu = UIMenu(options: .displayInline, children: elements)
-        XCodeButton.shared.showsMenuAsPrimaryAction = true
-        XCodeButton.shared.menu = sectionMenu
+        let button: UIButton = UIButton()
+        button.setTitle("Abort", for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
+        button.addAction(UIAction { _ in
+            Builder.abort = true
+        }, for: .touchUpInside)
         
+        let leftButton: UIBarButtonItem = UIBarButtonItem(customView: button)
+        
+        self.navigationItem.setLeftBarButton(leftButton, animated: true)
         self.navigationItem.setRightBarButton(barButton, animated: true)
         self.navigationItem.setHidesBackButton(true, animated: true)
         Builder.buildProject(withProject: project) { result in
             DispatchQueue.main.async {
-                self.navigationItem.setHidesBackButton(false, animated: true)
+                self.navigationItem.setLeftBarButton(nil, animated: true)
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
-                
-                self.navigationItem.titleView?.isUserInteractionEnabled = true
+                self.navigationItem.setHidesBackButton(false, animated: true)
                 
                 if !result {
                     if self.doReopen {
@@ -568,6 +583,38 @@ class FileListViewController: UITableViewController {
                     restartProcess()
                 }
             }
+        }
+    }
+}
+
+func share(url: URL, remove: Bool = false) -> Void {
+    let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    activityViewController.modalPresentationStyle = .popover
+        if remove {
+        activityViewController.completionWithItemsHandler = { activity, success, items, error in
+            do {
+                try FileManager.default.removeItem(at: url)
+            } catch {
+            }
+        }
+    }
+
+    DispatchQueue.main.async {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            if let rootViewController = windowScene.windows.first?.rootViewController {
+                if let popoverController = activityViewController.popoverPresentationController {
+                    popoverController.sourceView = rootViewController.view
+                    popoverController.sourceRect = CGRect(x: rootViewController.view.bounds.midX,
+                                                      y: rootViewController.view.bounds.midY,
+                                                      width: 0, height: 0)
+                    popoverController.permittedArrowDirections = []
+                }
+                rootViewController.present(activityViewController, animated: true, completion: nil)
+            } else {
+                print("No root view controller found.")
+            }
+        } else {
+            print("No window scene found.")
         }
     }
 }
