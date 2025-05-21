@@ -8,7 +8,7 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class FileListViewController: UITableViewController {
+class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
     static var buildCancelled: Bool = false
     let project: AppProject
     let path: String
@@ -287,10 +287,59 @@ class FileListViewController: UITableViewController {
                 addFile()
             }
         }))
+        fileMenuElements.append(UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
+            let documentPicker: UIDocumentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
+            documentPicker.allowsMultipleSelection = true
+            documentPicker.modalPresentationStyle = .pageSheet
+            documentPicker.delegate = self
+            self.present(documentPicker, animated: true)
+        })
         
         rootMenuChildren.append(UIMenu(title: "File", options: [.displayInline], children: fileMenuElements))
         
         return UIMenu(children: rootMenuChildren)
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        // TODO: Add handling for overwrite and stuff... like keep,rename,overwrite. We also should merge these functions as thats the 3rd time copying those.
+        func addFile(destination: URL) {
+            self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+        }
+        
+        func replaceFile(destination: URL) {
+            let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
+            if let index {
+                self.entries.remove(at: index)
+                let oldIndexPath = IndexPath(row: index, section: 0)
+                self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
+            }
+            
+            self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+        }
+        
+        func replaceOrAddFile(destination: URL) {
+            if FileManager.default.fileExists(atPath: destination.path) {
+                replaceFile(destination: destination)
+            } else {
+                addFile(destination: destination)
+            }
+        }
+        
+        for url in urls {
+            let fileName: String = url.lastPathComponent
+            let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(fileName)
+            
+            do {
+                try FileManager.default.moveItem(at: url, to: destination)
+                replaceOrAddFile(destination: destination)
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
