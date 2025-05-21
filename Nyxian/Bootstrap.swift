@@ -24,7 +24,7 @@ import ZIPFoundation
 class Bootstrap {
     var semaphore: DispatchSemaphore?
     let rootPath: String = "\(NSHomeDirectory())/Documents"
-    let newestBootstrapVersion: Int = 7
+    let newestBootstrapVersion: Int = 6
     
     var bootstrapVersion: Int {
         get {
@@ -63,7 +63,6 @@ class Bootstrap {
     func bootstrap() {
         print("[*] Hello LindDE:Bootstrap")
         pthread_dispatch {
-            
             print("[*] install status: \(self.isBootstrapInstalled)")
             print("[*] version: \(self.bootstrapVersion)")
             
@@ -83,13 +82,33 @@ class Bootstrap {
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Include"), withIntermediateDirectories: false)
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/SDK"), withIntermediateDirectories: false)
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Projects"), withIntermediateDirectories: false)
+                        try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Certificates"), withIntermediateDirectories: false)
+                        
+                        // Download include and sdk stuff
+                        if !fdownload("https://nyxian.app/bootstrap/include.zip", "include.zip") {
+                            print("[*] Bootstrap download failed\n")
+                            throw NSError(
+                                domain: "",
+                                code: 0,
+                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
+                            )
+                        }
+                        
+                        if !fdownload("https://nyxian.app/bootstrap/sdk.zip", "sdk.zip") {
+                            print("[*] Bootstrap download failed\n")
+                            throw NSError(
+                                domain: "",
+                                code: 0,
+                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
+                            )
+                        }
                         
                         // Now extract Include and SDK
                         print("[*] Bootstrapping folder structures")
                         print("[*] Extracting include.zip")
-                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(Bundle.main.bundlePath)/Shared/include.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/Include")))
+                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/include.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/Include")))
                         print("[*] Extracting sdk.zip")
-                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(Bundle.main.bundlePath)/Shared/sdk.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/SDK")))
+                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/sdk.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/SDK")))
                         self.bootstrapVersion = 1
                     }
                     
@@ -120,26 +139,18 @@ class Bootstrap {
                     }
                     
                     if self.bootstrapVersion == 5 {
-                        print("[*] bootstrap upgrade patch for version 5")
-                        try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Certificates"), withIntermediateDirectories: false)
-                        self.bootstrapVersion = 6
-                    }
-                    
-                    if self.bootstrapVersion == 6 {
                         print("[*] bootstrap upgrade patch for version 6")
                         // MARK: Placeholder Bootstrap upgrade
                         //getCertificates()
-                        self.bootstrapVersion = 7
+                        self.bootstrapVersion = 6
                     }
                     
                     self.bootstrapVersion = self.newestBootstrapVersion
                 } catch {
                     print("[!] failed: \(error.localizedDescription)")
+                    NotificationServer.NotifyUser(level: .error, notification: "Bootstrapping failed: \(error.localizedDescription), you will not be able to build any apps. please restart the app to reattempt bootstrapping!")
                     self.bootstrapVersion = 0
                     self.clearPath(path: "/")
-                    DispatchQueue.main.async {
-                        self.bootstrap()
-                    }
                 }
             }
             print("[*] Request Certificates")
