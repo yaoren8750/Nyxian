@@ -371,41 +371,44 @@ class Builder {
                 project: project
             )
             
+            func progressStage(systemName: String? = nil, logMessage: String, increment: Double? = nil, handler: () throws -> Void) throws {
+                let doReset: Bool = (increment == nil)
+                if doReset {
+                    XCodeButton.resetProgress()
+                }
+                
+                if let systemName = systemName {
+                    XCodeButton.switchImage(systemName: systemName)
+                }
+                
+                ls_nsprint("[*] \(logMessage)\n")
+                try handler()
+                
+                if !doReset {
+                    XCodeButton.incrementProgress(progress: increment ?? 0.0)
+                }
+            }
+            
+            func progressFlowBuilder(flow: [(String?,String,Double?,() throws -> Void)]) throws {
+                for item in flow {
+                    try progressStage(systemName: item.0, logMessage: item.1, increment: item.2, handler: item.3)
+                }
+            }
+            
             ls_nsprint("[*] LDE Builder v1.0\n")
             
             do {
                 // doit
-                XCodeButton.resetProgress()
-                ls_nsprint("[*] cleaning\n")
-                try builder.clean()
-                ls_nsprint("[*] preparing\n")
-                try builder.prepare()
-                ls_nsprint("[*] compiling\n")
-                try builder.compile()
-                XCodeButton.resetProgress()
-                
-                XCodeButton.switchImage(systemName: "link")
-                ls_nsprint("[*] linking\n")
-                try builder.link()
-                XCodeButton.incrementProgress(progress: 0.3)
-                
-                XCodeButton.switchImage(systemName: "checkmark.seal.text.page.fill")
-                ls_nsprint("[*] signing\n")
-                try builder.sign()
-                XCodeButton.incrementProgress(progress: 0.3)
-                
-                XCodeButton.switchImage(systemName: "archivebox.fill")
-                ls_nsprint("[*] packaging\n")
-                try builder.package()
-                XCodeButton.incrementProgress(progress: 0.4)
-                
-                ls_nsprint("[*] cleaning\n")
-                try builder.clean()
-                XCodeButton.resetProgress()
-                
-                XCodeButton.switchImage(systemName: "arrow.down.app.fill")
-                ls_nsprint("[*] installing\n")
-                try builder.install()
+                try progressFlowBuilder(flow: [
+                    (nil,"cleaning",nil,{ try builder.clean() }),
+                    (nil,"preparing",nil,{ try builder.prepare() }),
+                    (nil,"compiling",nil,{ try builder.compile() }),
+                    ("link","linking",0.3,{ try builder.link() }),
+                    ("checkmark.seal.text.page.fill","signing",0.3,{ try builder.sign() }),
+                    ("archivebox.fill","packaging",0.4,{ try builder.package() }),
+                    (nil,"cleaning",nil,{ try builder.clean() }),
+                    ("arrow.down.app.fill","installing",nil,{try builder.install() })
+                ])
             } catch {
                 if !Builder.abort {
                     result = false
