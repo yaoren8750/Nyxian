@@ -371,28 +371,24 @@ class Builder {
                 project: project
             )
             
+            var resetNeeded: Bool = false
             func progressStage(systemName: String? = nil, logMessage: String, increment: Double? = nil, handler: () throws -> Void) throws {
                 let doReset: Bool = (increment == nil)
-                if doReset {
+                if doReset, resetNeeded {
                     XCodeButton.resetProgress()
+                    resetNeeded = false
                 }
-                
-                if let systemName = systemName {
-                    XCodeButton.switchImage(systemName: systemName)
-                }
-                
+                if let systemName = systemName { XCodeButton.switchImage(systemName: systemName) }
                 ls_nsprint("[*] \(logMessage)\n")
                 try handler()
-                
-                if !doReset {
-                    XCodeButton.incrementProgress(progress: increment ?? 0.0)
+                if !doReset, let increment = increment {
+                    XCodeButton.incrementProgress(progress: increment)
+                    resetNeeded = true
                 }
             }
             
             func progressFlowBuilder(flow: [(String?,String,Double?,() throws -> Void)]) throws {
-                for item in flow {
-                    try progressStage(systemName: item.0, logMessage: item.1, increment: item.2, handler: item.3)
-                }
+                for item in flow { try progressStage(systemName: item.0, logMessage: item.1, increment: item.2, handler: item.3) }
             }
             
             ls_nsprint("[*] LDE Builder v1.0\n")
