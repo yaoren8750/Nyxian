@@ -9,7 +9,6 @@ import UIKit
 import UniformTypeIdentifiers
 
 class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
-    static var buildCancelled: Bool = false
     let project: AppProject
     let path: String
     var entries: [FileListEntry]
@@ -338,12 +337,10 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 share(url: URL(fileURLWithPath: "\(self.path)/\(entry.name)"), remove: false)
             }
             let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { action in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                    let entry = self.entries[indexPath.row]
-                    if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
-                        self.entries.remove(at: indexPath.row)
-                        self.tableView.deleteRows(at: [indexPath], with: .automatic)
-                    }
+                let entry = self.entries[indexPath.row]
+                if ((try? FileManager.default.removeItem(atPath: "\(self.path)/\(entry.name)")) != nil) {
+                    self.entries.remove(at: indexPath.row)
+                    self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
             }
             

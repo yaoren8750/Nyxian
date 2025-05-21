@@ -40,6 +40,7 @@ class Builder {
     }
     
     init(project: AppProject) {
+        project.projectConfig.plistHelper?.reloadForcefully()
         project.reload()
         
         self.project = project

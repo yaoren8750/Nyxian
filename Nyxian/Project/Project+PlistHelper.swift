@@ -38,6 +38,12 @@ class PlistHelper {
         return needsReload
     }
     
+    func reloadForcefully() {
+        let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
+        onReload(dict)
+        self.savedModificationDate = self.lastModificationDate
+    }
+    
     func overWritePlist(dict: [String:Any]) {
         NSDictionary(dictionary: dict).write(to: URL(fileURLWithPath: plistPath), atomically: true)
     }
