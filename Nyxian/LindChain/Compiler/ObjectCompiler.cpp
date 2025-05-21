@@ -78,26 +78,25 @@ int CompileObject(int argc,
     Args.push_back("-fsyntax-only");
 
     std::unique_ptr<Compilation> C(TheDriver.BuildCompilation(Args));
-    if (!C) {
-        pthread_mutex_unlock(&CIMutex);
+    
+    if(!C)
         return 0;
-    }
 
     // FIXME: Crash in here
     const JobList &Jobs = C->getJobs();
-    if (Jobs.size() != 1 || !isa<Command>(*Jobs.begin())) {
+    if(Jobs.size() != 1 || !isa<Command>(*Jobs.begin()))
+    {
         llvm::SmallString<256> Msg;
         llvm::raw_svector_ostream OS(Msg);
         Jobs.Print(OS, "; ", true);
         puts(Msg.c_str());
-        pthread_mutex_unlock(&CIMutex);
         return 1;
     }
 
     const Command &Cmd = cast<Command>(*Jobs.begin());
-    if (std::strcmp(Cmd.getCreator().getName(), "clang") != 0) {
+    if(std::strcmp(Cmd.getCreator().getName(), "clang") != 0)
+    {
         Diags.Report(diag::err_fe_expected_clang_command);
-        pthread_mutex_unlock(&CIMutex);
         return 1;
     }
 
@@ -105,7 +104,8 @@ int CompileObject(int argc,
     auto CI = std::make_unique<CompilerInvocation>();
     CompilerInvocation::CreateFromArgs(*CI, CCArgs, Diags);
     
-    if (CI->getHeaderSearchOpts().Verbose) {
+    if(CI->getHeaderSearchOpts().Verbose)
+    {
         errorOutputStream << "compiler invocation:\n";
         Jobs.Print(errorOutputStream, "\n", true);
         errorOutputStream << "\n";
@@ -116,10 +116,8 @@ int CompileObject(int argc,
     CompilerInstance Clang;
     Clang.setInvocation(std::move(CI));
     Clang.createDiagnostics(DiagClient.release(), false);
-    if (!Clang.hasDiagnostics()) {
-        pthread_mutex_unlock(&CIMutex);
+    if(!Clang.hasDiagnostics())
         return 1;
-    }
 
     auto Act = std::make_unique<EmitObjAction>();
     
