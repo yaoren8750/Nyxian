@@ -144,15 +144,14 @@ class Builder {
         // Create bundle path
         try FileManager.default.createDirectory(atPath: self.project.getBundlePath().1, withIntermediateDirectories: true)
         
-        // Now create Info.plist
-        let infoPlistData: [String: Any] = [
-            "CFBundleExecutable": self.project.projectConfig.executable,
-            "CFBundleIdentifier": self.project.projectConfig.bundleid,
-            "CFBundleName": self.project.projectConfig.displayname,
-            "CFBundleShortVersionString": "1.0",
-            "CFBundleVersion": "1.0",
-            "MinimumOSVersion": self.project.projectConfig.minimum_version,
-        ]
+        // Now copy info dictionary given info dictionary
+        var infoPlistData: [String:Any] = self.project.projectConfig.infoDictionary
+        infoPlistData["CFBundleExecutable"] = self.project.projectConfig.executable
+        infoPlistData["CFBundleIdentifier"] = self.project.projectConfig.bundleid
+        infoPlistData["CFBundleName"] = self.project.projectConfig.displayname
+        infoPlistData["CFBundleShortVersionString"] = "1.0"
+        infoPlistData["CFBundleVersion"] = "1.0"
+        infoPlistData["MinimumOSVersion"] = self.project.projectConfig.minimum_version
         
         let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
         FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)

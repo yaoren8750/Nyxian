@@ -37,6 +37,7 @@ class ProjectConfig {
     var threads: Int = 1
     var increment: Bool = false
     var restartApp: Bool = false
+    var infoDictionary: [String:Any] = [:]
     
     init(
         executable: String,
@@ -82,6 +83,8 @@ class ProjectConfig {
                 ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
                     ? UserDefaults.standard.bool(forKey: "LDEReopen")
                     : false)
+            
+            self?.infoDictionary = (dict["LDEBundleInfo"] as? [String:Any]) ?? [:]
         }
         
         let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
