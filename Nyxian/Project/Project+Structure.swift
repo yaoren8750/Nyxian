@@ -33,6 +33,11 @@ class ProjectConfig {
     var compiler_flags: [String] = []
     var linker_flags: [String] = []
     
+    // Overwritable variables
+    var threads: Int = 1
+    var increment: Bool = false
+    var restartApp: Bool = false
+    
     init(
         executable: String,
         displayname: String,
@@ -59,6 +64,24 @@ class ProjectConfig {
             self?.minimum_version = (dict["LDEMinimumVersion"] as? String) ?? "16.5"
             self?.compiler_flags = (dict["LDECompilerFlags"] as? [String]) ?? []
             self?.linker_flags = (dict["LDELinkerFlags"] as? [String]) ?? []
+            
+            let maxThreads: Int = getOptimalThreadCount()
+            self?.threads = (dict["LDEOverwriteThreads"] as? Int) ?? 0
+            if (self?.threads ?? 0) == 0 {
+                self?.threads = getCpuThreads()
+            } else if (self?.threads ?? 0) > maxThreads {
+                self?.threads = maxThreads
+            }
+            
+            self?.increment = (dict["LDEOverwriteIncrementalBuild"] as? Bool)
+                ?? ((UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil)
+                    ? UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
+                    : true)
+
+            self?.restartApp = (dict["LDEOverwriteReopen"] as? Bool)
+                ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
+                    ? UserDefaults.standard.bool(forKey: "LDEReopen")
+                    : false)
         }
         
         let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]

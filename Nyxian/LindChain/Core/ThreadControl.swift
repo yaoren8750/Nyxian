@@ -54,15 +54,23 @@ func getCpuThreads() -> Int {
 }
 
 class ThreadDispatchLimiter {
-    private let semaphore: DispatchSemaphore = DispatchSemaphore(value: getCpuThreads())
+    private let semaphore: DispatchSemaphore
     private let syncQueue = DispatchQueue(label: "threadLimiter.lockdown.queue", attributes: .concurrent)
     private var _isLockdown: Bool = false
     private(set) var isLockdown: Bool {
         get { syncQueue.sync { _isLockdown } }
         set { syncQueue.sync(flags: .barrier) { _isLockdown = newValue } }
     }
+    
+    init(threads: Int) {
+        let threads: Int = (threads == 0) ? 1 : threads
+        self.semaphore = DispatchSemaphore(value: threads)
+    }
 
-    func spawn(_ code: @escaping () -> Void, completion: @escaping () -> Void) {
+    func spawn(
+        _ code: @escaping () -> Void,
+        completion: @escaping () -> Void
+    ) {
         if self.isLockdown {
             completion()
             self.semaphore.signal()

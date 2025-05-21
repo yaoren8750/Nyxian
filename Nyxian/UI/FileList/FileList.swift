@@ -25,17 +25,6 @@ class FileListViewController: UITableViewController {
             UserDefaults.standard.set(newValue, forKey: "LDEReopened")
         }
     }
-    var doReopen: Bool {
-        get {
-            if UserDefaults.standard.object(forKey: "LDEReopen") != nil {
-                return UserDefaults.standard.bool(forKey: "LDEReopen")
-            }
-            return false
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "LDEReopen")
-        }
-    }
     
     init(
         isSublink: Bool = false,
@@ -312,7 +301,7 @@ class FileListViewController: UITableViewController {
                 self.title = self.project.projectConfig.displayname
             }
             
-            if self.doReopen {
+            if self.project.projectConfig.restartApp {
                 if self.openTheLogSheet {
                     let loggerView = LoggerView()
                     loggerView.modalPresentationStyle = .formSheet
@@ -547,10 +536,6 @@ class FileListViewController: UITableViewController {
         guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
         let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
         
-        XCodeButton.shared.addAction(UIAction { _ in
-            Builder.abort = true
-        }, for: .touchUpInside)
-        
         let button: UIButton = UIButton()
         button.setTitle("Abort", for: .normal)
         button.setTitleColor(.systemBlue, for: .normal)
@@ -570,7 +555,7 @@ class FileListViewController: UITableViewController {
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
                 if !result {
-                    if self.doReopen {
+                    if self.project.projectConfig.restartApp {
                         self.openTheLogSheet = true
                     } else {
                         let loggerView = LoggerView()
@@ -579,7 +564,7 @@ class FileListViewController: UITableViewController {
                     }
                 }
                 
-                if self.doReopen {
+                if self.project.projectConfig.restartApp {
                     restartProcess()
                 }
             }

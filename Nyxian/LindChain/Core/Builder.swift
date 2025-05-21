@@ -39,15 +39,6 @@ class Builder {
         }
     }
     
-    var doIncremental: Bool {
-        get {
-            if UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil {
-                return UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
-            }
-            return true
-        }
-    }
-    
     init(project: AppProject) {
         project.reload()
         
@@ -72,7 +63,7 @@ class Builder {
         
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
         
-        if self.doIncremental {
+        if self.project.projectConfig.increment {
             for item in self.dirtySourceFiles {
                 if !amIDirty(item) {
                     guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
@@ -175,7 +166,7 @@ class Builder {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
         let lock: NSLock = NSLock()
         let group: DispatchGroup = DispatchGroup()
-        let threader = ThreadDispatchLimiter()
+        let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads)
         
         // Setup abort handler
         Builder.abortHandler = {
