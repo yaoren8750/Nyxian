@@ -158,25 +158,6 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
                     let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
                     
-                    func addFile() {
-                        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-                        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-                        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-                    }
-                    
-                    func replaceFile() {
-                        let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
-                        if let index {
-                            self.entries.remove(at: index)
-                            let oldIndexPath = IndexPath(row: index, section: 0)
-                            self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
-                        }
-                        
-                        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-                        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-                        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-                    }
-                    
                     switch mode {
                     case .folder:
                         if FileManager.default.fileExists(atPath: destination.path) {
@@ -191,7 +172,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                             self.present(alert, animated: true)
                         } else {
                             try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
-                            addFile()
+                            self.addFile(destination: destination)
                         }
                     case .file:
                         var isDirectory: ObjCBool = ObjCBool(false)
@@ -210,14 +191,14 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                                     style: .destructive
                                 ) { _ in
                                     try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                                    replaceFile()
+                                    self.replaceFile(destination: destination)
                                 })
                             }
                             
                             self.present(alert, animated: true)
                         } else {
                             try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                            addFile()
+                            self.addFile(destination: destination)
                         }
                     }
                 })
@@ -242,25 +223,6 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
         fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "list.bullet.clipboard.fill"), handler: { _ in
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
-            func addFile() {
-                self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-                let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-            }
-            
-            func replaceFile() {
-                let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
-                if let index {
-                    self.entries.remove(at: index)
-                    let oldIndexPath = IndexPath(row: index, section: 0)
-                    self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
-                }
-                
-                self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-                let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-            }
-            
             var isDirectory: ObjCBool = ObjCBool(false)
             if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
                 let alert: UIAlertController = UIAlertController(
@@ -277,14 +239,14 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                         style: .destructive
                     ) { _ in
                         PasteBoardServices.paste(path: self.path)
-                        replaceFile()
+                        self.replaceFile(destination: destination)
                     })
                 }
                 
                 self.present(alert, animated: true)
             } else {
                 PasteBoardServices.paste(path: self.path)
-                addFile()
+                self.addFile(destination: destination)
             }
         }))
         fileMenuElements.append(UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
@@ -302,33 +264,6 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         // TODO: Add handling for overwrite and stuff... like keep,rename,overwrite. We also should merge these functions as thats the 3rd time copying those.
-        func addFile(destination: URL) {
-            self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-        }
-        
-        func replaceFile(destination: URL) {
-            let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
-            if let index {
-                self.entries.remove(at: index)
-                let oldIndexPath = IndexPath(row: index, section: 0)
-                self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
-            }
-            
-            self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
-            let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
-            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-        }
-        
-        func replaceOrAddFile(destination: URL) {
-            if FileManager.default.fileExists(atPath: destination.path) {
-                replaceFile(destination: destination)
-            } else {
-                addFile(destination: destination)
-            }
-        }
-        
         for url in urls {
             let fileName: String = url.lastPathComponent
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(fileName)
@@ -573,6 +508,36 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
             imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             imageView.heightAnchor.constraint(equalToConstant: 20)
         ])
+    }
+    
+    ///
+    /// Private: Function to add or replace a file or files in the array
+    ///
+    private func addFile(destination: URL) {
+        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+    }
+    
+    private func replaceFile(destination: URL) {
+        let index = self.entries.firstIndex(where: { $0.name == destination.lastPathComponent} )
+        if let index {
+            self.entries.remove(at: index)
+            let oldIndexPath = IndexPath(row: index, section: 0)
+            self.tableView.deleteRows(at: [oldIndexPath], with: .automatic)
+        }
+        
+        self.entries.append(FileListEntry.getEntry(ofPath: destination.path))
+        let newIndexPath = IndexPath(row: self.entries.count - 1, section: 0)
+        self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+    }
+    
+    private func replaceOrAddFile(destination: URL) {
+        if FileManager.default.fileExists(atPath: destination.path) {
+            replaceFile(destination: destination)
+        } else {
+            addFile(destination: destination)
+        }
     }
     
     ///
