@@ -58,12 +58,7 @@ int CompileObject(int argc,
     std::string errorString;
     llvm::raw_string_ostream errorOutputStream(errorString);
 
-    auto MainAddr = reinterpret_cast<void *>(intptr_t(llvm::sys::fs::getMainExecutable));
-    std::string Path = llvm::sys::fs::getMainExecutable(argv[0], MainAddr);
-
     auto DiagOpts = llvm::makeIntrusiveRefCnt<DiagnosticOptions>();
-    
-    errorOutputStream.raw_ostream::enable_colors(true);
     auto DiagClient = std::make_unique<TextDiagnosticPrinter>(errorOutputStream, &*DiagOpts);
     auto DiagID = llvm::makeIntrusiveRefCnt<DiagnosticIDs>();
     DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient.get());
@@ -72,7 +67,7 @@ int CompileObject(int argc,
     std::string tripleSuffix = platformTripple;
     llvm::Triple TargetTriple(triplePrefix + tripleSuffix);
     
-    Driver TheDriver(Path, TargetTriple.str(), Diags);
+    Driver TheDriver(argv[0], TargetTriple.str(), Diags);
 
     SmallVector<const char *, 16> Args(argv, argv + argc);
     Args.push_back("-fsyntax-only");
@@ -127,11 +122,13 @@ int CompileObject(int argc,
     
     Clang.ExecuteAction(*Act);
     
-    errorString = errorOutputStream.str();
     DiagnosticsEngine &diagnostics = Clang.getDiagnostics();
     
-    if(diagnostics.getNumWarnings() > 0 || diagnostics.getNumErrors() > 0)
+    if((diagnostics.getNumWarnings() + diagnostics.getNumErrors()) > 0)
+    {
+        errorString = errorOutputStream.str();
         ls_printf("%s\n", errorString.c_str());
+    }
 
     return Clang.getDiagnostics().hasErrorOccurred() ? 1 : 0;
 }
