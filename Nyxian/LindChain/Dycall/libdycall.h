@@ -29,11 +29,4 @@
 int dyexec(NSString *dylibPath,
            NSArray *arguments);
 
-/**
- * @brief This function is for copied dybinary execution
- *
- */
-int dycpbexec(NSString *bundlePath,
-              NSString *dylibPathInBundle);
-
 #endif // DYEXEC_H

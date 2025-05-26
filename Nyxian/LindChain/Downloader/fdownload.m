@@ -4,60 +4,42 @@
  * @brief This function is for downloading files online
  *
  */
-BOOL fdownload(NSString *urlString, NSString *destinationPath) {
+BOOL fdownload(NSString *urlString,
+               NSString *destinationPath)
+{
     // Prepare to download
     NSURL *url = [NSURL URLWithString:urlString];
-    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:nil delegateQueue:nil];
-
-    // Semaphore
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-    // Download Task
-    printf("downloading \"%s\"\n", [urlString UTF8String]);
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:nil delegateQueue:nil];
     
+    // The part where we download a file lol
     __block BOOL didDownload = NO;
-    
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithURL:url completionHandler:^(NSURL *location, NSURLResponse *response, NSError *error) {
-        if (error) {
-            printf("error: download failed: %s\n", [[error localizedDescription] UTF8String]);
+        // Check if download was successful and if not we signal and we exit
+        if(error)
+        {
             dispatch_semaphore_signal(semaphore);
-            return; // Exit early if there is an error
+            return;
         }
 
         // Determine the destination path
         NSString *finalDestinationPath = destinationPath;
-        if (![finalDestinationPath isAbsolutePath]) {
-            // If the destination path is relative, use the Documents directory
+        if (![finalDestinationPath isAbsolutePath])
             finalDestinationPath = [NSTemporaryDirectory() stringByAppendingPathComponent:destinationPath];
-        }
 
-        // Move File
-        NSError *fileError;
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-
-        // Check if destination file already exists
-        if ([fileManager fileExistsAtPath:finalDestinationPath]) {
-            printf("Warning: file already exists at destination path. Overwriting.\n");
-            [fileManager removeItemAtPath:finalDestinationPath error:nil]; // Optionally remove existing file
-        }
-
-        BOOL success = [fileManager moveItemAtURL:location toURL:[NSURL fileURLWithPath:finalDestinationPath] error:&fileError];
-
-        if (!success) {
-            printf("error: moving file failed: %s\n", [[fileError localizedDescription] UTF8String]);
-        } else {
-            printf("File moved to: %s\n", [finalDestinationPath UTF8String]);
-            didDownload = YES;
-        }
+        // Check if destination file already exists and remove it if it does
+        if ([[NSFileManager defaultManager] fileExistsAtPath:finalDestinationPath])
+            [[NSFileManager defaultManager] removeItemAtPath:finalDestinationPath error:NULL];
+        
+        // Move it to its destination in case it suceeds means that the file was sucessfully downloaded
+        didDownload = [[NSFileManager defaultManager] moveItemAtURL:location toURL:[NSURL fileURLWithPath:finalDestinationPath] error:NULL];
 
         dispatch_semaphore_signal(semaphore);
     }];
-
     [downloadTask resume];
 
+    // We wait till the download is done!
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    printf("done :3\n");
     
     return didDownload;
 }

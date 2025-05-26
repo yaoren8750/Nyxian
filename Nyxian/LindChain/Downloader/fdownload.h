@@ -8,4 +8,9 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-BOOL fdownload(NSString *urlString, NSString *destinationPath);
+/**
+ * @brief This function is for downloading files online
+ *
+ */
+BOOL fdownload(NSString *urlString,
+               NSString *destinationPath);
