@@ -12,7 +12,8 @@ class IconViewController: UITableViewController {
     
     var icons: [String] = [
         "Default",
-        "Drawn"
+        "Drawn",
+        "MoonLight"
     ]
     
     override func viewDidLoad() {
