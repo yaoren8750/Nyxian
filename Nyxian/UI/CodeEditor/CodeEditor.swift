@@ -7,6 +7,7 @@
 
 import UIKit
 import Runestone
+import TreeSitter
 import TreeSitterC
 import TreeSitterObjc
 import TreeSitterXML
@@ -123,34 +124,47 @@ class CodeEditorViewController: UIViewController {
         self.textView.autocapitalizationType = .none
         self.textView.textContainerInset = UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 0)
         
-        if fileURL.pathExtension == "m" || fileURL.pathExtension == "h" {
-            let objcHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/highlights.scm")
-            let cHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm")
-            let objcHighlightsQueryString = try? String(contentsOf: objcHighlightsURL)
-            let cHighlightsQueryString = try? String(contentsOf: cHighlightsURL)
-            let combinedHighlightsQueryString = (objcHighlightsQueryString ?? "") + "\n" + (cHighlightsQueryString ?? "")
-            let combinedHighlightsQuery = TreeSitterLanguage.Query(string: combinedHighlightsQueryString)
-            let objcInjectionURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/injections.scm")
-            let objcInjectionQueryString = try? String(contentsOf: objcInjectionURL)
-            let combinedInjectionsQueryString = (objcInjectionQueryString ?? "")
-            let combinedInjectionsQuery = TreeSitterLanguage.Query(string: combinedInjectionsQueryString)
-            let language = TreeSitterLanguage(tree_sitter_objc(), highlightsQuery: combinedHighlightsQuery, injectionsQuery: combinedInjectionsQuery)
+        func loadLanguage(language: UnsafePointer<TSLanguage>, highlightsPaths: [String], injectionsPaths: [String]) {
+            var highlightsContent: String = ""
+            var injectionsContent: String = ""
+            
+            for path in highlightsPaths {
+                highlightsContent.append("\((try? String(contentsOf: URL(fileURLWithPath: path))) ?? "")\n")
+            }
+            
+            for path in injectionsPaths {
+                injectionsContent.append("\((try? String(contentsOf: URL(fileURLWithPath: path))) ?? "")\n")
+            }
+            
+            let highlightsQuery = TreeSitterLanguage.Query(string: highlightsContent)
+            let injectionsQuery = TreeSitterLanguage.Query(string: injectionsContent)
+            
+            let language = TreeSitterLanguage(language, highlightsQuery: highlightsQuery, injectionsQuery: injectionsQuery)
             let languageMode = TreeSitterLanguageMode(language: language)
             self.textView.setLanguageMode(languageMode)
-        } else if fileURL.pathExtension == "c" {
-            let cHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm")
-            let cHighlightsQueryString = try? String(contentsOf: cHighlightsURL)
-            let cHighlightsQuery = TreeSitterLanguage.Query(string: cHighlightsQueryString ?? "")
-            let language = TreeSitterLanguage(tree_sitter_c(), highlightsQuery: cHighlightsQuery, injectionsQuery: nil)
-            let languageMode = TreeSitterLanguageMode(language: language)
-            self.textView.setLanguageMode(languageMode)
-        } else if fileURL.pathExtension == "xml" || fileURL.pathExtension == "plist" {
-            let xmlHighlightsURL = URL(fileURLWithPath: "\(Bundle.main.bundlePath)/TreeSitterXML_TreeSitterXML.bundle/xml/highlights.scm")
-            let xmlHighlightsQueryString = try? String(contentsOf: xmlHighlightsURL)
-            let xmlHighlightsQuery = TreeSitterLanguage.Query(string: xmlHighlightsQueryString ?? "")
-            let language = TreeSitterLanguage(tree_sitter_xml(), highlightsQuery: xmlHighlightsQuery, injectionsQuery: nil)
-            let languageMode = TreeSitterLanguageMode(language: language)
-            self.textView.setLanguageMode(languageMode)
+        }
+        
+        switch fileURL.pathExtension {
+        case "m","h":
+            loadLanguage(language: tree_sitter_objc() ,highlightsPaths: [
+                "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/highlights.scm",
+                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm"
+            ], injectionsPaths: [
+                "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/injections.scm"
+            ])
+            break
+        case "c":
+            loadLanguage(language: tree_sitter_c() ,highlightsPaths: [
+                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm"
+            ], injectionsPaths: [])
+            break
+        case "xml","plist":
+            loadLanguage(language: tree_sitter_xml(), highlightsPaths: [
+                "\(Bundle.main.bundlePath)/TreeSitterXML_TreeSitterXML.bundle/xml/highlights.scm"
+            ], injectionsPaths: [])
+            break
+        default:
+            break
         }
             
         self.textView.translatesAutoresizingMaskIntoConstraints = false
