@@ -74,10 +74,8 @@ class Builder {
             fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), encoding: .utf8)) ?? ""
         }
         
-        if(fileArgsString == self.argsString) {
-            if self.project.projectConfig.increment {
-                self.dirtySourceFiles = self.dirtySourceFiles.filter { amIDirty($0) }
-            }
+        if(fileArgsString == self.argsString), self.project.projectConfig.increment {
+            self.dirtySourceFiles = self.dirtySourceFiles.filter { amIDirty($0) }
         }
     }
     
@@ -175,7 +173,7 @@ class Builder {
             threader.lockdown()
         }
         
-        // now compile
+        // Now compile
         for _ in self.dirtySourceFiles {
             group.enter()
         }
