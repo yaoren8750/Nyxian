@@ -26,7 +26,7 @@ class Builder {
     private let compiler: Compiler
     private let argsString: String
     
-    private(set) var dirtySourceFiles: [String] = []
+    private var dirtySourceFiles: [String] = []
     
     static var abortHandler: () -> Void = {}
     static var _abort: Bool = false
@@ -175,7 +175,6 @@ class Builder {
     ///
     func compile() throws {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
-        let lock: NSLock = NSLock()
         let group: DispatchGroup = DispatchGroup()
         let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads)
         
@@ -221,9 +220,7 @@ class Builder {
                     return
                 }
                 
-                lock.lock()
                 XCodeButton.incrementProgress(progress: pstep)
-                lock.unlock()
             } completion: {
                 group.leave()
             }
