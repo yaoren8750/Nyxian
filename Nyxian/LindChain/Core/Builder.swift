@@ -64,14 +64,25 @@ class Builder {
         
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
         
-        if self.project.projectConfig.increment {
-            for item in self.dirtySourceFiles {
-                if !amIDirty(item) {
-                    guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
-                    self.dirtySourceFiles.remove(at: index)
+        // Check if args have changed
+        let argsString: String = genericCompilerFlags.joined()
+        var fileArgsString: String = ""
+        if FileManager.default.fileExists(atPath: "\(cachePath.1)/args.txt") {
+            // Check if the args string matches up
+            fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), encoding: .utf8)) ?? ""
+        }
+        
+        if(fileArgsString == argsString) {
+            if self.project.projectConfig.increment {
+                for item in self.dirtySourceFiles {
+                    if !amIDirty(item) {
+                        guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
+                        self.dirtySourceFiles.remove(at: index)
+                    }
                 }
             }
         }
+        try? argsString.write(to: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), atomically: false, encoding: .utf8)
     }
     
     ///
