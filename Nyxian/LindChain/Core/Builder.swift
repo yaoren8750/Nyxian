@@ -52,7 +52,8 @@ class Builder {
             "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
         ]
         
-        genericCompilerFlags.append(contentsOf: self.project.projectConfig.getCompilerFlags())
+        let compilerFlags: [String] = self.project.projectConfig.getCompilerFlags()
+        genericCompilerFlags.append(contentsOf: compilerFlags)
         
         self.compiler = Compiler(genericCompilerFlags)
         
@@ -66,7 +67,7 @@ class Builder {
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
         
         // Check if args have changed
-        self.argsString = genericCompilerFlags.joined()
+        self.argsString = compilerFlags.joined(separator: " ")
         var fileArgsString: String = ""
         if FileManager.default.fileExists(atPath: "\(cachePath.1)/args.txt") {
             // Check if the args string matches up
@@ -75,52 +76,43 @@ class Builder {
         
         if(fileArgsString == self.argsString) {
             if self.project.projectConfig.increment {
-                for item in self.dirtySourceFiles {
-                    if !amIDirty(item) {
-                        guard let index = self.dirtySourceFiles.firstIndex(of: item) else { continue }
-                        self.dirtySourceFiles.remove(at: index)
-                    }
-                }
+                self.dirtySourceFiles = self.dirtySourceFiles.filter { amIDirty($0) }
             }
         }
     }
     
     ///
-    /// Function to detect if a file is dirty
+    /// Function to detect if a file is dirty (has to be recompiled)
     ///
     private func amIDirty(_ item: String) -> Bool {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: item), let date = attributes[.modificationDate] as? Date else {
+        let rpath = relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())
+        let objectFilePath = "\(self.project.getCachePath().1)/\(expectedObjectFile(forPath: rpath))"
+        
+        // Checking if the source file is newer than the compiled object file
+        guard let sourceDate = try? FileManager.default
+            .attributesOfItem(atPath: item)[.modificationDate] as? Date else {
             return true
         }
         
-        let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())
-        let eobject = expectedObjectFile(forPath: rpath)
-        
-        ///
-        /// Case 2: the date of the source file is newer than the date of the object file
-        ///
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: "\(self.project.getCachePath().1)/\(eobject)"), let edate = attributes[.modificationDate] as? Date else {
+        guard let objectDate = try? FileManager.default
+            .attributesOfItem(atPath: objectFilePath)[.modificationDate] as? Date else {
             return true
         }
         
-        if(edate < date) {
+        if objectDate < sourceDate {
             return true
         }
         
-        ///
-        /// Case 3: Header files out of date
-        ///
+        // Checking if the header files included by the source code are newer than the object file
         let headers: [String] = HeaderIncludationsGatherer(path: item).includes
         for header in headers {
-            if !FileManager.default.fileExists(atPath: header) {
+            guard FileManager.default.fileExists(atPath: header),
+                let headerDate = try? FileManager.default
+                    .attributesOfItem(atPath: header)[.modificationDate] as? Date else {
                 return true
             }
             
-            guard let attributes = try? FileManager.default.attributesOfItem(atPath: header), let hdate = attributes[.modificationDate] as? Date else {
-                return true
-            }
-            
-            if(edate < hdate) {
+            if objectDate < headerDate {
                 return true
             }
         }
@@ -230,7 +222,11 @@ class Builder {
             )
         }
         
-        try? self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath().1)/args.txt"), atomically: false, encoding: .utf8)
+        do {
+            try self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath().1)/args.txt"), atomically: false, encoding: .utf8)
+        } catch {
+            print(error.localizedDescription)
+        }
         
         try Builder.isAbortedCheck()
     }
