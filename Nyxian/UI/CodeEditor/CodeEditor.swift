@@ -72,7 +72,11 @@ class CodeEditorViewController: UIViewController {
         
         self.view = OnDisappearUIView()
         
-        self.textView.text = (try? String(NSString(contentsOfFile: self.path, encoding: NSUTF8StringEncoding))) ?? ""
+        do {
+            self.textView.text = try String(contentsOf: URL(fileURLWithPath: self.path), encoding: .utf8)
+        } catch {
+            self.dismiss(animated: true)
+        }
         
         let fileURL = URL(fileURLWithPath: self.path)
         self.title = fileURL.lastPathComponent
