@@ -24,6 +24,7 @@ import Foundation
 class Builder {
     private let project: AppProject
     private let compiler: Compiler
+    private let argsString: String
     
     private(set) var dirtySourceFiles: [String] = []
     
@@ -65,14 +66,14 @@ class Builder {
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
         
         // Check if args have changed
-        let argsString: String = genericCompilerFlags.joined()
+        self.argsString = genericCompilerFlags.joined()
         var fileArgsString: String = ""
         if FileManager.default.fileExists(atPath: "\(cachePath.1)/args.txt") {
             // Check if the args string matches up
             fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), encoding: .utf8)) ?? ""
         }
         
-        if(fileArgsString == argsString) {
+        if(fileArgsString == self.argsString) {
             if self.project.projectConfig.increment {
                 for item in self.dirtySourceFiles {
                     if !amIDirty(item) {
@@ -82,7 +83,6 @@ class Builder {
                 }
             }
         }
-        try? argsString.write(to: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), atomically: false, encoding: .utf8)
     }
     
     ///
@@ -241,6 +241,8 @@ class Builder {
                 userInfo: [NSLocalizedDescriptionKey: "Compiling failed!"]
             )
         }
+        
+        try? self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath().1)/args.txt"), atomically: false, encoding: .utf8)
         
         try Builder.isAbortedCheck()
     }
