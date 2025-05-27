@@ -200,22 +200,13 @@ class Builder {
                 
                 let src = "\(self.project.getPath())/\(eobject)"
                 let dest = "\(self.project.getCachePath().1)/\(eobject)"
-                if FileManager.default.fileExists(atPath: dest) {
-                    do {
+                
+                do {
+                    if FileManager.default.fileExists(atPath: dest) {
                         try FileManager.default.removeItem(atPath: dest)
-                    } catch {
-                        threader.lockdown()
-                        return
                     }
-                }
-                if FileManager.default.fileExists(atPath: src) {
-                    do {
-                        try FileManager.default.moveItem(atPath: src, toPath: dest)
-                    } catch {
-                        threader.lockdown()
-                        return
-                    }
-                } else {
+                    try FileManager.default.moveItem(atPath: src, toPath: dest)
+                } catch {
                     threader.lockdown()
                     return
                 }
