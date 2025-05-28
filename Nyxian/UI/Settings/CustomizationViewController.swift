@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Runestone
 
 class CustomizationViewController: UITableViewController {
     var textField: UITextField?
@@ -16,6 +17,10 @@ class CustomizationViewController: UITableViewController {
         "MoonLight"
     ]
     
+    var themes: [LindDEThemer] = [
+        LindDEThemer()
+    ]
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -23,12 +28,23 @@ class CustomizationViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return (section == 0) ? "Credentials" : "Icons"
+        switch section {
+        case 0:
+            return "Credentials"
+        case 1:
+            return "Themes"
+        case 2:
+            return "Icons"
+        default:
+            return nil
+        }
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         switch indexPath.section {
         case 1:
+            return (indexPath.row == 0) ? 150 : 44
+        case 2:
             return 65
         default:
             return 44
@@ -36,15 +52,17 @@ class CustomizationViewController: UITableViewController {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 2
+        return 3
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
             return 1;
-        default:
+        case 2:
             return self.icons.count;
+        default:
+            return 2;
         }
     }
     
@@ -53,6 +71,21 @@ class CustomizationViewController: UITableViewController {
         
         if indexPath.section == 0 {
             cell = TextFieldTableCell(title: "Username", key: "LDEUsername", defaultValue: "Anonym")
+        } else if indexPath.section == 1 {
+            if indexPath.row == 0 {
+                cell = ThemePickerPreviewCell()
+                (cell as! ThemePickerPreviewCell).populate(with: ThemePickerPreviewCell.ViewModel(theme: themes[0], text: """
+#include <stdio.h>
+
+int main(void)
+{
+\tprintf(\"Hello, World\\n\");
+\treturn 0;
+}
+"""))
+            } else {
+                cell = PickerTableCell(options: ["NyxianLDE"], title: "Theme", key: "LDETheme", defaultValue: 0)
+            }
         } else {
             cell = UITableViewCell()
             let iconName = icons[indexPath.row]
