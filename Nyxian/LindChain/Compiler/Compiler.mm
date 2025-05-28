@@ -59,31 +59,23 @@ int CompileObject(int argc,
 - (int)compileObject:(nonnull NSString*)filePath
       platformTriple:(NSString*)platformTriple
 {
-    // Securing the concurrency
-    [self.lock lock];
-    
     // Allocating a C array by the given _flags array
     const int argc = (int)[_flags count] + 2;
     char **argv = (char **)malloc(sizeof(char*) * argc);
     argv[0] = strdup("clang");
     argv[1] = strdup([filePath UTF8String]);
-    for(int i = 2; i < argc; i++) argv[i] = strdup([[_flags objectAtIndex:i - 2] UTF8String]);
     
-    // Letting compilation run concurrent
+    // Unconcurrently access _flags and copy them over to our array
+    [self.lock lock];
+    for(int i = 2; i < argc; i++) argv[i] = strdup([[_flags objectAtIndex:i - 2] UTF8String]);
     [self.lock unlock];
 
     // Compile and get the resulting integer
     const int result = CompileObject(argc, (const char**)argv, [platformTriple UTF8String]);
     
-    // Securing the concurrency
-    [self.lock lock];
-    
     // Deallocating the entire C array
     for(int i = 0; i < argc; i++) free(argv[i]);
     free(argv);
-    
-    // Letting the resulting integer return concurrent
-    [self.lock unlock];
     
     return result;
 }
