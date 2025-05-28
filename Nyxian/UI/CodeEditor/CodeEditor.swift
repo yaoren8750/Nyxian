@@ -122,44 +122,38 @@ class CodeEditorViewController: UIViewController {
         self.textView.autocapitalizationType = .none
         self.textView.textContainerInset = UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 0)
         
-        func loadLanguage(language: UnsafePointer<TSLanguage>, highlightsPaths: [String], injectionsPaths: [String]) {
-            var highlightsContent: String = ""
-            var injectionsContent: String = ""
-            
-            for path in highlightsPaths {
-                highlightsContent.append("\((try? String(contentsOf: URL(fileURLWithPath: path))) ?? "")\n")
+        func loadLanguage(language: UnsafePointer<TSLanguage>, highlightsURL: [URL]) {
+            func combinedQuery(fromFilesAt fileURLs: [URL]) -> TreeSitterLanguage.Query? {
+                let rawQuery = fileURLs.compactMap { try? String(contentsOf: $0) }.joined(separator: "\n")
+                if !rawQuery.isEmpty {
+                    return TreeSitterLanguage.Query(string: rawQuery)
+                } else {
+                    return nil
+                }
             }
             
-            for path in injectionsPaths {
-                injectionsContent.append("\((try? String(contentsOf: URL(fileURLWithPath: path))) ?? "")\n")
-            }
-            
-            let highlightsQuery = TreeSitterLanguage.Query(string: highlightsContent)
-            let injectionsQuery = TreeSitterLanguage.Query(string: injectionsContent)
-            
-            let language = TreeSitterLanguage(language, highlightsQuery: highlightsQuery, injectionsQuery: injectionsQuery)
+            let language = TreeSitterLanguage(language, highlightsQuery: combinedQuery(fromFilesAt: highlightsURL))
             let languageMode = TreeSitterLanguageMode(language: language)
+            
             self.textView.setLanguageMode(languageMode)
         }
         
         switch fileURL.pathExtension {
         case "m","h":
-            loadLanguage(language: tree_sitter_objc() ,highlightsPaths: [
-                "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/highlights.scm",
-                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm"
-            ], injectionsPaths: [
-                "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/injections.scm"
+            loadLanguage(language: tree_sitter_objc(), highlightsURL: [
+                "\(Bundle.main.bundlePath)/TreeSitterObjc_TreeSitterObjc.bundle/queries/highlights.scm".URLGet(),
+                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm".URLGet()
             ])
             break
         case "c":
-            loadLanguage(language: tree_sitter_c() ,highlightsPaths: [
-                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm"
-            ], injectionsPaths: [])
+            loadLanguage(language: tree_sitter_c(), highlightsURL: [
+                "\(Bundle.main.bundlePath)/TreeSitterC_TreeSitterC.bundle/queries/highlights.scm".URLGet()
+            ])
             break
         case "xml","plist":
-            loadLanguage(language: tree_sitter_xml(), highlightsPaths: [
-                "\(Bundle.main.bundlePath)/TreeSitterXML_TreeSitterXML.bundle/xml/highlights.scm"
-            ], injectionsPaths: [])
+            loadLanguage(language: tree_sitter_xml(), highlightsURL: [
+                "\(Bundle.main.bundlePath)/TreeSitterXML_TreeSitterXML.bundle/xml/highlights.scm".URLGet()
+            ])
             break
         default:
             break
