@@ -21,6 +21,7 @@
 ///
 /// Properties
 ///
+
 // file path where the file is saved with the unsaved changes
 @property (nonatomic,readonly,strong) NSString *filepath;
 
@@ -47,7 +48,6 @@
                 args:(NSArray*)args;
 
 - (void)reparseFile:(NSString*) content;
-
 - (NSArray<Synitem *> *)getDiagnostics;
 
 - (void)deinit;
