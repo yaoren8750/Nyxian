@@ -8,17 +8,7 @@
 import Foundation
 
 class Author {
-    private var _author: String = ""
-    var author: String {
-        get {
-            return self._author
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "LDEFileAuthor")
-            _author = newValue
-        }
-    }
-    
+    var author: String = ""
     var file: String = ""
     var project: String = ""
     var signature: String {
@@ -31,16 +21,13 @@ class Author {
         }
     }
     
-    init() {
-        let author = UserDefaults.standard.object(forKey: "LDEFileAuthor") as? String
-        self._author = author ?? "Anonym"
-    }
-    
     func setTargetProject(_ name: String) {
         project = name
     }
     
     func signatureForFile(_ name: String) -> String {
+        self.author = (UserDefaults.standard.object(forKey: "LDEUsername") as? String) ?? "Anonym"
+        
         file = name
         return signature
     }

@@ -28,7 +28,7 @@ class SettingsViewController: UITableViewController {
             break
         case 1:
             cell.imageView?.image = UIImage(systemName: "paintbrush.fill")
-            cell.textLabel?.text = "Icons"
+            cell.textLabel?.text = "Customization"
             break
         case 2:
             cell.imageView?.image = UIImage(systemName: "document.badge.gearshape.fill")
