@@ -11,7 +11,7 @@ class ToolChainController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "Settings"
+        self.title = "Toolchain"
         
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         self.tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -55,7 +55,11 @@ class ToolChainController: UITableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0:
-            return "General"
+            return "Tools"
+        case 1:
+            return "Features"
+        case 3:
+            return "Experimental"
         default:
             return nil
         }
