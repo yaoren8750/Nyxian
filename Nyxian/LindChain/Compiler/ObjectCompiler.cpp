@@ -53,6 +53,7 @@ using namespace clang::driver;
 
 int CompileObject(int argc,
                   const char **argv,
+                  const char *outputFilePath,
                   const char *platformTripple)
 {
     std::string errorString;
@@ -107,6 +108,7 @@ int CompileObject(int argc,
     }
 
     CI->getFrontendOpts().DisableFree = false;
+    CI->getFrontendOpts().OutputFile = outputFilePath;
 
     CompilerInstance Clang;
     Clang.setInvocation(std::move(CI));

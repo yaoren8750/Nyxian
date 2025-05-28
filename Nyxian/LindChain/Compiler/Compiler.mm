@@ -30,6 +30,7 @@
 // TODO: Might want to extract a header
 int CompileObject(int argc,
                   const char **argv,
+                  const char *outputFilePath,
                   const char *platformTripple);
 
 @interface Compiler ()
@@ -57,6 +58,7 @@ int CompileObject(int argc,
 /// Method that compiles a object file for a given file path
 ///
 - (int)compileObject:(nonnull NSString*)filePath
+          outputFile:(NSString*)outputFilePath
       platformTriple:(NSString*)platformTriple
 {
     // Allocating a C array by the given _flags array
@@ -71,7 +73,7 @@ int CompileObject(int argc,
     [self.lock unlock];
 
     // Compile and get the resulting integer
-    const int result = CompileObject(argc, (const char**)argv, [platformTriple UTF8String]);
+    const int result = CompileObject(argc, (const char**)argv, [outputFilePath UTF8String], [platformTriple UTF8String]);
     
     // Deallocating the entire C array
     for(int i = 0; i < argc; i++) free(argv[i]);

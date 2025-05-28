@@ -178,25 +178,14 @@ class Builder {
             group.enter()
         }
         
-        for file in self.dirtySourceFiles {
+        for filePath in self.dirtySourceFiles {
             threader.spawn {
-                if self.compiler.compileObject(file, platformTriple: self.project.projectConfig.minimum_version) != 0 {
-                    threader.lockdown()
-                    return
-                }
                 
-                let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: file.URLGet())
+                let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())
                 let eobject = expectedObjectFile(forPath: rpath)
+                let outputFilePath = "\(self.project.getCachePath().1)/\(eobject)"
                 
-                let src = "\(self.project.getPath())/\(eobject)"
-                let dest = "\(self.project.getCachePath().1)/\(eobject)"
-                
-                do {
-                    if FileManager.default.fileExists(atPath: dest) {
-                        try FileManager.default.removeItem(atPath: dest)
-                    }
-                    try FileManager.default.moveItem(atPath: src, toPath: dest)
-                } catch {
+                if self.compiler.compileObject(filePath, outputFile: outputFilePath, platformTriple: self.project.projectConfig.minimum_version) != 0 {
                     threader.lockdown()
                     return
                 }
