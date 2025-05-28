@@ -75,14 +75,14 @@ class Builder {
         }
         
         if(fileArgsString == self.argsString), self.project.projectConfig.increment {
-            self.dirtySourceFiles = self.dirtySourceFiles.filter { amIDirty($0) }
+            self.dirtySourceFiles = self.dirtySourceFiles.filter { self.isFileDirty($0) }
         }
     }
     
     ///
     /// Function to detect if a file is dirty (has to be recompiled)
     ///
-    private func amIDirty(_ item: String) -> Bool {
+    private func isFileDirty(_ item: String) -> Bool {
         let rpath = relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())
         let objectFilePath = "\(self.project.getCachePath().1)/\(expectedObjectFile(forPath: rpath))"
         
