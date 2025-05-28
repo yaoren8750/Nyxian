@@ -180,7 +180,6 @@ class Builder {
         
         for filePath in self.dirtySourceFiles {
             threader.spawn {
-                
                 let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())
                 let eobject = expectedObjectFile(forPath: rpath)
                 let outputFilePath = "\(self.project.getCachePath().1)/\(eobject)"

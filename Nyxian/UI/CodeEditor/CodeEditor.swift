@@ -55,8 +55,6 @@ class CodeEditorViewController: UIViewController {
                 project.projectConfig.plistHelper?.reloadIfNeeded()
                 genericCompilerFlags.append(contentsOf: project.projectConfig.getCompilerFlags())
                 
-                print(genericCompilerFlags)
-                
                 self.synpushServer = SynpushServer(self.path, args: genericCompilerFlags)
             }
         }

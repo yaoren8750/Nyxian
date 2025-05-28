@@ -40,9 +40,8 @@ uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
     ///
     _argc = (int)[args count];
     _args = malloc(sizeof(char*) * _argc);
-    for (int i = 0; i < _argc; i++) {
+    for (int i = 0; i < _argc; i++)
         _args[i] = strdup([[args objectAtIndex:i] UTF8String]);
-    }
     
     ///
     /// Now we need the clang index
@@ -53,8 +52,6 @@ uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
     /// now we create the reusable file structure
     ///
     _file.Filename = [_filepath UTF8String];
-    _file.Contents = "int main(void) { return 0; }";
-    _file.Length = strlen(_file.Contents);
     
     ///
     /// Now we initilize the the translation unit
@@ -71,9 +68,7 @@ uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
 
     if (err != CXError_Success) {
         for(int i = 0; i < _argc; i++)
-        {
             free(_args[i]);
-        }
         free(_args);
         
         clang_disposeIndex(_index);
@@ -224,9 +219,7 @@ uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
     pthread_mutex_lock(&_mutex);
     
     for(int i = 0; i < _argc; i++)
-    {
         free(_args[i]);
-    }
     free(_args);
     
     clang_disposeIndex(_index);
