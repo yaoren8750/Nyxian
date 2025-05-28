@@ -99,7 +99,7 @@ func getCurrentSelectedTheme() -> LindDEThemer
         return UserDefaults.standard.integer(forKey: "LDETheme")
     }()
     
-    return themes[(selected > 2) ? 0 : selected]
+    return themes[(selected > (themes.count - 1)) ? 0 : selected]
 }
 
 ///
