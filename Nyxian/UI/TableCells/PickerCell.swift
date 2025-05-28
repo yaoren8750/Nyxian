@@ -67,7 +67,7 @@ class PickerTableCell: UITableViewCell {
         self.contentView.addSubview(label)
         
         // create the chevron image
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
         let image: UIImage = UIImage(systemName: "chevron.up.chevron.down", withConfiguration: config)!
         
         // now the option button
@@ -76,6 +76,7 @@ class PickerTableCell: UITableViewCell {
         button.setTitleColor(UIColor.systemBlue, for: .normal)
         button.setImage(image, for: .normal)
         button.titleLabel?.textAlignment = .right
+        button.semanticContentAttribute = .forceRightToLeft
         button.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(button)
         
@@ -107,9 +108,7 @@ class PickerTableCell: UITableViewCell {
             button.topAnchor.constraint(equalTo: self.contentView.topAnchor),
             button.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
             button.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 16),
-            button.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16),
-            
-            button.titleLabel!.widthAnchor.constraint(equalToConstant: 50)
+            button.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16)
         ])
     }
 }
