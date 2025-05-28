@@ -54,7 +54,7 @@ class SettingsViewController: UITableViewController {
             viewController = ToolChainController(style: .insetGrouped)
             break
         case 1:
-            viewController = IconViewController(style: .insetGrouped)
+            viewController = CustomizationViewController(style: .insetGrouped)
             break
         case 2:
             viewController = MiscellaneousController(style: .insetGrouped)

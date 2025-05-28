@@ -7,7 +7,7 @@
 
 import UIKit
 
-class IconViewController: UITableViewController {
+class CustomizationViewController: UITableViewController {
     var textField: UITextField?
     
     var icons: [String] = [
@@ -20,6 +20,10 @@ class IconViewController: UITableViewController {
         super.viewDidLoad()
         
         self.title = "Customization"
+    }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return (section == 0) ? "Credentials" : "Icons"
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
