@@ -101,7 +101,7 @@ class CodeEditorViewController: UIViewController {
         closeButton.action = #selector(closeEditor)
         self.navigationItem.setLeftBarButton(closeButton, animated: true)
         
-        let theme = LindDEThemer()
+        let theme = getCurrentSelectedTheme()
         theme.fontSize = self.codeEditorConfig.fontSize
         
         self.view.backgroundColor = .systemBackground

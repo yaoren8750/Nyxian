@@ -17,9 +17,7 @@ class CustomizationViewController: UITableViewController {
         "MoonLight"
     ]
     
-    var themes: [LindDEThemer] = [
-        LindDEThemer()
-    ]
+    var themePreviewCell: ThemePickerPreviewCell?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,8 +71,9 @@ class CustomizationViewController: UITableViewController {
             cell = TextFieldTableCell(title: "Username", key: "LDEUsername", defaultValue: "Anonym")
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
-                cell = ThemePickerPreviewCell()
-                (cell as! ThemePickerPreviewCell).populate(with: ThemePickerPreviewCell.ViewModel(theme: themes[0], text: """
+                themePreviewCell = ThemePickerPreviewCell()
+                cell = themePreviewCell!
+                (cell as! ThemePickerPreviewCell).populate(with: ThemePickerPreviewCell.ViewModel(theme: getCurrentSelectedTheme(), text: """
 #include <stdio.h>
 
 int main(void)
@@ -84,7 +83,10 @@ int main(void)
 }
 """))
             } else {
-                cell = PickerTableCell(options: ["NyxianLDE"], title: "Theme", key: "LDETheme", defaultValue: 0)
+                cell = PickerTableCell(options: ["NyxianLDE", "Solarized", "Xcode"], title: "Theme", key: "LDETheme", defaultValue: 0)
+                (cell as! PickerTableCell).callback = { selected in
+                    self.themePreviewCell!.switchTheme(theme: themes[selected])
+                }
             }
         } else {
             cell = UITableViewCell()

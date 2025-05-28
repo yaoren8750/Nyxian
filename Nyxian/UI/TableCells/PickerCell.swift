@@ -14,6 +14,7 @@ class PickerTableCell: UITableViewCell {
     let options: [String]
     let key: String
     let defaultValue: Int
+    var callback: (Int) -> Void = { _ in }
     var value: Int {
         get {
             if UserDefaults.standard.object(forKey: self.key) == nil {
@@ -24,6 +25,7 @@ class PickerTableCell: UITableViewCell {
         }
         set {
             UserDefaults.standard.set(newValue, forKey: self.key)
+            callback(newValue)
         }
     }
     private var selectedOption: String {

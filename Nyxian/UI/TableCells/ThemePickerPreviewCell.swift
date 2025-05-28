@@ -87,4 +87,12 @@ extension ThemePickerPreviewCell {
         textView.isEditable = false
         textView.isSelectable = false
     }
+    
+    func switchTheme(theme: LindDEThemer) {
+        textView.theme = theme
+        textView.backgroundColor = theme.backgroundColor
+        textView.insertionPointColor = theme.textColor
+        textView.selectionBarColor = theme.textColor
+        textView.selectionHighlightColor = theme.textColor.withAlphaComponent(0.2)
+    }
 }
