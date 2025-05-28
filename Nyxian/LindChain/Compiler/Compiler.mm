@@ -62,17 +62,12 @@ int CompileObject(int argc,
     // Securing the concurrency
     [self.lock lock];
     
-    // Allocating the NSMutableArray with the file that is targetted for the compilation and add the flags previously given to the array
-    NSMutableArray<NSString *> *args = [NSMutableArray arrayWithArray:@[
-        @"clang",
-        [filePath copy]
-    ]];
-    [args addObjectsFromArray:_flags];
-    
-    // Allocating a C array by the given NSMutableArray
-    const int argc = (int)[args count];
+    // Allocating a C array by the given _flags array
+    const int argc = (int)[_flags count] + 2;
     char **argv = (char **)malloc(sizeof(char*) * argc);
-    for(int i = 0; i < argc; i++) argv[i] = strdup([[args objectAtIndex:i] UTF8String]);
+    argv[0] = strdup("clang");
+    argv[1] = strdup([filePath UTF8String]);
+    for(int i = 2; i < argc; i++) argv[i] = strdup([[_flags objectAtIndex:i - 2] UTF8String]);
     
     // Letting compilation run concurrent
     [self.lock unlock];
