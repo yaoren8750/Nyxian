@@ -80,10 +80,12 @@ class CodeEditorViewController: UIViewController {
         let fileURL = URL(fileURLWithPath: self.path)
         self.title = fileURL.lastPathComponent
         
+        let theme = getCurrentSelectedTheme()
+        
         self.navigationController?.navigationBar.prefersLargeTitles = false
         self.navigationController?.navigationBar.standardAppearance = UINavigationBarAppearance()
         self.navigationController?.navigationBar.standardAppearance.configureWithOpaqueBackground()
-        self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor.systemGray6
+        self.navigationController?.navigationBar.standardAppearance.backgroundColor = theme.backgroundColor
         self.navigationController?.navigationBar.standardAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
         self.navigationController?.navigationBar.scrollEdgeAppearance = self.navigationController?.navigationBar.standardAppearance
         
@@ -101,7 +103,6 @@ class CodeEditorViewController: UIViewController {
         closeButton.action = #selector(closeEditor)
         self.navigationItem.setLeftBarButton(closeButton, animated: true)
         
-        let theme = getCurrentSelectedTheme()
         theme.fontSize = self.codeEditorConfig.fontSize
         
         self.view.backgroundColor = .systemBackground
