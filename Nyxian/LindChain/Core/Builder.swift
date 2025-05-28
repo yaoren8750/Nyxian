@@ -216,7 +216,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Compiling failed!"]
+                userInfo: [NSLocalizedDescriptionKey: "[!] failed to compile source code"]
             )
         }
         
@@ -253,7 +253,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Linking failed!"]
+                userInfo: [NSLocalizedDescriptionKey: "[!] linking object files together to a executable failed"]
             )
         }
         
@@ -266,7 +266,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Certificate server doesnt run! Either restart app or reimport certificate!"]
+                userInfo: [NSLocalizedDescriptionKey: "[!] zsign server doesnt run, please re/import your apple issued developer certificate"]
             )
         }
         
@@ -276,7 +276,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Signature failed!"]
+                userInfo: [NSLocalizedDescriptionKey: "[!] zsign server failed to sign app bundle"]
             )
         }
         
@@ -328,14 +328,14 @@ class Builder {
                 throw NSError(
                     domain: "",
                     code: 0,
-                    userInfo: [NSLocalizedDescriptionKey: "Open failed!"]
+                    userInfo: [NSLocalizedDescriptionKey: "[!] failed to open application"]
                 )
             }
         } else {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Install failed!"]
+                userInfo: [NSLocalizedDescriptionKey: "[!] failed to invoke application installation"]
             )
         }
     }
@@ -345,7 +345,7 @@ class Builder {
             throw NSError(
                 domain: "",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Build aborted!"]
+                userInfo: [NSLocalizedDescriptionKey: "[*] user aborted compilation"]
             )
         }
     }
