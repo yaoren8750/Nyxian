@@ -47,10 +47,11 @@ class TextFieldTableCell: UITableViewCell, UITextFieldDelegate {
         contentView.addSubview(label)
 
         textField = UITextField()
-        textField.placeholder = ""
+        textField.placeholder = "Value"
         textField.text = value
+        textField.textAlignment = .right
         textField.delegate = self
-        textField.borderStyle = .roundedRect
+        textField.borderStyle = .none
         textField.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(textField)
 
