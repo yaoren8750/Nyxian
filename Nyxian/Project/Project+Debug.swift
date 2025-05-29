@@ -141,9 +141,48 @@ class DebugDatabase: Codable {
  *
  */
 class UIDebugViewController: UITableViewController {
+    let file: String
+    var debugDatabase: DebugDatabase
+    
+    init(project: AppProject) {
+        self.file = "\(project.getCachePath().1)/debug.json"
+        self.debugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.file)/debug.json")
+        self.debugDatabase.addInternalMessage(message: "Failed BlahBlahBlah", severity: .Error)
+        self.debugDatabase.addInternalMessage(message: "Some warning", severity: .Warning)
+        super.init(style: .insetGrouped)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.title = "Issue Navigator"
+    }
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
+        return debugObjectsArray[section].debugItems.count
+    }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
+        return debugObjectsArray[section].title
+    }
+    
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return debugDatabase.debugObjects.count
+    }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
+        let items = debugObjectsArray[indexPath.section].debugItems
+        let item = items[indexPath.row]
+        
+        let cell = UITableViewCell()
+        cell.textLabel?.text = item.message
+        return cell
     }
 }
