@@ -28,6 +28,8 @@ class Builder {
     
     private var dirtySourceFiles: [String] = []
     
+    let database: DebugDatabase
+    
     static var abortHandler: () -> Void = {}
     static var _abort: Bool = false
     static var abort: Bool {
@@ -45,6 +47,9 @@ class Builder {
         project.reload()
         
         self.project = project
+        
+        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath().1)/debug.json")
+        self.database.clearDatabase()
         
         var genericCompilerFlags: [String] = [
             "-isysroot",
@@ -77,6 +82,7 @@ class Builder {
         if(fileArgsString == self.argsString), self.project.projectConfig.increment {
             self.dirtySourceFiles = self.dirtySourceFiles.filter { self.isFileDirty($0) }
         }
+        
     }
     
     ///
@@ -201,11 +207,8 @@ class Builder {
         Builder.abortHandler = {}
         
         if threader.isLockdown {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[!] failed to compile source code"]
-            )
+            self.database.addInternalMessage(message: "Failed to compile source code", severity: .Error)
+            throw NSError()
         }
         
         do {
@@ -238,11 +241,8 @@ class Builder {
             ldPath,
             ldArgs
         ) != 0 {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[!] linking object files together to a executable failed"]
-            )
+            self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
+            throw NSError()
         }
         
         try Builder.isAbortedCheck()
@@ -251,21 +251,15 @@ class Builder {
     func sign() throws {
         // Now we copy use it
         if !CertBlob.isReady {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[!] zsign server doesnt run, please re/import your apple issued developer certificate"]
-            )
+            self.database.addInternalMessage(message: "Zsign server doesnt run, please re/import your apple issued developer certificate", severity: .Error)
+            throw NSError()
         }
         
         let zsign = CertBlob.signer!
         
         if !zsign.sign(self.project.getBundlePath().1) {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[!] zsign server failed to sign app bundle"]
-            )
+            self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
+            throw NSError()
         }
         
         try Builder.isAbortedCheck()
@@ -313,18 +307,12 @@ class Builder {
                 self.project) {
                 exit(0)
             } else {
-                throw NSError(
-                    domain: "",
-                    code: 0,
-                    userInfo: [NSLocalizedDescriptionKey: "[!] failed to open application"]
-                )
+                self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
+                throw NSError()
             }
         } else {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[!] failed to invoke application installation"]
-            )
+            self.database.addInternalMessage(message: "Failed to invoke application installation popup", severity: .Error)
+            throw NSError()
         }
     }
     
@@ -355,14 +343,13 @@ class Builder {
             )
             
             var resetNeeded: Bool = false
-            func progressStage(systemName: String? = nil, logMessage: String, increment: Double? = nil, handler: () throws -> Void) throws {
+            func progressStage(systemName: String? = nil, increment: Double? = nil, handler: () throws -> Void) throws {
                 let doReset: Bool = (increment == nil)
                 if doReset, resetNeeded {
                     XCodeButton.resetProgress()
                     resetNeeded = false
                 }
                 if let systemName = systemName { XCodeButton.switchImage(systemName: systemName) }
-                ls_nsprint("[*] \(logMessage)\n")
                 try handler()
                 if !doReset, let increment = increment {
                     XCodeButton.incrementProgress(progress: increment)
@@ -370,23 +357,21 @@ class Builder {
                 }
             }
             
-            func progressFlowBuilder(flow: [(String?,String,Double?,() throws -> Void)]) throws {
-                for item in flow { try progressStage(systemName: item.0, logMessage: item.1, increment: item.2, handler: item.3) }
+            func progressFlowBuilder(flow: [(String?,Double?,() throws -> Void)]) throws {
+                for item in flow { try progressStage(systemName: item.0, increment: item.1, handler: item.2) }
             }
-            
-            ls_nsprint("[*] LDE Builder v1.0\n")
             
             do {
                 // doit
                 try progressFlowBuilder(flow: [
-                    (nil,"cleaning",nil,{ try builder.clean() }),
-                    (nil,"preparing",nil,{ try builder.prepare() }),
-                    (nil,"compiling",nil,{ try builder.compile() }),
-                    ("link","linking",0.3,{ try builder.link() }),
-                    ("checkmark.seal.text.page.fill","signing",0.3,{ try builder.sign() }),
-                    ("archivebox.fill","packaging",0.4,{ try builder.package() }),
-                    (nil,"cleaning",nil,{ try builder.clean() }),
-                    ("arrow.down.app.fill","installing",nil,{try builder.install() })
+                    (nil,nil,{ try builder.clean() }),
+                    (nil,nil,{ try builder.prepare() }),
+                    (nil,nil,{ try builder.compile() }),
+                    ("link",0.3,{ try builder.link() }),
+                    ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
+                    ("archivebox.fill",0.4,{ try builder.package() }),
+                    (nil,nil,{ try builder.clean() }),
+                    ("arrow.down.app.fill",nil,{try builder.install() })
                 ])
             } catch {
                 if !Builder.abort {
@@ -394,8 +379,9 @@ class Builder {
                 } else {
                     try? builder.clean()
                 }
-                ls_nsprint(error.localizedDescription)
             }
+            
+            builder.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
             
             completion(result)
         }

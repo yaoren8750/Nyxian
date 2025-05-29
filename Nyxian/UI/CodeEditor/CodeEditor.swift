@@ -27,9 +27,11 @@ class OnDisappearUIView: UIView {
 class CodeEditorViewController: UIViewController {
     private(set) var path: String
     private(set) var textView: TextView
+    private(set) var project: AppProject?
     private(set) var codeEditorConfig: CodeEditorConfig
     private(set) var synpushServer: SynpushServer?
     private(set) var coordinator: Coordinator?
+    private(set) var database: DebugDatabase?
     
     init(
         project: AppProject?,
@@ -42,6 +44,8 @@ class CodeEditorViewController: UIViewController {
         
         codeEditorConfig.plistHelper?.reloadIfNeeded()
         self.codeEditorConfig = codeEditorConfig
+        self.project = project
+        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project!.getCachePath().1)/debug.json")
         
         if let project = project {
             let suffix = self.path.URLGet().pathExtension
@@ -229,6 +233,13 @@ class CodeEditorViewController: UIViewController {
     }
     
     @objc func saveText() {
+        guard let synpushServer = self.synpushServer else { return }
+        
+        synpushServer.reparseFile(self.textView.text)
+        let synItems: [Synitem] = synpushServer.getDiagnostics()
+        self.database!.setFileDebug(ofPath: self.path, synItems: synItems)
+        self.database!.saveDatabase(toPath: "\(self.project!.getCachePath().1)/debug.json")
+        
         try? self.textView.text.write(to: URL(fileURLWithPath: self.path), atomically: true, encoding: .utf8)
     }
     

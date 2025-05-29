@@ -39,6 +39,9 @@ class Coordinator: NSObject, TextViewDelegate {
         self.debounce = Debouncer(delay: 1.5)
         super.init()
         guard self.parent.synpushServer != nil else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.updateDiag(diag: self.parent.database?.getFileDebug(ofPath: self.parent.path))
+        }
         self.textViewDidChange(self.parent.textView)
         
         ctrl1Pressed = {
@@ -94,201 +97,205 @@ class Coordinator: NSObject, TextViewDelegate {
                 self.parent.synpushServer!.reparseFile(textView.text)
                 let diag = self.parent.synpushServer!.getDiagnostics()
                 
-                let textView = self.parent.textView
+                self.updateDiag(diag: diag)
+            }
+        }
+    }
+    
+    func updateDiag(diag: [Synitem]?) {
+        let textView = self.parent.textView
+        
+        let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+        
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.3, animations: {
+                for item in self.message {
+                    item.alpha = 0
+                }
+            }, completion: { _ in
+                for item in self.message {
+                    item.removeFromSuperview()
+                }
+                self.message.removeAll()
+                self.line.removeAll()
+                waitonmebaby.signal()
+            })
+        }
+        
+        waitonmebaby.wait()
+        
+        if let diag = diag {
+            for item in diag {
+                if item.line == 0 { continue }
+                if self.line.contains(item.line) { continue }
                 
-                let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+                var rect: CGRect?
                 
-                DispatchQueue.main.async {
-                    UIView.animate(withDuration: 0.3, animations: {
-                        for item in self.message {
-                            item.alpha = 0
-                        }
-                    }, completion: { _ in
-                        for item in self.message {
-                            item.removeFromSuperview()
-                        }
-                        self.message.removeAll()
-                        self.line.removeAll()
-                        waitonmebaby.signal()
-                    })
+                DispatchQueue.main.sync {
+                    rect = textView.rectForLine(Int(item.line))
                 }
                 
-                waitonmebaby.wait()
+                self.line.append(item.line)
                 
-                if let diag = diag {
-                    for item in diag {
-                        if item.line == 0 { continue }
-                        if self.line.contains(item.line) { continue }
+                let highlightColor: UIColor
+                let sfname: String
+                
+                switch (item.type) {
+                case 0:
+                    highlightColor = UIColor.blue.withAlphaComponent(0.3)
+                    sfname = "info.circle.fill"
+                case 1:
+                    highlightColor = UIColor.orange.withAlphaComponent(0.3)
+                    sfname = "exclamationmark.triangle.fill"
+                case 2:
+                    highlightColor = UIColor.red.withAlphaComponent(0.3)
+                    sfname = "xmark.seal.fill"
+                default:
+                    highlightColor = UIColor.clear
+                    sfname = ""
+                }
+                
+                if let rect = rect {
+                    DispatchQueue.main.async {
+                        let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: textView.bounds.size.width, height: rect.height))
+                        view.backgroundColor = highlightColor
+                        view.isUserInteractionEnabled = false
                         
-                        var rect: CGRect?
+                        let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth/* - self.parent.textView.theme.gutterHairlineWidth*/, height: rect.height))
+                        button.isOnLine = item.line
                         
-                        DispatchQueue.main.sync {
-                            rect = textView.rectForLine(Int(item.line))
-                        }
+                        button.backgroundColor = highlightColor.withAlphaComponent(1.0)
+                        let image = self.resizeImage(image: UIImage(systemName: sfname)!, targetSize: CGSize(width: self.parent.textView.theme.font.pointSize, height: self.parent.textView.theme.font.pointSize), tintColor: self.parent.textView.theme.gutterBackgroundColor /*UIColor.systemBackground*/)
+                        button.setImage(image, for: .normal)
                         
-                        self.line.append(item.line)
+                        var widthConstraint: NSLayoutConstraint?
                         
-                        let highlightColor: UIColor
-                        let sfname: String
-                        
-                        switch (item.type) {
-                        case 0:
-                            highlightColor = UIColor.blue.withAlphaComponent(0.3)
-                            sfname = "info.circle.fill"
-                        case 1:
-                            highlightColor = UIColor.orange.withAlphaComponent(0.3)
-                            sfname = "exclamationmark.triangle.fill"
-                        case 2:
-                            highlightColor = UIColor.red.withAlphaComponent(0.3)
-                            sfname = "xmark.seal.fill"
-                        default:
-                            highlightColor = UIColor.clear
-                            sfname = ""
-                        }
-                        
-                        if let rect = rect {
-                            DispatchQueue.main.async {
-                                let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: textView.bounds.size.width, height: rect.height))
-                                view.backgroundColor = highlightColor
-                                view.isUserInteractionEnabled = false
-                                
-                                let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth/* - self.parent.textView.theme.gutterHairlineWidth*/, height: rect.height))
-                                button.isOnLine = item.line
-                                
-                                button.backgroundColor = highlightColor.withAlphaComponent(1.0)
-                                let image = self.resizeImage(image: UIImage(systemName: sfname)!, targetSize: CGSize(width: self.parent.textView.theme.font.pointSize, height: self.parent.textView.theme.font.pointSize), tintColor: self.parent.textView.theme.gutterBackgroundColor /*UIColor.systemBackground*/)
-                                button.setImage(image, for: .normal)
-                                
-                                var widthConstraint: NSLayoutConstraint?
-                                
-                                button.setAction {
-                                    button.stateview = !button.stateview
+                        button.setAction {
+                            button.stateview = !button.stateview
+                            
+                            if button.stateview {
+                                DispatchQueue.main.async {
+                                    let shift: CGFloat = self.parent.textView.gutterWidth
+                                    let finalWidth = textView.bounds.width / 1.5
+
+                                    let modHeight = rect.height + 10
                                     
-                                    if button.stateview {
-                                        DispatchQueue.main.async {
-                                            let shift: CGFloat = self.parent.textView.gutterWidth
-                                            let finalWidth = textView.bounds.width / 1.5
+                                    let preview = ErrorPreview(
+                                        parent: self,
+                                        frame: CGRect.zero,
+                                        message: item.message,
+                                        color: highlightColor,
+                                        minH: modHeight
+                                    )
+                                    preview.translatesAutoresizingMaskIntoConstraints = false
+                                    button.errorview = preview
 
-                                            let modHeight = rect.height + 10
-                                            
-                                            let preview = ErrorPreview(
-                                                parent: self,
-                                                frame: CGRect.zero,
-                                                message: item.message,
-                                                color: highlightColor,
-                                                minH: modHeight
-                                            )
-                                            preview.translatesAutoresizingMaskIntoConstraints = false
-                                            button.errorview = preview
+                                    preview.alpha = 0
+                                    textView.addSubview(preview)
+                                    
+                                    widthConstraint = preview.widthAnchor.constraint(equalToConstant: 0)
+                                    NSLayoutConstraint.activate([
+                                        preview.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: shift),
+                                        preview.topAnchor.constraint(equalTo: textView.topAnchor, constant: rect.origin.y),
+                                        widthConstraint!
+                                    ])
 
-                                            preview.alpha = 0
-                                            textView.addSubview(preview)
-                                            
-                                            widthConstraint = preview.widthAnchor.constraint(equalToConstant: 0)
-                                            NSLayoutConstraint.activate([
-                                                preview.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: shift),
-                                                preview.topAnchor.constraint(equalTo: textView.topAnchor, constant: rect.origin.y),
-                                                widthConstraint!
-                                            ])
-
+                                    textView.layoutIfNeeded()
+                                    
+                                    UIView.animate(
+                                        withDuration: 0.5,
+                                        delay: 0,
+                                        usingSpringWithDamping: 0.8,
+                                        initialSpringVelocity: 0.5,
+                                        options: [.curveEaseOut],
+                                        animations: {
+                                            preview.alpha = 1
+                                            widthConstraint!.constant = finalWidth
                                             textView.layoutIfNeeded()
-                                            
-                                            UIView.animate(
-                                                withDuration: 0.5,
-                                                delay: 0,
-                                                usingSpringWithDamping: 0.8,
-                                                initialSpringVelocity: 0.5,
-                                                options: [.curveEaseOut],
-                                                animations: {
-                                                    preview.alpha = 1
-                                                    widthConstraint!.constant = finalWidth
-                                                    textView.layoutIfNeeded()
-                                                },
-                                                completion: nil
-                                            )
-                                        }
-                                    } else {
-                                        if let preview = button.errorview {
-                                            DispatchQueue.main.async {
-                                                UIView.animate(
-                                                    withDuration: 0.3,
-                                                    delay: 0,
-                                                    options: [.curveEaseIn],
-                                                    animations: {
-                                                        preview.alpha = 0
-                                                        widthConstraint!.constant = 0
-                                                        preview.superview?.layoutIfNeeded()
-                                                    },
-                                                    completion: { _ in
-                                                        preview.removeFromSuperview()
-                                                    }
-                                                )
+                                        },
+                                        completion: nil
+                                    )
+                                }
+                            } else {
+                                if let preview = button.errorview {
+                                    DispatchQueue.main.async {
+                                        UIView.animate(
+                                            withDuration: 0.3,
+                                            delay: 0,
+                                            options: [.curveEaseIn],
+                                            animations: {
+                                                preview.alpha = 0
+                                                widthConstraint!.constant = 0
+                                                preview.superview?.layoutIfNeeded()
+                                            },
+                                            completion: { _ in
+                                                preview.removeFromSuperview()
                                             }
-                                        }
+                                        )
                                     }
                                 }
-                                
-                                view.alpha = 0
-                                button.alpha = 0
-                                self.message.append(view)
-                                self.message.append(button)
-                                
-                                let textInputView = textView.getTextInputView()
-                                textInputView?.addSubview(view)
-                                textInputView?.sendSubviewToBack(view)
-                                textInputView?.gutterContainerView.isUserInteractionEnabled = true
-                                textInputView?.gutterContainerView.addSubview(button)
-                                
-                                UIView.animate(withDuration: 0.3, animations: {
-                                    view.alpha = 1
-                                    button.alpha = 1
-                                }, completion: { _ in
-                                    button.isUserInteractionEnabled = true
-                                })
-                                
                             }
                         }
+                        
+                        view.alpha = 0
+                        button.alpha = 0
+                        self.message.append(view)
+                        self.message.append(button)
+                        
+                        let textInputView = textView.getTextInputView()
+                        textInputView?.addSubview(view)
+                        textInputView?.sendSubviewToBack(view)
+                        textInputView?.gutterContainerView.isUserInteractionEnabled = true
+                        textInputView?.gutterContainerView.addSubview(button)
+                        
+                        UIView.animate(withDuration: 0.3, animations: {
+                            view.alpha = 1
+                            button.alpha = 1
+                        }, completion: { _ in
+                            button.isUserInteractionEnabled = true
+                        })
+                        
                     }
                 }
-                
-                DispatchQueue.main.async {
-                    self.iDoStuff = false
-                    self.iDidInvalid = false
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.iDoStuff = false
+            self.iDidInvalid = false
+            
+            if self.needsAnotherRun {
+                self.needsAnotherRun = false
+                self.textViewDidChange(self.parent.textView)
+            } else {
+                if let diag = diag {
+                    var color: UIColor
                     
-                    if self.needsAnotherRun {
-                        self.needsAnotherRun = false
-                        self.textViewDidChange(self.parent.textView)
-                    } else {
-                        if let diag = diag {
-                            var color: UIColor
-                            
-                            color = gibDynamicColor(light: .systemGray5, dark: .systemGray6)
-                            
-                            var severity: Int = -1
-                            for item in diag {
-                                switch item.type {
-                                case 0:
-                                    if severity < 0 {
-                                        color = .blue.withAlphaComponent(0.8)
-                                        severity = 0
-                                    }
-                                    break
-                                case 1:
-                                    if severity < 1 {
-                                        color = .orange.withAlphaComponent(0.8)
-                                        severity = 1
-                                    }
-                                    break
-                                case 2:
-                                    if severity < 2 {
-                                        color = .red.withAlphaComponent(0.8)
-                                        severity = 2
-                                    }
-                                    break
-                                default:
-                                    break
-                                }
+                    color = gibDynamicColor(light: .systemGray5, dark: .systemGray6)
+                    
+                    var severity: Int = -1
+                    for item in diag {
+                        switch item.type {
+                        case 0:
+                            if severity < 0 {
+                                color = .blue.withAlphaComponent(0.8)
+                                severity = 0
                             }
+                            break
+                        case 1:
+                            if severity < 1 {
+                                color = .orange.withAlphaComponent(0.8)
+                                severity = 1
+                            }
+                            break
+                        case 2:
+                            if severity < 2 {
+                                color = .red.withAlphaComponent(0.8)
+                                severity = 2
+                            }
+                            break
+                        default:
+                            break
                         }
                     }
                 }
