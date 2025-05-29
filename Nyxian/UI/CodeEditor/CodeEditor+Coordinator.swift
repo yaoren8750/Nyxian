@@ -22,6 +22,14 @@ import UIKit
 import Runestone
 @testable import Runestone
 
+/*
+ * TODO: TodoList for the upcoming changes to the typechecking UI engine
+ *
+ * - Support to show multiple issues at once
+ * - Making save parse in the background to make the app seem faster to the user
+ *
+ */
+
 // MARK: - COORDINATOR
 class Coordinator: NSObject, TextViewDelegate {
     private let parent: CodeEditorViewController
