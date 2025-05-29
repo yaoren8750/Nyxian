@@ -113,6 +113,7 @@ class CodeEditorViewController: UIViewController {
         self.textView.showSpaces = codeEditorConfig.showSpaces
         self.textView.isLineWrappingEnabled = codeEditorConfig.wrapLine
         self.textView.showLineBreaks = codeEditorConfig.showReturn
+        self.textView.lineSelectionDisplayType = .line
         
         self.textView.lineHeightMultiplier = 1.3
         self.textView.keyboardType = .asciiCapable
