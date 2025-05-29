@@ -196,6 +196,18 @@ class UIDebugViewController: UITableViewController {
         
         let cell = UITableViewCell()
         cell.textLabel?.text = item.message
+        
+        cell.contentView.backgroundColor = {
+            switch item.severity {
+            case .Note:
+                return UIColor.systemBlue
+            case .Warning:
+                return UIColor.systemOrange
+            case .Error:
+                return UIColor.systemRed
+            }
+        }()
+        
         return cell
     }
 }
