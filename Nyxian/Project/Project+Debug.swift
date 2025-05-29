@@ -113,7 +113,7 @@ class DebugDatabase: Codable {
             fileObject.debugItems.append(debugItem)
         }
         
-        self.debugObjects[lastPathComponent] = fileObject
+        self.debugObjects[lastPathComponent] = (synItems.count > 0) ? fileObject : nil
     }
     
     func getFileDebug(ofPath path: String) -> [Synitem] {
@@ -149,6 +149,18 @@ class UIDebugViewController: UITableViewController {
     let file: String
     var debugDatabase: DebugDatabase
     
+    var sortedDebugObjects: [DebugObject] {
+        return debugDatabase.debugObjects.values.sorted {
+            if $0.title == "Internal" {
+                return true
+            } else if $1.title == "Internal" {
+                return false
+            } else {
+                return $0.title < $1.title
+            }
+        }
+    }
+    
     init(project: AppProject) {
         self.file = "\(project.getCachePath().1)/debug.json"
         self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
@@ -166,23 +178,21 @@ class UIDebugViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
-        return debugObjectsArray[section].debugItems.count
+        let count = sortedDebugObjects[section].debugItems.count
+        return (count > 0) ? count : 1
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
-        return debugObjectsArray[section].title
+        return sortedDebugObjects[section].title
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return debugDatabase.debugObjects.count
+        return sortedDebugObjects.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let debugObjectsArray = Array(debugDatabase.debugObjects.values)
-        let items = debugObjectsArray[indexPath.section].debugItems
-        let item = items[indexPath.row]
+        let items = sortedDebugObjects[indexPath.section].debugItems
+        let item = (items.count > 0) ? items[indexPath.row] : DebugItem(severity: .Note, message: "Contains no messages", line: 0, column: 0)
         
         let cell = UITableViewCell()
         cell.textLabel?.text = item.message
