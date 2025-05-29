@@ -154,7 +154,7 @@ class Coordinator: NSObject, TextViewDelegate {
                     sfname = "info.circle.fill"
                 case 1:
                     highlightColor = UIColor.orange.withAlphaComponent(0.3)
-                    sfname = "exclamationmark.triangle.fill"
+                    sfname = "exclamationmark.octagon.fill"
                 case 2:
                     highlightColor = UIColor.red.withAlphaComponent(0.3)
                     sfname = "xmark.seal.fill"

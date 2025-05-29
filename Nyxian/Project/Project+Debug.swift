@@ -175,6 +175,9 @@ class UIDebugViewController: UITableViewController {
         super.viewDidLoad()
         
         self.title = "Issue Navigator"
+        
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 60
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -196,8 +199,11 @@ class UIDebugViewController: UITableViewController {
         
         let cell = UITableViewCell()
         cell.textLabel?.text = item.message
+        cell.textLabel?.numberOfLines = 0;
+        cell.textLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
+        cell.textLabel?.translatesAutoresizingMaskIntoConstraints = false
         
-        cell.contentView.backgroundColor = {
+        let tintColor: UIColor = {
             switch item.severity {
             case .Note:
                 return UIColor.systemBlue
@@ -207,6 +213,55 @@ class UIDebugViewController: UITableViewController {
                 return UIColor.systemRed
             }
         }()
+        
+        let symbolName: String = {
+            switch item.severity {
+            case .Note:
+                return "info.circle.fill"
+            case .Warning:
+                return "exclamationmark.triangle.fill"
+            case .Error:
+                return "xmark.octagon.fill"
+            }
+        }()
+        
+        cell.contentView.backgroundColor = tintColor.withAlphaComponent(0.6)
+        
+        // The stripe where we will place the SFSymbol later on
+        let stripeView: UIView = UIView()
+        stripeView.backgroundColor = tintColor
+        stripeView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Image View
+        let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 8.0)
+        let image: UIImage? = UIImage(systemName: symbolName, withConfiguration: configuration)
+        let imageView: UIImageView = UIImageView(image: image)
+        imageView.tintColor = .label
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        stripeView.addSubview(imageView)
+        
+        cell.contentView.addSubview(stripeView)
+        
+        // Setting the constraints how we wanna layout our views
+        NSLayoutConstraint.activate([
+            stripeView.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
+            stripeView.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
+            stripeView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor),
+            stripeView.widthAnchor.constraint(equalToConstant: 20),
+            
+            cell.textLabel!.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
+            cell.textLabel!.leadingAnchor.constraint(equalTo: stripeView.trailingAnchor, constant: 10),
+            cell.textLabel!.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -10),
+            
+            cell.contentView.heightAnchor.constraint(equalTo: cell.textLabel!.heightAnchor, constant: 20),
+            
+            imageView.centerYAnchor.constraint(equalTo: stripeView.centerYAnchor),
+            imageView.centerXAnchor.constraint(equalTo: stripeView.centerXAnchor)
+        ])
+        
+        cell.separatorInset = .zero
+        cell.layoutMargins = .zero
+        cell.preservesSuperviewLayoutMargins = false
         
         return cell
     }
