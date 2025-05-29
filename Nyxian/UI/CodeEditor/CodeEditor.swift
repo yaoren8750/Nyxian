@@ -85,7 +85,7 @@ class CodeEditorViewController: UIViewController {
         self.navigationController?.navigationBar.prefersLargeTitles = false
         self.navigationController?.navigationBar.standardAppearance = UINavigationBarAppearance()
         self.navigationController?.navigationBar.standardAppearance.configureWithOpaqueBackground()
-        self.navigationController?.navigationBar.standardAppearance.backgroundColor = theme.backgroundColor
+        self.navigationController?.navigationBar.standardAppearance.backgroundColor = theme.gutterBackgroundColor
         self.navigationController?.navigationBar.standardAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
         self.navigationController?.navigationBar.scrollEdgeAppearance = self.navigationController?.navigationBar.standardAppearance
         
