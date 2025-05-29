@@ -1,0 +1,149 @@
+//
+//  Project+Debug.swift
+//  Nyxian
+//
+//  Created by SeanIsTethered on 29.05.25.
+//
+
+import Foundation
+import UIKit
+
+/*
+ * Debug "tile" in UI
+ *
+ */
+class DebugItem: Codable {
+    enum DebugServerity: UInt8, Codable {
+        case Note = 0
+        case Warning = 1
+        case Error = 2
+    }
+    
+    let severity: DebugItem.DebugServerity
+    let message: String     // in case of it being a file it contains the error, in case of it being a message it contains the message it self
+    let line: UInt64        // in case of it being a file it contains at what line the error is
+    let column: UInt64      // in case of it being a file it contains at what column the error is, this and the previous variable is ignored in case of it being a DebugMessage
+    
+    init(severity: DebugItem.DebugServerity, message: String, line: UInt64, column: UInt64) {
+        self.severity = severity
+        self.message = message
+        self.line = line
+        self.column = column
+    }
+}
+
+/*
+ * Content of one thing (i.e file/blah)
+ *
+ */
+class DebugObject: Codable {
+    enum DebugObjectType: Codable {
+        case DebugFile
+        case DebugMessage
+    }
+    
+    let title: String       // in case of it being a file it contains the last path component, in case of it being a message it contains "Internal"
+    let type: DebugObject.DebugObjectType
+    var debugItems: [DebugItem] = []
+    
+    init(title: String, type: DebugObject.DebugObjectType) {
+        self.title = title
+        self.type = type
+    }
+}
+
+/*
+ * Content of debug file (i.e `debug.json`)
+ *
+ */
+class DebugDatabase: Codable {
+    var debugObjects: [String:DebugObject] = [:]
+    
+    /*
+     * Function that gets the database of a filepath
+     */
+    static func getDatabase(ofPath path: String) -> DebugDatabase {
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: path))
+            let decoder = JSONDecoder()
+            let blob = try decoder.decode(DebugDatabase.self, from: data)
+            return blob
+        } catch {
+            print("Failed to decode certblob:", error)
+            // MARK: If it doesnt exist we create one
+            let debugDatabase: DebugDatabase = DebugDatabase()
+            
+            debugDatabase.debugObjects["Internal"] = DebugObject(title: "Internal", type: .DebugMessage)
+            
+            // First object is reserved for internal
+            return debugDatabase
+        }
+    }
+    
+    /*
+     * Function that saves the database to a filepath
+     */
+    func saveDatabase(toPath path: String) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            if let jsonData = try? encoder.encode(self) {
+                try jsonData.write(to: URL(fileURLWithPath: path))
+            }
+        } catch {
+            // TODO: Handle error
+        }
+    }
+    
+    /*
+     * Functions to manage object entries
+     */
+    func addInternalMessage(message: String, severity: DebugItem.DebugServerity) {
+        guard let internalObject = self.debugObjects["Internal"] else { return }
+        internalObject.debugItems.append(DebugItem(severity: severity, message: message, line: 0, column: 0))
+    }
+    
+    func setFileDebug(ofPath path: String, synItems: [Synitem]) {
+        // TODO: Last path component is pretty ineffective if the user has files with the same name at a other location in the project
+        let lastPathComponent: String = URL(fileURLWithPath: path).lastPathComponent
+        let fileObject: DebugObject = DebugObject(title: lastPathComponent, type: .DebugFile)
+        
+        for item in synItems {
+            let debugItem: DebugItem = DebugItem(severity: DebugItem.DebugServerity(rawValue: item.type) ?? .Note, message: item.message, line: item.line, column: item.column)
+            fileObject.debugItems.append(debugItem)
+        }
+        
+        self.debugObjects[lastPathComponent] = fileObject
+    }
+    
+    func getFileDebug(ofPath path: String) -> [Synitem] {
+        var synItems: [Synitem] = []
+        
+        // Get object
+        let lastPathComponent: String = URL(fileURLWithPath: path).lastPathComponent
+        guard let fileObject = self.debugObjects[lastPathComponent] else { return synItems }
+        
+        for item in fileObject.debugItems {
+            let synItem: Synitem = Synitem()
+            synItem.type = item.severity.rawValue
+            synItem.message = item.message
+            synItem.line = item.line
+            synItem.column = item.column
+            synItems.append(synItem)
+        }
+        
+        return synItems
+    }
+}
+
+/*
+ * Debug UI: Issue Navigator and Database at the same time that will be shared over the entire project :3
+ *
+ */
+class UIDebugViewController: UITableViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.title = "Issue Navigator"
+    }
+}
