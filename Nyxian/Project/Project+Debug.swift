@@ -134,6 +134,11 @@ class DebugDatabase: Codable {
         
         return synItems
     }
+    
+    func clearDatabase() {
+        self.debugObjects = [:]
+        self.debugObjects["Internal"] = DebugObject(title: "Internal", type: .DebugMessage)
+    }
 }
 
 /*
@@ -146,9 +151,7 @@ class UIDebugViewController: UITableViewController {
     
     init(project: AppProject) {
         self.file = "\(project.getCachePath().1)/debug.json"
-        self.debugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.file)/debug.json")
-        self.debugDatabase.addInternalMessage(message: "Failed BlahBlahBlah", severity: .Error)
-        self.debugDatabase.addInternalMessage(message: "Some warning", severity: .Warning)
+        self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
         super.init(style: .insetGrouped)
     }
     

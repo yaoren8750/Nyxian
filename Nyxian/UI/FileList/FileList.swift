@@ -108,6 +108,20 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 self.buildProject()
             }))
             projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: "apple.terminal.fill"), handler: { _ in
+                let debugDatabase: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath().1)/debug.json")
+                debugDatabase.clearDatabase()
+                debugDatabase.addInternalMessage(message: "meowmeow", severity: .Note)
+                debugDatabase.addInternalMessage(message: "nyanya", severity: .Warning)
+                debugDatabase.addInternalMessage(message: "rawrrawr", severity: .Error)
+                
+                let someSyn: Synitem = Synitem()
+                someSyn.message = "Meowmeow"
+                someSyn.type = 2
+                someSyn.line = 0
+                someSyn.column = 0
+                debugDatabase.setFileDebug(ofPath: "/meow/nya.c", synItems: [someSyn])
+                
+                debugDatabase.saveDatabase(toPath: "\(self.project.getCachePath().1)/debug.json")
                 let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
