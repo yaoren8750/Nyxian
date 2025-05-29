@@ -185,6 +185,7 @@ class CodeEditorViewController: UIViewController {
     func setupToolbar(textView: TextView) {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
+        toolbar.barTintColor = self.textView.theme.gutterBackgroundColor
         
         func spawnSeperator() -> UIBarButtonItem {
             return UIBarButtonItem(customView: UIView(frame: CGRect(x: 0, y: 0, width: 5, height: 1)))
