@@ -191,7 +191,7 @@ class UIDebugViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sortedDebugObjects[section].title
+        return "\(sortedDebugObjects[section].title) - \(sortedDebugObjects[section].debugItems.count)"
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
