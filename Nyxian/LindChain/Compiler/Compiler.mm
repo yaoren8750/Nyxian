@@ -26,12 +26,14 @@
 #include <pthread.h>
 #include "llvm/Support/raw_ostream.h"
 #import <Compiler/Compiler.h>
+#import <Synpush/Synpush.h>
 
 // TODO: Might want to extract a header
 int CompileObject(int argc,
                   const char **argv,
                   const char *outputFilePath,
-                  const char *platformTripple);
+                  const char *platformTripple,
+                  char **errorStringSet);
 
 @interface Compiler ()
 
@@ -60,6 +62,7 @@ int CompileObject(int argc,
 - (int)compileObject:(nonnull NSString*)filePath
           outputFile:(NSString*)outputFilePath
       platformTriple:(NSString*)platformTriple
+              issues:(NSMutableArray<Synitem*> * _Nullable * _Nonnull)issues
 {
     // Allocating a C array by the given _flags array
     const int argc = (int)[_flags count] + 2;
@@ -73,7 +76,38 @@ int CompileObject(int argc,
     [self.lock unlock];
 
     // Compile and get the resulting integer
-    const int result = CompileObject(argc, (const char**)argv, [outputFilePath UTF8String], [platformTriple UTF8String]);
+    // Run diagnostics
+    char *errorString = NULL;
+    const int result = CompileObject(argc, (const char**)argv, [outputFilePath UTF8String], [platformTriple UTF8String], &errorString);
+    
+    if(errorString)
+    {
+        printf("%s\n", errorString);
+        
+        NSString *errorObjCString = [NSString stringWithCString:errorString encoding:NSUTF8StringEncoding];
+        NSArray *errorLines = [errorObjCString componentsSeparatedByString:@"\n"];
+        
+        for(NSString *line in errorLines)
+        {
+            printf("%s\n", [line UTF8String]);
+            
+            NSArray *errorComponents = [line componentsSeparatedByString:@":"];
+            
+            printf("components: %lu\n", [errorComponents count]);
+            if([errorComponents count] == 5)
+            {
+                Synitem *item = [[Synitem alloc] init];
+                item.line = [errorComponents[1] unsignedIntValue];
+                item.column = [errorComponents[2] unsignedIntValue];
+                item.type = 2;
+                item.message = errorComponents[4];
+                
+                [*issues addObject:item];
+            }
+        }
+        
+        free(errorString);
+    }
     
     // Deallocating the entire C array
     for(int i = 0; i < argc; i++) free(argv[i]);

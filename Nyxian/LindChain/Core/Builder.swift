@@ -190,9 +190,19 @@ class Builder {
                 let eobject = expectedObjectFile(forPath: rpath)
                 let outputFilePath = "\(self.project.getCachePath().1)/\(eobject)"
                 
-                if self.compiler.compileObject(filePath, outputFile: outputFilePath, platformTriple: self.project.projectConfig.minimum_version) != 0 {
+                var issues: NSMutableArray? = NSMutableArray()
+                
+                if self.compiler.compileObject(
+                    filePath,
+                    outputFile: outputFilePath,
+                    platformTriple: self.project.projectConfig.minimum_version,
+                    issues: &issues
+                ) != 0 {
                     threader.lockdown()
-                    return
+                }
+                
+                if let nsArray = issues as? [Synitem] {
+                    self.database.setFileDebug(ofPath: filePath, synItems: nsArray)
                 }
                 
                 XCodeButton.incrementProgress(progress: pstep)
