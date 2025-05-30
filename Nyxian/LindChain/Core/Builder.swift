@@ -49,7 +49,7 @@ class Builder {
         self.project = project
         
         self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath().1)/debug.json")
-        self.database.clearDatabase()
+        self.database.reuseDatabase()
         
         var genericCompilerFlags: [String] = [
             "-isysroot",

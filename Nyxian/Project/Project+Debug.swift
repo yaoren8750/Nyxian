@@ -139,6 +139,11 @@ class DebugDatabase: Codable {
         self.debugObjects = [:]
         self.debugObjects["Internal"] = DebugObject(title: "Internal", type: .DebugMessage)
     }
+    
+    func reuseDatabase() {
+        // TODO: This database has to be handed off to the folder sync function to remove old files that arent existing anymore from the database!
+        self.debugObjects["Internal"] = DebugObject(title: "Internal", type: .DebugMessage)
+    }
 }
 
 /*
