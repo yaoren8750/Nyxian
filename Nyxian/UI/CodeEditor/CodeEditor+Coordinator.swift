@@ -55,21 +55,6 @@ class Coordinator: NSObject, TextViewDelegate {
             self.updateDiag(diag: self.parent.database?.getFileDebug(ofPath: self.parent.path))
         }
         self.textViewDidChange(self.parent.textView)
-        
-        ctrl1Pressed = {
-            guard let textRange = parent.textView.selectedTextRange else { return }
-            let cursorPosition = parent.textView.offset(from: parent.textView.beginningOfDocument, to: textRange.start)
-            let textUpToCursor = (parent.textView.text as NSString).substring(to: cursorPosition)
-            let lineNumber = textUpToCursor.components(separatedBy: .newlines).count
-            
-            let copymessage = self.message
-            
-            for item in copymessage {
-                if item.0.isOnLine == lineNumber {
-                    item.0.actionTap()
-                }
-            }
-        }
     }
     
     func textViewDidChange(_ textView: TextView) {
@@ -160,7 +145,6 @@ class Coordinator: NSObject, TextViewDelegate {
                 view.isUserInteractionEnabled = false
                 
                 let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height))
-                button.isOnLine = item.line
                 
                 button.backgroundColor = highlightColor.withAlphaComponent(1.0)
                 let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent.textView.theme.lineNumberFont.pointSize)
@@ -312,7 +296,6 @@ class Coordinator: NSObject, TextViewDelegate {
     }
     
     class NeoButton: UIButton {
-        var isOnLine: UInt64 = 0
         var actionTap: () -> Void
         var stateview: Bool = false
         var errorview: ErrorPreview? = nil
@@ -372,9 +355,6 @@ class Coordinator: NSObject, TextViewDelegate {
 }
 
 // MARK: - Test
-var ctrlSPressed: (Int) -> Void = { _ in }
-var ctrl1Pressed: () -> Void = {}
-var ctrlPPressed: () -> Void = {}
 extension Runestone.TextView {
     func rectForLine(_ lineNumber: Int) -> CGRect? {
         let mirror = Mirror(reflecting: self)
@@ -423,43 +403,5 @@ extension Runestone.TextView {
         }
         
         return textInputView
-    }
-    
-    open override var keyCommands: [UIKeyCommand]? {
-        return [
-            UIKeyCommand(
-                title: "Save",
-                action: #selector(handleCtrlS),
-                input: "S",
-                modifierFlags: [.control]
-            ),
-            UIKeyCommand(
-                title: "Shortcut 1",
-                action: #selector(handleCtrl1),
-                input: "1",
-                modifierFlags: [.control]
-            ),
-            UIKeyCommand(
-                title: "Play",
-                action: #selector(handleCtrlP),
-                input: "P",
-                modifierFlags: [.control]
-            )
-        ]
-    }
-    
-    @objc private func handleCtrlS() {
-        print("Ctrl + S detected — Save action triggered.")
-        ctrlSPressed(0)
-    }
-
-    @objc private func handleCtrl1() {
-        print("Ctrl + 1 detected — Shortcut 1 triggered.")
-        ctrl1Pressed()
-    }
-    
-    @objc private func handleCtrlP() {
-        print("Ctrl + P detected — Shortcut 1 triggered.")
-        ctrlPPressed()
     }
 }
