@@ -315,6 +315,8 @@ class Builder {
             if OpenAppAfterReinstallTrampolineSwitch(
                 installer,
                 self.project) {
+                self.database.addInternalMessage(message: "Application sucessfully build and installed", severity: .Note)
+                self.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
                 exit(0)
             } else {
                 self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
