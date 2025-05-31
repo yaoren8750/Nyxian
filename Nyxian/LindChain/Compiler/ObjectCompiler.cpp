@@ -127,9 +127,7 @@ int CompileObject(int argc,
     
     Clang.ExecuteAction(*Act);
     
-    DiagnosticsEngine &diagnostics = Clang.getDiagnostics();
-    
     *errorStringSet = strdup(errorString.c_str());
 
-    return Clang.getDiagnostics().hasErrorOccurred() ? 1 : 0;
+    return Clang.getDiagnostics().hasErrorOccurred();
 }
