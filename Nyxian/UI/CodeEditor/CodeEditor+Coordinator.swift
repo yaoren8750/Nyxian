@@ -33,18 +33,22 @@ import Runestone
 // MARK: - COORDINATOR
 class Coordinator: NSObject, TextViewDelegate {
     private let parent: CodeEditorViewController
-    private var message: [UIView] = []
-    private var line: [UInt64] = []
+    private var lines: [UInt64] = []
+    private var message: [(NeoButton,UIView)] = []
     
     private var iDoStuff: Bool = false
     private var iDidInvalid: Bool = false
     private var needsAnotherRun: Bool = false
+    private let textInputView: TextInputView?
+    private let textView: TextView
 
     private let debounce: Debouncer
     
     init(parent: CodeEditorViewController) {
         self.parent = parent
         self.debounce = Debouncer(delay: 1.5)
+        self.textView = parent.textView
+        self.textInputView = parent.textView.getTextInputView()
         super.init()
         guard self.parent.synpushServer != nil else { return }
         DispatchQueue.global(qos: .userInitiated).async {
@@ -61,10 +65,8 @@ class Coordinator: NSObject, TextViewDelegate {
             let copymessage = self.message
             
             for item in copymessage {
-                if let button = item as? NeoButton {
-                    if button.isOnLine == lineNumber {
-                        button.actionTap()
-                    }
+                if item.0.isOnLine == lineNumber {
+                    item.0.actionTap()
                 }
             }
         }
@@ -77,18 +79,13 @@ class Coordinator: NSObject, TextViewDelegate {
             let copymessage = self.message
             
             for item in copymessage {
-                if let button = item as? NeoButton {
-                    UIView.animate(withDuration: 0.3) {
-                        button.backgroundColor = UIColor.systemGray.withAlphaComponent(1.0)
-                        button.isUserInteractionEnabled = false
-                        button.errorview?.alpha = 0.0
-                    } completion: { _ in
-                        button.errorview?.removeFromSuperview()
-                    }
-                    continue
-                }
                 UIView.animate(withDuration: 0.3) {
-                    item.backgroundColor = UIColor.systemGray.withAlphaComponent(0.3)
+                    item.1.backgroundColor = UIColor.systemGray.withAlphaComponent(0.3)
+                    item.0.backgroundColor = UIColor.systemGray.withAlphaComponent(1.0)
+                    item.0.isUserInteractionEnabled = false
+                    item.0.errorview?.alpha = 0.0
+                } completion: { _ in
+                    item.0.errorview?.removeFromSuperview()
                 }
             }
         }
@@ -111,21 +108,21 @@ class Coordinator: NSObject, TextViewDelegate {
     }
     
     func updateDiag(diag: [Synitem]?) {
-        let textView = self.parent.textView
-        
         let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
         
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.3, animations: {
                 for item in self.message {
-                    item.alpha = 0
+                    item.0.alpha = 0
+                    item.1.alpha = 0
                 }
             }, completion: { _ in
                 for item in self.message {
-                    item.removeFromSuperview()
+                    item.0.removeFromSuperview()
+                    item.1.removeFromSuperview()
                 }
                 self.message.removeAll()
-                self.line.removeAll()
+                self.lines.removeAll()
                 waitonmebaby.signal()
             })
         }
@@ -135,15 +132,14 @@ class Coordinator: NSObject, TextViewDelegate {
         if let diag = diag {
             for item in diag {
                 if item.line == 0 { continue }
-                if self.line.contains(item.line) { continue }
+                if self.lines.contains(item.line) { continue }
+                self.lines.append(item.line)
                 
                 var rect: CGRect?
                 
                 DispatchQueue.main.sync {
                     rect = textView.rectForLine(Int(item.line))
                 }
-                
-                self.line.append(item.line)
                 
                 let highlightColor: UIColor
                 let sfname: String
@@ -165,16 +161,18 @@ class Coordinator: NSObject, TextViewDelegate {
                 
                 if let rect = rect {
                     DispatchQueue.main.async {
-                        let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: textView.bounds.size.width, height: rect.height))
+                        let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height))
                         view.backgroundColor = highlightColor
                         view.isUserInteractionEnabled = false
                         
-                        let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth/* - self.parent.textView.theme.gutterHairlineWidth*/, height: rect.height))
+                        let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height))
                         button.isOnLine = item.line
                         
                         button.backgroundColor = highlightColor.withAlphaComponent(1.0)
-                        let image = self.resizeImage(image: UIImage(systemName: sfname)!, targetSize: CGSize(width: self.parent.textView.theme.font.pointSize, height: self.parent.textView.theme.font.pointSize), tintColor: self.parent.textView.theme.gutterBackgroundColor /*UIColor.systemBackground*/)
+                        let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent.textView.theme.lineNumberFont.pointSize)
+                        let image = UIImage(systemName: sfname, withConfiguration: configuration)
                         button.setImage(image, for: .normal)
+                        button.imageView?.tintColor = UIColor.systemBackground
                         
                         var widthConstraint: NSLayoutConstraint?
                         
@@ -184,7 +182,7 @@ class Coordinator: NSObject, TextViewDelegate {
                             if button.stateview {
                                 DispatchQueue.main.async {
                                     let shift: CGFloat = self.parent.textView.gutterWidth
-                                    let finalWidth = textView.bounds.width / 1.5
+                                    let finalWidth = self.textView.bounds.width / 1.5
 
                                     let modHeight = rect.height + 10
                                     
@@ -199,16 +197,16 @@ class Coordinator: NSObject, TextViewDelegate {
                                     button.errorview = preview
 
                                     preview.alpha = 0
-                                    textView.addSubview(preview)
+                                    self.textView.addSubview(preview)
                                     
                                     widthConstraint = preview.widthAnchor.constraint(equalToConstant: 0)
                                     NSLayoutConstraint.activate([
-                                        preview.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: shift),
-                                        preview.topAnchor.constraint(equalTo: textView.topAnchor, constant: rect.origin.y),
+                                        preview.leadingAnchor.constraint(equalTo: self.textView.leadingAnchor, constant: shift),
+                                        preview.topAnchor.constraint(equalTo: self.textView.topAnchor, constant: rect.origin.y),
                                         widthConstraint!
                                     ])
 
-                                    textView.layoutIfNeeded()
+                                    self.textView.layoutIfNeeded()
                                     
                                     UIView.animate(
                                         withDuration: 0.5,
@@ -219,7 +217,7 @@ class Coordinator: NSObject, TextViewDelegate {
                                         animations: {
                                             preview.alpha = 1
                                             widthConstraint!.constant = finalWidth
-                                            textView.layoutIfNeeded()
+                                            self.textView.layoutIfNeeded()
                                         },
                                         completion: nil
                                     )
@@ -247,14 +245,12 @@ class Coordinator: NSObject, TextViewDelegate {
                         
                         view.alpha = 0
                         button.alpha = 0
-                        self.message.append(view)
-                        self.message.append(button)
+                        self.message.append((button,view))
                         
-                        let textInputView = textView.getTextInputView()
-                        textInputView?.addSubview(view)
-                        textInputView?.sendSubviewToBack(view)
-                        textInputView?.gutterContainerView.isUserInteractionEnabled = true
-                        textInputView?.gutterContainerView.addSubview(button)
+                        self.textInputView?.addSubview(view)
+                        self.textInputView?.sendSubviewToBack(view)
+                        self.textInputView?.gutterContainerView.isUserInteractionEnabled = true
+                        self.textInputView?.gutterContainerView.addSubview(button)
                         
                         UIView.animate(withDuration: 0.3, animations: {
                             view.alpha = 1
@@ -275,48 +271,7 @@ class Coordinator: NSObject, TextViewDelegate {
             if self.needsAnotherRun {
                 self.needsAnotherRun = false
                 self.textViewDidChange(self.parent.textView)
-            } else {
-                if let diag = diag {
-                    var color: UIColor
-                    
-                    color = gibDynamicColor(light: .systemGray5, dark: .systemGray6)
-                    
-                    var severity: Int = -1
-                    for item in diag {
-                        switch item.type {
-                        case 0:
-                            if severity < 0 {
-                                color = .blue.withAlphaComponent(0.8)
-                                severity = 0
-                            }
-                            break
-                        case 1:
-                            if severity < 1 {
-                                color = .orange.withAlphaComponent(0.8)
-                                severity = 1
-                            }
-                            break
-                        case 2:
-                            if severity < 2 {
-                                color = .red.withAlphaComponent(0.8)
-                                severity = 2
-                            }
-                            break
-                        default:
-                            break
-                        }
-                    }
-                }
             }
-        }
-    }
-    
-    func resizeImage(image: UIImage, targetSize: CGSize, tintColor: UIColor) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-            tintColor.setFill()
-            UIRectFillUsingBlendMode(CGRect(origin: .zero, size: targetSize), .sourceAtop)
         }
     }
     
