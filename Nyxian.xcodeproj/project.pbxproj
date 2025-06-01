@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7944B47F2DEC6EFD00834134 /* nyxian.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7944B47E2DEC6EFD00834134 /* nyxian.xcconfig */; };
 		7944B5642DEC712700834134 /* PrivateConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7944B5632DEC712700834134 /* PrivateConfig.xcconfig */; };
+		7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
 		AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */ = {isa = PBXBuildFile; productRef = AF9919572DC9175A00DDF895 /* TreeSitterObjc */; };
 		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
 		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -16,7 +16,6 @@
 		AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB302DCA566000B1B5F9 /* OpenSSL */; };
 		AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB652DCA5C9200B1B5F9 /* Vapor */; };
 		AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */; };
-		AFF4E0442DCBA35400B1B5F9 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */; };
 		AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */; };
 /* End PBXBuildFile section */
 
@@ -34,11 +33,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7944B47E2DEC6EFD00834134 /* nyxian.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = nyxian.xcconfig; sourceTree = "<group>"; };
 		7944B5632DEC712700834134 /* PrivateConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PrivateConfig.xcconfig; sourceTree = "<group>"; };
+		7944B5652DEC74EA00834134 /* Nyxian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nyxian.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7944B5672DEC74FC00834134 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		AF99171F2DC8EA3C00DDF895 /* Shared */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Shared; sourceTree = "<group>"; };
-		AF99172E2DC910DA00DDF895 /* Nyxian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nyxian.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -105,9 +103,9 @@
 				AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */,
 				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
 				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
+				7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */,
 				AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */,
 				AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */,
-				AFF4E0442DCBA35400B1B5F9 /* MobileCoreServices.framework in Frameworks */,
 				AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */,
 				AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */,
 			);
@@ -116,24 +114,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7944B5662DEC74FC00834134 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7944B5672DEC74FC00834134 /* MobileCoreServices.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AF9916D02DC8C42200DDF895 = {
 			isa = PBXGroup;
 			children = (
 				7944B5632DEC712700834134 /* PrivateConfig.xcconfig */,
 				AF99171F2DC8EA3C00DDF895 /* Shared */,
 				AF9916DB2DC8C42200DDF895 /* Nyxian */,
-				AF99172E2DC910DA00DDF895 /* Nyxian.app */,
-				AFF4E0422DCBA35300B1B5F9 /* Frameworks */,
-				7944B47E2DEC6EFD00834134 /* nyxian.xcconfig */,
+				7944B5652DEC74EA00834134 /* Nyxian.app */,
+				7944B5662DEC74FC00834134 /* Frameworks */,
 			);
-			sourceTree = "<group>";
-		};
-		AFF4E0422DCBA35300B1B5F9 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				AFF4E0432DCBA35400B1B5F9 /* MobileCoreServices.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -166,7 +163,7 @@
 				AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */,
 			);
 			productName = LindDE;
-			productReference = AF99172E2DC910DA00DDF895 /* Nyxian.app */;
+			productReference = 7944B5652DEC74EA00834134 /* Nyxian.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -219,7 +216,6 @@
 			files = (
 				AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */,
 				7944B5642DEC712700834134 /* PrivateConfig.xcconfig in Resources */,
-				7944B47F2DEC6EFD00834134 /* nyxian.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,6 +268,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = Y2844D5HR5;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -337,6 +334,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = Y2844D5HR5;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
