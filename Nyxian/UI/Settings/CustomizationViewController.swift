@@ -122,6 +122,8 @@ int main(void)
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
         
+        guard indexPath.section == 2 else { return }
+        
         let iconName: String = self.icons[indexPath.row]
         
         if iconName == "Default" {
