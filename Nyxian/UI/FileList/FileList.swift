@@ -113,7 +113,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 self.present(loggerView, animated: true)
             }))
             projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: "apple.terminal.fill"), handler: { _ in
-                let loggerView = LoggerView()
+                let loggerView = UINavigationController(rootViewController: LoggerViewController())
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))
