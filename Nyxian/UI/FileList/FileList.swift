@@ -128,91 +128,83 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
         }
         
         // The generic file system menu
-        var fileMenuElements: [UIMenuElement] = []
-        fileMenuElements.append(UIAction(title: "Create", image: UIImage(systemName: "plus"), handler: { _ in
+        enum CreateEntryMode {
+            case file
+            case folder
+        }
+        
+        func createEntry(mode: CreateEntryMode) {
+            let alert: UIAlertController = UIAlertController(
+                title: "Create \((mode == .file) ? "File" : "Folder")",
+                message: nil,
+                preferredStyle: .alert
+            )
             
-            enum CreateEntryMode {
-                case file
-                case folder
+            alert.addTextField { textField in
+                textField.placeholder = "Name"
             }
             
-            func createEntry(mode: CreateEntryMode) {
-                let alert: UIAlertController = UIAlertController(
-                    title: "Create \((mode == .file) ? "File" : "Folder")",
-                    message: nil,
-                    preferredStyle: .alert
-                )
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
+                let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
                 
-                alert.addTextField { textField in
-                    textField.placeholder = "Name"
-                }
-                
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
-                    let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
-                    
-                    switch mode {
-                    case .folder:
-                        if FileManager.default.fileExists(atPath: destination.path) {
-                            let alert: UIAlertController = UIAlertController(
-                                title: "Error",
-                                message: "Folder with the name \"\(destination.lastPathComponent)\" already exists.",
-                                preferredStyle: .alert
-                            )
-                            
-                            alert.addAction(UIAlertAction(title: "Close", style: .default))
-                            
-                            self.present(alert, animated: true)
-                        } else {
-                            try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
-                            self.addFile(destination: destination)
-                        }
-                    case .file:
-                        var isDirectory: ObjCBool = ObjCBool(false)
-                        if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
-                            let alert: UIAlertController = UIAlertController(
-                                title: isDirectory.boolValue ? "Error" : "Warning",
-                                message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
-                                preferredStyle: .alert
-                            )
-                            
-                            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                            
-                            if !isDirectory.boolValue {
-                                alert.addAction(UIAlertAction(
-                                    title: "Overwrite",
-                                    style: .destructive
-                                ) { _ in
-                                    try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                                    self.replaceFile(destination: destination)
-                                })
-                            }
-                            
-                            self.present(alert, animated: true)
-                        } else {
-                            try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                            self.addFile(destination: destination)
-                        }
+                switch mode {
+                case .folder:
+                    if FileManager.default.fileExists(atPath: destination.path) {
+                        let alert: UIAlertController = UIAlertController(
+                            title: "Error",
+                            message: "Folder with the name \"\(destination.lastPathComponent)\" already exists.",
+                            preferredStyle: .alert
+                        )
+                        
+                        alert.addAction(UIAlertAction(title: "Close", style: .default))
+                        
+                        self.present(alert, animated: true)
+                    } else {
+                        try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+                        self.addFile(destination: destination)
                     }
-                })
-                
-                self.present(alert, animated: true)
-            }
-            
-            let actionSheet: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-            
-            actionSheet.addAction(UIAlertAction(title: "File", style: .default){ _ in
-                createEntry(mode: .file)
+                case .file:
+                    var isDirectory: ObjCBool = ObjCBool(false)
+                    if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
+                        let alert: UIAlertController = UIAlertController(
+                            title: isDirectory.boolValue ? "Error" : "Warning",
+                            message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
+                            preferredStyle: .alert
+                        )
+                        
+                        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                        
+                        if !isDirectory.boolValue {
+                            alert.addAction(UIAlertAction(
+                                title: "Overwrite",
+                                style: .destructive
+                            ) { _ in
+                                try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                                self.replaceFile(destination: destination)
+                            })
+                        }
+                        
+                        self.present(alert, animated: true)
+                    } else {
+                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                        self.addFile(destination: destination)
+                    }
+                }
             })
             
-            actionSheet.addAction(UIAlertAction(title: "Folder", style: .default) { _ in
-                createEntry(mode: .folder)
-            })
-            
-            actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            
-            self.present(actionSheet, animated: true)
+            self.present(alert, animated: true)
+        }
+        
+        var fileMenuElements: [UIMenuElement] = []
+        var createMenuElements: [UIMenuElement] = []
+        createMenuElements.append(UIAction(title: "File", image: UIImage(systemName: "doc.fill"), handler: { _ in
+            createEntry(mode: .file)
         }))
+        createMenuElements.append(UIAction(title: "Folder", image: UIImage(systemName: "folder.fill"), handler: { _ in
+            createEntry(mode: .folder)
+        }))
+        fileMenuElements.append(UIMenu(title: "New", image: UIImage(systemName: "plus.circle.fill"), children: createMenuElements))
         fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "list.bullet.clipboard.fill"), handler: { _ in
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
