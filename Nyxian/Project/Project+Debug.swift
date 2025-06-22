@@ -309,6 +309,8 @@ class UIDebugViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.tableView.deselectRow(at: indexPath, animated: true)
         
+        guard indexPath.section != 0 else { return }
+        
         let object: DebugObject = sortedDebugObjects[indexPath.section]
         let item: DebugItem = object.debugItems[indexPath.row]
         
