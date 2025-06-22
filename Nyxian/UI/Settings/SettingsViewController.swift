@@ -23,7 +23,13 @@ class SettingsViewController: UITableViewController {
         
         switch indexPath.row {
         case 0:
-            cell.imageView?.image = UIImage(systemName: "wrench.adjustable.fill")
+            cell.imageView?.image = UIImage(systemName: {
+                if #available(iOS 16.0, *) {
+                    return "wrench.adjustable.fill"
+                } else {
+                    return "gearshape.2.fill"
+                }
+            }())
             cell.textLabel?.text = "Toolchain"
             break
         case 1:
@@ -31,7 +37,13 @@ class SettingsViewController: UITableViewController {
             cell.textLabel?.text = "Customization"
             break
         case 2:
-            cell.imageView?.image = UIImage(systemName: "document.badge.gearshape.fill")
+            cell.imageView?.image = UIImage(systemName: {
+                if #available(iOS 16.0, *) {
+                    return "document.badge.gearshape.fill"
+                } else {
+                    return "tray.2.fill"
+                }
+            }())
             cell.textLabel?.text = "Miscellaneous"
             break
         default:
