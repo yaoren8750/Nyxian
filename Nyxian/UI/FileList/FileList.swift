@@ -299,7 +299,13 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
             let infoAction = UIAction(title: "Information", image: UIImage(systemName: "info.square.fill")) { _ in
                 // TODO: Add Information sheet
             }
-            let copyAction = UIAction(title: "Copy", image: UIImage(systemName: "document.on.clipboard")) { action in
+            let copyAction = UIAction(title: "Copy", image: UIImage(systemName: {
+                if #available(iOS 16.0, *) {
+                    return "document.on.clipboard"
+                } else {
+                    return "doc.on.doc.fill"
+                }
+            }())) { action in
                 PasteBoardServices.copy(mode: .copy, path: self.entries[indexPath.row].path)
             }
             let moveAction = UIAction(title: "Move", image: UIImage(systemName: "arrow.right")) { action in
