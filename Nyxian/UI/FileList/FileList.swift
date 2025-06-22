@@ -112,7 +112,13 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))
-            projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: "apple.terminal.fill"), handler: { _ in
+            projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: {
+                if #available(iOS 16.0, *) {
+                    return "apple.terminal.fill"
+                } else {
+                    return "waveform.path.ecg.rectangle.fill"
+                }
+            }()), handler: { _ in
                 let loggerView = UINavigationController(rootViewController: LoggerViewController())
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
@@ -205,7 +211,13 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
             createEntry(mode: .folder)
         }))
         fileMenuElements.append(UIMenu(title: "New", image: UIImage(systemName: "plus.circle.fill"), children: createMenuElements))
-        fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: "list.bullet.clipboard.fill"), handler: { _ in
+        fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: {
+            if #available(iOS 16.0, *) {
+                return "list.bullet.clipboard.fill"
+            } else {
+                return "doc.on.doc.fill"
+            }
+        }()), handler: { _ in
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
             var isDirectory: ObjCBool = ObjCBool(false)
