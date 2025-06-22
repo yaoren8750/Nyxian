@@ -91,7 +91,13 @@ int main(void)
         } else {
             cell = UITableViewCell()
             let iconName = icons[indexPath.row]
-            if let image = UIImage(named: "IconPreview\(iconName)") {
+            if let image = UIImage(named: {
+                if #available(iOS 18.0, *) {
+                    return "IconPreview\(iconName)"
+                } else {
+                    return "IconPreview\(iconName)Old"
+                }
+            }()) {
                 let customImageView = UIImageView(image: image)
                 customImageView.layer.cornerRadius = 10
                 customImageView.layer.masksToBounds = true
