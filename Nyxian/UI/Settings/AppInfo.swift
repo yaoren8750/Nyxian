@@ -90,6 +90,8 @@ class AppInfoViewController: UITableViewController {
             }
         }
         
+        cell.selectionStyle = .none
+        
         return cell
     }
 }
