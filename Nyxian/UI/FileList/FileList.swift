@@ -36,7 +36,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
         self.path = path
         self.entries = FileListEntry.getEntries(ofPath: self.path)
         self.isSublink = isSublink
-        super.init(nibName: nil, bundle: nil)
+        super.init(style: .insetGrouped)
         
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.addTarget(self, action: #selector(performRefresh), for: .valueChanged)

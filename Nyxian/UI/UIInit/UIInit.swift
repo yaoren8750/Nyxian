@@ -32,8 +32,8 @@ func RevertUI() {
         // Fallback on earlier versions
     }
     
-    UITableView.appearance().backgroundColor = theme.backgroundColor
-    UITableViewCell.appearance().backgroundColor = theme.gutterBackgroundColor
+    UITableView.appearance().backgroundColor = theme.gutterBackgroundColor
+    UITableViewCell.appearance().backgroundColor = theme.backgroundColor
     
     UILabel.appearance().textColor = theme.textColor
     UIView.appearance().tintColor = theme.textColor
