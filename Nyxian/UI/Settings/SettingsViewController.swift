@@ -15,7 +15,7 @@ class SettingsViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return 4
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -46,6 +46,10 @@ class SettingsViewController: UITableViewController {
             }())
             cell.textLabel?.text = "Miscellaneous"
             break
+        case 3:
+            cell.imageView?.image = UIImage(systemName: "info")
+            cell.textLabel?.text = "Info"
+            break
         default:
             break
         }
@@ -71,15 +75,14 @@ class SettingsViewController: UITableViewController {
         case 2:
             viewController = MiscellaneousController(style: .insetGrouped)
             break
+        case 3:
+            viewController = AppInfoViewController(style: .insetGrouped)
+            break
         default:
             viewController = UIViewController()
             break
         }
         
         self.navigationController?.pushViewController(viewController, animated: true)
-    }
-    
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        return "Nyxian \"\(buildName)\" \(buildVersion) (\(buildStage))\nNyxianCore \"\(buildChainName)\" \(buildChainVersion) (\(buildChainStage))"
     }
 }
