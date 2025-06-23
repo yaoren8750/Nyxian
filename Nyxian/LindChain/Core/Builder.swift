@@ -160,6 +160,7 @@ class Builder {
         infoPlistData["CFBundleShortVersionString"] = self.project.projectConfig.version
         infoPlistData["CFBundleVersion"] = self.project.projectConfig.shortVersion
         infoPlistData["MinimumOSVersion"] = self.project.projectConfig.minimum_version
+        infoPlistData["UIDeviceFamily"] = [1,2]
         
         let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
         FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
