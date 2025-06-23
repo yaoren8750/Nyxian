@@ -78,4 +78,8 @@ class SettingsViewController: UITableViewController {
         
         self.navigationController?.pushViewController(viewController, animated: true)
     }
+    
+    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        return "Nyxian \"Nightsky\" 0.2 (Alpha)"
+    }
 }
