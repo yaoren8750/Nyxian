@@ -331,7 +331,11 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 
                 alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
                 alert.addAction(UIAlertAction(title: "Rename", style: .default, handler: { _ in
+                    try? FileManager.default.moveItem(atPath: "\(self.path)/\(entry.name)", toPath: "\(self.path)/\(alert.textFields![0].text ?? "0")")
                     
+                    self.entries.remove(at: indexPath.row)
+                    self.entries.append(FileListEntry.getEntry(ofPath: "\(self.path)/\(alert.textFields![0].text ?? "0")"))
+                    self.tableView.reloadData()
                 }))
                 
                 self.present(alert, animated: true)
