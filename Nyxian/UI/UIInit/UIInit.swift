@@ -8,8 +8,10 @@
 import UIKit
 
 func RevertUI() {
+    let theme: LindDEThemer = getCurrentSelectedTheme()
+    
     let navigationBarAppearance = UINavigationBarAppearance()
-    navigationBarAppearance.backgroundColor = UIColor.systemBackground
+    navigationBarAppearance.backgroundColor = theme.gutterBackgroundColor
     let titleAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
     navigationBarAppearance.titleTextAttributes = titleAttributes
     let buttonAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
@@ -23,10 +25,16 @@ func RevertUI() {
     UINavigationBar.appearance().scrollEdgeAppearance?.backgroundEffect = blurEffect
     let appearance = UITabBarAppearance()
     appearance.configureWithOpaqueBackground()
-    appearance.backgroundColor = UIColor.systemBackground
+    appearance.backgroundColor = theme.gutterBackgroundColor
     if #available(iOS 15.0, *) {
         UITabBar.appearance().scrollEdgeAppearance = appearance
     } else {
         // Fallback on earlier versions
     }
+    
+    UITableView.appearance().backgroundColor = theme.backgroundColor
+    UITableViewCell.appearance().backgroundColor = theme.gutterBackgroundColor
+    
+    UILabel.appearance().textColor = theme.textColor
+    UIView.appearance().tintColor = theme.textColor
 }

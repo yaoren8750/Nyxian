@@ -86,6 +86,7 @@ int main(void)
                 cell = PickerTableCell(options: ["NyxianLDE", "Solarized"], title: "Theme", key: "LDETheme", defaultValue: 0)
                 (cell as! PickerTableCell).callback = { selected in
                     self.themePreviewCell!.switchTheme(theme: themes[selected])
+                    restartProcess()
                 }
             }
         } else {
