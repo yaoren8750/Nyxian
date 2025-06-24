@@ -450,7 +450,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 addSystemImage(to: iconView, name: "text.page.fill")
             }
         } else {
-            addSystemImage(to: iconView, name: "folder.fill", tintColor: .systemBlue)
+            addSystemImage(to: iconView, name: "folder.fill")
         }
         
         cell.contentView.addSubview(iconView)
@@ -507,7 +507,9 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
     private func addSystemImage(to view: UIView, name: String, tintColor: UIColor? = nil) {
         let imageView = UIImageView(image: UIImage(systemName: name))
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = tintColor ?? .label
+        if let tintColor = tintColor {
+            imageView.tintColor = tintColor
+        }
         imageView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(imageView)
         
