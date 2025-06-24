@@ -10,26 +10,24 @@ import UIKit
 func RevertUI() {
     let theme: LindDEThemer = getCurrentSelectedTheme()
     
+    let blurEffect = UIBlurEffect(style: .systemMaterial)
     let navigationBarAppearance = UINavigationBarAppearance()
     navigationBarAppearance.backgroundColor = theme.gutterBackgroundColor
-    let titleAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
-    navigationBarAppearance.titleTextAttributes = titleAttributes
-    let buttonAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
-    navigationBarAppearance.buttonAppearance.normal.titleTextAttributes = buttonAttributes
-    let backItemAppearance = UIBarButtonItemAppearance()
-    backItemAppearance.normal.titleTextAttributes = [.foregroundColor : UIColor.label]
-    navigationBarAppearance.backButtonAppearance = backItemAppearance
-    let blurEffect = UIBlurEffect(style: .light)
+    navigationBarAppearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: theme.textColor]
+    navigationBarAppearance.buttonAppearance.normal.titleTextAttributes = [NSAttributedString.Key.foregroundColor: theme.textColor]
+    navigationBarAppearance.backButtonAppearance = UIBarButtonItemAppearance()
+    navigationBarAppearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor : theme.textColor]
+    
     UINavigationBar.appearance().compactAppearance = navigationBarAppearance
     UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
     UINavigationBar.appearance().scrollEdgeAppearance?.backgroundEffect = blurEffect
-    let appearance = UITabBarAppearance()
-    appearance.configureWithOpaqueBackground()
-    appearance.backgroundColor = theme.gutterBackgroundColor
+    
     if #available(iOS 15.0, *) {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = theme.gutterBackgroundColor
         UITabBar.appearance().scrollEdgeAppearance = appearance
-    } else {
-        // Fallback on earlier versions
+        UITabBar.appearance().scrollEdgeAppearance?.backgroundEffect = blurEffect
     }
     
     UITableView.appearance().backgroundColor = theme.gutterBackgroundColor
