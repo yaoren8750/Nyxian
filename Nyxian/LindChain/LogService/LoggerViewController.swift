@@ -11,7 +11,8 @@ import UIKit
 class LoggerTextView: UITextView {
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
-        //self.backgroundColor = .clear
+        self.backgroundColor = UITableView.appearance().backgroundColor
+        self.textColor = UILabel.appearance().textColor
         self.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .bold)
         self.isEditable = false
         self.isSelectable = true

@@ -37,13 +37,7 @@ class SettingsViewController: UITableViewController {
             cell.textLabel?.text = "Customization"
             break
         case 2:
-            cell.imageView?.image = UIImage(systemName: {
-                if #available(iOS 16.0, *) {
-                    return "document.badge.gearshape.fill"
-                } else {
-                    return "tray.2.fill"
-                }
-            }())
+            cell.imageView?.image = UIImage(systemName: "tray.2.fill")
             cell.textLabel?.text = "Miscellaneous"
             break
         case 3:

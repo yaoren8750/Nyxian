@@ -113,7 +113,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 self.present(loggerView, animated: true)
             }))
             projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: {
-                if #available(iOS 16.0, *) {
+                if #available(iOS 17.0, *) {
                     return "apple.terminal.fill"
                 } else {
                     return "waveform.path.ecg.rectangle.fill"
@@ -300,7 +300,7 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
                 // TODO: Add Information sheet
             }
             let copyAction = UIAction(title: "Copy", image: UIImage(systemName: {
-                if #available(iOS 16.0, *) {
+                if #available(iOS 17.0, *) {
                     return "document.on.clipboard"
                 } else {
                     return "doc.on.doc.fill"
