@@ -284,6 +284,7 @@ class CodeEditorViewController: UIViewController {
     }
     
     @objc func closeEditor() {
+        NotificationCenter.default.post(name: Notification.Name("CodeEditorDismissed"), object: nil)
         self.dismiss(animated: true)
     }
     

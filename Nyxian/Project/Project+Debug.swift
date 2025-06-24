@@ -201,6 +201,7 @@ class UIDebugViewController: UITableViewController {
         self.file = "\(project.getCachePath().1)/debug.json"
         self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
         super.init(style: .insetGrouped)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshDebugDatabase), name: Notification.Name("CodeEditorDismissed"), object: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -327,5 +328,10 @@ class UIDebugViewController: UITableViewController {
         debugDatabase.clearDatabase()
         debugDatabase.saveDatabase(toPath: self.file)
         tableView.reloadData()
+    }
+    
+    @objc func refreshDebugDatabase() {
+        self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
+        self.tableView.reloadData()
     }
 }
