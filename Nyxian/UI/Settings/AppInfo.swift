@@ -16,7 +16,7 @@ let buildVersion: String = "0.3"
 // Toolchain
 let buildChainName: String = "Leaf"
 let buildChainStage: String = "Alpha"
-let buildChainVersion: String = "0.1"
+let buildChainVersion: String = "0.2"
 
 // AppInfoView
 class AppInfoViewController: UITableViewController {

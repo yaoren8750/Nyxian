@@ -343,6 +343,8 @@ class Builder {
     ///
     static func buildProject(withProject project: AppProject,
                              completion: @escaping (Bool) -> Void) {
+        XCodeButton.resetProgress()
+        
         pthread_dispatch {
             Bootstrap.shared.waitTillDone()
             

@@ -557,22 +557,11 @@ class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
         LDELogger.clear()
         guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
         let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
-        
-        let button: UIButton = UIButton()
-        button.setTitle("Abort", for: .normal)
-        button.setTitleColor(.systemBlue, for: .normal)
-        button.addAction(UIAction { _ in
-            Builder.abort = true
-        }, for: .touchUpInside)
-        
-        let leftButton: UIBarButtonItem = UIBarButtonItem(customView: button)
-        
-        self.navigationItem.setLeftBarButton(leftButton, animated: true)
+
         self.navigationItem.setRightBarButton(barButton, animated: true)
         self.navigationItem.setHidesBackButton(true, animated: true)
         Builder.buildProject(withProject: project) { result in
             DispatchQueue.main.async {
-                self.navigationItem.setLeftBarButton(nil, animated: true)
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
