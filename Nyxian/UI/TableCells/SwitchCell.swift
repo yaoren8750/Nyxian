@@ -57,7 +57,7 @@ class SwitchTableCell: UITableViewCell {
         
         // now the option button
         let toggle: UISwitch = UISwitch()
-        toggle.onTintColor = UIColor.systemBlue
+        toggle.onTintColor = UIView.appearance().tintColor
         toggle.setOn(self.value, animated: false)
         toggle.translatesAutoresizingMaskIntoConstraints = false
         toggle.addTarget(self, action: #selector(toggleValueChanged), for: .valueChanged)

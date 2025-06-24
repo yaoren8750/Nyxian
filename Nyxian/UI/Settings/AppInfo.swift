@@ -11,7 +11,7 @@ import UIKit
 // App
 let buildName: String = "Nightsky"
 let buildStage: String = "Alpha"
-let buildVersion: String = "0.2"
+let buildVersion: String = "0.3"
 
 // Toolchain
 let buildChainName: String = "Leaf"
