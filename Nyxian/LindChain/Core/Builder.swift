@@ -30,18 +30,6 @@ class Builder {
     
     let database: DebugDatabase
     
-    static var abortHandler: () -> Void = {}
-    static var _abort: Bool = false
-    static var abort: Bool {
-        get {
-            return _abort
-        }
-        set {
-            _abort = newValue
-            abortHandler()
-        }
-    }
-    
     init(project: AppProject) {
         project.projectConfig.plistHelper?.reloadForcefully()
         project.reload()
@@ -164,7 +152,6 @@ class Builder {
         
         let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
         FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
-        try Builder.isAbortedCheck()
     }
     
     ///
@@ -174,11 +161,6 @@ class Builder {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
         let group: DispatchGroup = DispatchGroup()
         let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads)
-        
-        // Setup abort handler
-        Builder.abortHandler = {
-            threader.lockdown()
-        }
         
         // Now compile
         for _ in self.dirtySourceFiles {
@@ -214,9 +196,6 @@ class Builder {
         
         group.wait()
         
-        // Destroy handler
-        Builder.abortHandler = {}
-        
         if threader.isLockdown {
             self.database.addInternalMessage(message: "Failed to compile source code", severity: .Error)
             throw NSError()
@@ -227,8 +206,6 @@ class Builder {
         } catch {
             print(error.localizedDescription)
         }
-        
-        try Builder.isAbortedCheck()
     }
     
     func link() throws {
@@ -255,8 +232,6 @@ class Builder {
             self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
             throw NSError()
         }
-        
-        try Builder.isAbortedCheck()
     }
     
     func sign() throws {
@@ -272,8 +247,6 @@ class Builder {
             self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
             throw NSError()
         }
-        
-        try Builder.isAbortedCheck()
     }
     
     func package() throws {
@@ -285,8 +258,6 @@ class Builder {
             at: URL(fileURLWithPath: self.project.getPayloadPath().1),
             to: URL(fileURLWithPath: self.project.getPackagePath().1)
         )
-        
-        try Builder.isAbortedCheck()
     }
     
     func install() throws {
@@ -328,16 +299,6 @@ class Builder {
         }
     }
     
-    static private func isAbortedCheck() throws {
-        if Builder.abort {
-            throw NSError(
-                domain: "",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "[*] user aborted compilation"]
-            )
-        }
-    }
-    
     ///
     /// Static function to build the project
     ///
@@ -347,9 +308,6 @@ class Builder {
         
         pthread_dispatch {
             Bootstrap.shared.waitTillDone()
-            
-            Builder.abortHandler = {}
-            Builder.abort = false
             
             var result: Bool = true
             let builder: Builder = Builder(
@@ -388,11 +346,7 @@ class Builder {
                     ("arrow.down.app.fill",nil,{try builder.install() })
                 ])
             } catch {
-                if !Builder.abort {
-                    result = false
-                } else {
-                    try? builder.clean()
-                }
+                try? builder.clean()
             }
             
             builder.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
