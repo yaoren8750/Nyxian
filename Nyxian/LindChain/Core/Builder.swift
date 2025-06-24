@@ -347,6 +347,7 @@ class Builder {
                 ])
             } catch {
                 try? builder.clean()
+                result = false
             }
             
             builder.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
