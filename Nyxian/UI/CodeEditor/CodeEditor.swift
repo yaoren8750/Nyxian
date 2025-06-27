@@ -269,7 +269,11 @@ class CodeEditorViewController: UIViewController {
         
         synpushServer.reparseFile(self.textView.text)
         let synItems: [Synitem] = synpushServer.getDiagnostics()
+        
         self.database!.setFileDebug(ofPath: self.path, synItems: synItems)
+        if !FileManager.default.fileExists(atPath: self.project!.getCachePath()) {
+            try? FileManager.default.createDirectory(atPath: self.project!.getCachePath(), withIntermediateDirectories: true)
+        }
         self.database!.saveDatabase(toPath: "\(self.project!.getCachePath())/debug.json")
     }
     
