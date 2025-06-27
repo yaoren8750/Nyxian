@@ -84,6 +84,15 @@ class Bootstrap {
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Projects"), withIntermediateDirectories: false)
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Certificates"), withIntermediateDirectories: false)
                         
+                        if !fdownload("https://nyxian.app/bootstrap/include.zip", "include.zip") {
+                            print("[*] Bootstrap download failed\n")
+                            throw NSError(
+                                domain: "",
+                                code: 0,
+                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
+                            )
+                        }
+                        
                         // Now extract Include and SDK
                         print("[*] Bootstrapping folder structures")
                         print("[*] Extracting include.zip")
