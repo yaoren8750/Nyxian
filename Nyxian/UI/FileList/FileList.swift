@@ -575,10 +575,10 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                         loggerView.modalPresentationStyle = .formSheet
                         self.present(loggerView, animated: true)
                     }
-                }
-                
-                if self.project.projectConfig.restartApp {
-                    restartProcess()
+                    
+                    if self.project.projectConfig.restartApp {
+                        restartProcess()
+                    }
                 }
             }
         }

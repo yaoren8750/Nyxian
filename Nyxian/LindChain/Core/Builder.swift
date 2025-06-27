@@ -31,10 +31,8 @@ class Builder {
     let database: DebugDatabase
     
     init(project: AppProject) {
-        project.projectConfig.plistHelper?.reloadForcefully()
-        project.reload()
-        
         self.project = project
+        self.project.reload()
         
         self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath())/debug.json")
         self.database.reuseDatabase()
@@ -67,41 +65,26 @@ class Builder {
         if(fileArgsString == self.argsString), self.project.projectConfig.increment {
             self.dirtySourceFiles = self.dirtySourceFiles.filter { self.isFileDirty($0) }
         }
-        
     }
     
     ///
     /// Function to detect if a file is dirty (has to be recompiled)
     ///
     private func isFileDirty(_ item: String) -> Bool {
-        let rpath = relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())
-        let objectFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: rpath))"
+        let objectFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())))"
         
         // Checking if the source file is newer than the compiled object file
-        guard let sourceDate = try? FileManager.default
-            .attributesOfItem(atPath: item)[.modificationDate] as? Date else {
-            return true
-        }
-        
-        guard let objectDate = try? FileManager.default
-            .attributesOfItem(atPath: objectFilePath)[.modificationDate] as? Date else {
-            return true
-        }
-        
-        if objectDate < sourceDate {
+        guard let sourceDate = try? FileManager.default.attributesOfItem(atPath: item)[.modificationDate] as? Date,
+              let objectDate = try? FileManager.default.attributesOfItem(atPath: objectFilePath)[.modificationDate] as? Date,
+              objectDate > sourceDate else {
             return true
         }
         
         // Checking if the header files included by the source code are newer than the object file
-        let headers: [String] = HeaderIncludationsGatherer(path: item).includes
-        for header in headers {
+        for header in HeaderIncludationsGatherer(path: item).includes {
             guard FileManager.default.fileExists(atPath: header),
-                let headerDate = try? FileManager.default
-                    .attributesOfItem(atPath: header)[.modificationDate] as? Date else {
-                return true
-            }
-            
-            if objectDate < headerDate {
+                  let headerDate = try? FileManager.default.attributesOfItem(atPath: header)[.modificationDate] as? Date,
+                  objectDate > headerDate else {
                 return true
             }
         }
@@ -113,15 +96,12 @@ class Builder {
     /// Function to cleanup the project from old build files
     ///
     func clean() throws {
-        // first find the files to remove
-        let trashfiles: [String] = FindFilesStack(
+        // now remove what was find
+        for file in FindFilesStack(
             self.project.getPath(),
             ["o","tmp"],
             ["Resources","Config"]
-        )
-        
-        // now remove what was find
-        for file in trashfiles {
+        ) {
             try? FileManager.default.removeItem(atPath: file)
         }
         
@@ -170,9 +150,7 @@ class Builder {
         
         for filePath in self.dirtySourceFiles {
             threader.spawn {
-                let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())
-                let eobject = expectedObjectFile(forPath: rpath)
-                let outputFilePath = "\(self.project.getCachePath())/\(eobject)"
+                let outputFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())))"
                 
                 var issues: NSMutableArray? = NSMutableArray()
                 
@@ -312,6 +290,12 @@ class Builder {
     ///
     static func buildProject(withProject project: AppProject,
                              completion: @escaping (Bool) -> Void) {
+        if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
+            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.minimum_version) is needed to build the app!")
+            completion(true)
+            return
+        }
+        
         XCodeButton.resetProgress()
         
         pthread_dispatch {

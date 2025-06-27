@@ -156,10 +156,12 @@ class AppProject: Identifiable {
     let codeEditorConfig: CodeEditorConfig
     
     private let path: String
+    private let cachePath: String
     
     init(path: String) {
         // store the path
         self.path = path
+        self.cachePath = Bootstrap.shared.bootstrapPath("/Cache/\(self.path.URLGet().lastPathComponent)")
         
         // validate if the project plist exists and extract information
         self.projectConfig = ProjectConfig(withPath: "\(self.path)/Config/Project.plist")
@@ -264,9 +266,7 @@ class AppProject: Identifiable {
     }
     
     func getCachePath() -> String {
-        let uuidUsedInGeneration: String = self.path.URLGet().lastPathComponent
-        
-        return "\(Bootstrap.shared.bootstrapPath("/Cache/\(uuidUsedInGeneration)"))"
+        return cachePath
     }
     
     func getResourcesPath() -> String {
@@ -274,23 +274,23 @@ class AppProject: Identifiable {
     }
     
     func getPayloadPath() -> String {
-        return "\(path)/Payload"
+        return "\(cachePath)/Payload"
     }
     
     func getBundlePath() -> String {
-        return "\(path)/Payload/\(projectConfig.executable).app"
+        return "\(cachePath)/Payload/\(projectConfig.executable).app"
     }
     
     func getMachOPath() -> String {
         if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            return "\(path)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
+            return "\(cachePath)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
         } else {
-            return "\(path)/\(projectConfig.executable)"
+            return "\(cachePath)/\(projectConfig.executable)"
         }
     }
     
     func getPackagePath() -> String {
-        return "\(path)/\(projectConfig.executable).ipa"
+        return "\(cachePath)/\(projectConfig.executable).ipa"
     }
     
     ///
