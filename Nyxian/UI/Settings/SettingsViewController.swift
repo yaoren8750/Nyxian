@@ -8,19 +8,35 @@
 import UIKit
 
 class SettingsViewController: UIThemedTableViewController {
+    private var hasRestoredLastSelection = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.title = "Settings"
     }
-    
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        if !hasRestoredLastSelection,
+           let savedIndex = UserDefaults.standard.value(forKey: "LastSelectedSettingsIndex") as? Int,
+           navigationController?.topViewController === self {
+
+            hasRestoredLastSelection = true
+            navigateToController(for: savedIndex, animated: false)
+        } else {
+            UserDefaults.standard.set(nil, forKey: "LastSelectedSettingsIndex")
+        }
+    }
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 4
     }
-    
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell: UITableViewCell = UITableViewCell()
-        
+        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        cell.accessoryType = .disclosureIndicator
+
         switch indexPath.row {
         case 0:
             cell.imageView?.image = UIImage(systemName: {
@@ -31,51 +47,44 @@ class SettingsViewController: UIThemedTableViewController {
                 }
             }())
             cell.textLabel?.text = "Toolchain"
-            break
         case 1:
             cell.imageView?.image = UIImage(systemName: "paintbrush.fill")
             cell.textLabel?.text = "Customization"
-            break
         case 2:
             cell.imageView?.image = UIImage(systemName: "tray.2.fill")
             cell.textLabel?.text = "Miscellaneous"
-            break
         case 3:
             cell.imageView?.image = UIImage(systemName: "info")
             cell.textLabel?.text = "Info"
-            break
         default:
             break
         }
-        
-        cell.accessoryType = .disclosureIndicator
-        
+
         return cell
     }
-    
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.tableView.deselectRow(at: indexPath, animated: true)
-        
+        tableView.deselectRow(at: indexPath, animated: true)
+        UserDefaults.standard.set(indexPath.row, forKey: "LastSelectedSettingsIndex")
+        navigateToController(for: indexPath.row, animated: true)
+    }
+
+    private func navigateToController(for index: Int, animated: Bool) {
         let viewController: UIViewController
-        
-        switch indexPath.row {
+
+        switch index {
         case 0:
             viewController = ToolChainController(style: .insetGrouped)
-            break
         case 1:
             viewController = CustomizationViewController(style: .insetGrouped)
-            break
         case 2:
             viewController = MiscellaneousController(style: .insetGrouped)
-            break
         case 3:
             viewController = AppInfoViewController(style: .insetGrouped)
-            break
         default:
-            viewController = UIViewController()
-            break
+            return
         }
-        
-        self.navigationController?.pushViewController(viewController, animated: true)
+
+        navigationController?.pushViewController(viewController, animated: animated)
     }
 }
