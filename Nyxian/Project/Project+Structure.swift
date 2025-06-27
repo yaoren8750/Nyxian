@@ -248,11 +248,8 @@ class AppProject: Identifiable {
     }
     
     static func removeProject(project: AppProject) {
-        let cache: (Bool,String) = project.getCachePath()
+        try? FileManager.default.removeItem(atPath: project.getCachePath())
         try? FileManager.default.removeItem(atPath: project.path)
-        if cache.0 {
-            try? FileManager.default.removeItem(atPath: cache.1)
-        }
     }
     
     ///
@@ -266,44 +263,34 @@ class AppProject: Identifiable {
         return URL(fileURLWithPath: self.path).lastPathComponent
     }
     
-    func getCachePath() -> (Bool,String) {
+    func getCachePath() -> String {
         let uuidUsedInGeneration: String = self.path.URLGet().lastPathComponent
         
-        return getValidationPath("\(Bootstrap.shared.bootstrapPath("/Cache/\(uuidUsedInGeneration)"))")
+        return "\(Bootstrap.shared.bootstrapPath("/Cache/\(uuidUsedInGeneration)"))"
     }
     
-    func getResourcesPath() -> (Bool,String) {
-        return getValidationPath("\(path)/Resources")
+    func getResourcesPath() -> String {
+        return "\(path)/Resources"
     }
     
-    func getPayloadPath() -> (Bool,String) {
-        return getValidationPath("\(path)/Payload")
+    func getPayloadPath() -> String {
+        return "\(path)/Payload"
     }
     
-    func getBundlePath() -> (Bool,String) {
-        return getValidationPath("\(path)/Payload/\(projectConfig.executable).app")
+    func getBundlePath() -> String {
+        return "\(path)/Payload/\(projectConfig.executable).app"
     }
     
-    func getMachOPath() -> (Bool,String) {
+    func getMachOPath() -> String {
         if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            return getValidationPath("\(path)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)")
+            return "\(path)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
         } else {
-            return getValidationPath("\(path)/\(projectConfig.executable)")
+            return "\(path)/\(projectConfig.executable)"
         }
     }
     
-    func getPackagePath() -> (Bool,String) {
-        return getValidationPath("\(path)/\(projectConfig.executable).ipa")
-    }
-    
-    ///
-    /// Private
-    ///
-    private func getValidationPath(_ path: String) -> (Bool,String) {
-        if FileManager.default.fileExists(atPath: path) {
-            return (true,path)
-        }
-        return (false,path)
+    func getPackagePath() -> String {
+        return "\(path)/\(projectConfig.executable).ipa"
     }
     
     ///

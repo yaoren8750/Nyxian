@@ -348,9 +348,9 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 let entry = self.entries[indexPath.row]
                 let fileUrl: URL = URL(fileURLWithPath: "\(self.path)/\(entry.name)")
                 if ((try? FileManager.default.removeItem(at: fileUrl)) != nil) {
-                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath().1)/debug.json")
+                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath())/debug.json")
                     database.removeFileDebug(ofPath: fileUrl.path)
-                    database.saveDatabase(toPath: "\(self.project.getCachePath().1)/debug.json")
+                    database.saveDatabase(toPath: "\(self.project.getCachePath())/debug.json")
                     self.entries.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }

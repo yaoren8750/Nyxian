@@ -47,11 +47,8 @@ class CodeEditorViewController: UIViewController {
         self.line = line
         
         let cachePath = self.project!.getCachePath()
-        if !cachePath.0 {
-            try? FileManager.default.createDirectory(atPath: cachePath.1, withIntermediateDirectories: false)
-        }
         
-        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project!.getCachePath().1)/debug.json")
+        self.database = DebugDatabase.getDatabase(ofPath: "\(cachePath)/debug.json")
         
         if let project = project {
             let suffix = self.path.URLGet().pathExtension
@@ -273,7 +270,7 @@ class CodeEditorViewController: UIViewController {
         synpushServer.reparseFile(self.textView.text)
         let synItems: [Synitem] = synpushServer.getDiagnostics()
         self.database!.setFileDebug(ofPath: self.path, synItems: synItems)
-        self.database!.saveDatabase(toPath: "\(self.project!.getCachePath().1)/debug.json")
+        self.database!.saveDatabase(toPath: "\(self.project!.getCachePath())/debug.json")
     }
     
     @objc func closeEditor() {

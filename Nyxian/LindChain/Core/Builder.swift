@@ -36,7 +36,7 @@ class Builder {
         
         self.project = project
         
-        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath().1)/debug.json")
+        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath())/debug.json")
         self.database.reuseDatabase()
         
         var genericCompilerFlags: [String] = [
@@ -51,20 +51,17 @@ class Builder {
         self.compiler = Compiler(genericCompilerFlags)
         
         let cachePath = project.getCachePath()
-        if !cachePath.0 {
-            try? FileManager.default.createDirectory(atPath: cachePath.1, withIntermediateDirectories: false)
-        }
         
-        try? syncFolderStructure(from: project.getPath().URLGet(), to: cachePath.1.URLGet())
+        try? syncFolderStructure(from: project.getPath().URLGet(), to: cachePath.URLGet())
         
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
         
         // Check if args have changed
         self.argsString = compilerFlags.joined(separator: " ")
         var fileArgsString: String = ""
-        if FileManager.default.fileExists(atPath: "\(cachePath.1)/args.txt") {
+        if FileManager.default.fileExists(atPath: "\(cachePath)/args.txt") {
             // Check if the args string matches up
-            fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath.1)/args.txt"), encoding: .utf8)) ?? ""
+            fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath)/args.txt"), encoding: .utf8)) ?? ""
         }
         
         if(fileArgsString == self.argsString), self.project.projectConfig.increment {
@@ -78,7 +75,7 @@ class Builder {
     ///
     private func isFileDirty(_ item: String) -> Bool {
         let rpath = relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())
-        let objectFilePath = "\(self.project.getCachePath().1)/\(expectedObjectFile(forPath: rpath))"
+        let objectFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: rpath))"
         
         // Checking if the source file is newer than the compiled object file
         guard let sourceDate = try? FileManager.default
@@ -118,28 +115,30 @@ class Builder {
     func clean() throws {
         // first find the files to remove
         let trashfiles: [String] = FindFilesStack(
-            project.getPath(),
+            self.project.getPath(),
             ["o","tmp"],
             ["Resources","Config"]
         )
         
         // now remove what was find
         for file in trashfiles {
-            try FileManager.default.removeItem(atPath: file)
+            try? FileManager.default.removeItem(atPath: file)
         }
         
         // if payload exists remove it
-        let payloadPath: (Bool,String) = self.project.getPayloadPath()
-        
-        if(payloadPath.0) {
-            try FileManager.default.removeItem(atPath: payloadPath.1)
+        if self.project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+            let payloadPath: String = self.project.getPayloadPath()
+            if FileManager.default.fileExists(atPath: payloadPath) {
+                try? FileManager.default.removeItem(atPath: payloadPath)
+            }
         }
     }
     
     func prepare() throws {
         if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
-            // Create bundle path
-            try FileManager.default.createDirectory(atPath: self.project.getBundlePath().1, withIntermediateDirectories: true)
+            let bundlePath: String = self.project.getBundlePath()
+            
+            try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
             
             // Now copy info dictionary given info dictionary and add/overwrite info
             var infoPlistData: [String:Any] = self.project.projectConfig.infoDictionary
@@ -152,7 +151,7 @@ class Builder {
             infoPlistData["UIDeviceFamily"] = [1,2]
             
             let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
-            FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
+            FileManager.default.createFile(atPath:"\(bundlePath)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
         }
     }
     
@@ -173,7 +172,7 @@ class Builder {
             threader.spawn {
                 let rpath: String = relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())
                 let eobject = expectedObjectFile(forPath: rpath)
-                let outputFilePath = "\(self.project.getCachePath().1)/\(eobject)"
+                let outputFilePath = "\(self.project.getCachePath())/\(eobject)"
                 
                 var issues: NSMutableArray? = NSMutableArray()
                 
@@ -204,7 +203,7 @@ class Builder {
         }
         
         do {
-            try self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath().1)/args.txt"), atomically: false, encoding: .utf8)
+            try self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath())/args.txt"), atomically: false, encoding: .utf8)
         } catch {
             print(error.localizedDescription)
         }
@@ -219,9 +218,9 @@ class Builder {
             "-syslibroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
             "-o",
-            self.project.getMachOPath().1
+            self.project.getMachOPath()
         ] + FindFilesStack(
-            project.getCachePath().1,
+            project.getCachePath(),
             ["o"],
             ["Resources","Config"]
         ) + self.project.projectConfig.linker_flags
@@ -250,7 +249,7 @@ class Builder {
             
             let zsign = CertBlob.signer!
             
-            if !zsign.sign(self.project.getBundlePath().1) {
+            if !zsign.sign(self.project.getBundlePath()) {
                 self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
                 throw NSError()
             }
@@ -259,13 +258,13 @@ class Builder {
     
     func package() throws {
         if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
-            if FileManager.default.fileExists(atPath: self.project.getPackagePath().1) {
-                try FileManager.default.removeItem(atPath: self.project.getPackagePath().1)
+            if FileManager.default.fileExists(atPath: self.project.getPackagePath()) {
+                try FileManager.default.removeItem(atPath: self.project.getPackagePath())
             }
             
             try FileManager.default.zipItem(
-                at: URL(fileURLWithPath: self.project.getPayloadPath().1),
-                to: URL(fileURLWithPath: self.project.getPackagePath().1)
+                at: URL(fileURLWithPath: self.project.getPayloadPath()),
+                to: URL(fileURLWithPath: self.project.getPackagePath())
             )
         }
     }
@@ -273,7 +272,7 @@ class Builder {
     func install() throws {
         if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
             let installer = try Installer(
-                path: self.project.getPackagePath().1.URLGet(),
+                path: self.project.getPackagePath().URLGet(),
                 metadata: AppData(id: self.project.projectConfig.bundleid,
                                   version: 1, name: self.project.projectConfig.displayname),
                 image: nil
@@ -298,8 +297,8 @@ class Builder {
                     installer,
                     self.project) {
                     self.database.addInternalMessage(message: "Application sucessfully build and installed", severity: .Note)
-                    self.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
-                    try FileManager.default.removeItem(atPath: project.getPackagePath().1)
+                    self.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
+                    try FileManager.default.removeItem(atPath: project.getPackagePath())
                     exit(0)
                 } else {
                     self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
@@ -363,7 +362,7 @@ class Builder {
                 result = false
             }
             
-            builder.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
+            builder.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
             
             completion(result)
         }

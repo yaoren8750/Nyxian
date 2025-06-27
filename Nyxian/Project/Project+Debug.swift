@@ -198,7 +198,7 @@ class UIDebugViewController: UITableViewController {
     
     init(project: AppProject) {
         self.project = project
-        self.file = "\(project.getCachePath().1)/debug.json"
+        self.file = "\(project.getCachePath())/debug.json"
         self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
         super.init(style: .insetGrouped)
         NotificationCenter.default.addObserver(self, selector: #selector(refreshDebugDatabase), name: Notification.Name("CodeEditorDismissed"), object: nil)
