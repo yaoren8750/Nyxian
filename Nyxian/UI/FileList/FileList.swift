@@ -8,7 +8,7 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class FileListViewController: UITableViewController, UIDocumentPickerDelegate {
+class FileListViewController: UIThemedTableViewController, UIDocumentPickerDelegate {
     let project: AppProject
     let path: String
     var entries: [FileListEntry]

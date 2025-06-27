@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        let tabViewController: UITabBarController = UITabBarController()
+        let tabViewController: UIThemedTabBarController = UIThemedTabBarController()
         
         let contentViewController: ContentViewController = ContentViewController(path: "\(NSHomeDirectory())/Documents/Projects")
         let settingsViewController: SettingsViewController = SettingsViewController(style: .insetGrouped)

@@ -20,6 +20,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		79EE25D12E0D5D0D00AF61C1 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -144,6 +154,7 @@
 				AF9916D62DC8C42200DDF895 /* Frameworks */,
 				AF9916D72DC8C42200DDF895 /* Resources */,
 				AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */,
+				79EE25D12E0D5D0D00AF61C1 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
@@ -173,7 +184,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
+				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					AF9916D82DC8C42200DDF895 = {
@@ -370,7 +381,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Nyxian/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 58K75J96W4;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2844D5HR5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = Nyxian/LindChain;
@@ -398,7 +409,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = 95eceef18c7c79b2e4de47de3dfb4f7f0a48b6f2_wildcard_dev;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "00008101-001c186628e1401e_wildcard_dev";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;
 				SWIFT_VERSION = 5.0;
@@ -419,7 +430,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Nyxian/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 58K75J96W4;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2844D5HR5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = Nyxian/LindChain;
@@ -447,7 +458,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = 95eceef18c7c79b2e4de47de3dfb4f7f0a48b6f2_wildcard_dev;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "00008101-001c186628e1401e_wildcard_dev";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = Nyxian/bridge.h;
 				SWIFT_VERSION = 5.0;

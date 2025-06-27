@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ToolChainController: UITableViewController {
+class ToolChainController: UIThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         

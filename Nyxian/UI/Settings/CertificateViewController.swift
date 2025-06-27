@@ -8,7 +8,7 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class CertificateImporter: UITableViewController, UITextFieldDelegate {
+class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
     var textField: UITextField?
     
     var cert: ImportTableCell?

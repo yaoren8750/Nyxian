@@ -33,6 +33,7 @@ class ProjectConfig {
     var shortVersion: String = "1.0"
     
     var infoDictionary: [String:Any] = [:]
+    var subTargets: [String] = []
     var compiler_flags: [String] = []
     var linker_flags: [String] = []
     
@@ -47,7 +48,8 @@ class ProjectConfig {
         bundleid: String,
         minimum_version: String,
         compiler_flags: [String],
-        linker_flags: [String]
+        linker_flags: [String],
+        subTargets: [String]
     ) {
         self.executable = executable
         self.displayname = displayname
@@ -55,6 +57,7 @@ class ProjectConfig {
         self.minimum_version = minimum_version
         self.compiler_flags = compiler_flags
         self.linker_flags = linker_flags
+        self.subTargets = subTargets
     }
     
     init(withPath plistPath: String) {
@@ -69,6 +72,7 @@ class ProjectConfig {
             self?.linker_flags = (dict["LDELinkerFlags"] as? [String]) ?? []
             self?.version = (dict["LDEBundleVersion"] as? String) ?? "1.0"
             self?.shortVersion = (dict["LDEBundleShortVersion"] as? String) ?? "1.0"
+            self?.subTargets = (dict["LDESubTargets"] as? [String]) ?? []
             
             let maxThreads: Int = getOptimalThreadCount()
             self?.threads = (dict["LDEOverwriteThreads"] as? Int) ?? 0
@@ -188,6 +192,7 @@ class AppProject: Identifiable {
             "LDECompilerFlags": ["-fobjc-arc"],
             "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"],
             "LDEBundleInfo": [:],
+            "LDESubTargets": [],
             "LDEBundleVersion": "1.0",
             "LDEBundleShortVersion": "1.0"
         ]

@@ -90,15 +90,6 @@ class CodeEditorViewController: UIViewController {
         let fileURL = URL(fileURLWithPath: self.path)
         self.title = fileURL.lastPathComponent
         
-        let theme = getCurrentSelectedTheme()
-        
-        self.navigationController?.navigationBar.prefersLargeTitles = false
-        self.navigationController?.navigationBar.standardAppearance = UINavigationBarAppearance()
-        self.navigationController?.navigationBar.standardAppearance.configureWithOpaqueBackground()
-        self.navigationController?.navigationBar.standardAppearance.backgroundColor = theme.gutterBackgroundColor
-        self.navigationController?.navigationBar.standardAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
-        self.navigationController?.navigationBar.scrollEdgeAppearance = self.navigationController?.navigationBar.standardAppearance
-        
         let saveButton: UIBarButtonItem = UIBarButtonItem()
         saveButton.tintColor = .label
         saveButton.title = "Save"
@@ -113,11 +104,13 @@ class CodeEditorViewController: UIViewController {
         closeButton.action = #selector(closeEditor)
         self.navigationItem.setLeftBarButton(closeButton, animated: true)
         
-        theme.fontSize = self.project?.codeEditorConfig.fontSize ?? 10.0
-        
-        self.view.backgroundColor = .systemBackground
-        self.textView.backgroundColor = theme.backgroundColor
-        self.textView.theme = theme
+        if let theme = currentTheme {
+            theme.fontSize = self.project?.codeEditorConfig.fontSize ?? 10.0
+            
+            self.view.backgroundColor = .systemBackground
+            self.textView.backgroundColor = theme.backgroundColor
+            self.textView.theme = theme
+        }
         
         self.textView.showLineNumbers = self.project?.codeEditorConfig.showLine ?? true
         self.textView.showSpaces = self.project?.codeEditorConfig.showSpaces ?? true

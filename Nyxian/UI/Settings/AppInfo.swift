@@ -19,7 +19,7 @@ let buildChainStage: String = "Alpha"
 let buildChainVersion: String = "0.2"
 
 // AppInfoView
-class AppInfoViewController: UITableViewController {
+class AppInfoViewController: UIThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         

@@ -24,7 +24,7 @@ import ZIPFoundation
 class Bootstrap {
     var semaphore: DispatchSemaphore?
     let rootPath: String = "\(NSHomeDirectory())/Documents"
-    let newestBootstrapVersion: Int = 6
+    let newestBootstrapVersion: Int = 7
     
     var bootstrapVersion: Int {
         get {
@@ -84,31 +84,10 @@ class Bootstrap {
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Projects"), withIntermediateDirectories: false)
                         try FileManager.default.createDirectory(atPath: self.bootstrapPath("/Certificates"), withIntermediateDirectories: false)
                         
-                        // Download include and sdk stuff
-                        if !fdownload("https://nyxian.app/bootstrap/include.zip", "include.zip") {
-                            print("[*] Bootstrap download failed\n")
-                            throw NSError(
-                                domain: "",
-                                code: 0,
-                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
-                            )
-                        }
-                        
-                        if !fdownload("https://nyxian.app/bootstrap/sdk.zip", "sdk.zip") {
-                            print("[*] Bootstrap download failed\n")
-                            throw NSError(
-                                domain: "",
-                                code: 0,
-                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
-                            )
-                        }
-                        
                         // Now extract Include and SDK
                         print("[*] Bootstrapping folder structures")
                         print("[*] Extracting include.zip")
                         try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/include.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/Include")))
-                        print("[*] Extracting sdk.zip")
-                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/sdk.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/SDK")))
                         self.bootstrapVersion = 1
                     }
                     
@@ -143,6 +122,28 @@ class Bootstrap {
                         // MARK: Placeholder Bootstrap upgrade
                         //getCertificates()
                         self.bootstrapVersion = 6
+                    }
+                    
+                    if self.bootstrapVersion == 6 {
+                        if FileManager.default.fileExists(atPath: self.bootstrapPath("/SDK")) {
+                            try FileManager.default.removeItem(atPath: self.bootstrapPath("/SDK"))
+                        }
+                        
+                        print("[*] bootstrap upgrade patch for version 7")
+                        
+                        if !fdownload("https://nyxian.app/bootstrap/sdk18.5.zip", "sdk.zip") {
+                            print("[*] Bootstrap download failed\n")
+                            throw NSError(
+                                domain: "",
+                                code: 0,
+                                userInfo: [NSLocalizedDescriptionKey: "Download failed!"]
+                            )
+                        }
+                        
+                        print("[*] Extracting sdk.zip")
+                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/sdk.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/SDK")))
+                        
+                        self.bootstrapVersion = 7
                     }
                     
                     self.bootstrapVersion = self.newestBootstrapVersion
