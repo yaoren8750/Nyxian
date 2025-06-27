@@ -214,7 +214,7 @@ class Builder {
         let ldPath: String = "\(Bundle.main.bundlePath)/Frameworks/ld.dylib"
         
         // Preparing arguments for the linker
-        var ldArgs: [String] = [
+        let ldArgs: [String] = [
             "-syslibroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
             "-o",
@@ -224,10 +224,6 @@ class Builder {
             ["o"],
             ["Resources","Config"]
         ) + self.project.projectConfig.linker_flags
-        
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.Dylib.rawValue {
-            ldArgs.append("-dylib")
-        }
         
         // Linkage execution
         if dyexec(
