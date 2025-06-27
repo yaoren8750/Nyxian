@@ -137,21 +137,23 @@ class Builder {
     }
     
     func prepare() throws {
-        // Create bundle path
-        try FileManager.default.createDirectory(atPath: self.project.getBundlePath().1, withIntermediateDirectories: true)
-        
-        // Now copy info dictionary given info dictionary and add/overwrite info
-        var infoPlistData: [String:Any] = self.project.projectConfig.infoDictionary
-        infoPlistData["CFBundleExecutable"] = self.project.projectConfig.executable
-        infoPlistData["CFBundleIdentifier"] = self.project.projectConfig.bundleid
-        infoPlistData["CFBundleName"] = self.project.projectConfig.displayname
-        infoPlistData["CFBundleShortVersionString"] = self.project.projectConfig.version
-        infoPlistData["CFBundleVersion"] = self.project.projectConfig.shortVersion
-        infoPlistData["MinimumOSVersion"] = self.project.projectConfig.minimum_version
-        infoPlistData["UIDeviceFamily"] = [1,2]
-        
-        let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
-        FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
+        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+            // Create bundle path
+            try FileManager.default.createDirectory(atPath: self.project.getBundlePath().1, withIntermediateDirectories: true)
+            
+            // Now copy info dictionary given info dictionary and add/overwrite info
+            var infoPlistData: [String:Any] = self.project.projectConfig.infoDictionary
+            infoPlistData["CFBundleExecutable"] = self.project.projectConfig.executable
+            infoPlistData["CFBundleIdentifier"] = self.project.projectConfig.bundleid
+            infoPlistData["CFBundleName"] = self.project.projectConfig.displayname
+            infoPlistData["CFBundleShortVersionString"] = self.project.projectConfig.version
+            infoPlistData["CFBundleVersion"] = self.project.projectConfig.shortVersion
+            infoPlistData["MinimumOSVersion"] = self.project.projectConfig.minimum_version
+            infoPlistData["UIDeviceFamily"] = [1,2]
+            
+            let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
+            FileManager.default.createFile(atPath:"\(self.project.getBundlePath().1)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)
+        }
     }
     
     ///
@@ -213,7 +215,7 @@ class Builder {
         let ldPath: String = "\(Bundle.main.bundlePath)/Frameworks/ld.dylib"
         
         // Preparing arguments for the linker
-        let ldArgs: [String] = [
+        var ldArgs: [String] = [
             "-syslibroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
             "-o",
@@ -223,6 +225,10 @@ class Builder {
             ["o"],
             ["Resources","Config"]
         ) + self.project.projectConfig.linker_flags
+        
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.Dylib.rawValue {
+            ldArgs.append("-dylib")
+        }
         
         // Linkage execution
         if dyexec(
@@ -235,67 +241,74 @@ class Builder {
     }
     
     func sign() throws {
-        // Now we copy use it
-        if !CertBlob.isReady {
-            self.database.addInternalMessage(message: "Zsign server doesnt run, please re/import your apple issued developer certificate", severity: .Error)
-            throw NSError()
-        }
-        
-        let zsign = CertBlob.signer!
-        
-        if !zsign.sign(self.project.getBundlePath().1) {
-            self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
-            throw NSError()
+        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+            // Now we copy use it
+            if !CertBlob.isReady {
+                self.database.addInternalMessage(message: "Zsign server doesnt run, please re/import your apple issued developer certificate", severity: .Error)
+                throw NSError()
+            }
+            
+            let zsign = CertBlob.signer!
+            
+            if !zsign.sign(self.project.getBundlePath().1) {
+                self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
+                throw NSError()
+            }
         }
     }
     
     func package() throws {
-        if FileManager.default.fileExists(atPath: self.project.getPackagePath().1) {
-            try FileManager.default.removeItem(atPath: self.project.getPackagePath().1)
+        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+            if FileManager.default.fileExists(atPath: self.project.getPackagePath().1) {
+                try FileManager.default.removeItem(atPath: self.project.getPackagePath().1)
+            }
+            
+            try FileManager.default.zipItem(
+                at: URL(fileURLWithPath: self.project.getPayloadPath().1),
+                to: URL(fileURLWithPath: self.project.getPackagePath().1)
+            )
         }
-        
-        try FileManager.default.zipItem(
-            at: URL(fileURLWithPath: self.project.getPayloadPath().1),
-            to: URL(fileURLWithPath: self.project.getPackagePath().1)
-        )
     }
     
     func install() throws {
-        let installer = try Installer(
-            path: self.project.getPackagePath().1.URLGet(),
-            metadata: AppData(id: self.project.projectConfig.bundleid,
-                              version: 1, name: self.project.projectConfig.displayname),
-            image: nil
-        )
-        
-        var invokedInstallationPopup: Bool = false
-        let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
-            if UIApplication.shared.canOpenURL(installer.iTunesLink) {
-                UIApplication.shared.open(installer.iTunesLink, options: [:], completionHandler: { success in
-                    if success {
-                        invokedInstallationPopup = true
-                    }
-                    waitonmebaby.signal()
-                })
+        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+            let installer = try Installer(
+                path: self.project.getPackagePath().1.URLGet(),
+                metadata: AppData(id: self.project.projectConfig.bundleid,
+                                  version: 1, name: self.project.projectConfig.displayname),
+                image: nil
+            )
+            
+            var invokedInstallationPopup: Bool = false
+            let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+            DispatchQueue.main.async {
+                if UIApplication.shared.canOpenURL(installer.iTunesLink) {
+                    UIApplication.shared.open(installer.iTunesLink, options: [:], completionHandler: { success in
+                        if success {
+                            invokedInstallationPopup = true
+                        }
+                        waitonmebaby.signal()
+                    })
+                }
             }
-        }
-        waitonmebaby.wait()
-        
-        if invokedInstallationPopup {
-            if OpenAppAfterReinstallTrampolineSwitch(
-                installer,
-                self.project) {
-                self.database.addInternalMessage(message: "Application sucessfully build and installed", severity: .Note)
-                self.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
-                exit(0)
+            waitonmebaby.wait()
+            
+            if invokedInstallationPopup {
+                if OpenAppAfterReinstallTrampolineSwitch(
+                    installer,
+                    self.project) {
+                    self.database.addInternalMessage(message: "Application sucessfully build and installed", severity: .Note)
+                    self.database.saveDatabase(toPath: "\(project.getCachePath().1)/debug.json")
+                    try FileManager.default.removeItem(atPath: project.getPackagePath().1)
+                    exit(0)
+                } else {
+                    self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
+                    throw NSError()
+                }
             } else {
-                self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
+                self.database.addInternalMessage(message: "Failed to invoke application installation popup", severity: .Error)
                 throw NSError()
             }
-        } else {
-            self.database.addInternalMessage(message: "Failed to invoke application installation popup", severity: .Error)
-            throw NSError()
         }
     }
     

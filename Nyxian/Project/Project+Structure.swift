@@ -178,12 +178,12 @@ class AppProject: Identifiable {
             "LDEExecutable": executable,
             "LDEDisplayName": executable,
             "LDEBundleIdentifier": bundleid,
-            "LDEMinimumVersion": getPlatformTriple(),
+            "LDEMinimumVersion": UIDevice.current.systemVersion,
             "LDECompilerFlags": ["-fobjc-arc"],
             "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"],
             "LDEBundleInfo": [:],
             "LDESubTargets": [],
-            "LDEProjectType": 0,
+            "LDEProjectType": ProjectConfig.ProjectType.App.rawValue,
             "LDEBundleVersion": "1.0",
             "LDEBundleShortVersion": "1.0"
         ]
@@ -210,7 +210,10 @@ class AppProject: Identifiable {
                 do {
                     var plistData = try PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0)
                     try plistData.write(to: URL(fileURLWithPath: path))
-                } catch {}
+                } catch {
+                    print(error.localizedDescription)
+                    NotificationServer.NotifyUser(level: .error, notification: "Failed to create project: \(error.localizedDescription)")
+                }
             }
             
             writeDict(usingDict: projectdict, toPath: "\(path)/Config/Project.plist")
@@ -282,7 +285,11 @@ class AppProject: Identifiable {
     }
     
     func getMachOPath() -> (Bool,String) {
-        return getValidationPath("\(path)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)")
+        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+            return getValidationPath("\(path)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)")
+        } else {
+            return getValidationPath("\(path)/\(projectConfig.executable)")
+        }
     }
     
     func getPackagePath() -> (Bool,String) {
