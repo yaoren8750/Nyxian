@@ -23,6 +23,12 @@ Project Structure:
 */
 
 class ProjectConfig {
+    enum ProjectType: Int {
+        case App = 1
+        case Staticlib = 2
+        case Dylib = 3
+    }
+    
     var plistHelper: PlistHelper?
     
     var executable: String = "Unknown"
@@ -34,6 +40,7 @@ class ProjectConfig {
     
     var infoDictionary: [String:Any] = [:]
     var subTargets: [String] = []
+    var projectType: Int = ProjectType.App.rawValue
     var compiler_flags: [String] = []
     var linker_flags: [String] = []
     
@@ -41,24 +48,6 @@ class ProjectConfig {
     var threads: Int = 1
     var increment: Bool = false
     var restartApp: Bool = false
-    
-    init(
-        executable: String,
-        displayname: String,
-        bundleid: String,
-        minimum_version: String,
-        compiler_flags: [String],
-        linker_flags: [String],
-        subTargets: [String]
-    ) {
-        self.executable = executable
-        self.displayname = displayname
-        self.bundleid = bundleid
-        self.minimum_version = minimum_version
-        self.compiler_flags = compiler_flags
-        self.linker_flags = linker_flags
-        self.subTargets = subTargets
-    }
     
     init(withPath plistPath: String) {
         self.plistHelper = PlistHelper(plistPath: plistPath)
@@ -93,6 +82,7 @@ class ProjectConfig {
                     : false)
             
             self?.infoDictionary = (dict["LDEBundleInfo"] as? [String:Any]) ?? [:]
+            self?.projectType = (dict["LDEProjectType"] as? Int) ?? ProjectType.App.rawValue
         }
         
         let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
@@ -193,6 +183,7 @@ class AppProject: Identifiable {
             "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"],
             "LDEBundleInfo": [:],
             "LDESubTargets": [],
+            "LDEProjectType": 0,
             "LDEBundleVersion": "1.0",
             "LDEBundleShortVersion": "1.0"
         ]
