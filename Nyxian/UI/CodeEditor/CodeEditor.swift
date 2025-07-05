@@ -107,6 +107,10 @@ class CodeEditorViewController: UIViewController {
             self.view.backgroundColor = .systemBackground
             self.textView.backgroundColor = theme.backgroundColor
             self.textView.theme = theme
+            
+            self.navigationController?.navigationBar.prefersLargeTitles = false
+            self.navigationController?.navigationBar.standardAppearance = currentNavigationBarAppearance
+            self.navigationController?.navigationBar.scrollEdgeAppearance = currentNavigationBarAppearance
         }
         
         self.textView.showLineNumbers = self.project?.codeEditorConfig.showLine ?? true
