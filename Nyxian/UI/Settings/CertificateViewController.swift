@@ -37,16 +37,18 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
         self.tableView.isScrollEnabled = false
         self.tableView.rowHeight = 44
         
-        if #available(iOS 16.0, *) {
-            if let sheet = self.navigationController?.sheetPresentationController {
-                DispatchQueue.main.async {
-                    sheet.animateChanges {
-                        sheet.detents = [
-                            .custom { context in
-                                let contentHeight = self.tableView.contentSize.height + 50
-                                return contentHeight
-                            }
-                        ]
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            if #available(iOS 16.0, *) {
+                if let sheet = self.navigationController?.sheetPresentationController {
+                    DispatchQueue.main.async {
+                        sheet.animateChanges {
+                            sheet.detents = [
+                                .custom { context in
+                                    let contentHeight = self.tableView.contentSize.height + 50
+                                    return contentHeight
+                                }
+                            ]
+                        }
                     }
                 }
             }

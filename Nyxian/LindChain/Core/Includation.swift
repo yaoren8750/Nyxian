@@ -21,8 +21,6 @@ class HeaderIncludationsGatherer {
         } catch {
             print(error.localizedDescription)
         }
-        
-        print(includes)
     }
     
     func matchIncludations(content: String) throws -> [String] {
@@ -36,8 +34,6 @@ class HeaderIncludationsGatherer {
     }
     
     func gatherIncludations(forFile filePath: String, content: String) throws {
-        let suffix = filePath.URLGet().pathExtension
-
         let items = try matchIncludations(content: content)
         
         for item in items {

@@ -16,7 +16,6 @@ func RevertUI() {
     
     guard let currentTheme = currentTheme else { return }
     
-    let blurEffect = UIBlurEffect(style: .systemMaterial)
     currentNavigationBarAppearance.backgroundColor = currentTheme.gutterBackgroundColor
     currentNavigationBarAppearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: currentTheme.textColor]
     currentNavigationBarAppearance.buttonAppearance.normal.titleTextAttributes = [NSAttributedString.Key.foregroundColor: currentTheme.textColor]
@@ -25,13 +24,12 @@ func RevertUI() {
     
     UINavigationBar.appearance().compactAppearance = currentNavigationBarAppearance
     UINavigationBar.appearance().scrollEdgeAppearance = currentNavigationBarAppearance
-    UINavigationBar.appearance().scrollEdgeAppearance?.backgroundEffect = blurEffect
     
     if #available(iOS 15.0, *) {
         currentTabBarAppearance.configureWithOpaqueBackground()
         currentTabBarAppearance.backgroundColor = currentTheme.gutterBackgroundColor
+        UITabBar.appearance().standardAppearance = currentTabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = currentTabBarAppearance
-        UITabBar.appearance().scrollEdgeAppearance?.backgroundEffect = blurEffect
     }
     
     UITableView.appearance().backgroundColor = currentTheme.gutterBackgroundColor
