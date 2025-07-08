@@ -296,9 +296,6 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             
-            let infoAction = UIAction(title: "Information", image: UIImage(systemName: "info.square.fill")) { _ in
-                // TODO: Add Information sheet
-            }
             let copyAction = UIAction(title: "Copy", image: UIImage(systemName: {
                 if #available(iOS 17.0, *) {
                     return "document.on.clipboard"
@@ -356,11 +353,8 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 }
             }
             
-            let infoMenu: UIMenu = UIMenu(options: .displayInline, children:  [infoAction])
-            let firstMenu: UIMenu = UIMenu(options: .displayInline, children: [copyAction, moveAction, renameAction])
-            let secondMenu: UIMenu = UIMenu(options: .displayInline, children: [shareAction, deleteAction])
-            
-            return UIMenu(children: [infoMenu, firstMenu, secondMenu])
+            return UIMenu(children: [UIMenu(options: .displayInline, children: [copyAction, moveAction, renameAction]),
+                                     UIMenu(options: .displayInline, children: [shareAction, deleteAction])])
         }
     }
     

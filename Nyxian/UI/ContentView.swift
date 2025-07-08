@@ -103,24 +103,29 @@ class ContentViewController: UITableViewController {
         lastProjectWasSelected = true
     }
     
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            let project = self.projects[indexPath.row]
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             
-            let alert: UIAlertController = UIAlertController(
-                title: "Warning",
-                message: "Are you sure you want to remove \"\(project.projectConfig.displayname)\"?",
-                preferredStyle: .alert
-            )
+            let item: UIAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
+                let project = self.projects[indexPath.row]
+                
+                let alert: UIAlertController = UIAlertController(
+                    title: "Warning",
+                    message: "Are you sure you want to remove \"\(project.projectConfig.displayname)\"?",
+                    preferredStyle: .alert
+                )
+                
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { _ in
+                    AppProject.removeProject(project: project)
+                    self.projects = AppProject.listProjects(ofPath: self.path)
+                    self.tableView.deleteRows(at: [indexPath], with: .automatic)
+                })
+                
+                self.present(alert, animated: true)
+            }
             
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { _ in
-                AppProject.removeProject(project: project)
-                self.projects = AppProject.listProjects(ofPath: self.path)
-                self.tableView.deleteRows(at: [indexPath], with: .automatic)
-            })
-            
-            self.present(alert, animated: true)
+            return UIMenu(children: [item])
         }
     }
     
