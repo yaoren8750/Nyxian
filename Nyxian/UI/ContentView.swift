@@ -105,6 +105,15 @@ class ContentViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            let export: UIAction = UIAction(title: "Export", image: UIImage(systemName: "square.and.arrow.up.fill")) { _ in
+                DispatchQueue.global().async {
+                    let project = self.projects[indexPath.row]
+                    
+                    try? FileManager.default.zipItem(at: project.getPath().URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayname).zip"))
+                    
+                    share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayname).zip"), remove: true)
+                }
+            }
             
             let item: UIAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
                 let project = self.projects[indexPath.row]
@@ -121,7 +130,7 @@ class ContentViewController: UITableViewController {
                 }
             }
             
-            return UIMenu(children: [item])
+            return UIMenu(children: [export, item])
         }
     }
     
