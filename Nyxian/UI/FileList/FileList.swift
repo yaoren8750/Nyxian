@@ -154,48 +154,26 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
             alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
                 let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
                 
-                switch mode {
-                case .folder:
-                    if FileManager.default.fileExists(atPath: destination.path) {
-                        let alert: UIAlertController = UIAlertController(
-                            title: "Error",
-                            message: "Folder with the name \"\(destination.lastPathComponent)\" already exists.",
-                            preferredStyle: .alert
-                        )
-                        
-                        alert.addAction(UIAlertAction(title: "Close", style: .default))
-                        
-                        self.present(alert, animated: true)
+                var isDirectory: ObjCBool = ObjCBool(false)
+                if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
+                    self.presentConfirmationAlert(
+                        title: mode == .folder ? "Error" : "Warning",
+                        message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(!isDirectory.boolValue ? "" : "Folders cannot be removed!")",
+                        confirmTitle: "Overwrite",
+                        confirmStyle: .destructive,
+                        confirmHandler: {
+                            try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                            self.replaceFile(destination: destination)
+                        },
+                        addHandler: mode == .file && !isDirectory.boolValue
+                    )
+                } else {
+                    if mode == .file {
+                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
                     } else {
                         try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
-                        self.addFile(destination: destination)
                     }
-                case .file:
-                    var isDirectory: ObjCBool = ObjCBool(false)
-                    if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
-                        let alert: UIAlertController = UIAlertController(
-                            title: isDirectory.boolValue ? "Error" : "Warning",
-                            message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
-                            preferredStyle: .alert
-                        )
-                        
-                        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                        
-                        if !isDirectory.boolValue {
-                            alert.addAction(UIAlertAction(
-                                title: "Overwrite",
-                                style: .destructive
-                            ) { _ in
-                                try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                                self.replaceFile(destination: destination)
-                            })
-                        }
-                        
-                        self.present(alert, animated: true)
-                    } else {
-                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                        self.addFile(destination: destination)
-                    }
+                    self.addFile(destination: destination)
                 }
             })
             
