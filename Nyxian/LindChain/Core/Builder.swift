@@ -157,7 +157,7 @@ class Builder {
                 if self.compiler.compileObject(
                     filePath,
                     outputFile: outputFilePath,
-                    platformTriple: self.project.projectConfig.minimum_version,
+                    platformTriple: self.project.projectConfig.platformTriple,
                     issues: &issues
                 ) != 0 {
                     threader.lockdown()

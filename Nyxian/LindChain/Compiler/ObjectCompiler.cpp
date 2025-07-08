@@ -74,7 +74,7 @@ int CompileObject(int argc,
     auto DiagID = llvm::makeIntrusiveRefCnt<DiagnosticIDs>();
     DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient.get());
     
-    llvm::Triple TargetTriple(std::string("arm64-apple-ios") + platformTripple);
+    llvm::Triple TargetTriple(platformTripple);
     
     Driver TheDriver(argv[0], TargetTriple.str(), Diags);
 

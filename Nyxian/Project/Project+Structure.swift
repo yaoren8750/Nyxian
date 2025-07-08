@@ -34,9 +34,10 @@ class ProjectConfig {
     var executable: String = "Unknown"
     var displayname: String = "Unknown"
     var bundleid: String = "com.unknown.fallback.app"
-    var minimum_version: String = "16.5"
+    var minimum_version: String = UIDevice.current.systemVersion
     var version: String = "1.0"
     var shortVersion: String = "1.0"
+    var platformTriple: String = "arm64-apple-ios\(UIDevice.current.systemVersion)"
     
     var infoDictionary: [String:Any] = [:]
     var subTargets: [String] = []
@@ -81,6 +82,8 @@ class ProjectConfig {
                     ? UserDefaults.standard.bool(forKey: "LDEReopen")
                     : false)
             
+            self?.platformTriple = (dict["LDEOverwriteTriple"] as? String) ?? "apple-arm64-ios\(self?.minimum_version ?? UIDevice.current.systemVersion)"
+            
             self?.infoDictionary = (dict["LDEBundleInfo"] as? [String:Any]) ?? [:]
             self?.projectType = (dict["LDEProjectType"] as? Int) ?? ProjectType.App.rawValue
         }
@@ -93,7 +96,7 @@ class ProjectConfig {
     func getCompilerFlags() -> [String] {
         var flags: [String] = self.compiler_flags
         flags.append("-target")
-        flags.append("arm64-apple-ios\(self.minimum_version)")
+        flags.append(self.platformTriple)
         return flags
     }
 }
