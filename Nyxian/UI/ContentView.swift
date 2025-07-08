@@ -109,20 +109,16 @@ class ContentViewController: UITableViewController {
             let item: UIAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
                 let project = self.projects[indexPath.row]
                 
-                let alert: UIAlertController = UIAlertController(
+                self.presentConfirmationAlert(
                     title: "Warning",
                     message: "Are you sure you want to remove \"\(project.projectConfig.displayname)\"?",
-                    preferredStyle: .alert
-                )
-                
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { _ in
+                    confirmTitle: "Remove",
+                    confirmStyle: .destructive)
+                {
                     AppProject.removeProject(project: project)
                     self.projects = AppProject.listProjects(ofPath: self.path)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
-                })
-                
-                self.present(alert, animated: true)
+                }
             }
             
             return UIMenu(children: [item])

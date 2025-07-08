@@ -222,25 +222,17 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
             
             var isDirectory: ObjCBool = ObjCBool(false)
             if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
-                let alert: UIAlertController = UIAlertController(
+                self.presentConfirmationAlert(
                     title: isDirectory.boolValue ? "Error" : "Warning",
                     message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(isDirectory.boolValue ? "Folder cannot be overwritten" : "Do you want to overwrite it?")",
-                    preferredStyle: .alert
-                )
-                
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                
-                if !isDirectory.boolValue {
-                    alert.addAction(UIAlertAction(
-                        title: "Overwrite",
-                        style: .destructive
-                    ) { _ in
+                    confirmTitle: "Overwrite",
+                    confirmStyle: .destructive,
+                    confirmHandler: {
                         PasteBoardServices.paste(path: self.path)
                         self.replaceFile(destination: destination)
-                    })
-                }
-                
-                self.present(alert, animated: true)
+                    },
+                    addHandler: !isDirectory.boolValue
+                )
             } else {
                 PasteBoardServices.paste(path: self.path)
                 self.addFile(destination: destination)

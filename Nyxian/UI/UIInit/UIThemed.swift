@@ -71,3 +71,26 @@ class UIThemedTabBarController: UITabBarController, UITabBarControllerDelegate {
         }
     }
 }
+
+extension UIViewController {
+    func presentConfirmationAlert(
+        title: String,
+        message: String,
+        confirmTitle: String = "Confirm",
+        confirmStyle: UIAlertAction.Style = .default,
+        confirmHandler: @escaping () -> Void,
+        addHandler: Bool = true
+    ) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if addHandler {
+            alert.addAction(UIAlertAction(title: confirmTitle, style: confirmStyle) { _ in
+                confirmHandler()
+            })
+        }
+        
+        self.present(alert, animated: true)
+    }
+}
