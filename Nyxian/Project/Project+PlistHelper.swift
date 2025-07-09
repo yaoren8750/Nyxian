@@ -58,7 +58,7 @@ class PlistHelper {
     func writeKey(key: String, value: Any) {
         if let dictionary = dictionary {
             dictionary[key] = value
-            NSDictionary(dictionary: dictionary).write(to: URL(fileURLWithPath: plistPath), atomically: true)
+            dictionary.write(to: URL(fileURLWithPath: plistPath), atomically: true)
             self.savedModificationDate = Date()
         }
     }
