@@ -1,9 +1,13 @@
 # Script was made to get LLVM build for iOS from the Nyxian server
-wget https://nyxian.app/bootstrap/LLVM.zip
+if [ -d Nyxian/LindChain/LLVM.xcframework ]; then
+    rm -rf Nyxian/LindChain/LLVM.xcframework
+fi
+
+wget https://nyxian.app/bootstrap/LLVM_2.zip
 
 # Now create a tmp folder and prepare it
 mkdir tmp
-mv LLVM.zip tmp/LLVM.zip
+mv LLVM_2.zip tmp/LLVM.zip
 
 # Now enter and extract and move it back
 cd tmp
