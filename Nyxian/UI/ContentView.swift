@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class ContentViewController: UITableViewController {
+class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
     var projects: [AppProject] = []
     var path: String
     
@@ -87,7 +87,10 @@ class ContentViewController: UITableViewController {
             self.present(alert, animated: true)
         }
         let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
-            
+            let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.zip], asCopy: true)
+            documentPicker.delegate = self
+            documentPicker.modalPresentationStyle = .pageSheet
+            self.present(documentPicker, animated: true)
         }
         let menu: UIMenu = UIMenu(children: [createItem, importItem])
         
@@ -170,6 +173,26 @@ class ContentViewController: UITableViewController {
             }
             
             return UIMenu(children: [export, item])
+        }
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        do {
+            guard let selectedURL = urls.first else { return }
+            
+            let extractFirst: URL = URL(fileURLWithPath: "\(NSTemporaryDirectory())Proj")
+            try FileManager.default.createDirectory(at: extractFirst, withIntermediateDirectories: true)
+            try FileManager.default.unzipItem(at: selectedURL, to: extractFirst)
+            let items: [String] = try FileManager.default.contentsOfDirectory(atPath: "\(NSTemporaryDirectory())Proj")
+            let projectPath: String = "\(Bootstrap.shared.bootstrapPath("/Projects"))/\(UUID().uuidString)"
+            try FileManager.default.moveItem(atPath: extractFirst.appendingPathComponent(items.first ?? "").path, toPath: projectPath)
+            try FileManager.default.removeItem(at: extractFirst)
+            
+            self.projects.append(AppProject.init(path: projectPath))
+            let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+        } catch {
+            NotificationServer.NotifyUser(level: .error, notification: error.localizedDescription)
         }
     }
 }
