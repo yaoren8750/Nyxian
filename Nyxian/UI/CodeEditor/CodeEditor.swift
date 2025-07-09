@@ -52,12 +52,19 @@ class CodeEditorViewController: UIViewController {
         
         if let project = project {
             let suffix = self.path.URLGet().pathExtension
-            if suffix == "c" || suffix == "m" || suffix == "cpp" || suffix == "mm" {
+            if suffix == "c" || suffix == "m" || suffix == "cpp" || suffix == "mm" || suffix == "h" {
                 var genericCompilerFlags: [String] = [
                     "-isysroot",
                     Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
                     "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
                 ]
+                
+                if suffix == "h" {
+                    genericCompilerFlags.append(contentsOf: [
+                        "-x",
+                        "objective-c",
+                    ])
+                }
                 
                 project.projectConfig.plistHelper?.reloadIfNeeded()
                 genericCompilerFlags.append(contentsOf: project.projectConfig.getCompilerFlags())
