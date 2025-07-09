@@ -59,6 +59,7 @@ class CodeEditorViewController: UIViewController {
                     "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
                 ]
                 
+                // TODO: Analyse the includations of the .m files in the project to generate the right kinds fo flags, one example: u wrote c++ code and make a c++ header but then objective-c typechecking shouldnt happen! or the file is not included in the first place by any .m file then it shall be ignored and not typechecked
                 if suffix == "h" {
                     genericCompilerFlags.append(contentsOf: [
                         "-x",

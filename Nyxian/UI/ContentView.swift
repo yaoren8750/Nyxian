@@ -51,10 +51,49 @@ class ContentViewController: UITableViewController {
         
         self.title = "Projects"
         
+        let createItem: UIAction = UIAction(title: "Create", image: UIImage(systemName: "plus.circle.fill")) { _ in
+            let alert = UIAlertController(title: "Create Project",
+                                          message: "",
+                                          preferredStyle: .alert)
+            
+            alert.addTextField { (textField) -> Void in
+                textField.placeholder = "Name"
+            }
+            
+            alert.addTextField { (textField) -> Void in
+                textField.placeholder = "Bundle Identifier"
+            }
+            
+            let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
+            
+            let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
+                let name = (alert.textFields![0]).text!
+                let bundleid = (alert.textFields![1]).text!
+                
+                self.projects.append(AppProject.createAppProject(
+                    atPath: self.path,
+                    executable: name,
+                    bundleid: bundleid
+                ))
+                
+                let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
+                
+                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+            }
+            
+            alert.addAction(cancelAction)
+            alert.addAction(createAction)
+            
+            self.present(alert, animated: true)
+        }
+        let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
+            
+        }
+        let menu: UIMenu = UIMenu(children: [createItem, importItem])
+        
         let barbutton: UIBarButtonItem = UIBarButtonItem()
+        barbutton.menu = menu
         barbutton.image = UIImage(systemName: "plus")
-        barbutton.target = self
-        barbutton.action = #selector(PlusTabbed)
         self.navigationItem.setRightBarButton(barbutton, animated: false)
         
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
@@ -132,41 +171,5 @@ class ContentViewController: UITableViewController {
             
             return UIMenu(children: [export, item])
         }
-    }
-    
-    @objc func PlusTabbed() {
-        let alert = UIAlertController(title: "Create Project",
-                                      message: "",
-                                      preferredStyle: .alert)
-        
-        alert.addTextField { (textField) -> Void in
-            textField.placeholder = "Name"
-        }
-        
-        alert.addTextField { (textField) -> Void in
-            textField.placeholder = "Bundle Identifier"
-        }
-        
-        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
-        
-        let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
-            let name = (alert.textFields![0]).text!
-            let bundleid = (alert.textFields![1]).text!
-            
-            self.projects.append(AppProject.createAppProject(
-                atPath: self.path,
-                executable: name,
-                bundleid: bundleid
-            ))
-            
-            let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
-            
-            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-        }
-        
-        alert.addAction(cancelAction)
-        alert.addAction(createAction)
-        
-        self.present(alert, animated: true)
     }
 }
