@@ -188,28 +188,50 @@ class Builder {
     }
     
     func link() throws {
-        // Path to the ld dylib
-        let ldPath: String = "\(Bundle.main.bundlePath)/Frameworks/ld.dylib"
-        
-        // Preparing arguments for the linker
-        let ldArgs: [String] = [
-            "-syslibroot",
-            Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
-            "-o",
-            self.project.getMachOPath()
-        ] + FindFilesStack(
-            project.getCachePath(),
-            ["o"],
-            ["Resources","Config"]
-        ) + self.project.projectConfig.linker_flags
-        
-        // Linkage execution
-        if dyexec(
-            ldPath,
-            ldArgs
-        ) != 0 {
-            self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
-            throw NSError()
+        if UserDefaults.standard.integer(forKey: "LDELinker") == 0 {
+            let ldArgs: [String] = [
+                "-platform_version",
+                "ios",
+                project.projectConfig.minimum_version,
+                "18.5",
+                "-arch",
+                "arm64",
+                "-syslibroot",
+                Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
+                "-o",
+                self.project.getMachOPath()
+            ] + FindFilesStack(
+                project.getCachePath(),
+                ["o"],
+                ["Resources","Config"]
+            ) + self.project.projectConfig.linker_flags
+            
+            let array: NSArray = ldArgs as NSArray
+            if LinkMachO(array.mutableCopy() as? NSMutableArray) != 0 {
+                self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
+                throw NSError()
+            }
+        } else {
+            let ldPath: String = "\(Bundle.main.bundlePath)/Frameworks/ld.dylib"
+            
+            let ldArgs: [String] = [
+                "-syslibroot",
+                Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
+                "-o",
+                self.project.getMachOPath()
+            ] + FindFilesStack(
+                project.getCachePath(),
+                ["o"],
+                ["Resources","Config"]
+            ) + self.project.projectConfig.linker_flags
+            
+            if dyexec(
+                ldPath,
+                ldArgs
+            ) != 0 {
+                self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
+                throw NSError()
+            }
         }
     }
     

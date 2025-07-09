@@ -71,7 +71,7 @@ class ToolChainController: UIThemedTableViewController {
         switch indexPath.section {
         case 0:
             cell = PickerTableCell(
-                options: (indexPath.row == 0) ? ["LLVM"] : ["GNU"],
+                options: (indexPath.row == 0) ? ["LLVM"] : ["LLVM","GNU"],
                 title: (indexPath.row == 0) ? "Compiler" : "Linker",
                 key: (indexPath.row == 0) ? "LDECompiler" : "LDELinker",
                 defaultValue: 0

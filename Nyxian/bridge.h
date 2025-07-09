@@ -13,3 +13,4 @@
 #import <LogService/LogService.h>
 #import <Private/Restart.h>
 #import <Downloader/fdownload.h>
+#import <Linker/linker.h>

@@ -40,14 +40,6 @@
 #include <ErrorHandler.h>
 #include <LogService/LogService.h>
 
-pthread_mutex_t CIMutex;
-
-__attribute__((constructor))
-void initCIMutex(void)
-{
-    pthread_mutex_init(&CIMutex, 0);
-}
-
 using namespace clang;
 using namespace clang::driver;
 
@@ -118,10 +110,6 @@ int CompileObject(int argc,
         return 1;
 
     auto Act = std::make_unique<EmitObjAction>();
-    
-    pthread_mutex_lock(&CIMutex);
-    llvm::cl::ResetAllOptionOccurrences();
-    pthread_mutex_unlock(&CIMutex);
     
     Clang.ExecuteAction(*Act);
     

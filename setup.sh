@@ -3,11 +3,11 @@ if [ -d Nyxian/LindChain/LLVM.xcframework ]; then
     rm -rf Nyxian/LindChain/LLVM.xcframework
 fi
 
-wget https://nyxian.app/bootstrap/LLVM_2.zip
+wget https://nyxian.app/bootstrap/LLVM_3.zip
 
 # Now create a tmp folder and prepare it
 mkdir tmp
-mv LLVM_2.zip tmp/LLVM.zip
+mv LLVM_3.zip tmp/LLVM.zip
 
 # Now enter and extract and move it back
 cd tmp
