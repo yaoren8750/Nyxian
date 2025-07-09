@@ -39,17 +39,19 @@ class MiscellaneousController: UITableViewController {
                 importSettings.modalPresentationStyle = .pageSheet
                 
                 // dynamic size
-                if #available(iOS 16.0, *) {
-                    if let sheet = importSettings.sheetPresentationController {
-                        sheet.animateChanges {
-                            sheet.detents = [
-                                .custom { _ in
-                                    return 200
-                                }
-                            ]
+                if UIDevice.current.userInterfaceIdiom == .phone {
+                    if #available(iOS 16.0, *) {
+                        if let sheet = importSettings.sheetPresentationController {
+                            sheet.animateChanges {
+                                sheet.detents = [
+                                    .custom { _ in
+                                        return 200
+                                    }
+                                ]
+                            }
+                            
+                            sheet.prefersGrabberVisible = true
                         }
-                        
-                        sheet.prefersGrabberVisible = true
                     }
                 }
                 

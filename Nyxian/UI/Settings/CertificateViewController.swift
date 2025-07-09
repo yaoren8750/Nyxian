@@ -37,7 +37,7 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
         self.tableView.isScrollEnabled = false
         self.tableView.rowHeight = 44
         
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if UIDevice.current.userInterfaceIdiom == .phone {
             if #available(iOS 16.0, *) {
                 if let sheet = self.navigationController?.sheetPresentationController {
                     DispatchQueue.main.async {
