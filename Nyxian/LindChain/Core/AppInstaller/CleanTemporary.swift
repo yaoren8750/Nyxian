@@ -9,7 +9,7 @@ import Foundation
 
 func cleanTmp() {
     let fileManager = FileManager.default
-    let tmpDirectory = NSHomeDirectory() + "/tmp"
+    let tmpDirectory = NSTemporaryDirectory()
 
     if let files = try? fileManager.contentsOfDirectory(atPath: tmpDirectory) {
         for file in files {

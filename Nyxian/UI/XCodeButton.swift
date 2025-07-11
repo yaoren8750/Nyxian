@@ -106,6 +106,8 @@ class ProgressCircleView: UIView {
     }
 
     func setProgress(_ newProgress: CGFloat) {
+        guard newProgress > progressLayer.strokeEnd + 0.05 else { return }
+        
         let clamped = min(max(newProgress, 0), 1)
         
         let currentStrokeEnd = progressLayer.presentation()?.strokeEnd ?? progressLayer.strokeEnd

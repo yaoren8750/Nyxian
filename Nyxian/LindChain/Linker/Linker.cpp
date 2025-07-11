@@ -35,7 +35,7 @@ int linker(int argc, char **argv) {
     const lld::DriverDef drivers[] = {
         {lld::Darwin, &lld::macho::link},
     };
-    
+
     lld::Result result = lld::lldMain(args, llvm::outs(), errStream, drivers);
     
     errStream.flush();
