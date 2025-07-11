@@ -274,36 +274,16 @@ class Builder {
                 image: nil
             )
             
-            var invokedInstallationPopup: Bool = false
             let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-            DispatchQueue.main.async {
-                if UIApplication.shared.canOpenURL(installer.iTunesLink) {
-                    UIApplication.shared.open(installer.iTunesLink, options: [:], completionHandler: { success in
-                        if success {
-                            invokedInstallationPopup = true
-                        }
-                        waitonmebaby.signal()
-                    })
-                }
+            installer.installCompletionHandler {
+                waitonmebaby.signal()
             }
-            waitonmebaby.wait()
             
-            if invokedInstallationPopup {
-                if OpenAppAfterReinstallTrampolineSwitch(
-                    installer,
-                    self.project) {
-                    self.database.addInternalMessage(message: "Application sucessfully build and installed", severity: .Note)
-                    self.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
-                    try FileManager.default.removeItem(atPath: project.getPackagePath())
-                    exit(0)
-                } else {
-                    self.database.addInternalMessage(message: "Failed to open application", severity: .Error)
-                    throw NSError()
-                }
-            } else {
-                self.database.addInternalMessage(message: "Failed to invoke application installation popup", severity: .Error)
-                throw NSError()
+            DispatchQueue.main.async {
+                UIApplication.shared.open(installer.iTunesLink)
             }
+            
+            waitonmebaby.wait()
         }
     }
     
@@ -312,6 +292,8 @@ class Builder {
     ///
     static func buildProject(withProject project: AppProject,
                              completion: @escaping (Bool) -> Void) {
+        project.projectConfig.plistHelper?.reloadData()
+        
         if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
             NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.minimum_version) is needed to build the app!")
             completion(true)

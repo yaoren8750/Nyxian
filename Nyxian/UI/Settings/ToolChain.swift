@@ -31,7 +31,7 @@ class ToolChainController: UIThemedTableViewController {
         case 2:
             return 1
         case 3:
-            return 1
+            return 2
         default:
             return 0
         }
@@ -84,7 +84,11 @@ class ToolChainController: UIThemedTableViewController {
             cell = StepperTableCell(title: "Use Threads", key: "cputhreads", defaultValue: 1, minValue: 1, maxValue: getOptimalThreadCount())
             break
         case 3:
-            cell = SwitchTableCell(title: "Restart App", key: "LDEReopen", defaultValue: false)
+            if indexPath.row == 0 {
+                cell = SwitchTableCell(title: "Restart App (On Failure)", key: "LDEReopen", defaultValue: false)
+            } else {
+                cell = SwitchTableCell(title: "Restart App (On Succeed)", key: "LDEReopenSucceed", defaultValue: true)
+            }
         default:
             cell = UITableViewCell()
         }

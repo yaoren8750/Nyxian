@@ -543,6 +543,8 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                     if self.project.projectConfig.restartApp {
                         restartProcess()
                     }
+                } else if self.project.projectConfig.restartAppOnSucceed {
+                    exit(0)
                 }
             }
         }

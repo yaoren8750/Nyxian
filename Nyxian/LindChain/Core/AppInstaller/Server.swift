@@ -80,6 +80,7 @@ class Installer: Identifiable, ObservableObject {
         
         app = try Self.setupApp(port: port)
 
+        // TODO: Add user decline detection
         app.get("*") { [weak self] req in
             guard let self else { return Response(status: .badGateway) }
 
@@ -106,10 +107,68 @@ class Installer: Identifiable, ObservableObject {
                 return req.fileio.streamFile(
                     at: self.package.path
                 ) { result in
-                    DispatchQueue.main.async {
-                        self.completed = true
-                        self.status = .completed(result)
-                        self.onCompletion()
+                    DispatchQueue.global().async {
+                        func openAfterInstall() {
+                            defer {
+                                DispatchQueue.main.async {
+                                    self.completed = true
+                                    self.status = .completed(result)
+                                    self.onCompletion()
+                                }
+                            }
+                            
+                            guard let workspace = LSApplicationWorkspace.default() else {
+                                ls_nsprint("[!] Failed to get application workspace\n")
+                                return
+                            }
+                            
+                            var progress: Progress?
+                            var attempt: Int = 0
+                            let maxAttempts: Int = 10
+                            while progress == nil {
+                                progress = workspace.installProgress(forBundleID: self.metadata.id, makeSynchronous: 0) as? Progress
+                                
+                                attempt += 1
+                                if attempt > maxAttempts {
+                                    ls_nsprint("[!] Failed to get progress object from lsd\n")
+                                    return
+                                }
+                                
+                                Thread.sleep(forTimeInterval: 0.1)
+                            }
+                            
+                            if let progress = progress {
+                                var oldProgress: Double = 0.0
+                                var oldDate: Date = Date()
+                                
+                                while true {
+                                    if oldProgress < progress.fractionCompleted {
+                                        XCodeButton.updateProgressIncrement(progress: progress.fractionCompleted)
+                                        oldProgress = progress.fractionCompleted
+                                        oldDate = Date()
+                                    } else {
+                                        if oldDate.addingTimeInterval(20) < Date() {
+                                            workspace.clearCreatedProgress(forBundleID: self.metadata.id)
+                                            ls_nsprint("[!] Progress seemed to have frozen\n")
+                                            return
+                                        }
+                                    }
+                                    
+                                    if progress.isFinished {
+                                        while !workspace.openApplication(withBundleID: self.metadata.id) {
+                                            Thread.sleep(forTimeInterval: 0.1)
+                                        }
+                                        
+                                        workspace.clearCreatedProgress(forBundleID: self.metadata.id)
+                                        return
+                                    }
+                                    
+                                    Thread.sleep(forTimeInterval: 0.1)
+                                }
+                            }
+                        }
+                        
+                        openAfterInstall()
                     }
                 }
             default:

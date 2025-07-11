@@ -49,6 +49,7 @@ class ProjectConfig {
     var threads: Int = 1
     var increment: Bool = false
     var restartApp: Bool = false
+    var restartAppOnSucceed: Bool = true
     
     init(withPath plistPath: String) {
         self.plistHelper = PlistHelper(plistPath: plistPath)
@@ -81,6 +82,11 @@ class ProjectConfig {
                 ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
                     ? UserDefaults.standard.bool(forKey: "LDEReopen")
                     : false)
+            
+            self?.restartAppOnSucceed = (dict["LDEOverwriteReopenSucceed"] as? Bool)
+                ?? ((UserDefaults.standard.object(forKey: "LDEReopenSucceed") != nil)
+                    ? UserDefaults.standard.bool(forKey: "LDEReopenSucceed")
+                    : true)
             
             self?.platformTriple = (dict["LDEOverwriteTriple"] as? String) ?? "apple-arm64-ios\(self?.minimum_version ?? UIDevice.current.systemVersion)"
             
