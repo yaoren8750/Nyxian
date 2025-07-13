@@ -58,11 +58,9 @@ class PlistHelper {
      Functions for the project settings
      */
     func writeKey(key: String, value: Any) {
-        if let dictionary = dictionary {
-            dictionary[key] = value
-            dictionary.write(to: URL(fileURLWithPath: plistPath), atomically: true)
-            self.savedModificationDate = Date()
-        }
+        dictionary?[key] = value
+        dictionary?.write(to: URL(fileURLWithPath: plistPath), atomically: true)
+        self.savedModificationDate = Date()
     }
     
     func readKey(key: String) -> Any? {
