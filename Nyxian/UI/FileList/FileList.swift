@@ -380,33 +380,27 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
 
         if entry.type == .file {
             switch ext {
-            case "m":
-                label.text = "m"
-                label.textColor = .systemPurple
+            case "c":
+                label.text = "c"
+                label.textColor = .systemBlue
                 iconView.addSubview(label)
             case "h":
                 label.text = "h"
                 label.textColor = .systemGray
                 iconView.addSubview(label)
-            case "c":
-                label.text = "c"
-                label.textColor = .systemBlue
+            case "cpp":
+                addStackedLabel(to: iconView, base: "c", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+            case "hpp":
+                addStackedLabel(to: iconView, base: "h", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+            case "m":
+                label.text = "m"
+                label.textColor = .systemPurple
                 iconView.addSubview(label)
             case "mm":
                 addStackedLabel(to: iconView, base: "m", offset: CGPoint(x: 9, y: -6), color: .systemBlue)
-            case "nx":
-                label.text = "n"
-                label.textColor = .systemPurple
-                iconView.addSubview(label)
-            case "nxm":
-                addStackedLabel(to: iconView, base: "n", offset: CGPoint(x: 9, y: -6), color: .systemPurple)
-            case "cpp":
-                addStackedLabel(to: iconView, base: "c", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
             case "plist":
                 addSystemImage(to: iconView, name: "tablecells.fill")
-            case "swift":
-                addSystemImage(to: iconView, name: "swift", tintColor: .systemRed)
-            case "zip", "tar", "zst":
+            case "zip","tar","zst":
                 addSystemImage(to: iconView, name: "doc.fill")
             case "ipa":
                 addSystemImage(to: iconView, name: "app.gift.fill")
@@ -531,7 +525,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
-                if !result {                    
+                if !result {
                     if self.project.projectConfig.restartApp {
                         self.openTheLogSheet = true
                         restartProcess()

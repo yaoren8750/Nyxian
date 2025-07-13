@@ -30,7 +30,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
     }
     var cellSelected: Int = 0
     
-    @objc init(path: String) {
+    init(path: String) {
         RevertUI()
         
         Bootstrap.shared.bootstrap()
