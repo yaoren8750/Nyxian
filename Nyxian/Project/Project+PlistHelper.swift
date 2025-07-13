@@ -41,17 +41,14 @@ class PlistHelper {
         let needsReload: Bool = self.savedModificationDate < modDate
         if needsReload {
             dictionary = NSMutableDictionary(contentsOfFile: plistPath)
-            let dict: [String:Any] = (dictionary as? [String:Any]) ?? [:]
             self.savedModificationDate = modDate
         }
         return needsReload
     }
     
     func reloadData() {
-        let modDate = self.lastModificationDate
         dictionary = NSMutableDictionary(contentsOfFile: plistPath)
-        let dict: [String:Any] = (dictionary as? [String:Any]) ?? [:]
-        self.savedModificationDate = modDate
+        self.savedModificationDate = self.lastModificationDate
     }
     
     /*
