@@ -77,3 +77,58 @@ class TextFieldTableCell: UITableViewCell, UITextFieldDelegate {
         return true
     }
 }
+
+class TextFieldTableCellHandler: UITableViewCell, UITextFieldDelegate {
+    var textField: UITextField!
+    let title: String
+    var writeHandler: (String) -> Void = { _ in }
+
+    init(title: String, value: String) {
+        self.title = title
+        super.init(style: .default, reuseIdentifier: nil)
+        setupViews(value: value)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupViews(value: String) {
+        selectionStyle = .none
+
+        let label = UILabel()
+        label.text = title
+        label.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(label)
+
+        textField = UITextField()
+        textField.placeholder = "Value"
+        textField.text = value
+        textField.textAlignment = .right
+        textField.delegate = self
+        textField.borderStyle = .none
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(textField)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+
+            textField.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 12),
+            textField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            textField.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            textField.heightAnchor.constraint(equalToConstant: 30)
+        ])
+    }
+
+    // MARK: - UITextFieldDelegate
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        writeHandler(textField.text ?? "")
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+}

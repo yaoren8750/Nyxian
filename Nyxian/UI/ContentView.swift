@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
+class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
     var projects: [AppProject] = []
     var path: String
     
@@ -120,7 +120,6 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         self.lastProjectWasSelected = false
     }
     
@@ -173,7 +172,14 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
                 }
             }
             
-            return UIMenu(children: [export, item])
+            let settings: UIAction = UIAction(title: "Settings", image: UIImage(systemName: "gear")) { _ in
+                let settingsViewController: UINavigationController = UINavigationController(rootViewController: ProjectSettingsViewController(style: .insetGrouped, project: self.projects[indexPath.row]))
+                settingsViewController.modalPresentationStyle = .pageSheet
+                settingsViewController.presentationController?.delegate = self
+                self.present(settingsViewController, animated: true)
+            }
+            
+            return UIMenu(children: [export, item, settings])
         }
     }
     
