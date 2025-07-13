@@ -531,17 +531,14 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
-                if !result {
+                if !result {                    
                     if self.project.projectConfig.restartApp {
                         self.openTheLogSheet = true
+                        restartProcess()
                     } else {
                         let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
                         loggerView.modalPresentationStyle = .formSheet
                         self.present(loggerView, animated: true)
-                    }
-                    
-                    if self.project.projectConfig.restartApp {
-                        restartProcess()
                     }
                 } else if self.project.projectConfig.restartAppOnSucceed {
                     exit(0)
