@@ -292,7 +292,7 @@ class Builder {
     ///
     static func buildProject(withProject project: AppProject,
                              completion: @escaping (Bool) -> Void) {
-        project.projectConfig.plistHelper.reloadData()
+        project.projectConfig.reloadData()
         
         if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
             NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.minimum_version) is needed to build the app!")

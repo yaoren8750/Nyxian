@@ -63,4 +63,11 @@ class PlistHelper {
     func readKey(key: String) -> Any? {
         return dictionary?[key]
     }
+    
+    func readKeySecure<T: Decodable>(key: String, defaultValue: T) -> T {
+        guard let value = dictionary?[key] as? T else {
+            return defaultValue
+        }
+        return value
+    }
 }

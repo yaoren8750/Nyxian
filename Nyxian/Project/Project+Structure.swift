@@ -22,33 +22,30 @@ Project Structure:
  └── appdelegate.m          // UIKit app delegation of the iOS application
 */
 
-class ProjectConfig {
+class ProjectConfig: PlistHelper {
     enum ProjectType: Int {
         case App = 1
         case Staticlib = 2
         case Dylib = 3
     }
     
-    var plistHelper: PlistHelper
-    
-    var executable: String { (plistHelper.dictionary?["LDEExecutable"] as? String) ?? "Unknown" }
-    var displayname: String { (plistHelper.dictionary?["LDEDisplayName"] as? String) ?? self.executable }
-    var bundleid: String { (plistHelper.dictionary?["LDEBundleIdentifier"] as? String) ?? "com.unknown.fallback.app" }
-    var minimum_version: String { (plistHelper.dictionary?["LDEMinimumVersion"] as? String) ?? UIDevice.current.systemVersion }
-    var version: String { (plistHelper.dictionary?["LDEBundleVersion"] as? String) ?? "1.0" }
-    var shortVersion: String { (plistHelper.dictionary?["LDEBundleShortVersion"] as? String) ?? "1.0" }
-    var platformTriple: String { (plistHelper.dictionary?["LDEOverwriteTriple"] as? String) ?? "apple-arm64-ios\(self.minimum_version)" }
-    
-    var infoDictionary: [String:Any] { (plistHelper.dictionary?["LDEBundleInfo"] as? [String:Any]) ?? [:] }
-    var subTargets: [String] { (plistHelper.dictionary?["LDESubTargets"] as? [String]) ?? [] }
-    var projectType: Int { (plistHelper.dictionary?["LDEProjectType"] as? Int) ?? ProjectType.App.rawValue }
-    var compiler_flags: [String] { (plistHelper.dictionary?["LDECompilerFlags"] as? [String]) ?? [] }
-    var linker_flags: [String] { (plistHelper.dictionary?["LDELinkerFlags"] as? [String]) ?? [] }
+    var executable: String { self.readKeySecure(key: "LDEExecutable", defaultValue: "Unknown") }
+    var displayname: String { self.readKeySecure(key: "LDEDisplayName", defaultValue: self.executable) }
+    var bundleid: String { self.readKeySecure(key: "LDEBundleIdentifier", defaultValue: "com.unknown.fallback.app" ) }
+    var minimum_version: String { self.readKeySecure(key: "LDEMinimumVersion", defaultValue: UIDevice.current.systemVersion) }
+    var version: String { self.readKeySecure(key: "LDEBundleVersion", defaultValue: "1.0") }
+    var shortVersion: String { self.readKeySecure(key: "LDEBundleShortVersion", defaultValue: "1.0") }
+    var platformTriple: String { self.readKeySecure(key: "LDEOverwriteTriple", defaultValue: "apple-arm64-ios\(self.minimum_version)") }
+    var infoDictionary: [String:Any] { (self.readKey(key: "LDEBundleInfo") as? [String:Any]) ?? [:] }
+    var subTargets: [String] { self.readKeySecure(key: "LDESubTargets", defaultValue: []) }
+    var projectType: Int { self.readKeySecure(key: "LDEProjectType", defaultValue: ProjectType.App.rawValue) }
+    var compiler_flags: [String] { self.readKeySecure(key: "LDECompilerFlags", defaultValue: []) }
+    var linker_flags: [String] { self.readKeySecure(key: "LDELinkerFlags", defaultValue: []) }
     
     // Overwritable variables
     var threads: Int {
         let maxThreads: Int = getOptimalThreadCount()
-        var pthreads: Int = (plistHelper.dictionary?["LDEOverwriteThreads"] as? Int) ?? 0
+        var pthreads: Int = self.readKeySecure(key: "LDEOverwriteThreads", defaultValue: getCpuThreads())
         if pthreads == 0 {
             pthreads = getCpuThreads()
         } else if pthreads > maxThreads {
@@ -57,26 +54,22 @@ class ProjectConfig {
         return pthreads
     }
     var increment: Bool {
-        (plistHelper.dictionary?["LDEOverwriteIncrementalBuild"] as? Bool)
+        self.readKey(key: "LDEOverwriteIncrementalBuild") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
             : true)
     }
     var restartApp: Bool {
-        (plistHelper.dictionary?["LDEOverwriteReopen"] as? Bool)
+        self.readKey(key: "LDEOverwriteReopen") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEReopen")
             : false)
     }
     var restartAppOnSucceed: Bool {
-        (plistHelper.dictionary?["LDEOverwriteReopenSucceed"] as? Bool)
+        self.readKey(key: "LDEOverwriteReopenSucceed") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEReopenSucceed") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEReopenSucceed")
             : true)
-    }
-    
-    init(withPath plistPath: String) {
-        self.plistHelper = PlistHelper(plistPath: plistPath)
     }
     
     func getCompilerFlags() -> [String] {
@@ -87,18 +80,12 @@ class ProjectConfig {
     }
 }
 
-class CodeEditorConfig {
-    var plistHelper: PlistHelper
-    
-    var showLine: Bool { (plistHelper.dictionary?["LDEShowLines"] as? Bool) ?? true }
-    var showSpaces: Bool { (plistHelper.dictionary?["LDEShowSpace"] as? Bool) ?? true }
-    var showReturn: Bool { (plistHelper.dictionary?["LDEShowReturn"] as? Bool) ?? true }
-    var wrapLine: Bool { (plistHelper.dictionary?["LDEWrapLine"] as? Bool) ?? true }
-    var fontSize: Double { (plistHelper.dictionary?["LDEFontSize"] as? Double) ?? 10.0 }
-    
-    init(withPath plistPath: String) {
-        self.plistHelper = PlistHelper(plistPath: plistPath)
-    }
+class CodeEditorConfig: PlistHelper {
+    var showLine: Bool { self.readKeySecure(key: "LDEShowLines", defaultValue: true) }
+    var showSpaces: Bool { self.readKeySecure(key: "LDEShowSpace", defaultValue: true) }
+    var showReturn: Bool { self.readKeySecure(key: "LDEShowReturn", defaultValue: true) }
+    var wrapLine: Bool { self.readKeySecure(key: "LDEWrapLine", defaultValue: true) }
+    var fontSize: Double { self.readKeySecure(key: "LDEFontSize", defaultValue: 10.0) }
 }
 
 class AppProject: Identifiable {
@@ -117,8 +104,8 @@ class AppProject: Identifiable {
         self.cachePath = Bootstrap.shared.bootstrapPath("/Cache/\(self.path.URLGet().lastPathComponent)")
         
         // validate if the project plist exists and extract information
-        self.projectConfig = ProjectConfig(withPath: "\(self.path)/Config/Project.plist")
-        self.codeEditorConfig = CodeEditorConfig(withPath: "\(self.path)/Config/Editor.plist")
+        self.projectConfig = ProjectConfig(plistPath: "\(self.path)/Config/Project.plist")
+        self.codeEditorConfig = CodeEditorConfig(plistPath: "\(self.path)/Config/Editor.plist")
         self.projectTableCell = ProjectTableCell(project: self)
     }
     
@@ -251,7 +238,7 @@ class AppProject: Identifiable {
     ///
     
     @discardableResult func reload() -> Bool {
-        let needsUIReload: Bool = self.projectConfig.plistHelper.reloadIfNeeded()
+        let needsUIReload: Bool = self.projectConfig.reloadIfNeeded()
         if needsUIReload {
             self.projectTableCell.reload()
         }

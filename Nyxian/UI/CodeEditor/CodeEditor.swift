@@ -43,7 +43,7 @@ class CodeEditorViewController: UIViewController {
         self.textView = TextView()
         
         self.project = project
-        self.project?.codeEditorConfig.plistHelper.reloadIfNeeded()
+        self.project?.codeEditorConfig.reloadIfNeeded()
         self.line = line
         
         let cachePath = self.project!.getCachePath()
@@ -67,7 +67,7 @@ class CodeEditorViewController: UIViewController {
                     ])
                 }
                 
-                project.projectConfig.plistHelper.reloadIfNeeded()
+                project.projectConfig.reloadIfNeeded()
                 genericCompilerFlags.append(contentsOf: project.projectConfig.getCompilerFlags())
                 
                 self.synpushServer = SynpushServer(self.path, args: genericCompilerFlags)
