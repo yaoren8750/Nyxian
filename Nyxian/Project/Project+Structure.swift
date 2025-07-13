@@ -29,74 +29,54 @@ class ProjectConfig {
         case Dylib = 3
     }
     
-    var plistHelper: PlistHelper?
+    var plistHelper: PlistHelper
     
-    var executable: String = "Unknown"
-    var displayname: String = "Unknown"
-    var bundleid: String = "com.unknown.fallback.app"
-    var minimum_version: String = UIDevice.current.systemVersion
-    var version: String = "1.0"
-    var shortVersion: String = "1.0"
-    var platformTriple: String = "arm64-apple-ios\(UIDevice.current.systemVersion)"
+    var executable: String { (plistHelper.dictionary?["LDEExecutable"] as? String) ?? "Unknown" }
+    var displayname: String { (plistHelper.dictionary?["LDEDisplayName"] as? String) ?? self.executable }
+    var bundleid: String { (plistHelper.dictionary?["LDEBundleIdentifier"] as? String) ?? "com.unknown.fallback.app" }
+    var minimum_version: String { (plistHelper.dictionary?["LDEMinimumVersion"] as? String) ?? UIDevice.current.systemVersion }
+    var version: String { (plistHelper.dictionary?["LDEBundleVersion"] as? String) ?? "1.0" }
+    var shortVersion: String { (plistHelper.dictionary?["LDEBundleShortVersion"] as? String) ?? "1.0" }
+    var platformTriple: String { (plistHelper.dictionary?["LDEOverwriteTriple"] as? String) ?? "apple-arm64-ios\(self.minimum_version)" }
     
-    var infoDictionary: [String:Any] = [:]
-    var subTargets: [String] = []
-    var projectType: Int = ProjectType.App.rawValue
-    var compiler_flags: [String] = []
-    var linker_flags: [String] = []
+    var infoDictionary: [String:Any] { (plistHelper.dictionary?["LDEBundleInfo"] as? [String:Any]) ?? [:] }
+    var subTargets: [String] { (plistHelper.dictionary?["LDESubTargets"] as? [String]) ?? [] }
+    var projectType: Int { (plistHelper.dictionary?["LDEProjectType"] as? Int) ?? ProjectType.App.rawValue }
+    var compiler_flags: [String] { (plistHelper.dictionary?["LDECompilerFlags"] as? [String]) ?? [] }
+    var linker_flags: [String] { (plistHelper.dictionary?["LDELinkerFlags"] as? [String]) ?? [] }
     
     // Overwritable variables
-    var threads: Int = 1
-    var increment: Bool = false
-    var restartApp: Bool = false
-    var restartAppOnSucceed: Bool = true
+    var threads: Int {
+        let maxThreads: Int = getOptimalThreadCount()
+        var pthreads: Int = (plistHelper.dictionary?["LDEOverwriteThreads"] as? Int) ?? 0
+        if pthreads == 0 {
+            pthreads = getCpuThreads()
+        } else if pthreads > maxThreads {
+            pthreads = maxThreads
+        }
+        return pthreads
+    }
+    var increment: Bool {
+        (plistHelper.dictionary?["LDEOverwriteIncrementalBuild"] as? Bool)
+        ?? ((UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil)
+            ? UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
+            : true)
+    }
+    var restartApp: Bool {
+        (plistHelper.dictionary?["LDEOverwriteReopen"] as? Bool)
+        ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
+            ? UserDefaults.standard.bool(forKey: "LDEReopen")
+            : false)
+    }
+    var restartAppOnSucceed: Bool {
+        (plistHelper.dictionary?["LDEOverwriteReopenSucceed"] as? Bool)
+        ?? ((UserDefaults.standard.object(forKey: "LDEReopenSucceed") != nil)
+            ? UserDefaults.standard.bool(forKey: "LDEReopenSucceed")
+            : true)
+    }
     
     init(withPath plistPath: String) {
         self.plistHelper = PlistHelper(plistPath: plistPath)
-        
-        self.plistHelper?.onReload = { [weak self] dict in
-            self?.executable = (dict["LDEExecutable"] as? String) ?? "Unknown"
-            self?.displayname = (dict["LDEDisplayName"] as? String) ?? (self?.executable ?? "Unknown")
-            self?.bundleid = (dict["LDEBundleIdentifier"] as? String) ?? "com.unknown.fallback.app"
-            self?.minimum_version = (dict["LDEMinimumVersion"] as? String) ?? "16.5"
-            self?.compiler_flags = (dict["LDECompilerFlags"] as? [String]) ?? []
-            self?.linker_flags = (dict["LDELinkerFlags"] as? [String]) ?? []
-            self?.version = (dict["LDEBundleVersion"] as? String) ?? "1.0"
-            self?.shortVersion = (dict["LDEBundleShortVersion"] as? String) ?? "1.0"
-            self?.subTargets = (dict["LDESubTargets"] as? [String]) ?? []
-            
-            let maxThreads: Int = getOptimalThreadCount()
-            self?.threads = (dict["LDEOverwriteThreads"] as? Int) ?? 0
-            if (self?.threads ?? 0) == 0 {
-                self?.threads = getCpuThreads()
-            } else if (self?.threads ?? 0) > maxThreads {
-                self?.threads = maxThreads
-            }
-            
-            self?.increment = (dict["LDEOverwriteIncrementalBuild"] as? Bool)
-                ?? ((UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil)
-                    ? UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
-                    : true)
-
-            self?.restartApp = (dict["LDEOverwriteReopen"] as? Bool)
-                ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
-                    ? UserDefaults.standard.bool(forKey: "LDEReopen")
-                    : false)
-            
-            self?.restartAppOnSucceed = (dict["LDEOverwriteReopenSucceed"] as? Bool)
-                ?? ((UserDefaults.standard.object(forKey: "LDEReopenSucceed") != nil)
-                    ? UserDefaults.standard.bool(forKey: "LDEReopenSucceed")
-                    : true)
-            
-            self?.platformTriple = (dict["LDEOverwriteTriple"] as? String) ?? "apple-arm64-ios\(self?.minimum_version ?? UIDevice.current.systemVersion)"
-            
-            self?.infoDictionary = (dict["LDEBundleInfo"] as? [String:Any]) ?? [:]
-            self?.projectType = (dict["LDEProjectType"] as? Int) ?? ProjectType.App.rawValue
-        }
-        
-        let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
-        
-        self.plistHelper?.onReload(dict)
     }
     
     func getCompilerFlags() -> [String] {
@@ -108,52 +88,16 @@ class ProjectConfig {
 }
 
 class CodeEditorConfig {
-    var plistHelper: PlistHelper?
+    var plistHelper: PlistHelper
     
-    var showLine: Bool = true
-    var showSpaces: Bool = true
-    var showReturn: Bool = true
-    var wrapLine: Bool = true
-    var fontSize: Double = 0.0
-    
-    init() {}
-    
-    init(
-        showLine: Bool,
-        showSpaces: Bool,
-        showReturn: Bool,
-        wrapLine: Bool,
-        fontSize: Double
-    ) {
-        self.showLine = showLine
-        self.showSpaces = showSpaces
-        self.showReturn = showReturn
-        self.wrapLine = wrapLine
-        self.fontSize = 10.0
-    }
-    
-    static var shared: CodeEditorConfig = CodeEditorConfig(
-        showLine: true,
-        showSpaces: true,
-        showReturn: true,
-        wrapLine: true,
-        fontSize: 10.0
-    )
+    var showLine: Bool { (plistHelper.dictionary?["LDEShowLines"] as? Bool) ?? true }
+    var showSpaces: Bool { (plistHelper.dictionary?["LDEShowSpace"] as? Bool) ?? true }
+    var showReturn: Bool { (plistHelper.dictionary?["LDEShowReturn"] as? Bool) ?? true }
+    var wrapLine: Bool { (plistHelper.dictionary?["LDEWrapLine"] as? Bool) ?? true }
+    var fontSize: Double { (plistHelper.dictionary?["LDEFontSize"] as? Double) ?? 10.0 }
     
     init(withPath plistPath: String) {
         self.plistHelper = PlistHelper(plistPath: plistPath)
-        
-        self.plistHelper?.onReload = { [weak self] dict in
-            self?.showLine = (dict["LDEShowLines"] as? Bool) ?? true
-            self?.showSpaces = (dict["LDEShowSpace"] as? Bool) ?? true
-            self?.showReturn = (dict["LDEShowReturn"] as? Bool) ?? true
-            self?.wrapLine = (dict["LDEWrapLine"] as? Bool) ?? true
-            self?.fontSize = (dict["LDEFontSize"] as? Double) ?? 10.0
-        }
-        
-        let dict: [String:Any] = (NSDictionary(contentsOfFile: plistPath) as? [String:Any]) ?? [:]
-        
-        self.plistHelper?.onReload(dict)
     }
 }
 
@@ -307,7 +251,7 @@ class AppProject: Identifiable {
     ///
     
     @discardableResult func reload() -> Bool {
-        let needsUIReload: Bool = self.projectConfig.plistHelper?.reloadIfNeeded() ?? false
+        let needsUIReload: Bool = self.projectConfig.plistHelper.reloadIfNeeded()
         if needsUIReload {
             self.projectTableCell.reload()
         }

@@ -26,15 +26,11 @@ class PlistHelper {
      */
     var dictionary: NSMutableDictionary?
     
-    /*
-     Holds the reload function that has to be called to reload the content
-     */
-    var onReload: ([String:Any]) -> Void = { _ in }
-    
     init(plistPath: String) {
         self.plistPath = plistPath
         self.savedModificationDate = Date()
         self.savedModificationDate = self.lastModificationDate
+        self.reloadData()
     }
     
     /*
@@ -46,7 +42,6 @@ class PlistHelper {
         if needsReload {
             dictionary = NSMutableDictionary(contentsOfFile: plistPath)
             let dict: [String:Any] = (dictionary as? [String:Any]) ?? [:]
-            onReload(dict)
             self.savedModificationDate = modDate
         }
         return needsReload
@@ -56,7 +51,6 @@ class PlistHelper {
         let modDate = self.lastModificationDate
         dictionary = NSMutableDictionary(contentsOfFile: plistPath)
         let dict: [String:Any] = (dictionary as? [String:Any]) ?? [:]
-        onReload(dict)
         self.savedModificationDate = modDate
     }
     
@@ -72,9 +66,6 @@ class PlistHelper {
     }
     
     func readKey(key: String) -> Any? {
-        if let dictionary = dictionary {
-            return dictionary[key]
-        }
-        return nil
+        return dictionary?[key]
     }
 }

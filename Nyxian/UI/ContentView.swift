@@ -129,6 +129,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        self.projects[indexPath.row].reload()
         return self.projects[indexPath.row].projectTableCell
     }
     

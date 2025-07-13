@@ -79,10 +79,10 @@ int dyexec(NSString *dylibPath,
     }
     
     // The status of the dybinary resulting by its main threads return value
-    void *status = NULL;
+    int status = -1;
     
     // Joining the thread the dybinary runs on to catch its return value
-    pthread_join(thread, &status);
+    pthread_join(thread, (void*)&status);
 
     // Closing the dybinary to release its static memory and get rid of it being loaded in memory
     dlclose(data.handle);
@@ -93,5 +93,5 @@ int dyexec(NSString *dylibPath,
     free(data.argv);
 
     // Returning the status of the dybinary finally
-    return (int)(intptr_t)status;
+    return status;
 }
