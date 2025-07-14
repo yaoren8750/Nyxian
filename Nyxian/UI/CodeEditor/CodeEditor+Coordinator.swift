@@ -36,31 +36,42 @@ class Coordinator: NSObject, TextViewDelegate {
     private var lines: [UInt64] = []
     private var message: [(NeoButton,UIView)] = []
     
-    private var iDoStuff: Bool = false
-    private var iDidInvalid: Bool = false
-    private var needsAnotherRun: Bool = false
+    private(set) var isProcessing: Bool = false
+    private(set) var isInvalidated: Bool = false
+    private(set) var needsAnotherProcess: Bool = false
+    
     private let textInputView: TextInputView?
     private let textView: TextView
 
-    private let debounce: Debouncer
+    private var debounce: Debouncer?
+    private(set) var diag: [Synitem] = []
+    private let vtkey: [(String,UIColor)] = [
+        ("info.circle.fill", UIColor.blue.withAlphaComponent(0.3)),
+        ("exclamationmark.triangle.fill", UIColor.orange.withAlphaComponent(0.3)),
+        ("xmark.octagon.fill", UIColor.red.withAlphaComponent(0.3))
+    ]
     
     init(parent: CodeEditorViewController) {
         self.parent = parent
-        self.debounce = Debouncer(delay: 1.5)
         self.textView = parent.textView
         self.textInputView = parent.textView.getTextInputView()
         super.init()
         guard self.parent.synpushServer != nil else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.updateDiag(diag: self.parent.database?.getFileDebug(ofPath: self.parent.path))
+        self.debounce = Debouncer(delay: 1.5) {
+            self.isProcessing = true
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.parent.synpushServer!.reparseFile(self.textView.text)
+                self.diag = self.parent.synpushServer!.getDiagnostics()
+                self.updateDiag()
+            }
         }
         self.textViewDidChange(self.parent.textView)
     }
     
     func textViewDidChange(_ textView: TextView) {
         guard self.parent.synpushServer != nil else { return }
-        if !self.iDidInvalid {
-            self.iDidInvalid = true
+        if !self.isInvalidated {
+            self.isInvalidated = true
             let copymessage = self.message
             
             for item in copymessage {
@@ -75,26 +86,15 @@ class Coordinator: NSObject, TextViewDelegate {
             }
         }
         
-        if self.iDoStuff {
-            self.needsAnotherRun = true
+        if self.isProcessing {
+            self.needsAnotherProcess = true
             return
         }
         
-        self.debounce.debounce {
-            self.iDoStuff = true
-            
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.parent.synpushServer!.reparseFile(textView.text)
-                let diag = self.parent.synpushServer!.getDiagnostics()
-                
-                self.updateDiag(diag: diag)
-            }
-        }
+        self.debounce?.debounce()
     }
     
-    func updateDiag(diag: [Synitem]?) {
-        guard let diag = diag else { return }
-        
+    func updateDiag() {
         let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.3, animations: {
@@ -124,31 +124,18 @@ class Coordinator: NSObject, TextViewDelegate {
             }
             guard let rect = rect else { continue }
             
-            let highlightColor: UIColor
-            let sfname: String
-            
-            switch (item.type) {
-            case 0:
-                highlightColor = UIColor.blue.withAlphaComponent(0.3)
-                sfname = "info.circle.fill"
-            case 1:
-                highlightColor = UIColor.orange.withAlphaComponent(0.3)
-                sfname = "exclamationmark.triangle.fill"
-            default:
-                highlightColor = UIColor.red.withAlphaComponent(0.3)
-                sfname = "xmark.octagon.fill"
-            }
+            let properties: (String,UIColor) = self.vtkey[Int(item.type)]
             
             DispatchQueue.main.async {
                 let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height))
-                view.backgroundColor = highlightColor
+                view.backgroundColor = properties.1
                 view.isUserInteractionEnabled = false
                 
                 let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height))
                 
-                button.backgroundColor = highlightColor.withAlphaComponent(1.0)
+                button.backgroundColor = properties.1.withAlphaComponent(1.0)
                 let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent.textView.theme.lineNumberFont.pointSize)
-                let image = UIImage(systemName: sfname, withConfiguration: configuration)
+                let image = UIImage(systemName: properties.0, withConfiguration: configuration)
                 button.setImage(image, for: .normal)
                 button.imageView?.tintColor = UIColor.systemBackground
                 
@@ -168,7 +155,7 @@ class Coordinator: NSObject, TextViewDelegate {
                                 parent: self,
                                 frame: CGRect.zero,
                                 message: item.message,
-                                color: highlightColor,
+                                color: properties.1,
                                 minH: modHeight
                             )
                             preview.translatesAutoresizingMaskIntoConstraints = false
@@ -241,11 +228,11 @@ class Coordinator: NSObject, TextViewDelegate {
         }
         
         DispatchQueue.main.async {
-            self.iDoStuff = false
-            self.iDidInvalid = false
+            self.isProcessing = false
+            self.isInvalidated = false
             
-            if self.needsAnotherRun {
-                self.needsAnotherRun = false
+            if self.needsAnotherProcess {
+                self.needsAnotherProcess = false
                 self.textViewDidChange(self.parent.textView)
             }
         }
@@ -336,17 +323,19 @@ class Coordinator: NSObject, TextViewDelegate {
         private var workItem: DispatchWorkItem?
         private let queue: DispatchQueue
         private let delay: TimeInterval
+        private let action: () -> Void
 
-        init(delay: TimeInterval, queue: DispatchQueue = .main) {
+        init(delay: TimeInterval,
+             queue: DispatchQueue = .main,
+             action: @escaping () -> Void) {
             self.delay = delay
             self.queue = queue
+            self.action = action
         }
 
-        func debounce(action: @escaping () -> Void) {
+        func debounce() {
             workItem?.cancel()
-
             workItem = DispatchWorkItem(block: action)
-
             if let workItem = workItem {
                 queue.asyncAfter(deadline: .now() + delay, execute: workItem)
             }

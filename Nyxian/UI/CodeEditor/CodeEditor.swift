@@ -32,11 +32,13 @@ class CodeEditorViewController: UIViewController {
     private(set) var coordinator: Coordinator?
     private(set) var database: DebugDatabase?
     private(set) var line: UInt64?
+    private(set) var column: UInt64?
     
     init(
         project: AppProject?,
         path: String,
-        line: UInt64? = nil
+        line: UInt64? = nil,
+        column: UInt64? = nil
     ) {
         self.path = path
         
@@ -45,6 +47,7 @@ class CodeEditorViewController: UIViewController {
         self.project = project
         self.project?.codeEditorConfig.reloadIfNeeded()
         self.line = line
+        self.column = column
         
         let cachePath = self.project!.getCachePath()
         
@@ -194,24 +197,33 @@ class CodeEditorViewController: UIViewController {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let line = self.line {                
-                guard let rect: CGRect = self.textView.rectForLine(Int(line)) else { return }
-                
-                let targetOffsetY = rect.origin.y - self.textView.textContainerInset.top
-                let maxOffsetY = self.textView.contentSize.height - self.textView.bounds.height
-                let clampedOffsetY = max(min(targetOffsetY, maxOffsetY), 0)
-                
-                let targetOffset = CGPoint(x: 0, y: clampedOffsetY)
+            guard var line = self.line else { return }
+            guard var column = self.column else { return }
+            line -= 1
+            column -= 1
+            
+            let lines = self.textView.text.components(separatedBy: .newlines)
+            guard line < lines.count else { return }
 
-                self.textView.setContentOffset(targetOffset, animated: true)
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    if let position = self.textView.closestPosition(to: rect.origin) {
-                        self.textView.selectedTextRange = self.textView.textRange(from: position, to: position)
-                    }
-                    
-                    self.textView.becomeFirstResponder()
-                }
+            let lineText = lines[Int(line)]
+            let clampedColumn = min(Int(column), lineText.count)
+
+            let offset = lines.prefix(Int(line)).reduce(0) { $0 + $1.count + 1 } + clampedColumn
+
+            guard let rect = self.textView.rectForLine(Int(line)) else { return }
+
+            let targetOffsetY = rect.origin.y - self.textView.textContainerInset.top
+            let maxOffsetY = self.textView.contentSize.height - self.textView.bounds.height
+            let clampedOffsetY = max(min(targetOffsetY, maxOffsetY), 0)
+
+            let targetOffset = CGPoint(x: 0, y: clampedOffsetY)
+            self.textView.setContentOffset(targetOffset, animated: true)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard let start = self.textView.position(from: self.textView.beginningOfDocument, offset: offset) else { return }
+                let range = self.textView.textRange(from: start, to: start)
+                self.textView.selectedTextRange = range
+                self.textView.becomeFirstResponder()
             }
         }
     }
@@ -277,15 +289,9 @@ class CodeEditorViewController: UIViewController {
             try? self.textView.text.write(to: URL(fileURLWithPath: self.path), atomically: true, encoding: .utf8)
         }
         
-        guard let synpushServer = self.synpushServer else { return }
+        guard let synpushServer = self.synpushServer, let coordinator = self.coordinator else { return }
         
-        synpushServer.reparseFile(self.textView.text)
-        let synItems: [Synitem] = synpushServer.getDiagnostics()
-        
-        self.database!.setFileDebug(ofPath: self.path, synItems: synItems)
-        if !FileManager.default.fileExists(atPath: self.project!.getCachePath()) {
-            try? FileManager.default.createDirectory(atPath: self.project!.getCachePath(), withIntermediateDirectories: true)
-        }
+        self.database!.setFileDebug(ofPath: self.path, synItems: self.coordinator?.diag ?? [])
         self.database!.saveDatabase(toPath: "\(self.project!.getCachePath())/debug.json")
     }
     

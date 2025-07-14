@@ -345,7 +345,8 @@ class UIDebugViewController: UITableViewController {
         let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
             project: project,
             path: "\(self.project.getPath())/\(object.title)",
-            line: item.line
+            line: item.line,
+            column: item.column
         ))
         fileVC.modalPresentationStyle = .overFullScreen
         self.present(fileVC, animated: true)
