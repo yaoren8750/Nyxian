@@ -89,14 +89,9 @@ class PickerTableCell: UITableViewCell {
         var menuItems: [UIMenuElement] = []
         
         for option in self.options {
-            menuItems.append(UIAction(title: option) { _ in
-                // get index
-                let index = self.options.firstIndex(where: { $0 == option } )
-                
-                // update value
+            let index = self.options.firstIndex(where: { $0 == option } )
+            menuItems.append(UIAction(title: "\(index ?? 0): \(option) \((self.selectedOption == option) ? "(Selected)" : "")") { _ in
                 self.value = index ?? 0
-                
-                // update title
                 button.setTitle(self.selectedOption, for: .normal)
             })
         }

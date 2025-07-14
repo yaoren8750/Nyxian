@@ -11,9 +11,16 @@ import UIKit
 class ProjectSettingsViewController: UITableViewController {
     let project: AppProject
     
+    let vtkey: [(String, String, String)]
+    
     init(style: UITableView.Style,
          project: AppProject) {
         self.project = project
+        self.vtkey = [
+            (self.project.projectConfig.executable,"Executable","LDEExecutable"),
+            (self.project.projectConfig.displayname,"Display Name","LDEDisplayName"),
+            (self.project.projectConfig.bundleid,"BundleID","LDEBundleIdentifier")
+        ]
         super.init(style: style)
     }
     
@@ -28,35 +35,13 @@ class ProjectSettingsViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 2
+        return self.vtkey.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let value: String
-        let title: String
-        let key: String
-        
-        switch indexPath.row {
-        case 0:
-            value = self.project.projectConfig.executable
-            title = "Executable"
-            key = "LDEExecutable"
-            break
-        case 1:
-            value = self.project.projectConfig.displayname
-            title = "Display Name"
-            key = "LDEDisplayName"
-            break
-        default:
-            value = "NULL"
-            title = "NULL"
-            key = "NULL"
-            break
-        }
-        
-        let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: title, value: value)
+        let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.row].1, value: self.vtkey[indexPath.row].0)
         cell.writeHandler = { value in
-            self.project.projectConfig.writeKey(key: key, value: value)
+            self.project.projectConfig.writeKey(key: self.vtkey[indexPath.row].2, value: value)
             self.project.projectTableCell.reload()
         }
         
