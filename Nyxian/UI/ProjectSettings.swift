@@ -18,13 +18,13 @@ class ProjectSettingsViewController: UITableViewController {
         self.project = project
         self.vtkey = [
             [
-                (self.project.projectConfig.executable,"Executable","LDEExecutable"),
                 (self.project.projectConfig.displayname,"Display Name","LDEDisplayName"),
                 (self.project.projectConfig.bundleid,"BundleID","LDEBundleIdentifier"),
                 (self.project.projectConfig.version,"Version","LDEBundleVersion"),
                 (self.project.projectConfig.shortVersion,"Short Version","LDEBundleShortVersion")
             ],
             [
+                (self.project.projectConfig.executable,"Executable","LDEExecutable"),
                 (self.project.projectConfig.minimum_version,"Minimum Deployments","LDEMinimumVersion")
             ]
         ]
