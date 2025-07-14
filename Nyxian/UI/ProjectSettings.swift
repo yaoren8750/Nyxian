@@ -43,18 +43,20 @@ class ProjectSettingsViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.vtkey[section].count
+        return ((section == 0) ? 1 : self.vtkey[section - 1].count)
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 2
+        return 3
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0:
-            return "Info"
+            return "Icon"
         case 1:
+            return "Info"
+        case 2:
             return "Build"
         default:
             return nil
@@ -62,12 +64,17 @@ class ProjectSettingsViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.section][indexPath.row].1, value: self.vtkey[indexPath.section][indexPath.row].0)
-        cell.writeHandler = { value in
-            self.project.projectConfig.writeKey(key: self.vtkey[indexPath.section][indexPath.row].2, value: value)
-            self.project.projectTableCell.reload()
+        if indexPath.section != 0 {
+            let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.section - 1][indexPath.row].1, value: self.vtkey[indexPath.section - 1][indexPath.row].0)
+            cell.writeHandler = { value in
+                self.project.projectConfig.writeKey(key: self.vtkey[indexPath.section - 1][indexPath.row].2, value: value)
+                self.project.projectTableCell.reload()
+            }
+            return cell
+        } else {
+            let cell: UITableViewCell = UITableViewCell()
+            cell.textLabel?.text = "S0n"
+            return cell
         }
-        
-        return cell
     }
 }
