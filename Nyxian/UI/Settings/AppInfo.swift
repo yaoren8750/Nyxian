@@ -9,14 +9,9 @@ import Foundation
 import UIKit
 
 // App
-let buildName: String = "Nightsky"
-let buildStage: String = "Alpha"
-let buildVersion: String = "0.3"
-
-// Toolchain
-let buildChainName: String = "Leaf"
-let buildChainStage: String = "Alpha"
-let buildChainVersion: String = "0.2"
+let buildName: String = "Twinterlune"
+let buildStage: String = "Indev"
+let buildVersion: String = "0.4"
 
 // AppInfoView
 class AppInfoViewController: UIThemedTableViewController {
@@ -27,27 +22,15 @@ class AppInfoViewController: UIThemedTableViewController {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 3
+        return 2
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
-            return 1
-        } else {
-            return 3
-        }
+        return section == 0 ? 1 : 3
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 {
-            return nil
-        } else if section == 1 {
-            return "Nyxian"
-        } else if section == 2 {
-            return "NyxianCore"
-        } else {
-            return nil
-        }
+        return section == 0 ? nil : "Nyxian"
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -76,17 +59,17 @@ class AppInfoViewController: UIThemedTableViewController {
                 imageView.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
                 imageView.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor)
             ])
-        } else {
+        }else {
             switch indexPath.row {
             case 0:
                 cell.textLabel?.text = "Name"
-                cell.detailTextLabel?.text = (indexPath.section == 1) ? buildName : buildChainName
+                cell.detailTextLabel?.text = buildName
             case 1:
                 cell.textLabel?.text = "Version"
-                cell.detailTextLabel?.text = (indexPath.section == 1) ? buildVersion : buildChainVersion
+                cell.detailTextLabel?.text = buildVersion
             default:
                 cell.textLabel?.text = "Stage"
-                cell.detailTextLabel?.text = (indexPath.section == 1) ? buildStage : buildChainStage
+                cell.detailTextLabel?.text = buildStage
             }
         }
         
