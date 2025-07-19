@@ -520,23 +520,13 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
 
         self.navigationItem.setRightBarButton(barButton, animated: true)
         self.navigationItem.setHidesBackButton(true, animated: true)
-        Builder.buildProject(withProject: project) { result in
+        
+        DispatchQueue.global().async {
+            // TwinterCore action!
+            
             DispatchQueue.main.async {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
-                
-                if !result {
-                    if self.project.projectConfig.restartApp {
-                        self.openTheLogSheet = true
-                        restartProcess()
-                    } else {
-                        let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
-                        loggerView.modalPresentationStyle = .formSheet
-                        self.present(loggerView, animated: true)
-                    }
-                } else if self.project.projectConfig.restartAppOnSucceed {
-                    exit(0)
-                }
             }
         }
     }
