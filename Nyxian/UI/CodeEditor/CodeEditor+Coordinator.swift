@@ -34,7 +34,7 @@ import Runestone
 class Coordinator: NSObject, TextViewDelegate {
     private let parent: CodeEditorViewController
     private var lines: [UInt64] = []
-    private var message: [(NeoButton,UIView)] = []
+    private var entries: [(NeoButton,UIView,UInt64)] = []
     
     private(set) var isProcessing: Bool = false
     private(set) var isInvalidated: Bool = false
@@ -72,9 +72,9 @@ class Coordinator: NSObject, TextViewDelegate {
         guard self.parent.synpushServer != nil else { return }
         if !self.isInvalidated {
             self.isInvalidated = true
-            let copymessage = self.message
+            let copyentry = self.entries
             
-            for item in copymessage {
+            for item in copyentry {
                 UIView.animate(withDuration: 0.3) {
                     item.1.backgroundColor = UIColor.systemGray.withAlphaComponent(0.3)
                     item.0.backgroundColor = UIColor.systemGray.withAlphaComponent(1.0)
@@ -84,6 +84,10 @@ class Coordinator: NSObject, TextViewDelegate {
                     item.0.errorview?.removeFromSuperview()
                 }
             }
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.redrawDiag()
         }
         
         if self.isProcessing {
@@ -98,25 +102,39 @@ class Coordinator: NSObject, TextViewDelegate {
         self.debounce?.debounce()
     }
     
-    func updateDiag() {
-        let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.3, animations: {
-                for item in self.message {
-                    item.0.alpha = 0
-                    item.1.alpha = 0
+    func redrawDiag() {
+        if !self.entries.isEmpty {
+            for item in self.entries {
+                DispatchQueue.main.async {
+                    guard let rect = self.textView.rectForLine(Int(item.2)) else { return }
+                    item.0.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height)
+                    item.1.frame = CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height)
                 }
-            }, completion: { _ in
-                for item in self.message {
-                    item.0.removeFromSuperview()
-                    item.1.removeFromSuperview()
-                }
-                self.message.removeAll()
-                self.lines.removeAll()
-                waitonmebaby.signal()
-            })
+            }
         }
-        waitonmebaby.wait()
+    }
+    
+    func updateDiag() {
+        if !self.entries.isEmpty {
+            let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+            DispatchQueue.main.async {
+                UIView.animate(withDuration: 0.3, animations: {
+                    for item in self.entries {
+                        item.0.alpha = 0
+                        item.1.alpha = 0
+                    }
+                }, completion: { _ in
+                    for item in self.entries {
+                        item.0.removeFromSuperview()
+                        item.1.removeFromSuperview()
+                    }
+                    self.entries.removeAll()
+                    self.lines.removeAll()
+                    waitonmebaby.signal()
+                })
+            }
+            waitonmebaby.wait()
+        }
         
         for item in diag {
             if self.lines.contains(item.line) || (item.line == 0) { continue }
@@ -214,7 +232,7 @@ class Coordinator: NSObject, TextViewDelegate {
                 
                 view.alpha = 0
                 button.alpha = 0
-                self.message.append((button,view))
+                self.entries.append((button,view,item.line))
                 
                 self.textInputView?.addSubview(view)
                 self.textInputView?.sendSubviewToBack(view)
