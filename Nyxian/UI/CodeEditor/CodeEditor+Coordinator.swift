@@ -94,6 +94,10 @@ class Coordinator: NSObject, TextViewDelegate {
         self.debounce?.debounce()
     }
     
+    func textViewDidChangeSelection(_ textView: TextView) {
+        self.debounce?.debounce()
+    }
+    
     func updateDiag() {
         let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
