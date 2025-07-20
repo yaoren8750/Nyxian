@@ -7,3 +7,11 @@ IO.printf("[*] Got LindChain: " + LindChain + "\n");
 IO.printf("[*] -- Project --\n");
 IO.printf("[*] Path: " + Project.Path + "\n");
 IO.printf("[*] CachePath: " + Project.CachePath + "\n");
+IO.printf("[*] -- Finder  --\n");
+IO.printf("[*] Finding clang files...\n");
+
+let items = LindChain.FindFilesStack(Project.Path, ["m","c","mm","cpp"], ["Resources"]);
+for(const item of items)
+{
+    IO.printf("[*] Clang file: " + item + "\n");
+}

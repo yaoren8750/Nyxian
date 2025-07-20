@@ -28,7 +28,7 @@
  */
 @protocol LindChainModuleExport <JSExport>
 
-
+JSExportAs(FindFilesStack,    - (NSArray<NSString *> *)FindFilesStack:(NSString*)projectPath fileExtensions:(NSArray<NSString *> *)fileExtensions ignore:(NSArray<NSString *> *)ignore                );
 
 @end
 
