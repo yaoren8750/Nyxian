@@ -1,4 +1,6 @@
 // TwinterBuild Module
 include("IO");
+include("LindChain")
 
-IO.printf("Meow\n");
+IO.printf("TwinterBuild Module\n");
+IO.printf("[*] Got LindChain: " + LindChain + "\n");

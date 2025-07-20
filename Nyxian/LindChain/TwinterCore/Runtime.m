@@ -27,6 +27,7 @@
 /// Module Headers
 #import <TwinterCore/Modules/IO/IO.h>
 #import <TwinterCore/Modules/Timer/Timer.h>
+#import <TwinterCore/Modules/LindChain/LindChain.h>
 
 /*
  @Brief Nyxian runtime extension
@@ -80,6 +81,8 @@
             IncludeModule = [[IOModule alloc] init];
         } else if ([LibName isEqualToString:@"Timer"]) {
             IncludeModule = [[TimerModule alloc] init];
+        } else if ([LibName isEqualToString:@"LindChain"]) {
+            IncludeModule = [[LindChainModule alloc] init];
         } else {
             NSString *path = [NSString stringWithFormat:@"%@.nxm", LibName];
             NSURL *url = [[NSURL fileURLWithPath:path] URLByDeletingLastPathComponent];
