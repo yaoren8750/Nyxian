@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <ErrorHandler.h>
 #include <LogService/LogService.h>
-#include <TwinterCore/Modules/LindChain/Types/Clang.h>
 
 using namespace clang;
 using namespace clang::driver;
@@ -102,97 +101,6 @@ int CompileObject(int argc,
     CompilerInvocation::CreateFromArgs(*CI, CCArgs, Diags);
 
     CI->getFrontendOpts().DisableFree = false;
-    CI->getFrontendOpts().OutputFile = outputFilePath;
-
-    CompilerInstance Clang;
-    Clang.setInvocation(std::move(CI));
-    Clang.createDiagnostics(DiagClient.release(), false);
-    if(!Clang.hasDiagnostics())
-        return 1;
-
-    auto Act = std::make_unique<EmitObjAction>();
-    
-    Clang.ExecuteAction(*Act);
-    
-    *errorStringSet = strdup(errorString.c_str());
-    ls_printf("%s\n", *errorStringSet);
-
-    return Clang.getDiagnostics().hasErrorOccurred();
-}
-
-bool TwinterCoreChangeValue(bool target, TwinterBool_t *twbool)
-{
-    if(twbool->Overwrite)
-        return twbool->Value;
-    else
-        return target;
-}
-
-int TwinterCoreCompileObject(int argc,
-                  const char **argv,
-                  const char *outputFilePath,
-                  const char *platformTripple,
-                  char **errorStringSet,
-                  Clang_t clang)
-{
-    std::string errorString;
-    llvm::raw_string_ostream errorOutputStream(errorString);
-
-    auto DiagOpts = llvm::makeIntrusiveRefCnt<DiagnosticOptions>();
-    
-    DiagOpts->ShowColors = false;
-    DiagOpts->ShowLevel = true;
-    DiagOpts->ShowOptionNames = false;
-    DiagOpts->MessageLength = 0;
-    DiagOpts->ShowSourceRanges = false;
-    DiagOpts->ShowPresumedLoc = false;
-    DiagOpts->ShowCarets = false;
-    
-    auto DiagClient = std::make_unique<TextDiagnosticPrinter>(errorOutputStream, &*DiagOpts);
-    auto DiagID = llvm::makeIntrusiveRefCnt<DiagnosticIDs>();
-    DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient.get());
-    
-    llvm::Triple TargetTriple(platformTripple);
-    
-    Driver TheDriver(argv[0], TargetTriple.str(), Diags);
-
-    SmallVector<const char *, 16> Args(argv, argv + argc);
-    Args.push_back("-fsyntax-only");
-
-    std::unique_ptr<Compilation> C(TheDriver.BuildCompilation(Args));
-    
-    if(!C)
-        return 0;
-
-    // FIXME: Crash in here
-    const JobList &Jobs = C->getJobs();
-    if(Jobs.size() != 1 || !isa<Command>(*Jobs.begin()))
-    {
-        llvm::SmallString<256> Msg;
-        llvm::raw_svector_ostream OS(Msg);
-        Jobs.Print(OS, "; ", true);
-        puts(Msg.c_str());
-        return 1;
-    }
-
-    const Command &Cmd = cast<Command>(*Jobs.begin());
-    if(std::strcmp(Cmd.getCreator().getName(), "clang") != 0)
-    {
-        Diags.Report(diag::err_fe_expected_clang_command);
-        return 1;
-    }
-
-    const auto &CCArgs = Cmd.getArguments();
-    auto CI = std::make_unique<CompilerInvocation>();
-    CompilerInvocation::CreateFromArgs(*CI, CCArgs, Diags);
-
-    // Frontend option overwrite
-    CI->getFrontendOpts().DisableFree = TwinterCoreChangeValue(CI->getFrontendOpts().DisableFree, &clang.FrontEndOpts.DisableFree);
-    CI->getFrontendOpts().RelocatablePCH = TwinterCoreChangeValue(CI->getFrontendOpts().RelocatablePCH, &clang.FrontEndOpts.RelocatablePCH);
-    CI->getFrontendOpts().ShowHelp = TwinterCoreChangeValue(CI->getFrontendOpts().ShowHelp, &clang.FrontEndOpts.ShowHelp);
-    CI->getFrontendOpts().ShowStats = TwinterCoreChangeValue(CI->getFrontendOpts().ShowStats, &clang.FrontEndOpts.ShowStats);
-    
-    // Set fileoutput
     CI->getFrontendOpts().OutputFile = outputFilePath;
 
     CompilerInstance Clang;

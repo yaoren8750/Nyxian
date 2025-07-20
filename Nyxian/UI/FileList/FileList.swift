@@ -521,18 +521,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.navigationItem.setRightBarButton(barButton, animated: true)
         self.navigationItem.setHidesBackButton(true, animated: true)
         
-        DispatchQueue.global().async {
-            let runtime = NYXIAN_Runtime()
-            let projectDict: [String: Any] = [
-                "Path": self.project.getPath(),
-                "CachePath": self.project.getCachePath(),
-                "ProjectConfig": self.project.projectConfig.dictionary ?? [:],
-                "CodeEditorConfig": self.project.codeEditorConfig.dictionary ?? [:]
-            ]
-            let jsProjectObject = JSValue(object: projectDict, in: runtime.context)
-            runtime.context.setObject(jsProjectObject, forKeyedSubscript: "Project" as (NSCopying & NSObjectProtocol))
-            runtime.run("\(Bundle.main.bundlePath)/Shared/TwinterBuild.nm")
-            
+        Builder.buildProject(withProject: project) { _ in
             DispatchQueue.main.async {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)

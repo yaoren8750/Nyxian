@@ -54,13 +54,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				LindChain/Dybin/ld.dylib,
-				LindChain/Dybin/libcrypto.3.dylib,
-				LindChain/Dybin/libiosexec.1.dylib,
-				LindChain/Dybin/libncursesw.6.dylib,
-				LindChain/Dybin/libtapi.dylib,
-				LindChain/Dybin/libxar.1.dylib,
-				LindChain/Dybin/libzstd.1.dylib,
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;
 		};
@@ -70,24 +63,10 @@
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
-				LindChain/Dybin/ld.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libcrypto.3.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libiosexec.1.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libncursesw.6.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libtapi.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libxar.1.dylib = (CodeSignOnCopy, );
-				LindChain/Dybin/libzstd.1.dylib = (CodeSignOnCopy, );
 				LindChain/Synpush/libclang.dylib = (CodeSignOnCopy, );
 			};
 			buildPhase = AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */;
 			membershipExceptions = (
-				LindChain/Dybin/ld.dylib,
-				LindChain/Dybin/libcrypto.3.dylib,
-				LindChain/Dybin/libiosexec.1.dylib,
-				LindChain/Dybin/libncursesw.6.dylib,
-				LindChain/Dybin/libtapi.dylib,
-				LindChain/Dybin/libxar.1.dylib,
-				LindChain/Dybin/libzstd.1.dylib,
 				LindChain/Synpush/libclang.dylib,
 			);
 		};

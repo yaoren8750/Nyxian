@@ -18,9 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import UIKit
 import Foundation
-import CryptoKit
 
 class Builder {
     private let project: AppProject
@@ -73,14 +71,6 @@ class Builder {
     ///
     private func isFileDirty(_ item: String) -> Bool {
         let objectFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())))"
-        
-        func sha256Hash(ofFileAt url: URL) throws -> String {
-            let fileData = try Data(contentsOf: url)
-            let hash = SHA256.hash(data: fileData)
-            return hash.map { String(format: "%02hhx", $0) }.joined()
-        }
-        
-        print("\(item) | hash: \(try! sha256Hash(ofFileAt: item.URLGet()))")
         
         // Checking if the source file is newer than the compiled object file
         guard let sourceDate = try? FileManager.default.attributesOfItem(atPath: item)[.modificationDate] as? Date,
@@ -202,50 +192,27 @@ class Builder {
     }
     
     func link() throws {
-        if UserDefaults.standard.integer(forKey: "LDELinker") == 0 {
-            let ldArgs: [String] = [
-                "-platform_version",
-                "ios",
-                project.projectConfig.minimum_version,
-                "18.5",
-                "-arch",
-                "arm64",
-                "-syslibroot",
-                Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
-                "-o",
-                self.project.getMachOPath()
-            ] + FindFilesStack(
-                project.getCachePath(),
-                ["o"],
-                ["Resources","Config"]
-            ) + self.project.projectConfig.linker_flags
-            
-            let array: NSArray = ldArgs as NSArray
-            if LinkMachO(array.mutableCopy() as? NSMutableArray) != 0 {
-                self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
-                throw NSError()
-            }
-        } else {
-            let ldPath: String = "\(Bundle.main.bundlePath)/Frameworks/ld.dylib"
-            
-            let ldArgs: [String] = [
-                "-syslibroot",
-                Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
-                "-o",
-                self.project.getMachOPath()
-            ] + FindFilesStack(
-                project.getCachePath(),
-                ["o"],
-                ["Resources","Config"]
-            ) + self.project.projectConfig.linker_flags
-            
-            if dyexec(
-                ldPath,
-                ldArgs
-            ) != 0 {
-                self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
-                throw NSError()
-            }
+        let ldArgs: [String] = [
+            "-platform_version",
+            "ios",
+            project.projectConfig.minimum_version,
+            "18.5",
+            "-arch",
+            "arm64",
+            "-syslibroot",
+            Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
+            "-o",
+            self.project.getMachOPath()
+        ] + FindFilesStack(
+            project.getCachePath(),
+            ["o"],
+            ["Resources","Config"]
+        ) + self.project.projectConfig.linker_flags
+        
+        let array: NSArray = ldArgs as NSArray
+        if LinkMachO(array.mutableCopy() as? NSMutableArray) != 0 {
+            self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
+            throw NSError()
         }
     }
     
