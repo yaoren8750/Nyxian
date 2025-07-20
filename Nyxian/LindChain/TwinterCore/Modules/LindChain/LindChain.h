@@ -17,25 +17,24 @@
  along with FridaCodeManager. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import "Module.h"
+#ifndef NYXIAN_MODULE_LINDCHAIN_H
+#define NYXIAN_MODULE_LINDCHAIN_H
 
-@implementation Module
+#import <Foundation/Foundation.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 
-- (instancetype)init
-{
-    self = [super init];
-    _semaphore = dispatch_semaphore_create(0);
-    return self;
-}
-
-- (void)moduleCleanup
-{
-    return;
-}
-
-- (dispatch_semaphore_t)giveSemaphore
-{
-    return _semaphore;
-}
+/*
+ @Brief JSExport Protocol for TimerModule
+ */
+@protocol LindChainModuleExport <JSExport>
 
 @end
+
+/*
+ @Brief TimerModule Module Interface
+ */
+@interface LindChainModule: NSObject <LindChainModuleExport>
+
+@end
+
+#endif /* NYXIAN_MODULE_TIMER_H */

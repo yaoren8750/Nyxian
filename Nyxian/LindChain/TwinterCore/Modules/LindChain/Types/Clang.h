@@ -17,19 +17,25 @@
  along with FridaCodeManager. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef NYXIAN_MODULE_H
-#define NYXIAN_MODULE_H
+/*
+ Clang structure will be stored here
+ */
 
-#import <Foundation/Foundation.h>
+#include <stdbool.h>
 
-@interface Module : NSObject
+typedef struct {
+    bool Overwrite;
+    bool Value;
+} TwinterBool_t;
 
-@property (nonatomic,strong) dispatch_semaphore_t semaphore;
+typedef struct {
+    TwinterBool_t DisableFree;
+    TwinterBool_t RelocatablePCH;
+    TwinterBool_t ShowHelp;
+    TwinterBool_t ShowStats;
+} FrontEndOpts_t;
 
-- (void)moduleCleanup;
-- (dispatch_semaphore_t)giveSemaphore;
-
-@end
-
-#endif
+typedef struct {
+    FrontEndOpts_t FrontEndOpts;
+} Clang_t;
 

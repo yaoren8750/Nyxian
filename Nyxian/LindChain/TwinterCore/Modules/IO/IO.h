@@ -20,7 +20,6 @@
 #ifndef NYXIAN_MODULE_IO_H
 #define NYXIAN_MODULE_IO_H
 
-#import <TwinterCore/Modules/Module.h>
 #import <Foundation/Foundation.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 #import <Nyxian-Swift.h>
@@ -101,7 +100,7 @@ JSExportAs(setenv,  - (id)setenv:(NSString*)env value:(NSString*)value overwrite
 /*
  @Brief I/O Module Interface
  */
-@interface IOModule : Module <IOModuleExport>
+@interface IOModule : NSObject <IOModuleExport>
 
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *array;
 

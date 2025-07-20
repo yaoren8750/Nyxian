@@ -20,7 +20,6 @@
 #ifndef NYXIAN_MODULE_TIMER_H
 #define NYXIAN_MODULE_TIMER_H
 
-#import <TwinterCore/Modules/Module.h>
 #import <Foundation/Foundation.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 
@@ -37,7 +36,7 @@
 /*
  @Brief TimerModule Module Interface
  */
-@interface TimerModule: Module <TimerModuleExport>
+@interface TimerModule: NSObject <TimerModuleExport>
 
 @end
 

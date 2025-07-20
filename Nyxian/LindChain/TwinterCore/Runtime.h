@@ -25,9 +25,6 @@
 #import <UIKit/UIKit.h>
 #include <pthread.h>
 
-/// Header for Module Object type
-#import <TwinterCore/Modules/Module.h>
-
 NS_ASSUME_NONNULL_BEGIN
 
 /*
@@ -41,9 +38,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init;
 - (void)run:(NSString*)path;
 - (void)cleanup;
-
-/// Module Handoff functions
-- (void)handoffModule:(Module*)module;
 
 /// Is module already imported?
 - (BOOL)isModuleImported:(NSString *)name;
