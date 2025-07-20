@@ -28,6 +28,8 @@
  */
 @protocol LindChainModuleExport <JSExport>
 
+
+
 @end
 
 /*

@@ -523,6 +523,14 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         
         DispatchQueue.global().async {
             let runtime = NYXIAN_Runtime()
+            let projectDict: [String: Any] = [
+                "Path": self.project.getPath(),
+                "CachePath": self.project.getCachePath(),
+                "ProjectConfig": self.project.projectConfig.dictionary ?? [:],
+                "CodeEditorConfig": self.project.codeEditorConfig.dictionary ?? [:]
+            ]
+            let jsProjectObject = JSValue(object: projectDict, in: runtime.context)
+            runtime.context.setObject(jsProjectObject, forKeyedSubscript: "Project" as (NSCopying & NSObjectProtocol))
             runtime.run("\(Bundle.main.bundlePath)/Shared/TwinterBuild.nm")
             
             DispatchQueue.main.async {

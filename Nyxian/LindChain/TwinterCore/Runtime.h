@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <JavaScriptCore/JavaScriptCore.h>
+#import <TwinterCore/ReturnObjBuilder.h>
 #import <UIKit/UIKit.h>
 #include <pthread.h>
 

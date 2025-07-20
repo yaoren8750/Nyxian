@@ -4,3 +4,6 @@ include("LindChain")
 
 IO.printf("TwinterBuild Module\n");
 IO.printf("[*] Got LindChain: " + LindChain + "\n");
+IO.printf("[*] -- Project --\n");
+IO.printf("[*] Path: " + Project.Path + "\n");
+IO.printf("[*] CachePath: " + Project.CachePath + "\n");
