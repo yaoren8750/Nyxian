@@ -1,2 +1,4 @@
 // TwinterBuild Module
+include("IO");
 
+IO.printf("Meow\n");

@@ -522,7 +522,8 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.navigationItem.setHidesBackButton(true, animated: true)
         
         DispatchQueue.global().async {
-            // TwinterCore action!
+            let runtime = NYXIAN_Runtime()
+            runtime.run("\(Bundle.main.bundlePath)/Shared/TwinterBuild.nm")
             
             DispatchQueue.main.async {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)

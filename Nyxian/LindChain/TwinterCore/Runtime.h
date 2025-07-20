@@ -37,7 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Main Runtime functions you should focus on
 - (instancetype)init;
 - (void)run:(NSString*)path;
-- (void)cleanup;
 
 /// Is module already imported?
 - (BOOL)isModuleImported:(NSString *)name;

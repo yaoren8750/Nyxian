@@ -64,60 +64,57 @@
     chdir([[url path] UTF8String]);
     
     // Setting environment up to be safe
-    if([self isModuleImported:@"include"])
-    {
-        __block NYXIAN_Runtime *Runtime = self;
-        [_Context setObject:^id(NSString *LibName) {
-            // Placeholder for module to import
-            NSObject *IncludeModule = NULL;
+    __block NYXIAN_Runtime *Runtime = self;
+    [_Context setObject:^id(NSString *LibName) {
+        // Placeholder for module to import
+        NSObject *IncludeModule = NULL;
+        
+        // Checking if module with that name is already imported
+        if([Runtime isModuleImported:LibName])
+        {
+            return NULL;
+        }
+        
+        if ([LibName isEqualToString:@"IO"]) {
+            IO_MACRO_MAP();
+            IncludeModule = [[IOModule alloc] init];
+        } else if ([LibName isEqualToString:@"Timer"]) {
+            IncludeModule = [[TimerModule alloc] init];
+        } else {
+            NSString *path = [NSString stringWithFormat:@"%@.nxm", LibName];
+            NSURL *url = [[NSURL fileURLWithPath:path] URLByDeletingLastPathComponent];
+            NSString *code = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
+            NSString *currentPath = [[NSFileManager defaultManager] currentDirectoryPath];
             
-            // Checking if module with that name is already imported
-            if([Runtime isModuleImported:LibName])
-            {
-                return NULL;
+            chdir([[url path] UTF8String]);
+            
+            NSString *realLibName = [[NSURL fileURLWithPath:LibName] lastPathComponent];
+            
+            if (!code) {
+                return jsDoThrowError([NSString stringWithFormat:@"include: %@\n", EW_FILE_NOT_FOUND]);
             }
             
-            if ([LibName isEqualToString:@"IO"]) {
-                IO_MACRO_MAP();
-                IncludeModule = [[IOModule alloc] init];
-            } else if ([LibName isEqualToString:@"Timer"]) {
-                IncludeModule = [[TimerModule alloc] init];
-            } else {
-                NSString *path = [NSString stringWithFormat:@"%@.nxm", LibName];
-                NSURL *url = [[NSURL fileURLWithPath:path] URLByDeletingLastPathComponent];
-                NSString *code = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
-                NSString *currentPath = [[NSFileManager defaultManager] currentDirectoryPath];
-                
-                chdir([[url path] UTF8String]);
-                
-                NSString *realLibName = [[NSURL fileURLWithPath:LibName] lastPathComponent];
-                
-                if (!code) {
-                    return jsDoThrowError([NSString stringWithFormat:@"include: %@\n", EW_FILE_NOT_FOUND]);
-                }
-                
-                [Runtime.Context evaluateScript:[NSString stringWithFormat:@"var %@ = (function() {\n%@}\n)();", realLibName, code]];
-                
-                JSValue *exception = Runtime.Context.exception;
-                if (exception && !exception.isUndefined && !exception.isNull) {
-                    jsDoThrowError([NSString stringWithFormat:@"include: %@\n", [exception toString]]);
-                    Runtime.Context.exception = nil;
-                }
-                
-                chdir([currentPath UTF8String]);
-                
-                return NULL;
+            [Runtime.Context evaluateScript:[NSString stringWithFormat:@"var %@ = (function() {\n%@}\n)();", realLibName, code]];
+            
+            JSValue *exception = Runtime.Context.exception;
+            if (exception && !exception.isUndefined && !exception.isNull) {
+                jsDoThrowError([NSString stringWithFormat:@"include: %@\n", [exception toString]]);
+                Runtime.Context.exception = nil;
             }
             
-            // complete include
-            if(!IncludeModule)
-                return NULL;
-            
-            [Runtime.Context setObject:IncludeModule forKeyedSubscript:LibName];
+            chdir([currentPath UTF8String]);
             
             return NULL;
-        } forKeyedSubscript:@"include"];
-    }
+        }
+        
+        // complete include
+        if(!IncludeModule)
+            return NULL;
+        
+        [Runtime.Context setObject:IncludeModule forKeyedSubscript:LibName];
+        
+        return NULL;
+    } forKeyedSubscript:@"include"];
     
     // Setting up and running the code in the environment
     _Context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
@@ -126,18 +123,6 @@
     [_Context evaluateScript:code];
     
     // Cleaning up mess in case
-    [self cleanup];
-}
-
-/// Private cleanup function
-- (void)cleanup
-{
-    // And here we get fake stdout
-    ls_printf("[EXIT]\n");
-    
-    // And we tell ARC that ARC can fuck them selves and release the Context
-    _Context = nil;
-    
     [_envRecover restoreBackup];
 }
 

@@ -26,14 +26,15 @@
 #import <TwinterCore/ReturnObjBuilder.h>
 #import <TwinterCore/ErrorThrow.h>
 
-/// Some standard headers we need
+/// Some standard headers
 #include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
-char* readline(const char *prompt);
+// LindChain headers
+#import <LogService/LogService.h>
 
 /*
  @Brief I/O Module Implementation
@@ -53,6 +54,11 @@ char* readline(const char *prompt);
 /// They are for the purpose to communicate with with the stdin
 /// hook
 ///
+- (void)printf:(NSString*)buffer
+{
+    ls_puts([buffer cStringUsingEncoding:NSUTF8StringEncoding], [buffer length]);
+}
+
 - (NSString*)perror
 {
     return @(strerror(errno));

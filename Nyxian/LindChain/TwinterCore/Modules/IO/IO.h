@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// They are for the purpose to communicate with with the stdin
 /// hook
 ///
+- (void)printf:(NSString*)buffer;
 - (NSString*)perror;
 - (id)fsync:(int)fd;
 JSExportAs(ftruncate, - (id)ftruncate:(int)fd offset:(UInt64)offset                                     );
