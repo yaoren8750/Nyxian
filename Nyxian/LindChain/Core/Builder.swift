@@ -249,40 +249,45 @@ class Builder {
     
     func install() throws {
         if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            /*let installer = try Installer(
-                path: self.project.getPackagePath().URLGet(),
-                metadata: AppData(id: self.project.projectConfig.bundleid,
-                                  version: 1, name: self.project.projectConfig.displayname),
-                image: nil
-            )
-            
-            let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-            installer.installCompletionHandler {
-                waitonmebaby.signal()
-            }
-            
-            DispatchQueue.main.async {
-                UIApplication.shared.open(installer.iTunesLink)
-            }
-            
-            waitonmebaby.wait()*/
-            
-            let status = InstallerStatusViewModel()
-            
-            let proxy = InstallationProxy(viewModel: status)
-            
-            let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-            Task {
-                do {
-                    try await proxy.install(at: self.project.getPackagePath().URLGet())
-                } catch {
-                    NotificationServer.NotifyUser(level: .error, notification: error.localizedDescription)
+            let installMethod = UserDefaults.standard.integer(forKey: "LDEInstallMethod")
+            if installMethod == 0 {
+                let installer = try Installer(
+                    path: self.project.getPackagePath().URLGet(),
+                    metadata: AppData(id: self.project.projectConfig.bundleid,
+                                      version: 1, name: self.project.projectConfig.displayname),
+                    image: nil
+                )
+                
+                let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+                installer.installCompletionHandler {
+                    waitonmebaby.signal()
                 }
-                waitonmebaby.signal()
+                
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(installer.iTunesLink)
+                }
+                
+                waitonmebaby.wait()
+            } else {
+                let status = InstallerStatusViewModel()
+                
+                let proxy = InstallationProxy(viewModel: status)
+                
+                let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+                Task {
+                    do {
+                        try await InstallationAppProxy.deleteApp(for: project.projectConfig.bundleid)
+                        try await proxy.install(at: self.project.getPackagePath().URLGet())
+                    } catch {
+                        NotificationServer.NotifyUser(level: .error, notification: error.localizedDescription)
+                    }
+                    waitonmebaby.signal()
+                }
+                waitonmebaby.wait()
+                
+                
+                LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
             }
-            waitonmebaby.wait()
-            
-            LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
         }
     }
     
