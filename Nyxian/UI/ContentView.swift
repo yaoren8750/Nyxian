@@ -34,7 +34,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     init(path: String) {
         RevertUI()
         
-        print("Meow is at: \(HeartbeatManager.pairingFile())")
+        HeartbeatManager.shared.start()
         Bootstrap.shared.bootstrap()
         LDELogger.setup()
         CertBlob.startSigner()

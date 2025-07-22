@@ -19,6 +19,7 @@
 */
 
 import Foundation
+import IDeviceSwift
 
 class Builder {
     private let project: AppProject
@@ -247,8 +248,8 @@ class Builder {
     }
     
     func install() throws {
-        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
-            let installer = try Installer(
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+            /*let installer = try Installer(
                 path: self.project.getPackagePath().URLGet(),
                 metadata: AppData(id: self.project.projectConfig.bundleid,
                                   version: 1, name: self.project.projectConfig.displayname),
@@ -264,7 +265,24 @@ class Builder {
                 UIApplication.shared.open(installer.iTunesLink)
             }
             
+            waitonmebaby.wait()*/
+            
+            let status = InstallerStatusViewModel()
+            
+            let proxy = InstallationProxy(viewModel: status)
+            
+            let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+            Task {
+                do {
+                    try await proxy.install(at: self.project.getPackagePath().URLGet())
+                } catch {
+                    NotificationServer.NotifyUser(level: .error, notification: error.localizedDescription)
+                }
+                waitonmebaby.signal()
+            }
             waitonmebaby.wait()
+            
+            LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
         }
     }
     
