@@ -51,6 +51,8 @@ class PairingImporter: UIThemedTableViewController, UITextFieldDelegate {
                 }
             }
         }
+        
+        NotificationServer.NotifyUser(level: .warning, notification: "This is still a feature under testing")
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -99,10 +101,14 @@ class PairingImporter: UIThemedTableViewController, UITextFieldDelegate {
         
         HeartbeatManager.shared.start()
         
-        let status = HeartbeatManager.shared.checkSocketConnection()
-        
-        if !status.isConnected {
-            NotificationServer.NotifyUser(level: .error, notification: "StosVPN is not running, make sure it does! Error: \(status.error ?? "Unknown")")
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+            let status = HeartbeatManager.shared.checkSocketConnection()
+            
+            if !status.isConnected {
+                NotificationServer.NotifyUser(level: .error, notification: "StosVPN is not running, make sure it does! Error: \(status.error ?? "Unknown")")
+            } else {
+                NotificationServer.NotifyUser(level: .note, notification: "Connected to localhost with sessionID: \(HeartbeatManager.shared.sessionId ?? 0)")
+            }
         }
         
         self.dismiss(animated: true)
