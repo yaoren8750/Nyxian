@@ -98,6 +98,25 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.navigationItem.setRightBarButton(barbutton, animated: true)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if !self.isSublink {
+            if self.project.reload() {
+                self.title = self.project.projectConfig.displayname
+            }
+            
+            if self.project.projectConfig.restartApp {
+                if self.openTheLogSheet {
+                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+                    loggerView.modalPresentationStyle = .formSheet
+                    self.present(loggerView, animated: true)
+                    self.openTheLogSheet = false
+                }
+            }
+        }
+    }
+    
     func generateMenu() -> UIMenu {
         var rootMenuChildren: [UIMenu] = []
         
@@ -240,25 +259,6 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 replaceOrAddFile(destination: destination)
             } catch {
                 print(error.localizedDescription)
-            }
-        }
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        if !self.isSublink {
-            if self.project.reload() {
-                self.title = self.project.projectConfig.displayname
-            }
-            
-            if self.project.projectConfig.restartApp {
-                if self.openTheLogSheet {
-                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
-                    loggerView.modalPresentationStyle = .formSheet
-                    self.present(loggerView, animated: true)
-                    self.openTheLogSheet = false
-                }
             }
         }
     }
@@ -525,12 +525,19 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
             DispatchQueue.main.async {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
-            }
-            
-            if result && self.project.projectConfig.restartAppOnSucceed {
-                exit(0)
-            } else if !result && self.project.projectConfig.restartApp {
-                restartProcess()
+                
+                if result && self.project.projectConfig.restartAppOnSucceed {
+                    exit(0)
+                } else if !result {
+                    if self.project.projectConfig.restartAppOnSucceed {
+                        self.openTheLogSheet = true
+                        restartProcess()
+                    } else {
+                        let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+                        loggerView.modalPresentationStyle = .formSheet
+                        self.present(loggerView, animated: true)
+                    }
+                }
             }
         }
     }

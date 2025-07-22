@@ -67,13 +67,7 @@ class AppInfoViewController: UIThemedTableViewController {
                     if buildVersion <= 0.3 {
                         return "Nightsky"
                     } else if buildVersion <= 0.9 {
-                        return "Twinterlune"
-                    } else if buildVersion <= 1.9 {
-                        return "Stellalune"
-                    } else if buildVersion <= 2.9{
-                        return "Stellashine"
-                    } else if buildVersion <= 3.9{
-                        return "Astershine"
+                        return "Moonshine"
                     } else {
                         return "Unknown"
                     }
