@@ -33,7 +33,6 @@ import Runestone
 // MARK: - COORDINATOR
 class Coordinator: NSObject, TextViewDelegate {
     private let parent: CodeEditorViewController
-    //private var lines: [UInt64] = []
     private var entries: [UInt64:(NeoButton?,UIView?)] = [:]
     
     private(set) var isProcessing: Bool = false

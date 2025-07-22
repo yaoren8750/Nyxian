@@ -521,10 +521,16 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.navigationItem.setRightBarButton(barButton, animated: true)
         self.navigationItem.setHidesBackButton(true, animated: true)
         
-        Builder.buildProject(withProject: project) { _ in
+        Builder.buildProject(withProject: project) { result in
             DispatchQueue.main.async {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
+            }
+            
+            if result && self.project.projectConfig.restartAppOnSucceed {
+                exit(0)
+            } else if !result && self.project.projectConfig.restartApp {
+                restartProcess()
             }
         }
     }
