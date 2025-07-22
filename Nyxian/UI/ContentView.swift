@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import IDeviceSwift
 
 class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
     var projects: [AppProject] = []
@@ -33,6 +34,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     init(path: String) {
         RevertUI()
         
+        print("Meow is at: \(HeartbeatManager.pairingFile())")
         Bootstrap.shared.bootstrap()
         LDELogger.setup()
         CertBlob.startSigner()

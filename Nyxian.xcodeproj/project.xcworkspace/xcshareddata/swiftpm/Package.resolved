@@ -1,5 +1,5 @@
 {
-  "originHash" : "25d3788daccdc435ccfdf0af63fc735bc62fb8e294e6e8080e814806bb011d56",
+  "originHash" : "658d2bf544364e117670481811c7e65413664a62e98900a1334bb85a7fd0926e",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "742f624a998cba2a9e653d9b1e91ad3f3a5dff6b",
         "version" : "4.15.2"
+      }
+    },
+    {
+      "identity" : "idevicekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/khcrysalis/IDeviceKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "fd71167641054739c69a58df5da74b4ded11e782"
       }
     },
     {
