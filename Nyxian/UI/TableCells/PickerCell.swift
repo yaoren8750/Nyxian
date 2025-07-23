@@ -15,6 +15,9 @@ class PickerTableCell: UITableViewCell {
     let key: String
     let defaultValue: Int
     var callback: (Int) -> Void = { _ in }
+    
+    let button: UIButton
+    
     var value: Int {
         get {
             if UserDefaults.standard.object(forKey: self.key) == nil {
@@ -47,6 +50,7 @@ class PickerTableCell: UITableViewCell {
         self.title = title
         self.key = key
         self.defaultValue = defaultValue
+        button = UIButton()
         super.init(style: .default, reuseIdentifier: nil)
         
         _ = self.value
@@ -73,7 +77,6 @@ class PickerTableCell: UITableViewCell {
         let image: UIImage = UIImage(systemName: "chevron.up.chevron.down", withConfiguration: config)!
         
         // now the option button
-        let button: UIButton = UIButton()
         button.setTitle(self.selectedOption, for: .normal)
         button.setTitleColor(UILabel.appearance().textColor, for: .normal)
         button.setImage(image, for: .normal)
@@ -86,17 +89,7 @@ class PickerTableCell: UITableViewCell {
         self.contentView.addSubview(button)
         
         // now the menu for the button
-        var menuItems: [UIMenuElement] = []
-        
-        for option in self.options {
-            let index = self.options.firstIndex(where: { $0 == option } )
-            menuItems.append(UIAction(title: "\(index ?? 0): \(option) \((self.selectedOption == option) ? "(Selected)" : "")") { _ in
-                self.value = index ?? 0
-                button.setTitle(self.selectedOption, for: .normal)
-            })
-        }
-        
-        button.menu = UIMenu(children: menuItems)
+        refreshMenuItems()
         button.showsMenuAsPrimaryAction = true
         
         // Now fix its constraints
@@ -110,5 +103,18 @@ class PickerTableCell: UITableViewCell {
             button.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 16),
             button.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16)
         ])
+    }
+    
+    func refreshMenuItems() {
+        var menuItems: [UIMenuElement] = []
+        for option in self.options {
+            let index = self.options.firstIndex(where: { $0 == option } )
+            menuItems.append(UIAction(title: "\(index ?? 0): \(option) \((self.selectedOption == option) ? "(Selected)" : "")") { _ in
+                self.value = index ?? 0
+                self.button.setTitle(self.selectedOption, for: .normal)
+                self.refreshMenuItems()
+            })
+        }
+        button.menu = UIMenu(children: menuItems)
     }
 }
