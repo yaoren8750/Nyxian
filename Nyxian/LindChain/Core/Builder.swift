@@ -20,6 +20,7 @@
 
 import Foundation
 import IDeviceSwift
+import Combine
 
 class Builder {
     private let project: AppProject
@@ -181,8 +182,7 @@ class Builder {
         group.wait()
         
         if threader.isLockdown {
-            self.database.addInternalMessage(message: "Failed to compile source code", severity: .Error)
-            throw NSError()
+            throw NSError(domain: "com.cr4zy.nyxian.builder.compile", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to compile source code"])
         }
         
         do {
@@ -212,24 +212,20 @@ class Builder {
         
         let array: NSArray = ldArgs as NSArray
         if LinkMachO(array.mutableCopy() as? NSMutableArray) != 0 {
-            self.database.addInternalMessage(message: "Linking object files together to a executable failed", severity: .Error)
-            throw NSError()
+            throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:"Linking object files together to a executable failed"])
         }
     }
     
     func sign() throws {
         if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
-            // Now we copy use it
             if !CertBlob.isReady {
-                self.database.addInternalMessage(message: "Zsign server doesnt run, please re/import your apple issued developer certificate", severity: .Error)
-                throw NSError()
+                throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 1, userInfo: [NSLocalizedDescriptionKey:"Zsign server doesnt run, please re/import your apple issued developer certificate"])
             }
             
             let zsign = CertBlob.signer!
             
             if !zsign.sign(self.project.getBundlePath()) {
-                self.database.addInternalMessage(message: "Zsign server failed to sign app bundle", severity: .Error)
-                throw NSError()
+                throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 2, userInfo: [NSLocalizedDescriptionKey:"Zsign server failed to sign app bundle"])
             }
         }
     }
@@ -269,22 +265,34 @@ class Builder {
                 
                 waitonmebaby.wait()
             } else {
+                var cancellables = Set<AnyCancellable>()
+                
                 let status = InstallerStatusViewModel()
+                status.$installProgress
+                    .receive(on: RunLoop.main)
+                    .sink { progress in
+                        XCodeButton.updateProgress(progress: progress)
+                    }
+                    .store(in: &cancellables)
                 
                 let proxy = InstallationProxy(viewModel: status)
                 
                 let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
+                var sharedError: Error? = nil
                 Task {
                     do {
                         try await InstallationAppProxy.deleteApp(for: project.projectConfig.bundleid)
                         try await proxy.install(at: self.project.getPackagePath().URLGet())
                     } catch {
-                        NotificationServer.NotifyUser(level: .error, notification: error.localizedDescription)
+                        sharedError = error
                     }
                     waitonmebaby.signal()
                 }
                 waitonmebaby.wait()
                 
+                if let error = sharedError {
+                    throw error
+                }
                 
                 LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
             }
@@ -348,6 +356,7 @@ class Builder {
             } catch {
                 try? builder.clean()
                 result = false
+                builder.database.addInternalMessage(message: error.localizedDescription, severity: .Error)
             }
             
             builder.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
