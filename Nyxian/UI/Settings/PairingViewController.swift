@@ -109,24 +109,8 @@ class PairingImporter: UIThemedTableViewController, UITextFieldDelegate {
             } else {
                 NotificationServer.NotifyUser(level: .note, notification: "Connected to localhost with sessionID: \(HeartbeatManager.shared.sessionId ?? 0)")
             }
-            
-            let iap = InstallationAppProxy()
-            iap.delegate = MyAppManager()
-            
-            Task {
-                try? await iap.listApps()
-            }
         }
         
         self.dismiss(animated: true)
-    }
-}
-
-class MyAppManager: InstallationProxyAppsDelegate {
-    func updateApplications(with apps: [AppInfo]) {
-        NotificationServer.NotifyUser(level: .note, notification: "Session tells us these apps are installed on your idevice currently: \(apps)")
-        for app in apps {
-            print("App name: \(app.CFBundleName ?? "")")
-        }
     }
 }
