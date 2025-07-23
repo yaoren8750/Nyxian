@@ -306,11 +306,12 @@ class Builder {
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
         
-        if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
+        // TODO: Fix this
+        /*if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
             NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.minimum_version) is needed to build the app!")
             completion(true)
             return
-        }
+        }*/
         
         XCodeButton.resetProgress()
         
