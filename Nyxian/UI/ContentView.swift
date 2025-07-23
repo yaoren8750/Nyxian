@@ -122,25 +122,24 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
+
         openProject(index: indexPath.row)
     }
     
     func openProject(index: Int = 0, project: AppProject? = nil, animated: Bool = true, saveProject: Bool = true) {
-        print("Attempt!!!")
         let selectedProject: AppProject = {
             guard let project = project else { return projects[index] }
             return project
         }()
         
-        let fileVC = FileListViewController(project: selectedProject,
-                                            path: selectedProject.getPath())
-        
         if UIDevice.current.userInterfaceIdiom == .pad {
-            let navVC: UINavigationController = UINavigationController(rootViewController: fileVC)
-            navVC.modalPresentationStyle = .fullScreen
-            self.present(navVC, animated: animated)
+            let padFileVC: MainSplitViewController = MainSplitViewController(project: selectedProject,
+                                                                             path: selectedProject.getPath())
+            padFileVC.modalPresentationStyle = .fullScreen
+            self.present(padFileVC, animated: animated)
         } else {
+            let fileVC = FileListViewController(project: selectedProject,
+                                                path: selectedProject.getPath())
             self.navigationController?.pushViewController(fileVC, animated: animated)
         }
         

@@ -92,7 +92,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if UIDevice.current.userInterfaceIdiom == .pad, !self.isSublink {
             self.navigationItem.setLeftBarButton(UIBarButtonItem(primaryAction: UIAction(title: "Close") { _ in
                 UserDefaults.standard.set(nil, forKey: "LDELastProjectSelected")
                 self.dismiss(animated: true)
