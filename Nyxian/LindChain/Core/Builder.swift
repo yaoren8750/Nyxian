@@ -231,7 +231,7 @@ class Builder {
     }
     
     func package() throws {
-        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
             if FileManager.default.fileExists(atPath: self.project.getPackagePath()) {
                 try FileManager.default.removeItem(atPath: self.project.getPackagePath())
             }
@@ -240,6 +240,15 @@ class Builder {
                 at: URL(fileURLWithPath: self.project.getPayloadPath()),
                 to: URL(fileURLWithPath: self.project.getPackagePath())
             )
+            
+            let sourceURL: URL = self.project.getResourcesPath().URLGet()
+            let destinationURL: URL = self.project.getBundlePath().URLGet()
+            let files: [String] = try FileManager.default.contentsOfDirectory(atPath: project.getResourcesPath())
+            for file in files {
+                let sourceItemURL = sourceURL.appendingPathComponent(file)
+                let destinationItemURL = destinationURL.appendingPathComponent(file)
+                try FileManager.default.copyItem(at: sourceItemURL, to: destinationItemURL)
+            }
         }
     }
     
