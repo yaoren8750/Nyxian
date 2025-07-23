@@ -29,7 +29,6 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
             UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelected")
         }
     }
-    var cellSelected: Int = 0
     
     init(path: String) {
         RevertUI()
@@ -109,13 +108,15 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         self.tableView.reloadData()
         
         if lastProjectWasSelected {
-            openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false)
+            openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
         }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.lastProjectWasSelected = false
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            self.lastProjectWasSelected = false
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -133,7 +134,8 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         openProject(index: indexPath.row)
     }
     
-    func openProject(index: Int = 0, project: AppProject? = nil, animated: Bool = true) {
+    func openProject(index: Int = 0, project: AppProject? = nil, animated: Bool = true, saveProject: Bool = true) {
+        print("Attempt!!!")
         let selectedProject: AppProject = {
             guard let project = project else { return projects[index] }
             return project
@@ -150,9 +152,10 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
             self.navigationController?.pushViewController(fileVC, animated: animated)
         }
         
-        self.cellSelected = index
-        lastProjectSelected = selectedProject.getUUID()
-        lastProjectWasSelected = true
+        if saveProject {
+            lastProjectSelected = selectedProject.getUUID()
+            lastProjectWasSelected = true
+        }
     }
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {

@@ -67,7 +67,10 @@ class ProjectTableCell: UITableViewCell {
         self.separatorInset = UIEdgeInsets.zero
         self.layoutMargins = .zero
         self.preservesSuperviewLayoutMargins = false
-        self.accessoryType = .disclosureIndicator
+        
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            self.accessoryType = .disclosureIndicator
+        }
     }
     
     func reload() {
