@@ -353,16 +353,22 @@ class Builder {
             
             do {
                 // doit
-                try progressFlowBuilder(flow: [
-                    (nil,nil,{ try builder.clean() }),
-                    (nil,nil,{ try builder.prepare() }),
-                    (nil,nil,{ try builder.compile() }),
-                    ("link",0.3,{ try builder.link() }),
-                    ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
-                    ("archivebox.fill",0.4,{ try builder.package() }),
-                    (nil,nil,{ try builder.clean() }),
-                    ("arrow.down.app.fill",nil,{try builder.install() })
-                ])
+                if builder.dirtySourceFiles.isEmpty {
+                    try progressFlowBuilder(flow: [
+                        ("arrow.down.app.fill",nil,{try builder.install() })
+                    ])
+                } else {
+                    try progressFlowBuilder(flow: [
+                        (nil,nil,{ try builder.clean() }),
+                        (nil,nil,{ try builder.prepare() }),
+                        (nil,nil,{ try builder.compile() }),
+                        ("link",0.3,{ try builder.link() }),
+                        ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
+                        ("archivebox.fill",0.4,{ try builder.package() }),
+                        (nil,nil,{ try builder.clean() }),
+                        ("arrow.down.app.fill",nil,{try builder.install() })
+                    ])
+                }
             } catch {
                 try? builder.clean()
                 result = false
