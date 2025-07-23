@@ -13,17 +13,9 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     var projects: [AppProject] = []
     var path: String
     
-    var lastProjectWasSelected: Bool {
+    var lastProjectSelected: String? {
         get {
-            return UserDefaults.standard.bool(forKey: "LDELastProjectSelectedEven")
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelectedEven")
-        }
-    }
-    var lastProjectSelected: String {
-        get {
-            return UserDefaults.standard.string(forKey: "LDELastProjectSelected") ?? "0"
+            return UserDefaults.standard.string(forKey: "LDELastProjectSelected")
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelected")
@@ -107,7 +99,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         
         self.tableView.reloadData()
         
-        if lastProjectWasSelected {
+        if let lastProjectSelected = lastProjectSelected {
             openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
         }
     }
@@ -115,7 +107,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if UIDevice.current.userInterfaceIdiom != .pad {
-            self.lastProjectWasSelected = false
+            lastProjectSelected = nil
         }
     }
     
@@ -154,7 +146,6 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         
         if saveProject {
             lastProjectSelected = selectedProject.getUUID()
-            lastProjectWasSelected = true
         }
     }
     

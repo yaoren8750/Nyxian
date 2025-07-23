@@ -94,7 +94,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         
         if UIDevice.current.userInterfaceIdiom == .pad {
             self.navigationItem.setLeftBarButton(UIBarButtonItem(primaryAction: UIAction(title: "Close") { _ in
-                UserDefaults.standard.set(false, forKey: "LDELastProjectSelectedEven")
+                UserDefaults.standard.set(nil, forKey: "LDELastProjectSelected")
                 self.dismiss(animated: true)
             }), animated: false)
         }
