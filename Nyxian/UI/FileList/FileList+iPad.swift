@@ -24,7 +24,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         let masterVC = FileListViewController(project: project, path: path)
-        let detailVC = DetailViewController()
+        let detailVC = CodeEditorViewController(project: project, path: path.URLGet().appendingPathComponent("Config").appendingPathComponent("Project.plist").path)
 
         let masterNav = UINavigationController(rootViewController: masterVC)
         let detailNav = UINavigationController(rootViewController: detailVC)
