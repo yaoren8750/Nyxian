@@ -92,10 +92,12 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
-        let barbutton: UIBarButtonItem = UIBarButtonItem()
-        barbutton.image = UIImage(systemName: "ellipsis.circle")
-        barbutton.menu = generateMenu()
-        self.navigationItem.setRightBarButton(barbutton, animated: true)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            self.navigationItem.setLeftBarButton(UIBarButtonItem(primaryAction: UIAction(title: "Close") { _ in
+                self.dismiss(animated: true)
+            }), animated: false)
+        }
+        self.navigationItem.setRightBarButton(UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), primaryAction: nil, menu: generateMenu()), animated: false)
     }
     
     override func viewWillAppear(_ animated: Bool) {

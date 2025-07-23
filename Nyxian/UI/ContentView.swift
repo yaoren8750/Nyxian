@@ -109,14 +109,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         self.tableView.reloadData()
         
         if lastProjectWasSelected {
-            let selectedProject = AppProject(path: "\(self.path)/\(lastProjectSelected)")
-            
-            let fileVC = FileListViewController(project: selectedProject,
-                                                path: selectedProject.getPath())
-            
-            self.navigationController?.pushViewController(fileVC, animated: false)
-            
-            return
+            openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false)
         }
     }
     
@@ -137,12 +130,27 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let selectedProject = projects[indexPath.row]
+        openProject(index: indexPath.row)
+    }
+    
+    func openProject(index: Int = 0, project: AppProject? = nil, animated: Bool = true) {
+        let selectedProject: AppProject = {
+            guard let project = project else { return projects[index] }
+            return project
+        }()
+        
         let fileVC = FileListViewController(project: selectedProject,
                                             path: selectedProject.getPath())
-        self.navigationController?.pushViewController(fileVC, animated: true)
         
-        self.cellSelected = indexPath.row
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let navVC: UINavigationController = UINavigationController(rootViewController: fileVC)
+            navVC.modalPresentationStyle = .fullScreen
+            self.present(navVC, animated: animated)
+        } else {
+            self.navigationController?.pushViewController(fileVC, animated: animated)
+        }
+        
+        self.cellSelected = index
         lastProjectSelected = selectedProject.getUUID()
         lastProjectWasSelected = true
     }
