@@ -96,7 +96,9 @@ class Coordinator: NSObject, TextViewDelegate {
     }
     
     func textViewDidChangeSelection(_ textView: TextView) {
-        self.debounce?.debounce()
+        if self.isInvalidated {
+            self.debounce?.debounce()
+        }
     }
     
     func redrawDiag() {
