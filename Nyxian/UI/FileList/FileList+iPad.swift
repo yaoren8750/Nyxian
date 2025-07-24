@@ -9,11 +9,18 @@ import UIKit
 
 class MainSplitViewController: UISplitViewController, UISplitViewControllerDelegate {
     let project: AppProject
-    let path: String
     
-    init(project: AppProject, path: String) {
+    var lastPathOpenedInProject: String? {
+        get {
+            return UserDefaults.standard.string(forKey: "\(project.getUUID()).lastPathOpenedInProject")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(project.getUUID()).lastPathOpenedInProject")
+        }
+    }
+    
+    init(project: AppProject) {
         self.project = project
-        self.path = path
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -23,8 +30,8 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let masterVC = FileListViewController(project: project, path: path)
-        let detailVC = CodeEditorViewController(project: project, path: path.URLGet().appendingPathComponent("Config").appendingPathComponent("Project.plist").path)
+        let masterVC = FileListViewController(project: project)
+        let detailVC = CodeEditorViewController(project: project, path: (self.lastPathOpenedInProject != nil) ? "\(self.project.getPath())/\(self.lastPathOpenedInProject!)" : project.getPath().URLGet().appendingPathComponent("Config").appendingPathComponent("Project.plist").path)
 
         let masterNav = UINavigationController(rootViewController: masterVC)
         let detailNav = UINavigationController(rootViewController: detailVC)
@@ -43,6 +50,8 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
             args.count > 1,
             args[0] == "open"
         else { return }
+        
+        self.lastPathOpenedInProject = relativePath(from: self.project.getPath().URLGet(), to: args[1].URLGet())
 
         DispatchQueue.main.async {
             let blur = self.addBlur(on: self.viewControllers[1].view, alpha: 0.0)

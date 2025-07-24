@@ -92,7 +92,11 @@ class CodeEditorViewController: UIViewController {
         do {
             self.textView.text = try String(contentsOf: URL(fileURLWithPath: self.path), encoding: .utf8)
         } catch {
-            self.dismiss(animated: true)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                // Handle it
+            } else {
+                self.dismiss(animated: true)
+            }
         }
         
         let fileURL = URL(fileURLWithPath: self.path)

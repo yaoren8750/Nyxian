@@ -133,13 +133,11 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         }()
         
         if UIDevice.current.userInterfaceIdiom == .pad {
-            let padFileVC: MainSplitViewController = MainSplitViewController(project: selectedProject,
-                                                                             path: selectedProject.getPath())
+            let padFileVC: MainSplitViewController = MainSplitViewController(project: selectedProject)
             padFileVC.modalPresentationStyle = .fullScreen
             self.present(padFileVC, animated: animated)
         } else {
-            let fileVC = FileListViewController(project: selectedProject,
-                                                path: selectedProject.getPath())
+            let fileVC = FileListViewController(project: selectedProject)
             self.navigationController?.pushViewController(fileVC, animated: animated)
         }
         

@@ -25,12 +25,12 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     init(
         isSublink: Bool = false,
         project: AppProject,
-        path: String = ""
+        path: String? = nil
     ) {
         Author.shared.setTargetProject(project.projectConfig.displayname)
         
         self.project = project
-        self.path = path
+        self.path = path ?? project.getPath()
         self.entries = FileListEntry.getEntries(ofPath: self.path)
         self.isSublink = isSublink
         super.init(style: .insetGrouped)
