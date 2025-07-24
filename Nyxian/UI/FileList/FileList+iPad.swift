@@ -51,7 +51,9 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
             args[0] == "open"
         else { return }
         
-        self.lastPathOpenedInProject = relativePath(from: self.project.getPath().URLGet(), to: args[1].URLGet())
+        let writeValue: String = relativePath(from: self.project.getPath().URLGet(), to: args[1].URLGet())
+        if let valueIfAvailable: String = self.lastPathOpenedInProject, writeValue == valueIfAvailable { return }
+        self.lastPathOpenedInProject = writeValue
 
         DispatchQueue.main.async {
             let blur = self.addBlur(on: self.viewControllers[1].view, alpha: 0.0)
