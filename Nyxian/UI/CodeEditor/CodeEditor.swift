@@ -105,12 +105,14 @@ class CodeEditorViewController: UIViewController {
         saveButton.action = #selector(saveText)
         self.navigationItem.setRightBarButton(saveButton, animated: true)
         
-        let closeButton: UIBarButtonItem = UIBarButtonItem()
-        closeButton.tintColor = .label
-        closeButton.title = "Close"
-        closeButton.target = self
-        closeButton.action = #selector(closeEditor)
-        self.navigationItem.setLeftBarButton(closeButton, animated: true)
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            let closeButton: UIBarButtonItem = UIBarButtonItem()
+            closeButton.tintColor = .label
+            closeButton.title = "Close"
+            closeButton.target = self
+            closeButton.action = #selector(closeEditor)
+            self.navigationItem.setLeftBarButton(closeButton, animated: true)
+        }
         
         if let theme = currentTheme {
             theme.fontSize = self.project?.codeEditorConfig.fontSize ?? 10.0

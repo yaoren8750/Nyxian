@@ -31,6 +31,56 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 
         self.viewControllers = [masterNav, detailNav]
         self.delegate = self
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleMyNotification(_:)), name: Notification.Name("FileListAct"), object: nil)
+    }
+    
+    private var blurViewTag = 999_001
+
+    @objc func handleMyNotification(_ notification: Notification) {
+        guard
+            let args = notification.object as? [String],
+            args.count > 1,
+            args[0] == "open"
+        else { return }
+
+        DispatchQueue.main.async {
+            let blur = self.addBlur(on: self.viewControllers[1].view, alpha: 0.0)
+            UIView.animate(withDuration: 0.20, animations: {
+                blur.alpha = 1
+            }, completion: { _ in
+                let editor = CodeEditorViewController(project: self.project, path: args[1])
+                let nav = UINavigationController(rootViewController: editor)
+
+                self.viewControllers[1] = nav
+                let blur = self.addBlur(on: self.viewControllers[1].view, alpha: 1.0)
+                
+                UIView.animate(withDuration: 0.20, delay: 0.05, options: .curveEaseInOut, animations: {
+                    blur.alpha = 0
+                }, completion: { _ in
+                    blur.removeFromSuperview()
+                })
+            })
+        }
+    }
+
+    private func addBlur(on hostView: UIView, alpha: Double = 1.0) -> UIVisualEffectView {
+        if let existing = hostView.viewWithTag(blurViewTag) as? UIVisualEffectView {
+            return existing
+        }
+
+        let effect = UIBlurEffect(style: .systemMaterial)
+        let blurView = UIVisualEffectView(effect: effect)
+        blurView.tag = blurViewTag
+        blurView.alpha = alpha
+        blurView.frame = hostView.bounds
+        blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        hostView.addSubview(blurView)
+        return blurView
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 

@@ -349,12 +349,16 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 )
                 self.navigationController?.pushViewController(fileVC, animated: true)
             } else {
-                let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
-                    project: project,
-                    path: fileListEntry.path
-                ))
-                fileVC.modalPresentationStyle = .overFullScreen
-                self.present(fileVC, animated: true)
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["open",fileListEntry.path])
+                } else {
+                    let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
+                        project: project,
+                        path: fileListEntry.path
+                    ))
+                    fileVC.modalPresentationStyle = .overFullScreen
+                    self.present(fileVC, animated: true)
+                }
             }
         }
     }
