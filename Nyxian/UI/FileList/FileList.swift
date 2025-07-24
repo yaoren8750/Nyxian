@@ -15,10 +15,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     let isSublink: Bool
     var openTheLogSheet: Bool {
         get {
-            if UserDefaults.standard.object(forKey: "LDEReopened") != nil {
-                return UserDefaults.standard.bool(forKey: "LDEReopened")
-            }
-            return false
+            return UserDefaults.standard.bool(forKey: "LDEReopened")
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "LDEReopened")
