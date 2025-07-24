@@ -342,14 +342,18 @@ class UIDebugViewController: UITableViewController {
         let object: DebugObject = sortedDebugObjects[indexPath.section]
         let item: DebugItem = object.debugItems[indexPath.row]
         
-        let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
-            project: project,
-            path: "\(self.project.getPath())/\(object.title)",
-            line: item.line,
-            column: item.column
-        ))
-        fileVC.modalPresentationStyle = .overFullScreen
-        self.present(fileVC, animated: true)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["open","\(self.project.getPath())/\(object.title)"])
+        } else {
+            let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
+                project: project,
+                path: "\(self.project.getPath())/\(object.title)",
+                line: item.line,
+                column: item.column
+            ))
+            fileVC.modalPresentationStyle = .overFullScreen
+            self.present(fileVC, animated: true)
+        }
     }
     
     @objc func clearDatabase() {
