@@ -65,6 +65,24 @@ class SplitScreenDetailViewController: UIViewController {
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
                 ])
                 vc.didMove(toParent: self)
+                //self.navigationItem.title = vc.navigationItem.title
+                
+                let menuButton: UIButton = UIButton()
+                menuButton.showsMenuAsPrimaryAction = true
+                menuButton.setTitle(vc.title, for: .normal)
+                menuButton.setTitleColor(currentTheme?.textColor, for: .normal)
+                menuButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: menuButton.titleLabel!.font.pointSize)
+                
+                var items: [UIMenuElement] = []
+                
+                for item in vc.navigationItem.rightBarButtonItems! {
+                    items.append(UIAction(title: item.title ?? "Unknown", image: item.image, handler: { _ in vc.perform(item.action) }))
+                }
+                
+                let menu: UIMenu = UIMenu(children: items)
+                menuButton.menu = menu
+                
+                self.navigationItem.titleView = menuButton
             }
         }
     }
@@ -119,8 +137,6 @@ class SplitScreenDetailViewController: UIViewController {
         if args.count > 1,
            args[0] == "open" {
             self.childVC = CodeEditorViewController(project: project, path: args[1])
-            //self.title = args[1].URLGet().lastPathComponent
-            //self.label.text = args[1]
         } else if args.count > 0,
                   args[0] == "issue" {
             self.childVC = UIDebugViewController(project: self.project)
@@ -144,16 +160,8 @@ class SplitScreenDetailViewController: UIViewController {
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
-                if result && self.project.projectConfig.restartAppOnSucceed {
-                    exit(0)
-                } else if !result {
-                    if self.project.projectConfig.restartAppOnSucceed {
-                        restartProcess()
-                    } else {
-                        let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
-                        loggerView.modalPresentationStyle = .formSheet
-                        self.present(loggerView, animated: true)
-                    }
+                if !result {
+                    NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["issue"])
                 }
             }
         }
