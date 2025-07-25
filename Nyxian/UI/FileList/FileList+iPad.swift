@@ -45,15 +45,12 @@ class SplitScreenDetailViewController: UIViewController {
         }
         set {
             if let oldVC = childVCMaster {
-                // Animate removal
                 UIView.transition(with: oldVC.view, duration: 0.3, options: .transitionCrossDissolve, animations: {
                     oldVC.view.alpha = 0
                 }, completion: { _ in
                     oldVC.view.removeFromSuperview()
                     oldVC.removeFromParent()
-                    if newValue == nil {
-                        self.navigationItem.titleView = self.titleView
-                    }
+                    if newValue == nil { self.navigationItem.titleView = self.titleView }
                 })
             }
 
@@ -77,9 +74,18 @@ class SplitScreenDetailViewController: UIViewController {
 
                 let menuButton: UIButton = UIButton()
                 menuButton.showsMenuAsPrimaryAction = true
-                menuButton.setTitle(vc.title, for: .normal)
-                menuButton.setTitleColor(currentTheme?.textColor, for: .normal)
-                menuButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: menuButton.titleLabel!.font.pointSize)
+                menuButton.semanticContentAttribute = .forceRightToLeft
+                var bconfig = UIButton.Configuration.filled()
+                bconfig.image = UIImage(systemName: "chevron.down.circle.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .bold))
+                bconfig.imagePadding = 5
+                bconfig.background = .clear()
+                bconfig.baseBackgroundColor = .clear
+                bconfig.cornerStyle = .capsule
+                var container = AttributeContainer()
+                container.font = UIFont.boldSystemFont(ofSize: 16)
+                container.foregroundColor = currentTheme?.textColor
+                bconfig.attributedTitle = AttributedString(vc.title ?? "Unknown", attributes: container)
+                menuButton.configuration = bconfig
                 
                 var items: [UIMenuElement] = []
                 for item in vc.navigationItem.rightBarButtonItems ?? [] {
