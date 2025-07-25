@@ -105,7 +105,17 @@ class Coordinator: NSObject, TextViewDelegate {
         if !self.entries.isEmpty {
             for item in self.entries {
                 DispatchQueue.main.async {
-                    guard let rect = self.textView.rectForLine(Int(item.key)) else { return }
+                    guard let rect = self.textView.rectForLine(Int(item.key)) else {
+                        UIView.animate(withDuration: 0.3, animations: {
+                            item.value.0!.alpha = 0
+                            item.value.1!.alpha = 0
+                        }, completion: { _ in
+                            item.value.0?.removeFromSuperview()
+                            item.value.1?.removeFromSuperview()
+                            self.entries.removeValue(forKey: item.key)
+                        })
+                        return
+                    }
                     item.value.0!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height)
                     item.value.1!.frame = CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height)
                 }
