@@ -44,6 +44,8 @@ class SplitScreenDetailViewController: UIViewController {
             childVCMaster
         }
         set {
+            self.navigationItem.rightBarButtonItems! = Array(self.navigationItem.rightBarButtonItems!.prefix(2))
+            
             if let oldVC = childVCMaster {
                 UIView.transition(with: oldVC.view, duration: 0.3, options: .transitionCrossDissolve, animations: {
                     oldVC.view.alpha = 0
@@ -89,10 +91,15 @@ class SplitScreenDetailViewController: UIViewController {
                 menuButton.configuration = bconfig
                 
                 var items: [UIMenuElement] = []
+                var buttons: [UIBarButtonItem] = []
                 for item in vc.navigationItem.rightBarButtonItems ?? [] {
-                    items.append(UIAction(title: item.title ?? "Unknown", image: item.image, handler: { _ in
-                        vc.perform(item.action)
-                    }))
+                    if let title = item.title {
+                        items.append(UIAction(title: title, image: item.image, handler: { _ in
+                            vc.perform(item.action)
+                        }))
+                    } else {
+                        buttons.append(item)
+                    }
                 }
                 
                 let menu: UIMenu = UIMenu(options: .displayInline, children: [
@@ -103,6 +110,11 @@ class SplitScreenDetailViewController: UIViewController {
                 ])
                 menuButton.menu = menu
                 self.navigationItem.titleView = menuButton
+                
+                if !buttons.isEmpty {
+                    self.navigationItem.rightBarButtonItems?.append(makeSeparator())
+                    self.navigationItem.rightBarButtonItems?.append(contentsOf: buttons)
+                }
             }
         }
     }
@@ -155,6 +167,25 @@ class SplitScreenDetailViewController: UIViewController {
         } else {
             return
         }
+    }
+    
+    func makeSeparator() -> UIBarButtonItem {
+        let separatorWidth: CGFloat = 1
+        let separatorHeight: CGFloat = 30
+
+        let separatorView = UIView(frame: CGRect(x: 0, y: 0, width: separatorWidth, height: separatorHeight))
+        separatorView.backgroundColor = UIColor.systemGray3
+        separatorView.layer.cornerRadius = separatorWidth / 2
+        separatorView.translatesAutoresizingMaskIntoConstraints = false
+
+        let separatorItem = UIBarButtonItem(customView: separatorView)
+
+        NSLayoutConstraint.activate([
+            separatorView.widthAnchor.constraint(equalToConstant: separatorWidth),
+            separatorView.heightAnchor.constraint(equalToConstant: separatorHeight)
+        ])
+
+        return separatorItem
     }
     
     private func buildProject() {
