@@ -12,7 +12,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
     
     init(project: AppProject) {
         self.project = project
-        super.init(style: .doubleColumn)
+        super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -27,13 +27,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
         let masterNav = UINavigationController(rootViewController: masterVC)
         let detailNav = UINavigationController(rootViewController: detailVC)
         
-        self.setViewController(masterNav, for: .primary)
-        self.setViewController(detailNav, for: .secondary)
-        
-        self.preferredDisplayMode = .oneBesideSecondary
-        self.preferredSplitBehavior = .tile
-        self.displayModeButtonVisibility = .never
-        self.primaryEdge = .leading
+        self.viewControllers = [masterNav,detailNav]
 
         self.delegate = self
     }
@@ -42,6 +36,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 class SplitScreenDetailViewController: UIViewController {
     let project: AppProject
     let label = UILabel()
+    var titleView: UIView?
     
     var childVCMaster: UIViewController?
     var childVC: UIViewController? {
@@ -50,12 +45,22 @@ class SplitScreenDetailViewController: UIViewController {
         }
         set {
             if let oldVC = childVCMaster {
-                oldVC.view.removeFromSuperview()
-                oldVC.removeFromParent()
+                // Animate removal
+                UIView.transition(with: oldVC.view, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                    oldVC.view.alpha = 0
+                }, completion: { _ in
+                    oldVC.view.removeFromSuperview()
+                    oldVC.removeFromParent()
+                    if newValue == nil {
+                        self.navigationItem.titleView = self.titleView
+                    }
+                })
             }
+
             if let vc = newValue {
                 childVCMaster = vc
                 self.addChild(vc)
+                vc.view.alpha = 0
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
@@ -65,8 +70,11 @@ class SplitScreenDetailViewController: UIViewController {
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
                 ])
                 vc.didMove(toParent: self)
-                //self.navigationItem.title = vc.navigationItem.title
-                
+
+                UIView.animate(withDuration: 0.3) {
+                    vc.view.alpha = 1
+                }
+
                 let menuButton: UIButton = UIButton()
                 menuButton.showsMenuAsPrimaryAction = true
                 menuButton.setTitle(vc.title, for: .normal)
@@ -74,31 +82,28 @@ class SplitScreenDetailViewController: UIViewController {
                 menuButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: menuButton.titleLabel!.font.pointSize)
                 
                 var items: [UIMenuElement] = []
-                
-                for item in vc.navigationItem.rightBarButtonItems! {
-                    items.append(UIAction(title: item.title ?? "Unknown", image: item.image, handler: { _ in vc.perform(item.action) }))
+                for item in vc.navigationItem.rightBarButtonItems ?? [] {
+                    items.append(UIAction(title: item.title ?? "Unknown", image: item.image, handler: { _ in
+                        vc.perform(item.action)
+                    }))
                 }
                 
-                let menu: UIMenu = UIMenu(children: items)
+                let menu: UIMenu = UIMenu(options: .displayInline, children: [
+                    UIMenu(options: .displayInline, children: items),
+                    UIMenu(options: .displayInline, children: [
+                        UIAction(title: "Close", handler: { _ in self.childVC = nil })
+                    ])
+                ])
                 menuButton.menu = menu
-                
                 self.navigationItem.titleView = menuButton
             }
-        }
-    }
-    
-    var lastPathOpenedInProject: String? {
-        get {
-            return UserDefaults.standard.string(forKey: "\(project.getUUID()).lastPathOpenedInProject")
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "\(project.getUUID()).lastPathOpenedInProject")
         }
     }
     
     init(project: AppProject) {
         self.project = project
         super.init(nibName: nil, bundle: nil)
+        self.titleView = self.navigationItem.titleView
     }
     
     required init?(coder: NSCoder) {
