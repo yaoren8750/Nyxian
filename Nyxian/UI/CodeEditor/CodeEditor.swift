@@ -197,9 +197,12 @@ class CodeEditorViewController: UIViewController {
         self.coordinator = Coordinator(parent: self)
         self.textView.editorDelegate = self.coordinator
         
-        (self.view as! OnDisappearUIView).onDisappear = { [weak self] in
-            guard let synpushServer = self?.synpushServer else { return }
-            synpushServer.deinit()
+        // TODO: ReImplement that for iPadOS
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            (self.view as! OnDisappearUIView).onDisappear = { [weak self] in
+                guard let synpushServer = self?.synpushServer else { return }
+                synpushServer.deinit()
+            }
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

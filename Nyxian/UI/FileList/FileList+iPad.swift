@@ -50,6 +50,7 @@ class SplitScreenDetailViewController: UIViewController {
                 UIView.transition(with: oldVC.view, duration: 0.3, options: .transitionCrossDissolve, animations: {
                     oldVC.view.alpha = 0
                 }, completion: { _ in
+                    oldVC.view.removeConstraints(oldVC.view.constraints)
                     oldVC.view.removeFromSuperview()
                     oldVC.removeFromParent()
                     if newValue == nil { self.navigationItem.titleView = self.titleView }
@@ -63,7 +64,7 @@ class SplitScreenDetailViewController: UIViewController {
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
-                    vc.view.topAnchor.constraint(equalTo: view.topAnchor),
+                    vc.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
                     vc.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
                     vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -119,6 +120,25 @@ class SplitScreenDetailViewController: UIViewController {
         }
     }
     
+    /*
+     TabBarView -> Experiment
+     */
+    private let tabBarView = UIView()
+    private let stack = UIStackView()
+    
+    func addTab(vc: CodeEditorViewController) {
+        let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100), vc: vc)
+        
+        button.addAction(UIAction { _ in
+            self.childVC = button.vc
+        }, for: .touchUpInside)
+        
+        self.stack.addArrangedSubview(button)
+    }
+    
+    /*
+     Initial Class
+     */
     init(project: AppProject) {
         self.project = project
         super.init(nibName: nil, bundle: nil)
@@ -145,6 +165,41 @@ class SplitScreenDetailViewController: UIViewController {
             self.label.leftAnchor.constraint(equalTo: self.view.leftAnchor)
         ])
         
+        self.view.addSubview(self.tabBarView)
+        
+        self.tabBarView.backgroundColor = .clear
+        self.tabBarView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            self.tabBarView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            self.tabBarView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            self.tabBarView.heightAnchor.constraint(equalToConstant: 100)
+        ])
+        
+        self.stack.axis = .horizontal
+        self.stack.alignment = .bottom
+        self.stack.distribution = .fillEqually
+        self.stack.translatesAutoresizingMaskIntoConstraints = false
+                
+        self.tabBarView.addSubview(self.stack)
+        NSLayoutConstraint.activate([
+            self.stack.leftAnchor.constraint(equalTo: self.tabBarView.leftAnchor),
+            self.stack.rightAnchor.constraint(equalTo: self.tabBarView.rightAnchor),
+            self.stack.topAnchor.constraint(equalTo: self.tabBarView.topAnchor),
+            self.stack.bottomAnchor.constraint(equalTo: self.tabBarView.bottomAnchor)
+        ])
+        
+        let bottomBorderView = UIView()
+        bottomBorderView.backgroundColor = currentTheme?.gutterHairlineColor
+        bottomBorderView.translatesAutoresizingMaskIntoConstraints = false
+        tabBarView.addSubview(bottomBorderView)
+
+        NSLayoutConstraint.activate([
+            bottomBorderView.bottomAnchor.constraint(equalTo: self.tabBarView.bottomAnchor),
+            bottomBorderView.leftAnchor.constraint(equalTo: self.tabBarView.leftAnchor),
+            bottomBorderView.rightAnchor.constraint(equalTo: self.tabBarView.rightAnchor),
+            bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        
         let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
             self.buildProject()
         })
@@ -160,7 +215,8 @@ class SplitScreenDetailViewController: UIViewController {
         guard let args = notification.object as? [String] else { return }
         if args.count > 1,
            args[0] == "open" {
-            self.childVC = CodeEditorViewController(project: project, path: args[1])
+            //self.childVC = CodeEditorViewController(project: project, path: args[1])
+            self.addTab(vc: CodeEditorViewController(project: project, path: args[1]))
         } else if args.count > 0,
                   args[0] == "issue" {
             self.childVC = UIDebugViewController(project: self.project)
@@ -212,5 +268,49 @@ class SplitScreenDetailViewController: UIViewController {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+class UIButtonTab: UIButton {
+    let vc: CodeEditorViewController
+    
+    init(frame: CGRect, vc: CodeEditorViewController) {
+        self.vc = vc
+        super.init(frame: frame)
+        
+        self.setTitle(vc.path.URLGet().lastPathComponent, for: .normal)
+        self.titleLabel?.font = .systemFont(ofSize: 13)
+        self.contentHorizontalAlignment = .center
+        self.contentVerticalAlignment = .center
+        self.titleLabel?.textAlignment = .center
+        self.layer.borderColor = UIColor.white.cgColor
+        
+        let leftBorderView = UIView()
+        leftBorderView.backgroundColor = currentTheme?.gutterHairlineColor
+        leftBorderView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(leftBorderView)
+
+        NSLayoutConstraint.activate([
+            leftBorderView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            leftBorderView.topAnchor.constraint(equalTo: self.topAnchor),
+            leftBorderView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            leftBorderView.widthAnchor.constraint(equalToConstant: 1)
+        ])
+        
+        let rightBorderView = UIView()
+        rightBorderView.backgroundColor = currentTheme?.gutterHairlineColor
+        rightBorderView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(rightBorderView)
+
+        NSLayoutConstraint.activate([
+            rightBorderView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            rightBorderView.topAnchor.constraint(equalTo: self.topAnchor),
+            rightBorderView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            rightBorderView.widthAnchor.constraint(equalToConstant: 0.5)
+        ])
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
