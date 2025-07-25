@@ -121,7 +121,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         var rootMenuChildren: [UIMenu] = []
         
         // Project Roots Menu in case its the root of the project obviously
-        if !self.isSublink {
+        if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad {
             var projectMenuElements: [UIMenuElement] = []
             projectMenuElements.append(UIAction(title: "Build", image: UIImage(systemName: "hammer.fill"), handler: { _ in
                 self.buildProject()
