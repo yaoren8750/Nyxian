@@ -80,6 +80,7 @@ class SplitScreenDetailViewController: UIViewController {
                 bconfig.imagePadding = 5
                 bconfig.background = .clear()
                 bconfig.baseBackgroundColor = .clear
+                bconfig.baseForegroundColor = currentTheme?.textColor
                 bconfig.cornerStyle = .capsule
                 var container = AttributeContainer()
                 container.font = UIFont.boldSystemFont(ofSize: 16)
