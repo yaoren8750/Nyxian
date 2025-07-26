@@ -38,29 +38,29 @@ class SplitScreenDetailViewController: UIViewController {
     let label = UILabel()
     var titleView: UIView?
     
+    var lock: NSLock = NSLock()
     var childVCMaster: UIViewController?
     var childVC: UIViewController? {
         get {
             childVCMaster
         }
         set {
-            self.navigationItem.rightBarButtonItems! = Array(self.navigationItem.rightBarButtonItems!.prefix(2))
+            self.lock.lock()
             
             if let oldVC = childVCMaster {
-                UIView.transition(with: oldVC.view, duration: 0.3, options: .transitionCrossDissolve, animations: {
-                    oldVC.view.alpha = 0
-                }, completion: { _ in
-                    oldVC.view.removeConstraints(oldVC.view.constraints)
-                    oldVC.view.removeFromSuperview()
-                    oldVC.removeFromParent()
-                    if newValue == nil { self.navigationItem.titleView = self.titleView }
-                })
+                if oldVC == newValue {
+                    self.lock.unlock()
+                    return
+                }
+                
+                oldVC.view.removeConstraints(oldVC.view.constraints)
+                oldVC.view.removeFromSuperview()
+                oldVC.removeFromParent()
             }
 
             if let vc = newValue {
                 childVCMaster = vc
                 self.addChild(vc)
-                vc.view.alpha = 0
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
@@ -69,59 +69,9 @@ class SplitScreenDetailViewController: UIViewController {
                     vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
                 ])
-                vc.didMove(toParent: self)
-
-                UIView.animate(withDuration: 0.3) {
-                    vc.view.alpha = 1
-                }
-
-                /*let menuButton: UIButton = UIButton()
-                menuButton.showsMenuAsPrimaryAction = true
-                menuButton.semanticContentAttribute = .forceRightToLeft
-                var bconfig = UIButton.Configuration.filled()
-                bconfig.image = UIImage(systemName: "chevron.down.circle.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .bold))
-                bconfig.imagePadding = 5
-                bconfig.background = .clear()
-                bconfig.baseBackgroundColor = .clear
-                bconfig.baseForegroundColor = currentTheme?.textColor
-                bconfig.cornerStyle = .capsule
-                var container = AttributeContainer()
-                container.font = UIFont.boldSystemFont(ofSize: 16)
-                container.foregroundColor = currentTheme?.textColor
-                bconfig.attributedTitle = AttributedString(vc.title ?? "Unknown", attributes: container)
-                menuButton.configuration = bconfig
-                
-                var items: [UIMenuElement] = []
-                var buttons: [UIBarButtonItem] = []
-                for item in vc.navigationItem.rightBarButtonItems ?? [] {
-                    if let title = item.title {
-                        items.append(UIAction(title: title, image: item.image, handler: { _ in
-                            vc.perform(item.action)
-                        }))
-                    } else {
-                        buttons.append(item)
-                    }
-                }
-                
-                let menu: UIMenu = UIMenu(options: .displayInline, children: [
-                    UIMenu(options: .displayInline, children: items),
-                    UIMenu(options: .displayInline, children: [
-                        UIAction(title: "Close", handler: { _ in
-                            self.childVC = nil
-                            if let button = self.childButton {
-                                self.stack.removeArrangedSubview(button)
-                            }
-                        })
-                    ])
-                ])
-                menuButton.menu = menu
-                self.navigationItem.titleView = menuButton
-                
-                if !buttons.isEmpty {
-                    self.navigationItem.rightBarButtonItems?.append(makeSeparator())
-                    self.navigationItem.rightBarButtonItems?.append(contentsOf: buttons)
-                }*/
             }
+            
+            self.lock.unlock()
         }
     }
     var childButton: UIButtonTab?
@@ -138,10 +88,10 @@ class SplitScreenDetailViewController: UIViewController {
             self.childButton = button
             self.childVC = button.vc
         } closeAction: { button in
-            self.childVC = nil
-            if let button = self.childButton {
-                self.stack.removeArrangedSubview(button)
+            if self.childVC == button.vc {
+                self.childVC = nil
             }
+            self.stack.removeArrangedSubview(button)
         }
         
         self.stack.addArrangedSubview(button)
@@ -226,8 +176,7 @@ class SplitScreenDetailViewController: UIViewController {
         guard let args = notification.object as? [String] else { return }
         if args.count > 1,
            args[0] == "open" {
-            self.childVC = CodeEditorViewController(project: project, path: args[1])
-            self.addTab(vc: self.childVC as! CodeEditorViewController)
+            self.addTab(vc: CodeEditorViewController(project: project, path: args[1]))
         } else if args.count > 0,
                   args[0] == "issue" {
             self.childVC = UIDebugViewController(project: self.project)
@@ -342,6 +291,9 @@ class UIButtonTab: UIButton {
         ])
         
         closeButton.showsMenuAsPrimaryAction = true
+        
+        // Open before making the menu
+        openAction(self)
         
         // Making menu
         var items: [UIMenuElement] = []
