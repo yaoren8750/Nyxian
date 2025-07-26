@@ -75,7 +75,7 @@ class SplitScreenDetailViewController: UIViewController {
                     vc.view.alpha = 1
                 }
 
-                let menuButton: UIButton = UIButton()
+                /*let menuButton: UIButton = UIButton()
                 menuButton.showsMenuAsPrimaryAction = true
                 menuButton.semanticContentAttribute = .forceRightToLeft
                 var bconfig = UIButton.Configuration.filled()
@@ -106,7 +106,12 @@ class SplitScreenDetailViewController: UIViewController {
                 let menu: UIMenu = UIMenu(options: .displayInline, children: [
                     UIMenu(options: .displayInline, children: items),
                     UIMenu(options: .displayInline, children: [
-                        UIAction(title: "Close", handler: { _ in self.childVC = nil })
+                        UIAction(title: "Close", handler: { _ in
+                            self.childVC = nil
+                            if let button = self.childButton {
+                                self.stack.removeArrangedSubview(button)
+                            }
+                        })
                     ])
                 ])
                 menuButton.menu = menu
@@ -115,10 +120,11 @@ class SplitScreenDetailViewController: UIViewController {
                 if !buttons.isEmpty {
                     self.navigationItem.rightBarButtonItems?.append(makeSeparator())
                     self.navigationItem.rightBarButtonItems?.append(contentsOf: buttons)
-                }
+                }*/
             }
         }
     }
+    var childButton: UIButtonTab?
     
     /*
      TabBarView -> Experiment
@@ -127,11 +133,16 @@ class SplitScreenDetailViewController: UIViewController {
     private let stack = UIStackView()
     
     func addTab(vc: CodeEditorViewController) {
-        let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100), vc: vc)
-        
-        button.addAction(UIAction { _ in
+        let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100),
+                                 vc: vc) { button in
+            self.childButton = button
             self.childVC = button.vc
-        }, for: .touchUpInside)
+        } closeAction: { button in
+            self.childVC = nil
+            if let button = self.childButton {
+                self.stack.removeArrangedSubview(button)
+            }
+        }
         
         self.stack.addArrangedSubview(button)
     }
@@ -215,8 +226,8 @@ class SplitScreenDetailViewController: UIViewController {
         guard let args = notification.object as? [String] else { return }
         if args.count > 1,
            args[0] == "open" {
-            //self.childVC = CodeEditorViewController(project: project, path: args[1])
-            self.addTab(vc: CodeEditorViewController(project: project, path: args[1]))
+            self.childVC = CodeEditorViewController(project: project, path: args[1])
+            self.addTab(vc: self.childVC as! CodeEditorViewController)
         } else if args.count > 0,
                   args[0] == "issue" {
             self.childVC = UIDebugViewController(project: self.project)
@@ -274,7 +285,10 @@ class SplitScreenDetailViewController: UIViewController {
 class UIButtonTab: UIButton {
     let vc: CodeEditorViewController
     
-    init(frame: CGRect, vc: CodeEditorViewController) {
+    init(frame: CGRect,
+         vc: CodeEditorViewController,
+         openAction: @escaping (UIButtonTab) -> Void,
+         closeAction: @escaping (UIButtonTab) -> Void) {
         self.vc = vc
         super.init(frame: frame)
         
@@ -307,6 +321,48 @@ class UIButtonTab: UIButton {
             rightBorderView.topAnchor.constraint(equalTo: self.topAnchor),
             rightBorderView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
             rightBorderView.widthAnchor.constraint(equalToConstant: 0.5)
+        ])
+        
+        self.addAction(UIAction { _ in
+            openAction(self)
+        }, for: .touchUpInside)
+        
+        // Close button
+        let closeButton: UIButton = UIButton()
+        closeButton.setImage(UIImage(systemName: "ellipsis"), for: .normal)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(closeButton)
+        
+        NSLayoutConstraint.activate([
+            closeButton.topAnchor.constraint(equalTo: self.topAnchor),
+            closeButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            closeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            closeButton.heightAnchor.constraint(equalTo: self.heightAnchor),
+            closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor)
+        ])
+        
+        closeButton.showsMenuAsPrimaryAction = true
+        
+        // Making menu
+        var items: [UIMenuElement] = []
+        var buttons: [UIBarButtonItem] = []
+        for item in vc.navigationItem.rightBarButtonItems ?? [] {
+            if let title = item.title {
+                items.append(UIAction(title: title, image: item.image, handler: { _ in
+                    vc.perform(item.action)
+                }))
+            } else {
+                buttons.append(item)
+            }
+        }
+        
+        closeButton.menu = UIMenu(options: .displayInline, children: [
+            UIMenu(options: .displayInline, children: items),
+            UIMenu(options: .displayInline, children: [
+                UIAction(title: "Close", handler: { _ in
+                    closeAction(self)
+                })
+            ])
         ])
     }
     
