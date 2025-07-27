@@ -116,7 +116,7 @@ class Builder {
     }
     
     func prepare() throws {
-        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue || project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
             let bundlePath: String = self.project.getBundlePath()
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
@@ -217,8 +217,9 @@ class Builder {
     }
     
     func sign() throws {
-        if project.projectConfig.projectType != ProjectConfig.ProjectType.Dylib.rawValue {
-            if !CertBlob.isReady {
+        // TODO: Mammooth Task!!!
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+            /*if !CertBlob.isReady {
                 throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 1, userInfo: [NSLocalizedDescriptionKey:"Zsign server doesnt run, please re/import your apple issued developer certificate"])
             }
             
@@ -226,7 +227,10 @@ class Builder {
             
             if !zsign.sign(self.project.getBundlePath()) {
                 throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 2, userInfo: [NSLocalizedDescriptionKey:"Zsign server failed to sign app bundle"])
-            }
+            }*/
+            
+            //let certblob: CertBlob = try CertBlob(atPath: CertBlob.getSelectedCertBlobPath())
+            //ZSigner.sign(withAppPath: project.getBundlePath(), prov: certblob.prov, key: certblob.p12, pass: certblob.password, completionHandler: {_,_ in })
         }
     }
     
@@ -305,6 +309,33 @@ class Builder {
                 
                 LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
             }
+        } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
+            // Get Certificate data
+
+            let data: CertBlob = try! CertBlob.init(atPath: CertBlob.getSelectedCertBlobPath())
+
+            let appGroupUserDefault = UserDefaults.init(suiteName: LCUtils.appGroupID()) ?? UserDefaults.standard
+            appGroupUserDefault.set(data.p12, forKey: "LCCertificateData")
+            appGroupUserDefault.set(data.password, forKey: "LCCertificatePassword")
+            appGroupUserDefault.set(NSDate.now, forKey: "LCCertificateUpdateDate")
+            UserDefaults.standard.set(LCUtils.appGroupID(), forKey: "LCAppGroupID")
+            
+            let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
+            appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
+                if result {
+                    appInfo?.save()
+                    do {
+                        try self.sign()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                    invokeAppMain(appInfo?.bundlePath(), 0, nil)
+                } else {
+                    print(meow ?? "Unk")
+                }
+            }, progressHandler: { progress in
+                print(progress!.fractionCompleted)
+            }, forceSign: false)
         }
     }
     

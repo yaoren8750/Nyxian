@@ -27,6 +27,7 @@ class ProjectConfig: PlistHelper {
         case App = 1
         case Staticlib = 2
         case Dylib = 3
+        case Binary = 4
     }
     
     var executable: String { self.readKeySecure(key: "LDEExecutable", defaultValue: "Unknown") }
@@ -222,7 +223,7 @@ class AppProject: Identifiable {
     }
     
     func getMachOPath() -> String {
-        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue || self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
             return "\(cachePath)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
         } else {
             return "\(cachePath)/\(projectConfig.executable)"

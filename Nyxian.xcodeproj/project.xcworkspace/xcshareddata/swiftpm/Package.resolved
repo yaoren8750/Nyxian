@@ -1,5 +1,5 @@
 {
-  "originHash" : "658d2bf544364e117670481811c7e65413664a62e98900a1334bb85a7fd0926e",
+  "originHash" : "d66cc0abafa5a488a7ba583c00ce9358619e628d321309ef00262499bbcc963b",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -44,15 +44,6 @@
       "state" : {
         "revision" : "3498e60218e6003894ff95192d756e238c01f44e",
         "version" : "4.7.1"
-      }
-    },
-    {
-      "identity" : "openssl",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krzyzanowskim/OpenSSL.git",
-      "state" : {
-        "revision" : "389296819a8d025ac10ddc9f22135a5518991fdc",
-        "version" : "1.1.180"
       }
     },
     {

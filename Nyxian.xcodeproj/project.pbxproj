@@ -16,7 +16,6 @@
 		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
 		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
 		AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */ = {isa = PBXBuildFile; fileRef = AF99171F2DC8EA3C00DDF895 /* Shared */; };
-		AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB302DCA566000B1B5F9 /* OpenSSL */; };
 		AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB652DCA5C9200B1B5F9 /* Vapor */; };
 		AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */; };
 		AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */; };
@@ -66,10 +65,12 @@
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
+				LindChain/OpenSSL.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				LindChain/Synpush/libclang.dylib = (CodeSignOnCopy, );
 			};
 			buildPhase = AFF4DB332DCA57EC00B1B5F9 /* Embed Libraries */;
 			membershipExceptions = (
+				LindChain/OpenSSL.xcframework,
 				LindChain/Synpush/libclang.dylib,
 			);
 		};
@@ -93,7 +94,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				79767D2F2E2FC0DB0048F37C /* IDevice in Frameworks */,
-				AFF4DB312DCA566000B1B5F9 /* OpenSSL in Frameworks */,
 				79767D312E2FC0DB0048F37C /* IDeviceSwift in Frameworks */,
 				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
 				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
@@ -153,7 +153,6 @@
 				AF9919572DC9175A00DDF895 /* TreeSitterObjc */,
 				AF99195A2DC9176900DDF895 /* TreeSitterC */,
 				AF9FD5882DC935F400411E1A /* Runestone */,
-				AFF4DB302DCA566000B1B5F9 /* OpenSSL */,
 				AFF4DB652DCA5C9200B1B5F9 /* Vapor */,
 				AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */,
 				AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */,
@@ -193,7 +192,6 @@
 				AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */,
 				AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */,
 				AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */,
-				AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */,
 				AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */,
 				AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */,
@@ -511,14 +509,6 @@
 				minimumVersion = 0.5.1;
 			};
 		};
-		AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
-			requirement = {
-				kind = exactVersion;
-				version = 1.1.180;
-			};
-		};
 		AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/vapor/vapor";
@@ -575,11 +565,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */;
 			productName = Runestone;
-		};
-		AFF4DB302DCA566000B1B5F9 /* OpenSSL */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AFF4DB2F2DCA566000B1B5F9 /* XCRemoteSwiftPackageReference "OpenSSL" */;
-			productName = OpenSSL;
 		};
 		AFF4DB652DCA5C9200B1B5F9 /* Vapor */ = {
 			isa = XCSwiftPackageProductDependency;

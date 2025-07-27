@@ -91,6 +91,9 @@ class SplitScreenDetailViewController: UIViewController {
             if self.childVC == button.vc {
                 self.childVC = nil
             }
+            if let synpushServer = button.vc.synpushServer {
+                synpushServer.deinit()
+            }
             self.stack.removeArrangedSubview(button)
         }
         
@@ -185,25 +188,6 @@ class SplitScreenDetailViewController: UIViewController {
         }
     }
     
-    func makeSeparator() -> UIBarButtonItem {
-        let separatorWidth: CGFloat = 1
-        let separatorHeight: CGFloat = 30
-
-        let separatorView = UIView(frame: CGRect(x: 0, y: 0, width: separatorWidth, height: separatorHeight))
-        separatorView.backgroundColor = UIColor.systemGray3
-        separatorView.layer.cornerRadius = separatorWidth / 2
-        separatorView.translatesAutoresizingMaskIntoConstraints = false
-
-        let separatorItem = UIBarButtonItem(customView: separatorView)
-
-        NSLayoutConstraint.activate([
-            separatorView.widthAnchor.constraint(equalToConstant: separatorWidth),
-            separatorView.heightAnchor.constraint(equalToConstant: separatorHeight)
-        ])
-
-        return separatorItem
-    }
-    
     private func buildProject() {
         self.navigationItem.titleView?.isUserInteractionEnabled = false
         XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
@@ -242,6 +226,7 @@ class UIButtonTab: UIButton {
         super.init(frame: frame)
         
         self.setTitle(vc.path.URLGet().lastPathComponent, for: .normal)
+        self.setTitleColor(currentTheme?.textColor, for: .normal)
         self.titleLabel?.font = .systemFont(ofSize: 13)
         self.contentHorizontalAlignment = .center
         self.contentVerticalAlignment = .center

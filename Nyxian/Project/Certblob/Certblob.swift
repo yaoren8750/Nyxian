@@ -31,12 +31,12 @@ struct CertBlob: Codable, Identifiable {
     let prov: Data
     let password: String
     
-    static var signer: zsign? = nil
+    //static var signer: zsign? = nil
     static var isReady: Bool = false
     static var firstBoot: Bool = false
     
     static func startSigner() {
-        if CertBlob.getSelectedCertBlobID().0 {
+        /*if CertBlob.getSelectedCertBlobID().0 {
             signer = zsign()
             CertBlob.isReady = signer?.prepsign(CertBlob.getSelectedCertBlobPath()) ?? false
             
@@ -55,7 +55,7 @@ struct CertBlob: Codable, Identifiable {
             } else {
                 CertBlob.firstBoot = true
             }
-        }
+        }*/
     }
     
     init(atPath path: String) throws {
