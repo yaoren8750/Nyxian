@@ -18,4 +18,4 @@
 #import <LiveContainer/ZSign/zsigner.h>
 
 void Dylibify(NSString* ExecutablePath);
-NSString* invokeAppMain(NSString *bundlePath, int argc, char *argv[]);
+NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);

@@ -293,11 +293,6 @@ NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
     // Overwrite @executable_path
     const char *appExecPath = appBundle.executablePath.fileSystemRepresentation;
     *path = appExecPath;
-    
-    overwriteExecPath(appExecPath);
-    lcGuestAppId = appBundle.bundleIdentifier;
-    overwriteMainNSBundle(appBundle);
-    overwriteMainCFBundle();
 
     // Overwrite executable info
     if(!appBundle.executablePath) {
@@ -315,8 +310,6 @@ NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
         SEL selector = @selector(arguments);
         method_setImplementation(class_getInstanceMethod(swiftNSProcessInfo, selector), class_getMethodImplementation(NSProcessInfo.class, selector));
     }
-    // ignore setting handler from guest app
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSSetUncaughtExceptionHandler, hook_do_nothing, nil);
     
     DyldHooksInit(false , 0);
     
@@ -353,6 +346,8 @@ NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
     
     //‚argv[0] = (char *)appExecPath;
     ret = appMain(argc, argv);
+    
+    dlclose(appHandle);
 
     return [NSString stringWithFormat:@"App returned from its main function with code %d.", ret];
 }

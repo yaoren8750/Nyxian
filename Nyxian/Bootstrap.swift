@@ -172,6 +172,9 @@ class Bootstrap {
     func waitTillDone() {
         guard Bootstrap.shared.bootstrapVersion != Bootstrap.shared.newestBootstrapVersion else { return }
         
+        print(Bootstrap.shared.bootstrapVersion)
+        print(Bootstrap.shared.newestBootstrapVersion)
+        
         XCodeButton.switchImage(systemName: "archivebox.fill")
         XCodeButton.updateProgress(progress: 0.1)
         

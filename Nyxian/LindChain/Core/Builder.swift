@@ -332,7 +332,7 @@ class Builder {
                     } catch {
                         print(error.localizedDescription)
                     }
-                    invokeAppMain(appInfo?.bundlePath(), 0, nil)
+                    invokeBinaryMain(appInfo?.bundlePath(), 0, nil)
                 } else {
                     print(meow ?? "Unk")
                 }
