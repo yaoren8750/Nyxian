@@ -168,9 +168,16 @@ class SplitScreenDetailViewController: UIViewController {
             self.buildProject()
         })
         let issueNavigator: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "exclamationmark.triangle.fill"), primaryAction: UIAction { _ in
-            NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["issue"])
+            let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+            loggerView.modalPresentationStyle = .formSheet
+            self.present(loggerView, animated: true)
         })
-        self.navigationItem.rightBarButtonItems = [buildButton,issueNavigator]
+        let console: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "apple.terminal.fill"), primaryAction: UIAction { _ in
+            let loggerView = UINavigationController(rootViewController: LoggerViewController())
+            loggerView.modalPresentationStyle = .formSheet
+            self.present(loggerView, animated: true)
+        })
+        self.navigationItem.rightBarButtonItems = [buildButton,issueNavigator,console]
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleMyNotification(_:)), name: Notification.Name("FileListAct"), object: nil)
     }
@@ -180,9 +187,6 @@ class SplitScreenDetailViewController: UIViewController {
         if args.count > 1,
            args[0] == "open" {
             self.addTab(vc: CodeEditorViewController(project: project, path: args[1]))
-        } else if args.count > 0,
-                  args[0] == "issue" {
-            self.childVC = UIDebugViewController(project: self.project)
         } else {
             return
         }
@@ -204,7 +208,9 @@ class SplitScreenDetailViewController: UIViewController {
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
                 if !result {
-                    NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["issue"])
+                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+                    loggerView.modalPresentationStyle = .formSheet
+                    self.present(loggerView, animated: true)
                 }
             }
         }
