@@ -44,41 +44,14 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         
         self.title = "Projects"
         
-        let createItem: UIAction = UIAction(title: "Create", image: UIImage(systemName: "plus.circle.fill")) { _ in
-            let alert = UIAlertController(title: "Create Project",
-                                          message: "",
-                                          preferredStyle: .alert)
-            
-            alert.addTextField { (textField) -> Void in
-                textField.placeholder = "Name"
-            }
-            
-            alert.addTextField { (textField) -> Void in
-                textField.placeholder = "Bundle Identifier"
-            }
-            
-            let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
-            
-            let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
-                let name = (alert.textFields![0]).text!
-                let bundleid = (alert.textFields![1]).text!
-                
-                self.projects.append(AppProject.createAppProject(
-                    atPath: self.path,
-                    executable: name,
-                    bundleid: bundleid
-                ))
-                
-                let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
-                
-                self.tableView.insertRows(at: [newIndexPath], with: .automatic)
-            }
-            
-            alert.addAction(cancelAction)
-            alert.addAction(createAction)
-            
-            self.present(alert, animated: true)
-        }
+        // TODO: Create a menu
+        let createItem: UIMenu = UIMenu(title: "Create", image: UIImage(systemName: "plus.circle.fill"), children: [UIAction(title: "App") { _ in
+            self.createProject(mode: .App)
+        },
+                                                                                                                    UIAction(title: "Binary") { _ in
+            self.createProject(mode: .Binary)
+        }])
+        
         let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.zip], asCopy: true)
             documentPicker.delegate = self
@@ -102,6 +75,43 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         if let lastProjectSelected = lastProjectSelected {
             openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
         }
+    }
+    
+    func createProject(mode: ProjectConfig.ProjectType) {
+        let alert = UIAlertController(title: "Create Project",
+                                      message: "",
+                                      preferredStyle: .alert)
+        
+        alert.addTextField { (textField) -> Void in
+            textField.placeholder = "Name"
+        }
+        
+        alert.addTextField { (textField) -> Void in
+            textField.placeholder = "Bundle Identifier"
+        }
+        
+        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
+            let name = (alert.textFields![0]).text!
+            let bundleid = (alert.textFields![1]).text!
+            
+            self.projects.append(AppProject.createAppProject(
+                atPath: self.path,
+                executable: name,
+                bundleid: bundleid,
+                mode: mode
+            ))
+            
+            let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
+            
+            self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(createAction)
+        
+        self.present(alert, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

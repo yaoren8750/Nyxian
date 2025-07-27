@@ -116,7 +116,9 @@ class Builder {
     }
     
     func prepare() throws {
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue || project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
+        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
+            project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
+            project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
             let bundlePath: String = self.project.getBundlePath()
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
@@ -309,7 +311,8 @@ class Builder {
                 
                 LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
             }
-        } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
+        } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
+                    project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
             // Get Certificate data
 
             let data: CertBlob = try! CertBlob.init(atPath: CertBlob.getSelectedCertBlobPath())

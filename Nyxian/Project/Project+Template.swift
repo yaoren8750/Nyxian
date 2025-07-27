@@ -11,6 +11,8 @@ class AppCodeTemplate {
     
     enum AppCodeTemplateScheme: String {
         case objc = "ObjC"
+        case objclive = "ObjCTest"
+        case binary = "Binary"
     }
     
     private func createAuthoredCodeFile(

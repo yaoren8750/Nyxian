@@ -28,6 +28,7 @@ class ProjectConfig: PlistHelper {
         case Staticlib = 2
         case Dylib = 3
         case Binary = 4
+        case LiveApp = 5
     }
     
     var executable: String { self.readKeySecure(key: "LDEExecutable", defaultValue: "Unknown") }
@@ -112,7 +113,8 @@ class AppProject: Identifiable {
     
     static func createAppProject(atPath path: String,
                                  executable: String,
-                                 bundleid: String) -> AppProject {
+                                 bundleid: String,
+                                 mode: ProjectConfig.ProjectType) -> AppProject {
         
         // first we prepare all information we need
         let path: String = "\(path)/\(UUID())"
@@ -126,7 +128,7 @@ class AppProject: Identifiable {
             "LDELinkerFlags": ["-ObjC", "-lc", "-lc++", "-framework", "Foundation", "-framework", "UIKit"],
             "LDEBundleInfo": [:],
             "LDESubTargets": [],
-            "LDEProjectType": ProjectConfig.ProjectType.App.rawValue,
+            "LDEProjectType": mode.rawValue,
             "LDEBundleVersion": "1.0",
             "LDEBundleShortVersion": "1.0"
         ]
@@ -162,10 +164,24 @@ class AppProject: Identifiable {
             writeDict(usingDict: projectdict, toPath: "\(path)/Config/Project.plist")
             writeDict(usingDict: editordict, toPath: "\(path)/Config/Editor.plist")
             
+            // MARK: For testing
             AppCodeTemplate.shared.createCode(
                 withProjectName: executable,
                 atPath: path,
-                withScheme: .objc
+                withScheme: {
+                    switch mode {
+                    case .App:
+                        return AppCodeTemplate.AppCodeTemplateScheme.objc
+                    case .Binary:
+                        return AppCodeTemplate.AppCodeTemplateScheme.binary
+                    case .Dylib:
+                        return AppCodeTemplate.AppCodeTemplateScheme.objc
+                    case .LiveApp:
+                        return AppCodeTemplate.AppCodeTemplateScheme.objc
+                    case .Staticlib:
+                        return AppCodeTemplate.AppCodeTemplateScheme.objc
+                    }
+                }()
             )
         } catch {
             print(error)
@@ -223,7 +239,9 @@ class AppProject: Identifiable {
     }
     
     func getMachOPath() -> String {
-        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue || self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
+        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
+            self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
+            self.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
             return "\(cachePath)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
         } else {
             return "\(cachePath)/\(projectConfig.executable)"
