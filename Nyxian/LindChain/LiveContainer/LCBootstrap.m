@@ -16,6 +16,7 @@
 #include "../litehook/src/litehook.h"
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
+#import <LogService/LogService.h>
 
 static int (*appMain)(int, char**);
 NSUserDefaults *lcUserDefaults;
@@ -278,6 +279,15 @@ NSString* invokeAppMain(NSString *bundlePath, int argc, char *argv[]) {
     return [NSString stringWithFormat:@"App returned from its main function with code %d.", ret];
 }
 
+void signal_handler(int sig) {
+    if (sig == SIGSEGV) {
+        ls_printf("Caught SIGSEGV (possible EXC_BAD_ACCESS)\n");
+    } else if (sig == SIGBUS) {
+        ls_printf("Caught SIGBUS (alignment error or EXC_BAD_ACCESS)\n");
+    }
+    //exit(1); // Don't continue after memory fault!
+}
+
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
     NSString *appError = nil;
     NSBundle *appBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
@@ -344,8 +354,15 @@ NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
     NSLog(@"[LCBootstrap] jumping to main %p", appMain);
     int ret;
     
-    //‚argv[0] = (char *)appExecPath;
+    // Escape fault
+    signal(SIGSEGV, signal_handler);
+    signal(SIGBUS, signal_handler);
+    
     ret = appMain(argc, argv);
+    
+    // Stop escaping fault
+    signal(SIGSEGV, SIG_IGN);
+    signal(SIGBUS, SIG_IGN);
     
     dlclose(appHandle);
 
