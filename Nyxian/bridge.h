@@ -6,7 +6,6 @@
 //
 
 #import <Compiler/Compiler.h>
-//#import <Signer/zsign.h>
 #import <Private/LSApplicationWorkspace.h>
 #import <Synpush/Synpush.h>
 #import <LogService/LogService.h>
@@ -20,3 +19,4 @@
 void Dylibify(NSString* ExecutablePath);
 NSString* invokeAppMain(NSString *bundlePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);
+void debugger_main(void);
