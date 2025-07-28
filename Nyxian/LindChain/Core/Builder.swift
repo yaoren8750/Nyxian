@@ -236,7 +236,8 @@ class Builder {
     }
     
     func package() throws {
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+        // MARK: End of packaging
+        /*if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
             if FileManager.default.fileExists(atPath: self.project.getPackagePath()) {
                 try FileManager.default.removeItem(atPath: self.project.getPackagePath())
             }
@@ -254,74 +255,28 @@ class Builder {
                 let destinationItemURL = destinationURL.appendingPathComponent(file)
                 try FileManager.default.copyItem(at: sourceItemURL, to: destinationItemURL)
             }
-        }
+        }*/
     }
     
     func install() throws {
+        let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
         if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            let installMethod = UserDefaults.standard.integer(forKey: "LDEInstallMethod")
-            // TODO: Implement LC
-            /*if installMethod == 0 {
-                let installer = try Installer(
-                    path: self.project.getPackagePath().URLGet(),
-                    metadata: AppData(id: self.project.projectConfig.bundleid,
-                                      version: 1, name: self.project.projectConfig.displayname),
-                    image: nil
-                )
-                
-                let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-                installer.installCompletionHandler {
-                    waitonmebaby.signal()
+            appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
+                if result {
+                    appInfo?.save()                    
+                    UserDefaults.standard.set(appInfo?.bundlePath(), forKey: "LDEAppPath")
+                    restartProcess()
+                } else {
+                    print(meow ?? "Unk")
                 }
-                
-                DispatchQueue.main.async {
-                    UIApplication.shared.open(installer.iTunesLink)
-                }
-                
-                waitonmebaby.wait()
-            } else {
-                var cancellables = Set<AnyCancellable>()
-                
-                let status = InstallerStatusViewModel()
-                status.$installProgress
-                    .receive(on: RunLoop.main)
-                    .sink { progress in
-                        XCodeButton.updateProgress(progress: progress)
-                    }
-                    .store(in: &cancellables)
-                
-                let proxy = InstallationProxy(viewModel: status)
-                
-                let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
-                var sharedError: Error? = nil
-                Task {
-                    do {
-                        try await InstallationAppProxy.deleteApp(for: project.projectConfig.bundleid)
-                        try await proxy.install(at: self.project.getPackagePath().URLGet())
-                    } catch {
-                        sharedError = error
-                    }
-                    waitonmebaby.signal()
-                }
-                waitonmebaby.wait()
-                
-                if let error = sharedError {
-                    throw error
-                }
-                
-                LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
-            }*/
+            }, progressHandler: { progress in
+                print(progress!.fractionCompleted)
+            }, forceSign: false)
         } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
                     project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
-            let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
             appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
                 if result {
                     appInfo?.save()
-                    do {
-                        try self.sign()
-                    } catch {
-                        print(error.localizedDescription)
-                    }
                     invokeBinaryMain(appInfo?.bundlePath(), 0, nil)
                 } else {
                     print(meow ?? "Unk")
@@ -377,22 +332,15 @@ class Builder {
             
             do {
                 // doit
-                if builder.dirtySourceFiles.isEmpty {
-                    try progressFlowBuilder(flow: [
-                        ("arrow.down.app.fill",nil,{try builder.install() })
-                    ])
-                } else {
-                    try progressFlowBuilder(flow: [
-                        (nil,nil,{ try builder.clean() }),
-                        (nil,nil,{ try builder.prepare() }),
-                        (nil,nil,{ try builder.compile() }),
-                        ("link",0.3,{ try builder.link() }),
-                        ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
-                        ("archivebox.fill",0.4,{ try builder.package() }),
-                        (nil,nil,{ try builder.clean() }),
-                        ("arrow.down.app.fill",nil,{try builder.install() })
-                    ])
-                }
+                try progressFlowBuilder(flow: [
+                    (nil,nil,{ try builder.clean() }),
+                    (nil,nil,{ try builder.prepare() }),
+                    (nil,nil,{ try builder.compile() }),
+                    ("link",0.3,{ try builder.link() }),
+                    ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
+                    ("archivebox.fill",0.4,{ try builder.package() }),
+                    ("arrow.down.app.fill",nil,{try builder.install() })
+                ])
             } catch {
                 try? builder.clean()
                 result = false
