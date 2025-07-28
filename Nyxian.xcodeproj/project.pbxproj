@@ -9,14 +9,10 @@
 /* Begin PBXBuildFile section */
 		7944B5642DEC712700834134 /* PrivateConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7944B5632DEC712700834134 /* PrivateConfig.xcconfig */; };
 		7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
-		79767D2F2E2FC0DB0048F37C /* IDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 79767D2E2E2FC0DB0048F37C /* IDevice */; };
-		79767D312E2FC0DB0048F37C /* IDeviceSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 79767D302E2FC0DB0048F37C /* IDeviceSwift */; };
-		79767D332E2FC0DB0048F37C /* plist in Frameworks */ = {isa = PBXBuildFile; productRef = 79767D322E2FC0DB0048F37C /* plist */; };
 		AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */ = {isa = PBXBuildFile; productRef = AF9919572DC9175A00DDF895 /* TreeSitterObjc */; };
 		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
 		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
 		AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */ = {isa = PBXBuildFile; fileRef = AF99171F2DC8EA3C00DDF895 /* Shared */; };
-		AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DB652DCA5C9200B1B5F9 /* Vapor */; };
 		AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */; };
 		AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */; };
 /* End PBXBuildFile section */
@@ -93,14 +89,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				79767D2F2E2FC0DB0048F37C /* IDevice in Frameworks */,
-				79767D312E2FC0DB0048F37C /* IDeviceSwift in Frameworks */,
 				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
 				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
 				7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */,
-				AFF4DB662DCA5C9200B1B5F9 /* Vapor in Frameworks */,
 				AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */,
-				79767D332E2FC0DB0048F37C /* plist in Frameworks */,
 				AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */,
 				AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */,
 			);
@@ -153,12 +145,8 @@
 				AF9919572DC9175A00DDF895 /* TreeSitterObjc */,
 				AF99195A2DC9176900DDF895 /* TreeSitterC */,
 				AF9FD5882DC935F400411E1A /* Runestone */,
-				AFF4DB652DCA5C9200B1B5F9 /* Vapor */,
 				AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */,
 				AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */,
-				79767D2E2E2FC0DB0048F37C /* IDevice */,
-				79767D302E2FC0DB0048F37C /* IDeviceSwift */,
-				79767D322E2FC0DB0048F37C /* plist */,
 			);
 			productName = LindDE;
 			productReference = 7944B5652DEC74EA00834134 /* Nyxian.app */;
@@ -192,10 +180,8 @@
 				AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */,
 				AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */,
 				AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */,
-				AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */,
 				AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */,
-				79767D2D2E2FC0DB0048F37C /* XCRemoteSwiftPackageReference "IDeviceKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AF9916D02DC8C42200DDF895;
@@ -477,14 +463,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		79767D2D2E2FC0DB0048F37C /* XCRemoteSwiftPackageReference "IDeviceKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/khcrysalis/IDeviceKit.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tree-sitter-grammars/tree-sitter-objc.git";
@@ -509,14 +487,6 @@
 				minimumVersion = 0.5.1;
 			};
 		};
-		AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/vapor/vapor";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.114.1;
-			};
-		};
 		AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
@@ -536,21 +506,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		79767D2E2E2FC0DB0048F37C /* IDevice */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 79767D2D2E2FC0DB0048F37C /* XCRemoteSwiftPackageReference "IDeviceKit" */;
-			productName = IDevice;
-		};
-		79767D302E2FC0DB0048F37C /* IDeviceSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 79767D2D2E2FC0DB0048F37C /* XCRemoteSwiftPackageReference "IDeviceKit" */;
-			productName = IDeviceSwift;
-		};
-		79767D322E2FC0DB0048F37C /* plist */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 79767D2D2E2FC0DB0048F37C /* XCRemoteSwiftPackageReference "IDeviceKit" */;
-			productName = plist;
-		};
 		AF9919572DC9175A00DDF895 /* TreeSitterObjc */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */;
@@ -565,11 +520,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */;
 			productName = Runestone;
-		};
-		AFF4DB652DCA5C9200B1B5F9 /* Vapor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AFF4DB642DCA5C9200B1B5F9 /* XCRemoteSwiftPackageReference "vapor" */;
-			productName = Vapor;
 		};
 		AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;

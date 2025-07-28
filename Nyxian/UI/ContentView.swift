@@ -7,7 +7,6 @@
 
 import Foundation
 import UIKit
-import IDeviceSwift
 
 class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
     var projects: [AppProject] = []
@@ -25,7 +24,6 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
     init(path: String) {
         RevertUI()
         
-        HeartbeatManager.shared.start()
         Bootstrap.shared.bootstrap()
         LDELogger.setup()
         CertBlob.startSigner()

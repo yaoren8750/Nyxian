@@ -163,8 +163,6 @@ class Bootstrap {
                     self.clearPath(path: "/")
                 }
             }
-            print("[*] Request Certificates")
-            getCertificates()
             print("[*] Done")
         }
     }

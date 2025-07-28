@@ -19,7 +19,6 @@
 */
 
 import Foundation
-import IDeviceSwift
 import Combine
 
 class Builder {
@@ -261,7 +260,8 @@ class Builder {
     func install() throws {
         if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
             let installMethod = UserDefaults.standard.integer(forKey: "LDEInstallMethod")
-            if installMethod == 0 {
+            // TODO: Implement LC
+            /*if installMethod == 0 {
                 let installer = try Installer(
                     path: self.project.getPackagePath().URLGet(),
                     metadata: AppData(id: self.project.projectConfig.bundleid,
@@ -310,7 +310,7 @@ class Builder {
                 }
                 
                 LSApplicationWorkspace.default().openApplication(withBundleID: self.project.projectConfig.bundleid)
-            }
+            }*/
         } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
                     project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
             // Get Certificate data

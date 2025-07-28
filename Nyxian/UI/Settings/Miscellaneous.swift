@@ -16,7 +16,7 @@ class MiscellaneousController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return 2
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -24,8 +24,6 @@ class MiscellaneousController: UITableViewController {
             switch indexPath.row {
             case 0:
                 return "Import Certificate"
-            case 1:
-                return "Import Pairing File (If you use AFC method)"
             case 2:
                 return "Reset All"
             default:
@@ -60,30 +58,6 @@ class MiscellaneousController: UITableViewController {
                 self.present(importSettings, animated: true)
                 break
             case 1:
-                let importPopup: PairingImporter = PairingImporter(style: .insetGrouped)
-                let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
-                importSettings.modalPresentationStyle = .pageSheet
-                
-                // dynamic size
-                if UIDevice.current.userInterfaceIdiom == .phone {
-                    if #available(iOS 16.0, *) {
-                        if let sheet = importSettings.sheetPresentationController {
-                            sheet.animateChanges {
-                                sheet.detents = [
-                                    .custom { _ in
-                                        return 200
-                                    }
-                                ]
-                            }
-                            
-                            sheet.prefersGrabberVisible = true
-                        }
-                    }
-                }
-                
-                self.present(importSettings, animated: true)
-                break
-            case 2:
                 let alert: UIAlertController = UIAlertController(
                     title: "Warning",
                     message: "All projects and preferences will be wiped! Are you sure you wanna proceed?",
