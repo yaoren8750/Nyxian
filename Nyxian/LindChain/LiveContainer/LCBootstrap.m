@@ -285,7 +285,6 @@ void signal_handler(int sig) {
     } else if (sig == SIGBUS) {
         ls_printf("Caught SIGBUS (alignment error or EXC_BAD_ACCESS)\n");
     }
-    //exit(1); // Don't continue after memory fault!
 }
 
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {

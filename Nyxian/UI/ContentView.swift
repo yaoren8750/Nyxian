@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
+@objc class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
     var projects: [AppProject] = []
     var path: String
     
@@ -21,7 +21,7 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         }
     }
     
-    init(path: String) {
+    @objc init(path: String) {
         RevertUI()
         
         Bootstrap.shared.bootstrap()

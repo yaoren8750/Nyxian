@@ -7,7 +7,7 @@
 
 import UIKit
 
-class UIThemedTableViewController: UITableViewController {
+@objc class UIThemedTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -27,7 +27,7 @@ class UIThemedTableViewController: UITableViewController {
     }
 }
 
-class UIThemedTabBarController: UITabBarController, UITabBarControllerDelegate {
+@objc class UIThemedTabBarController: UITabBarController, UITabBarControllerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.delegate = self
