@@ -217,47 +217,6 @@ class Builder {
         }
     }
     
-    func sign() throws {
-        // TODO: Mammooth Task!!!
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            /*if !CertBlob.isReady {
-                throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 1, userInfo: [NSLocalizedDescriptionKey:"Zsign server doesnt run, please re/import your apple issued developer certificate"])
-            }
-            
-            let zsign = CertBlob.signer!
-            
-            if !zsign.sign(self.project.getBundlePath()) {
-                throw NSError(domain: "com.cr4zy.nyxian.builder.sign", code: 2, userInfo: [NSLocalizedDescriptionKey:"Zsign server failed to sign app bundle"])
-            }*/
-            
-            //let certblob: CertBlob = try CertBlob(atPath: CertBlob.getSelectedCertBlobPath())
-            //ZSigner.sign(withAppPath: project.getBundlePath(), prov: certblob.prov, key: certblob.p12, pass: certblob.password, completionHandler: {_,_ in })
-        }
-    }
-    
-    func package() throws {
-        // MARK: End of packaging
-        /*if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            if FileManager.default.fileExists(atPath: self.project.getPackagePath()) {
-                try FileManager.default.removeItem(atPath: self.project.getPackagePath())
-            }
-            
-            try FileManager.default.zipItem(
-                at: URL(fileURLWithPath: self.project.getPayloadPath()),
-                to: URL(fileURLWithPath: self.project.getPackagePath())
-            )
-            
-            let sourceURL: URL = self.project.getResourcesPath().URLGet()
-            let destinationURL: URL = self.project.getBundlePath().URLGet()
-            let files: [String] = try FileManager.default.contentsOfDirectory(atPath: project.getResourcesPath())
-            for file in files {
-                let sourceItemURL = sourceURL.appendingPathComponent(file)
-                let destinationItemURL = destinationURL.appendingPathComponent(file)
-                try FileManager.default.copyItem(at: sourceItemURL, to: destinationItemURL)
-            }
-        }*/
-    }
-    
     func install() throws {
         let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
         if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
@@ -337,8 +296,6 @@ class Builder {
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
                     ("link",0.3,{ try builder.link() }),
-                    ("checkmark.seal.text.page.fill",0.3,{ try builder.sign() }),
-                    ("archivebox.fill",0.4,{ try builder.package() }),
                     ("arrow.down.app.fill",nil,{try builder.install() })
                 ])
             } catch {
