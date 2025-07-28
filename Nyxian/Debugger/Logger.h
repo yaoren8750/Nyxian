@@ -24,7 +24,7 @@
 
 @end
 
-@interface LoggerView : UINavigationController
+@interface LoggerView : UIViewController
 
 @property (nonatomic,strong,readonly) LoggerTextView *loggerText;
 

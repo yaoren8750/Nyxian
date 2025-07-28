@@ -15,7 +15,8 @@ void restartProcess(void)
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             while(YES)
             {
-                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:[[NSBundle mainBundle] bundleIdentifier]];
+                // FIXME: Fix it in case someone uses a other bundleID
+                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.cr4zy.nyxian"];
             }
         });
         
