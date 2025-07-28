@@ -9,9 +9,9 @@ import Foundation
 import UIKit
 
 // App
-let buildName: String = "Twinterlune"
+let buildName: String = "Moonshine"
 let buildStage: String = "Indev"
-let buildVersion: Double = 0.4
+let buildVersion: Double = 0.5
 
 // AppInfoView
 class AppInfoViewController: UIThemedTableViewController {
@@ -63,15 +63,7 @@ class AppInfoViewController: UIThemedTableViewController {
             switch indexPath.row {
             case 0:
                 cell.textLabel?.text = "Name"
-                cell.detailTextLabel?.text = {
-                    if buildVersion <= 0.3 {
-                        return "Nightsky"
-                    } else if buildVersion <= 0.9 {
-                        return "Moonshine"
-                    } else {
-                        return "Unknown"
-                    }
-                }()
+                cell.detailTextLabel?.text = buildName
             case 1:
                 cell.textLabel?.text = "Version"
                 cell.detailTextLabel?.text = String(buildVersion)
