@@ -47,12 +47,9 @@ LoggerView *nxloggerview;
     UIViewController *rootVC = keyWindow.rootViewController;
 
     if (rootVC) {
-        UITapGestureRecognizer *longPress =
-                [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                              action:@selector(handleTap:)];
-        //longPress.minimumPressDuration = 0.5;
-        longPress.numberOfTapsRequired = 1;
-        longPress.numberOfTouchesRequired = 3;
+        UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+        longPress.minimumPressDuration = 0.5;
+        //longPress.numberOfTapsRequired = 1;
         [rootVC.view addGestureRecognizer:longPress];
         
         _rootViewController = rootVC;
@@ -66,7 +63,7 @@ LoggerView *nxloggerview;
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
-    if (gesture.state == UIGestureRecognizerStateRecognized) {
+    if (gesture.state == UIGestureRecognizerStateBegan) {
         if(_blurView == NULL)
         {
             UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
@@ -124,27 +121,13 @@ LoggerView *nxloggerview;
                 [backButton.heightAnchor constraintEqualToConstant:75]
             ]];
             
-            UITapGestureRecognizer *longPress =
-                    [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                  action:@selector(handleBlurTap:)];
-            //longPress.minimumPressDuration = 0.5;
+            UITapGestureRecognizer *longPress = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
             longPress.numberOfTapsRequired = 1;
-            //longPress.numberOfTouchesRequired = 3;
             [self.blurView addGestureRecognizer:longPress];
             
             [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
                 self.blurView.alpha = 1.0;
             } completion:nil];
-        } else {
-            /*[UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionCurveEaseOut animations:^{
-                self.blurView.alpha = 0.0;
-            } completion:^(BOOL isFinished) {
-                if(isFinished)
-                {
-                    [self.blurView removeFromSuperview];
-                    self.blurView = NULL;
-                }
-            }];*/
         }
     }
 }
