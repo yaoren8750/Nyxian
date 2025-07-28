@@ -26,7 +26,6 @@ class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UI
         
         Bootstrap.shared.bootstrap()
         LDELogger.setup()
-        CertBlob.startSigner()
         
         self.path = path
         

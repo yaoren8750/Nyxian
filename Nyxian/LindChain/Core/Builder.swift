@@ -313,16 +313,6 @@ class Builder {
             }*/
         } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
                     project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
-            // Get Certificate data
-
-            let data: CertBlob = try! CertBlob.init(atPath: CertBlob.getSelectedCertBlobPath())
-
-            let appGroupUserDefault = UserDefaults.init(suiteName: LCUtils.appGroupID()) ?? UserDefaults.standard
-            appGroupUserDefault.set(data.p12, forKey: "LCCertificateData")
-            appGroupUserDefault.set(data.password, forKey: "LCCertificatePassword")
-            appGroupUserDefault.set(NSDate.now, forKey: "LCCertificateUpdateDate")
-            UserDefaults.standard.set(LCUtils.appGroupID(), forKey: "LCAppGroupID")
-            
             let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
             appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
                 if result {

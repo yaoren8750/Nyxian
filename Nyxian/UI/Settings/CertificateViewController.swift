@@ -12,11 +12,9 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
     var textField: UITextField?
     
     var cert: ImportTableCell?
-    var prov: ImportTableCell?
     
     let sectionTitles: [String] = [
         "Certificate",
-        "Mobileprovision",
         "Password"
     ]
     
@@ -70,13 +68,8 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
         case 0:
             cert = ImportTableCell(parent: self)
             cell = cert!
-            //cell.textLabel?.text = "Import"
             break
         case 1:
-            prov = ImportTableCell(parent: self)
-            cell = prov!
-            break
-        case 2:
             cell = UITableViewCell()
             self.textField = UITextField(frame: CGRect(x: 15, y: 0, width: tableView.frame.width - 30, height: 44))
             self.textField?.placeholder = "ie. 123456"
@@ -95,7 +88,7 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 3
+        return 2
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -104,14 +97,16 @@ class CertificateImporter: UIThemedTableViewController, UITextFieldDelegate {
     }
     
     @objc func importButton() {
-        try? FileManager.default.removeItem(atPath: CertBlob.getSelectedCertBlobPath())
-        
-        CertBlob.createCertBlob(
-            p12Path: self.cert!.url!.path,
-            mpPath: self.prov!.url!.path,
-            password: textField?.text ?? "",
-            name: "Meow"
-        )
+        do {
+            let p12Data: Data = try Data(contentsOf: URL(fileURLWithPath: self.cert!.url!.path))
+            let appGroupUserDefault = UserDefaults.init(suiteName: LCUtils.appGroupID()) ?? UserDefaults.standard
+            appGroupUserDefault.set(p12Data, forKey: "LCCertificateData")
+            appGroupUserDefault.set(textField?.text ?? "", forKey: "LCCertificatePassword")
+            appGroupUserDefault.set(NSDate.now, forKey: "LCCertificateUpdateDate")
+            UserDefaults.standard.set(LCUtils.appGroupID(), forKey: "LCAppGroupID")
+        } catch {
+            NotificationServer.NotifyUser(level: .error, notification: "Something went wrong importing the CertBlob! \(error.localizedDescription)")
+        }
         
         self.dismiss(animated: true)
     }
