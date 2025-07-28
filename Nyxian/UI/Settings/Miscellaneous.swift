@@ -24,7 +24,7 @@ class MiscellaneousController: UITableViewController {
             switch indexPath.row {
             case 0:
                 return "Import Certificate"
-            case 2:
+            case 1:
                 return "Reset All"
             default:
                 return "Unknown"
