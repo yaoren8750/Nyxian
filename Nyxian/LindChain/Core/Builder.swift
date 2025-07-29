@@ -223,7 +223,9 @@ class Builder {
             appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
                 if result {
                     appInfo?.save()                    
-                    UserDefaults.standard.set(appInfo?.bundlePath(), forKey: "LDEAppPath")
+                    UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
+                    UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
+                    UserDefaults.standard.set(self.project.getTmpPath(), forKey: "LDETmpPath")
                     restartProcess()
                 } else {
                     print(meow ?? "Unk")

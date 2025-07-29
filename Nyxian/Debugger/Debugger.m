@@ -49,7 +49,6 @@ LoggerView *nxloggerview;
     if (rootVC) {
         UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
         longPress.minimumPressDuration = 0.5;
-        //longPress.numberOfTapsRequired = 1;
         [rootVC.view addGestureRecognizer:longPress];
         
         _rootViewController = rootVC;

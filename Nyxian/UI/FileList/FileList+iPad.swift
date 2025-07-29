@@ -208,9 +208,14 @@ class SplitScreenDetailViewController: UIViewController {
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
                 if !result {
+                    /*if self.project.projectConfig.restartApp {
+                        self.openTheLogSheet = true
+                        restartProcess()
+                    } else {*/
                     let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
                     loggerView.modalPresentationStyle = .formSheet
                     self.present(loggerView, animated: true)
+                    //}
                 }
             }
         }

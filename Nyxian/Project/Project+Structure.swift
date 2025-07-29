@@ -252,6 +252,14 @@ class AppProject: Identifiable {
         return "\(cachePath)/\(projectConfig.executable).ipa"
     }
     
+    func getHomePath() -> String {
+        return "\(cachePath)/data"
+    }
+    
+    func getTmpPath() -> String {
+        return "\(cachePath)/tmp"
+    }
+    
     ///
     /// Public
     ///

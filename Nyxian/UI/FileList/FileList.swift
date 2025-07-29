@@ -123,7 +123,7 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         // Project Roots Menu in case its the root of the project obviously
         if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad {
             var projectMenuElements: [UIMenuElement] = []
-            projectMenuElements.append(UIAction(title: "Build", image: UIImage(systemName: "hammer.fill"), handler: { _ in
+            projectMenuElements.append(UIAction(title: "Run", image: UIImage(systemName: "play.fill"), handler: { _ in
                 self.buildProject()
             }))
             projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { _ in
@@ -530,10 +530,8 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
                 self.navigationItem.setRightBarButton(oldBarButton, animated: true)
                 self.navigationItem.setHidesBackButton(false, animated: true)
                 
-                if result && self.project.projectConfig.restartAppOnSucceed {
-                    exit(0)
-                } else if !result {
-                    if self.project.projectConfig.restartAppOnSucceed {
+                if !result {
+                    if self.project.projectConfig.restartApp {
                         self.openTheLogSheet = true
                         restartProcess()
                     } else {

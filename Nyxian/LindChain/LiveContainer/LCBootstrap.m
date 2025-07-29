@@ -178,16 +178,9 @@ static void *getAppEntryPoint(void *handle) {
     return (void *)header + entryoff;
 }
 
-NSString* invokeAppMain(NSString *bundlePath, int argc, char *argv[]) {
+NSString* invokeAppMain(NSString *bundlePath, NSString *newHomePath, NSString *newTmpPath, int argc, char *argv[]) {
     NSString *appError = nil;
-    /*if (!LCSharedUtils.certificatePassword) {
-        appError = @"Needs certificate.";
-        return appError;
-    }*/
-    
     NSFileManager *fm = NSFileManager.defaultManager;
-    NSString *docPath = [fm URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask]
-        .lastObject.path;
     
     NSBundle *appBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
     
@@ -206,6 +199,17 @@ NSString* invokeAppMain(NSString *bundlePath, int argc, char *argv[]) {
     
     // Overwrite NSUserDefaults
     lcGuestAppId = appBundle.bundleIdentifier;
+    
+    setenv("CFFIXED_USER_HOME", newHomePath.UTF8String, 1);
+    setenv("HOME", newHomePath.UTF8String, 1);
+    setenv("TMPDIR", newTmpPath.UTF8String, 1);
+
+    // Setup directories
+    NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData"];
+    for (NSString *dir in dirList) {
+        NSString *dirPath = [newHomePath stringByAppendingPathComponent:dir];
+        [fm createDirectoryAtPath:dirPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
     
     // Overwrite NSBundle
     overwriteMainNSBundle(appBundle);
@@ -372,63 +376,3 @@ static void exceptionHandler(NSException *exception) {
     NSString *error = [NSString stringWithFormat:@"%@\nCall stack: %@", exception.reason, exception.callStackSymbols];
     [lcUserDefaults setObject:error forKey:@"error"];
 }
-
-int LiveContainerMain(int argc, char *argv[]) {
-    lcMainBundle = [NSBundle mainBundle];
-    lcUserDefaults = NSUserDefaults.standardUserDefaults;
-    lcSharedDefaults = [[NSUserDefaults alloc] initWithSuiteName: [LCSharedUtils appGroupID]];
-    setenv("LC_HOME_PATH", getenv("HOME"), 1);
-
-    NSString *selectedApp = [lcUserDefaults stringForKey:@"selected"];
-    NSString *selectedContainer = [lcUserDefaults stringForKey:@"selectedContainer"];
-    
-    NSString* lastLaunchDataUUID;
-    
-    lastLaunchDataUUID = selectedContainer;
-    
-    // we put all files in app group after fixing 0xdead10cc. This call is here in case user upgraded lc with app's data in private Library/SharedDocuments
-    [LCSharedUtils moveSharedAppFolderBack];
-    
-    if(lastLaunchDataUUID) {
-        NSString* lastLaunchType = [lcUserDefaults objectForKey:@"lastLaunchType"];
-        NSString* preferencesTo;
-        NSURL *docPathUrl = [NSFileManager.defaultManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].lastObject;
-        if([lastLaunchType isEqualToString:@"Shared"] || isLiveProcess) {
-            preferencesTo = [LCSharedUtils.appGroupPath.path stringByAppendingPathComponent:[NSString stringWithFormat:@"LiveContainer/Data/Application/%@/Library/Preferences", lastLaunchDataUUID]];
-        } else {
-            preferencesTo = [docPathUrl.path stringByAppendingPathComponent:[NSString stringWithFormat:@"Data/Application/%@/Library/Preferences", lastLaunchDataUUID]];
-        }
-        // recover preferences
-        // this is not needed anymore, it's here for backward competability
-        [LCSharedUtils dumpPreferenceToPath:preferencesTo dataUUID:lastLaunchDataUUID];
-        if(!isLiveProcess) {
-            [lcUserDefaults removeObjectForKey:@"lastLaunchDataUUID"];
-            [lcUserDefaults removeObjectForKey:@"lastLaunchType"];
-        }
-    }
-    
-    if (selectedApp) {
-        [lcUserDefaults removeObjectForKey:@"selected"];
-        [lcUserDefaults removeObjectForKey:@"selectedContainer"];
-        NSSetUncaughtExceptionHandler(&exceptionHandler);
-        NSString *appError = invokeAppMain([NSString stringWithFormat:@"%@/Documents/Applications/%@", NSHomeDirectory(),selectedApp], argc, argv);
-        if (appError) {
-            [lcUserDefaults setObject:appError forKey:@"error"];
-            return 1;
-        }
-    }
-    
-    void *LiveContainerSwiftUIHandle = dlopen("@executable_path/Frameworks/LiveContainerSwiftUI.framework/LiveContainerSwiftUI", RTLD_LAZY);
-    assert(LiveContainerSwiftUIHandle);
-
-    int (*LiveContainerSwiftUIMain)(void) = dlsym(LiveContainerSwiftUIHandle, "main");
-    return LiveContainerSwiftUIMain();
-
-}
-
-#ifdef DEBUG
-int callAppMain(int argc, char *argv[]) {
-    assert(appMain != NULL);
-    __attribute__((musttail)) return appMain(argc, argv);
-}
-#endif
