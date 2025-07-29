@@ -15,6 +15,8 @@
 
 @property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
 
+- (void)crashHandle;
+
 @end
 
 @interface LogTextView : UITextView

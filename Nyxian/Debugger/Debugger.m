@@ -13,12 +13,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #import <Nyxian-Swift.h>
+#import <litehook/src/litehook.h>
 
 UINavigationController *nxloggerview;
+NyxianDebugger *nxdebugger;
 
-///
-/// This is a on-device debugger that is in the app you wanna debug
-///
+/*
+ Hooks
+ */
+
+/// Escape `exit()`
+void debugger_exit(void)
+{
+    restartProcess();
+}
+
+/// Escape memory corruption
+void debugger_signal_handler(int sig) {
+    debugger_exit();
+}
+
+/*
+ The Debugger it self
+ */
 @implementation NyxianDebugger
 
 - (instancetype)init {
@@ -152,6 +169,9 @@ UINavigationController *nxloggerview;
     return button;
 }
 
+/*
+ Handlers for the Debugger buttons
+ */
 - (void)handleConsoleButton:(UIButton *)sender
 {
     [self.rootViewController presentViewController:nxloggerview animated:YES completion:nil];
@@ -169,15 +189,36 @@ UINavigationController *nxloggerview;
     restartProcess();
 }
 
+/*
+ Crash View
+ */
+- (void)crashHandle
+{
+    // TODO: Implement a function that lets the blurview appear in both cases with NULL and without NULL and to safe time in the future for future implementations
+    if (_blurView == NULL) {
+        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
+        self.blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+        self.blurView.frame = _rootViewController.view.bounds;
+        self.blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.blurView.alpha = 0.0;
+        [_rootViewController.view addSubview:self.blurView];
+    }
+}
+
 @end
 
-///
-/// Self executed code
-///
-NyxianDebugger *nxdebugger;
-
+/*
+ Debugger setup
+ */
 void debugger_main(void)
 {
+    /// Escape the death
+    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, exit, debugger_exit, nil);
+    signal(SIGSEGV, debugger_signal_handler);
+    signal(SIGABRT, debugger_signal_handler);
+    signal(SIGBUS, debugger_signal_handler);
+    
+    /// Debugger init
     nxdebugger = [[NyxianDebugger alloc] init];
     nxloggerview = [[UINavigationController alloc] initWithRootViewController:[[LoggerView alloc] init]];
     
