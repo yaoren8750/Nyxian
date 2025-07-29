@@ -13,7 +13,6 @@
 {
     self = [super init];
     
-    self.backgroundColor = UIColor.clearColor;
     self.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightBold];
     self.editable = NO;
     self.selectable = YES;
@@ -71,44 +70,20 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [self.navigationController.navigationBar setTranslucent:NO];
-    UIImage *shadowImage = [self imageWithColor:[UIColor lightGrayColor] size:CGSizeMake(1.0, 0.5)];
-    [self.navigationController.navigationBar setShadowImage:shadowImage];
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
     
-    UINavigationBar *navigationBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 55)];
-    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:@"Console"];
-    [navigationBar setItems:@[navItem]];
-    [self.view addSubview:navigationBar];
+    self.title = @"Console";
     
-    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
-    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
-    blurView.frame = self.view.bounds;
-    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    
-    [self.view insertSubview:blurView atIndex:0];
-
     _loggerText = [[LogTextView alloc] init];
     _loggerText.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:_loggerText];
     
     [NSLayoutConstraint activateConstraints:@[
-        [_loggerText.topAnchor constraintEqualToAnchor:navigationBar.bottomAnchor],
+        [_loggerText.topAnchor constraintEqualToAnchor:self.view.topAnchor],
         [_loggerText.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
         [_loggerText.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [_loggerText.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
     ]];
-}
-
-- (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size {
-    CGRect rect = CGRectMake(0.0f, 0.0f, size.width, size.height);
-    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
-    [color setFill];
-    UIRectFill(rect);
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return image;
 }
 
 @end

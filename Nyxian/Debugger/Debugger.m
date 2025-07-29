@@ -14,7 +14,7 @@
 #include <stdio.h>
 #import <Nyxian-Swift.h>
 
-LoggerView *nxloggerview;
+UINavigationController *nxloggerview;
 
 ///
 /// This is a on-device debugger that is in the app you wanna debug
@@ -179,8 +179,7 @@ NyxianDebugger *nxdebugger;
 void debugger_main(void)
 {
     nxdebugger = [[NyxianDebugger alloc] init];
-    nxloggerview = [[LoggerView alloc] init];
-    nxloggerview.modalPresentationStyle = UIModalPresentationPageSheet;
+    nxloggerview = [[UINavigationController alloc] initWithRootViewController:[[LoggerView alloc] init]];
     
     printf("[*] Nyxian Debugger 1.0\n");
 }
