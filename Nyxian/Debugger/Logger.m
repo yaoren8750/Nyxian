@@ -7,7 +7,7 @@
 
 #import "Logger.h"
 
-@implementation LoggerTextView
+@implementation LogTextView
 
 - (instancetype)init
 {
@@ -88,7 +88,7 @@
     
     [self.view insertSubview:blurView atIndex:0];
 
-    _loggerText = [[LoggerTextView alloc] init];
+    _loggerText = [[LogTextView alloc] init];
     _loggerText.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:_loggerText];

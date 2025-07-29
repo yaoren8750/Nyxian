@@ -8,8 +8,8 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class FileListViewController: UIThemedTableViewController, UIDocumentPickerDelegate {
-    let project: AppProject
+@objc class FileListViewController: UIThemedTableViewController, UIDocumentPickerDelegate {
+    let project: AppProject?
     let path: String
     var entries: [FileListEntry]
     let isSublink: Bool
@@ -24,13 +24,32 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     
     init(
         isSublink: Bool = false,
-        project: AppProject,
+        project: AppProject?,
         path: String? = nil
     ) {
-        Author.shared.setTargetProject(project.projectConfig.displayname)
-        
         self.project = project
-        self.path = path ?? project.getPath()
+        
+        if let project = project {
+            Author.shared.setTargetProject(project.projectConfig.displayname)
+            self.path = path ?? project.getPath()
+        } else {
+            self.path = path ?? ""
+        }
+        
+        self.entries = FileListEntry.getEntries(ofPath: self.path)
+        self.isSublink = isSublink
+        super.init(style: .insetGrouped)
+        
+        self.refreshControl = UIRefreshControl()
+        self.refreshControl?.addTarget(self, action: #selector(performRefresh), for: .valueChanged)
+    }
+    
+    @objc init(
+        isSublink: Bool = false,
+        path: String
+    ) {
+        self.project = nil
+        self.path = path
         self.entries = FileListEntry.getEntries(ofPath: self.path)
         self.isSublink = isSublink
         super.init(style: .insetGrouped)
@@ -82,11 +101,16 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if !self.isSublink {
-            LDELogger.log(forProject: self.project)
+        if let project = self.project {
+            if !self.isSublink {
+                LDELogger.log(forProject: project)
+            }
+            
+            self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
+        } else {
+            self.title = URL(fileURLWithPath: self.path).lastPathComponent
         }
         
-        self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
         if UIDevice.current.userInterfaceIdiom == .pad, !self.isSublink {
@@ -101,14 +125,14 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if !self.isSublink {
-            if self.project.reload() {
-                self.title = self.project.projectConfig.displayname
+        if !self.isSublink, let project = self.project {
+            if project.reload() {
+                self.title = project.projectConfig.displayname
             }
             
-            if self.project.projectConfig.restartApp {
+            if project.projectConfig.restartApp {
                 if self.openTheLogSheet {
-                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
                     loggerView.modalPresentationStyle = .formSheet
                     self.present(loggerView, animated: true)
                     self.openTheLogSheet = false
@@ -121,13 +145,13 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
         var rootMenuChildren: [UIMenu] = []
         
         // Project Roots Menu in case its the root of the project obviously
-        if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad {
+        if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad, let project = self.project {
             var projectMenuElements: [UIMenuElement] = []
             projectMenuElements.append(UIAction(title: "Run", image: UIImage(systemName: "play.fill"), handler: { _ in
                 self.buildProject()
             }))
             projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { _ in
-                let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
+                let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))
@@ -314,10 +338,10 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
             let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { action in
                 let entry = self.entries[indexPath.row]
                 let fileUrl: URL = URL(fileURLWithPath: "\(self.path)/\(entry.name)")
-                if ((try? FileManager.default.removeItem(at: fileUrl)) != nil) {
-                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath())/debug.json")
+                if ((try? FileManager.default.removeItem(at: fileUrl)) != nil), let project = self.project {
+                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(project.getCachePath())/debug.json")
                     database.removeFileDebug(ofPath: fileUrl.path)
-                    database.saveDatabase(toPath: "\(self.project.getCachePath())/debug.json")
+                    database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
                     self.entries.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
@@ -516,28 +540,30 @@ class FileListViewController: UIThemedTableViewController, UIDocumentPickerDeleg
     /// Private: Function to initiate building the app
     ///
     private func buildProject() {
-        self.navigationItem.titleView?.isUserInteractionEnabled = false
-        XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
-        LDELogger.clear()
-        guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
-        let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
-
-        self.navigationItem.setRightBarButton(barButton, animated: true)
-        self.navigationItem.setHidesBackButton(true, animated: true)
-        
-        Builder.buildProject(withProject: project) { result in
-            DispatchQueue.main.async {
-                self.navigationItem.setRightBarButton(oldBarButton, animated: true)
-                self.navigationItem.setHidesBackButton(false, animated: true)
-                
-                if !result {
-                    if self.project.projectConfig.restartApp {
-                        self.openTheLogSheet = true
-                        restartProcess()
-                    } else {
-                        let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
-                        loggerView.modalPresentationStyle = .formSheet
-                        self.present(loggerView, animated: true)
+        if let project = self.project {
+            self.navigationItem.titleView?.isUserInteractionEnabled = false
+            XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
+            LDELogger.clear()
+            guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
+            let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
+            
+            self.navigationItem.setRightBarButton(barButton, animated: true)
+            self.navigationItem.setHidesBackButton(true, animated: true)
+            
+            Builder.buildProject(withProject: project) { result in
+                DispatchQueue.main.async {
+                    self.navigationItem.setRightBarButton(oldBarButton, animated: true)
+                    self.navigationItem.setHidesBackButton(false, animated: true)
+                    
+                    if !result {
+                        if project.projectConfig.restartApp {
+                            self.openTheLogSheet = true
+                            restartProcess()
+                        } else {
+                            let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
+                            loggerView.modalPresentationStyle = .formSheet
+                            self.present(loggerView, animated: true)
+                        }
                     }
                 }
             }

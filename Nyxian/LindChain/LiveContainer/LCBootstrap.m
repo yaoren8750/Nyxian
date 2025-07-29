@@ -178,7 +178,7 @@ static void *getAppEntryPoint(void *handle) {
     return (void *)header + entryoff;
 }
 
-NSString* invokeAppMain(NSString *bundlePath, NSString *newHomePath, NSString *newTmpPath, int argc, char *argv[]) {
+NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]) {
     NSString *appError = nil;
     NSFileManager *fm = NSFileManager.defaultManager;
     
@@ -200,14 +200,14 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *newHomePath, NSString *n
     // Overwrite NSUserDefaults
     lcGuestAppId = appBundle.bundleIdentifier;
     
-    setenv("CFFIXED_USER_HOME", newHomePath.UTF8String, 1);
-    setenv("HOME", newHomePath.UTF8String, 1);
-    setenv("TMPDIR", newTmpPath.UTF8String, 1);
+    setenv("CFFIXED_USER_HOME", homePath.UTF8String, 1);
+    setenv("HOME", homePath.UTF8String, 1);
+    setenv("TMPDIR", [[NSString stringWithFormat:@"%@/Tmp", homePath] UTF8String], 1);
 
     // Setup directories
-    NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData"];
+    NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData", @"Tmp"];
     for (NSString *dir in dirList) {
-        NSString *dirPath = [newHomePath stringByAppendingPathComponent:dir];
+        NSString *dirPath = [homePath stringByAppendingPathComponent:dir];
         [fm createDirectoryAtPath:dirPath withIntermediateDirectories:YES attributes:nil error:nil];
     }
     

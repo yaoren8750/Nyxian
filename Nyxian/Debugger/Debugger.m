@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#import <Nyxian-Swift.h>
 
 LoggerView *nxloggerview;
 
@@ -63,67 +64,49 @@ LoggerView *nxloggerview;
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
     if (gesture.state == UIGestureRecognizerStateBegan) {
-        if(_blurView == NULL)
-        {
+        if (_blurView == NULL) {
             UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
             self.blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
             self.blurView.frame = _rootViewController.view.bounds;
             self.blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             self.blurView.alpha = 0.0;
-            
-            UIButton *consoleButton = [[UIButton alloc] init];
-            consoleButton.backgroundColor = UIColor.systemGray3Color;
-            consoleButton.translatesAutoresizingMaskIntoConstraints = NO;
-            consoleButton.layer.cornerRadius = 15;
-            consoleButton.layer.borderWidth = 1;
-            consoleButton.layer.borderColor = UIColor.systemGrayColor.CGColor;
-            [consoleButton addTarget:self
-                              action:@selector(handleConsoleButton:)
-                    forControlEvents:UIControlEventTouchUpInside];
-            
-            UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:30 weight:UIImageSymbolWeightRegular];
-            UIImage *symbolImage = [[UIImage systemImageNamed:@"apple.terminal.fill"] imageByApplyingSymbolConfiguration:config];
-            [consoleButton setImage:symbolImage forState:UIControlStateNormal];
-            consoleButton.tintColor = UIColor.whiteColor;
+            [_rootViewController.view addSubview:self.blurView];
+
+            UIButton *consoleButton = [self createDebuggerButtonWithSymbol:@"apple.terminal.fill"
+                                                                 markColor:nil
+                                                                    action:@selector(handleConsoleButton:)];
+            UIButton *fileButton = [self createDebuggerButtonWithSymbol:@"folder.fill"
+                                                              markColor:nil
+                                                                 action:@selector(handleFileButton:)];
+            UIButton *backButton = [self createDebuggerButtonWithSymbol:@"arrowshape.turn.up.backward.fill"
+                                                              markColor:UIColor.systemRedColor
+                                                                 action:@selector(handleBackButton:)];
             
             [_blurView.contentView addSubview:consoleButton];
-            [_rootViewController.view addSubview:self.blurView];
-            
+            [_blurView.contentView addSubview:fileButton];
+            [_blurView.contentView addSubview:backButton];
+
             [NSLayoutConstraint activateConstraints:@[
                 [consoleButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-                [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-45],
+                [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-85],
                 [consoleButton.widthAnchor constraintEqualToConstant:75],
-                [consoleButton.heightAnchor constraintEqualToConstant:75]
-            ]];
-            
-            UIButton *backButton = [[UIButton alloc] init];
-            backButton.backgroundColor = UIColor.systemGray3Color;
-            backButton.translatesAutoresizingMaskIntoConstraints = NO;
-            backButton.layer.cornerRadius = 15;
-            backButton.layer.borderWidth = 1;
-            backButton.layer.borderColor = UIColor.systemGrayColor.CGColor;
-            [backButton addTarget:self
-                              action:@selector(handleBackButton:)
-                    forControlEvents:UIControlEventTouchUpInside];
-            
-            UIImage *backSymbolImage = [[UIImage systemImageNamed:@"arrowshape.turn.up.backward.fill"] imageByApplyingSymbolConfiguration:config];
-            [backButton setImage:backSymbolImage forState:UIControlStateNormal];
-            backButton.tintColor = UIColor.whiteColor;
-            
-            [_blurView.contentView addSubview:backButton];
-            [_rootViewController.view addSubview:self.blurView];
-            
-            [NSLayoutConstraint activateConstraints:@[
+                [consoleButton.heightAnchor constraintEqualToConstant:75],
+
+                [fileButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
+                [fileButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor],
+                [fileButton.widthAnchor constraintEqualToConstant:75],
+                [fileButton.heightAnchor constraintEqualToConstant:75],
+
                 [backButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-                [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:45],
+                [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:85],
                 [backButton.widthAnchor constraintEqualToConstant:75],
-                [backButton.heightAnchor constraintEqualToConstant:75]
+                [backButton.heightAnchor constraintEqualToConstant:75],
             ]];
-            
-            UITapGestureRecognizer *longPress = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
-            longPress.numberOfTapsRequired = 1;
-            [self.blurView addGestureRecognizer:longPress];
-            
+
+            UITapGestureRecognizer *blurTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
+            blurTap.numberOfTapsRequired = 1;
+            [self.blurView addGestureRecognizer:blurTap];
+
             [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
                 self.blurView.alpha = 1.0;
             } completion:nil];
@@ -143,9 +126,42 @@ LoggerView *nxloggerview;
     }];
 }
 
+- (UIButton *)createDebuggerButtonWithSymbol:(NSString *)symbolName markColor:(UIColor*)markColor action:(SEL)selector {
+    UIButton *button = [[UIButton alloc] init];
+    button.backgroundColor = UIColor.systemGray3Color;
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    button.layer.cornerRadius = 15;
+    button.layer.borderWidth = 1;
+    
+    if(!markColor)
+        button.layer.borderColor = UIColor.systemGrayColor.CGColor;
+    else
+        button.layer.borderColor = markColor.CGColor;
+
+    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:30 weight:UIImageSymbolWeightRegular];
+    UIImage *symbolImage = [[UIImage systemImageNamed:symbolName] imageByApplyingSymbolConfiguration:config];
+    [button setImage:symbolImage forState:UIControlStateNormal];
+    
+    if(!markColor)
+        button.tintColor = UIColor.whiteColor;
+    else
+        button.tintColor = markColor;
+
+    [button addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];
+
+    return button;
+}
+
 - (void)handleConsoleButton:(UIButton *)sender
 {
     [self.rootViewController presentViewController:nxloggerview animated:YES completion:nil];
+}
+
+- (void)handleFileButton:(UIButton *)sender
+{
+    FileListViewController *fileVC = [[FileListViewController alloc] initWithIsSublink:NO path:NSHomeDirectory()];
+    UINavigationController *fileNav = [[UINavigationController alloc] initWithRootViewController:fileVC];
+    [self.rootViewController presentViewController:fileNav animated:YES completion:nil];
 }
 
 - (void)handleBackButton:(UIButton *)sender

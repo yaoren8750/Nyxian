@@ -257,7 +257,7 @@ class AppProject: Identifiable {
     }
     
     func getTmpPath() -> String {
-        return "\(cachePath)/tmp"
+        return "\(cachePath)/data/tmp"
     }
     
     ///

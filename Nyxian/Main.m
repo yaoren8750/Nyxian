@@ -19,7 +19,7 @@ int main(int argc, char * argv[]) {
         if(appPath) {
             [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"LDEAppPath"];
             debugger_main();
-            invokeAppMain(appPath, [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHomePath"], [[NSUserDefaults standardUserDefaults] stringForKey:@"LDETmpPath"], 0, nil);
+            invokeAppMain(appPath, [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHomePath"], 0, nil);
         } else {
             return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
         }

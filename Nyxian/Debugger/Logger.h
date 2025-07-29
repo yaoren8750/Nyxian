@@ -17,7 +17,7 @@
 
 @end
 
-@interface LoggerTextView : UITextView
+@interface LogTextView : UITextView
 
 @property (nonatomic,strong,readonly) NSPipe *pipe;
 @property (nonatomic,strong,readonly) NSFileHandle *handle;
@@ -26,6 +26,6 @@
 
 @interface LoggerView : UIViewController
 
-@property (nonatomic,strong,readonly) LoggerTextView *loggerText;
+@property (nonatomic,strong,readonly) LogTextView *loggerText;
 
 @end
