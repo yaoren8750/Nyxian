@@ -53,7 +53,14 @@ class SplitScreenDetailViewController: UIViewController {
                     return
                 }
                 
-                oldVC.view.removeConstraints(oldVC.view.constraints)
+                self.view.constraints
+                    .filter { constraint in
+                        return constraint.firstItem as? UIView == oldVC.view || constraint.secondItem as? UIView == oldVC.view
+                    }
+                    .forEach { constraint in
+                        self.view.removeConstraint(constraint)
+                    }
+
                 oldVC.view.removeFromSuperview()
                 oldVC.removeFromParent()
             }
