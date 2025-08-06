@@ -1,9 +1,22 @@
-//
-//  FileList+iPad.swift
-//  Nyxian
-//
-//  Created by SeanIsTethered on 23.07.25.
-//
+/*
+ Copyright (C) 2025 cr4zyengineer
+ Copyright (C) 2025 expo
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
 
 import UIKit
 
@@ -88,10 +101,11 @@ class SplitScreenDetailViewController: UIViewController {
      */
     private let tabBarView = UIView()
     private let stack = UIStackView()
-    
-    func addTab(vc: CodeEditorViewController) {
+    private var tabs: [UIButtonTab] = []
+    func addTab(path: String) {
         let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100),
-                                 vc: vc) { button in
+                                 project: self.project,
+                                 path: path) { button in
             self.childButton = button
             self.childVC = button.vc
         } closeAction: { button in
@@ -193,7 +207,7 @@ class SplitScreenDetailViewController: UIViewController {
         guard let args = notification.object as? [String] else { return }
         if args.count > 1,
            args[0] == "open" {
-            self.addTab(vc: CodeEditorViewController(project: project, path: args[1]))
+            self.addTab(path: args[1])
         } else {
             return
         }
@@ -234,13 +248,17 @@ class SplitScreenDetailViewController: UIViewController {
 }
 
 class UIButtonTab: UIButton {
+    let path: String
     let vc: CodeEditorViewController
     
     init(frame: CGRect,
-         vc: CodeEditorViewController,
+         project: AppProject,
+         path: String,
          openAction: @escaping (UIButtonTab) -> Void,
          closeAction: @escaping (UIButtonTab) -> Void) {
-        self.vc = vc
+        self.path = path
+        self.vc = CodeEditorViewController(project: project, path: path)
+        
         super.init(frame: frame)
         
         self.setTitle(vc.path.URLGet().lastPathComponent, for: .normal)
@@ -304,7 +322,7 @@ class UIButtonTab: UIButton {
         for item in vc.navigationItem.rightBarButtonItems ?? [] {
             if let title = item.title {
                 items.append(UIAction(title: title, image: item.image, handler: { _ in
-                    vc.perform(item.action)
+                    self.vc.perform(item.action)
                 }))
             } else {
                 buttons.append(item)
