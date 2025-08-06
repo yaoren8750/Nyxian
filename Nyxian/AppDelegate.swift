@@ -58,11 +58,17 @@ import UIKit
             label.textAlignment = .center
             label.translatesAutoresizingMaskIntoConstraints = false;
             
-            let reasonLabel: UILabel = UILabel()
+            let reasonLabel: UITextView = UITextView()
+            reasonLabel.isEditable = false
+            reasonLabel.isSelectable = true
+            reasonLabel.isScrollEnabled = true
             reasonLabel.text = appException
-            reasonLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-            reasonLabel.textAlignment = .center
+            reasonLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
             reasonLabel.translatesAutoresizingMaskIntoConstraints = false
+            reasonLabel.backgroundColor = UIColor.systemGray3
+            reasonLabel.layer.borderWidth = 1
+            reasonLabel.layer.borderColor = UIColor.systemGray.cgColor
+            reasonLabel.layer.cornerRadius = 15
             
             let vc: UIViewController = UIViewController()
             vc.view.addSubview(blurView)
@@ -87,10 +93,10 @@ import UIKit
                 label.widthAnchor.constraint(equalTo: blurView.widthAnchor),
                 label.heightAnchor.constraint(equalToConstant: 80),
                 
-                reasonLabel.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
-                reasonLabel.centerYAnchor.constraint(equalTo: blurView.centerYAnchor),
-                reasonLabel.widthAnchor.constraint(equalTo: blurView.widthAnchor),
-                reasonLabel.heightAnchor.constraint(equalToConstant: 80)
+                reasonLabel.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 5),
+                reasonLabel.bottomAnchor.constraint(equalTo: closeButton.topAnchor, constant: -25),
+                reasonLabel.leftAnchor.constraint(equalTo: blurView.leftAnchor, constant: 25),
+                reasonLabel.rightAnchor.constraint(equalTo: blurView.rightAnchor, constant: -25)
             ])
             
             window?.rootViewController = vc
