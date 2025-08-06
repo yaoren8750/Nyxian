@@ -35,6 +35,9 @@ NyxianDebugger *nxdebugger;
  Hooks
  */
 
+extern NSUserDefaults *backupDefaults;
+extern NSString *appPath;
+
 /// Escape `exit()`
 void debugger_exit(void)
 {
@@ -43,6 +46,7 @@ void debugger_exit(void)
 
 /// Escape memory corruption
 void debugger_signal_handler(int sig) {
+    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"App raised signal %d", sig] forKey:@"LDEAppException"];
     debugger_exit();
 }
 

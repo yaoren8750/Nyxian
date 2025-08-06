@@ -28,6 +28,8 @@ import UIKit
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
+        window = UIWindow(frame: UIScreen.main.bounds)
+        
         let tabViewController: UIThemedTabBarController = UIThemedTabBarController()
         
         let contentViewController: ContentViewController = ContentViewController(path: "\(NSHomeDirectory())/Documents/Projects")
@@ -38,13 +40,94 @@ import UIKit
         
         projectsNavigationController.tabBarItem = UITabBarItem(title: "Projects", image: UIImage(systemName: "square.grid.2x2.fill"), tag: 0)
         settingsNavigationController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 1)
-
+        
         tabViewController.viewControllers = [projectsNavigationController, settingsNavigationController]
         
-        window = UIWindow(frame: UIScreen.main.bounds)
-        window?.rootViewController = tabViewController
-        window?.makeKeyAndVisible()
+        if let appException = UserDefaults.standard.string(forKey: "LDEAppException") {
+            UserDefaults.standard.set(nil, forKey: "LDEAppException")
+            
+            let blurEffect: UIBlurEffect = UIBlurEffect(style: .systemMaterial)
+            let blurView: UIVisualEffectView = UIVisualEffectView(effect: blurEffect)
+            blurView.frame = window!.frame
+            blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            blurView.alpha = 1.0
+            
+            let label: UILabel = UILabel()
+            label.text = "Guest App Crashed"
+            label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+            label.textAlignment = .center
+            label.translatesAutoresizingMaskIntoConstraints = false;
+            
+            let reasonLabel: UILabel = UILabel()
+            reasonLabel.text = appException
+            reasonLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+            reasonLabel.textAlignment = .center
+            reasonLabel.translatesAutoresizingMaskIntoConstraints = false
+            
+            let vc: UIViewController = UIViewController()
+            vc.view.addSubview(blurView)
+            
+            let closeButton: UIButton = self.createDebugButton(symbolName: "arrow.right", action: UIAction { _ in
+                self.window?.rootViewController = tabViewController
+                self.window?.makeKeyAndVisible()
+            })
+            
+            blurView.contentView.addSubview(closeButton)
+            blurView.contentView.addSubview(label)
+            blurView.contentView.addSubview(reasonLabel)
+            
+            NSLayoutConstraint.activate([
+                closeButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
+                closeButton.centerYAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -100),
+                closeButton.widthAnchor.constraint(equalToConstant: 75),
+                closeButton.heightAnchor.constraint(equalToConstant: 75),
+                
+                label.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: blurView.topAnchor, constant: 100),
+                label.widthAnchor.constraint(equalTo: blurView.widthAnchor),
+                label.heightAnchor.constraint(equalToConstant: 80),
+                
+                reasonLabel.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
+                reasonLabel.centerYAnchor.constraint(equalTo: blurView.centerYAnchor),
+                reasonLabel.widthAnchor.constraint(equalTo: blurView.widthAnchor),
+                reasonLabel.heightAnchor.constraint(equalToConstant: 80)
+            ])
+            
+            window?.rootViewController = vc
+            window?.makeKeyAndVisible()
+        } else {
+            window?.rootViewController = tabViewController
+            window?.makeKeyAndVisible()
+        }
 
         return true
+    }
+    
+    func createDebugButton(markColor: UIColor? = nil, symbolName: String, action: UIAction) -> UIButton {
+        let button: UIButton = UIButton()
+        button.backgroundColor = UIColor.systemGray3
+        button.translatesAutoresizingMaskIntoConstraints = false;
+        button.layer.cornerRadius = 15;
+        button.layer.borderWidth = 1;
+        
+        if let markColor = markColor {
+            button.layer.borderColor = markColor.cgColor;
+        } else {
+            button.layer.borderColor = UIColor.systemGray.cgColor;
+        }
+
+        let config: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
+        let symbolImage: UIImage? = UIImage(systemName: symbolName, withConfiguration: config)
+        button.setImage(symbolImage, for: .normal)
+        
+        if let markColor = markColor {
+            button.tintColor = markColor
+        } else {
+            button.tintColor = UIColor.white
+        }
+        
+        button.addAction(action, for: .touchUpInside)
+
+        return button
     }
 }
