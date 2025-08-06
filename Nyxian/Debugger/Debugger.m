@@ -127,19 +127,13 @@ void debugger_signal_handler(int sig) {
 
             [NSLayoutConstraint activateConstraints:@[
                 [consoleButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-                [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-85],
-                [consoleButton.widthAnchor constraintEqualToConstant:75],
-                [consoleButton.heightAnchor constraintEqualToConstant:75],
+                [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-45],
 
                 [fileButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-                [fileButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor],
-                [fileButton.widthAnchor constraintEqualToConstant:75],
-                [fileButton.heightAnchor constraintEqualToConstant:75],
+                [fileButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:45],
 
                 [backButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-                [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:85],
-                [backButton.widthAnchor constraintEqualToConstant:75],
-                [backButton.heightAnchor constraintEqualToConstant:75],
+                [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.bottomAnchor constant:-100],
             ]];
 
             UITapGestureRecognizer *blurTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
@@ -187,6 +181,11 @@ void debugger_signal_handler(int sig) {
         button.tintColor = markColor;
 
     [button addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];
+    
+    [NSLayoutConstraint activateConstraints:@[
+        [button.widthAnchor constraintEqualToConstant:75],
+        [button.heightAnchor constraintEqualToConstant:75],
+    ]];
 
     return button;
 }
