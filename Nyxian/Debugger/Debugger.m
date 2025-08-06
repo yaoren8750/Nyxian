@@ -39,15 +39,20 @@ extern NSUserDefaults *backupDefaults;
 extern NSString *appPath;
 
 /// Escape `exit()`
-void debugger_exit(void)
+void debugger_exit(int code)
 {
+    if(code != 0)
+    {
+        [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"App did exit with %d", code] forKey:@"LDEAppException"];
+    }
+    
     restartProcess();
 }
 
 /// Escape memory corruption
 void debugger_signal_handler(int sig) {
     [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"App raised signal %d", sig] forKey:@"LDEAppException"];
-    debugger_exit();
+    debugger_exit(0);
 }
 
 /*
