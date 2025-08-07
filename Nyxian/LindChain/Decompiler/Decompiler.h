@@ -18,19 +18,10 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifdef __cplusplus
+#import <Foundation/Foundation.h>
 
-extern "C" {
+@interface Decompiler : NSObject
 
-#endif
++ (NSString*)getDecompiledCodeBuffer:(UInt64)markAddress;
 
-void updateErrorOfPath(const char* filePath,
-                       const char* content);
-
-void removeErrorOfPath(const char *filePath);
-
-#ifdef __cplusplus
-
-}
-
-#endif
+@end

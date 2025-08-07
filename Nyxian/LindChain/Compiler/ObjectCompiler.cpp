@@ -36,9 +36,6 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Support/TargetSelect.h"
 #include <pthread.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <ErrorHandler.h>
 #include <LogService/LogService.h>
 
 using namespace clang;
