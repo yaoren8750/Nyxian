@@ -76,7 +76,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state, int ignoreDe
         const char *func = symbol_for_address(retAddr);
 
         // Decompile around this return address
-        NSString *disasm = [Decompiler getDecompiledCodeBuffer:(UInt64)retAddr];
+        NSString *disasm = [Decompiler getDecompiledCodeBuffer:(UInt64)retAddr - 4];
 
         stringNS = [stringNS stringByAppendingFormat:@"Exception Raised at %s\n", func];
         stringNS = [stringNS stringByAppendingFormat:@"ASM Exception Trace:\n%@\n", disasm];
@@ -90,7 +90,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state, int ignoreDe
         void *ret = (void *)frame->lr;
         const char *name = symbol_for_address(ret);
         if(strcmp(name, "<unknown>") != 0)
-            stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n\n", name, [Decompiler getDecompiledCodeBuffer:(UInt64)ret]];
+            stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n\n", name, [Decompiler getDecompiledCodeBuffer:(UInt64)ret - 4]];
 
         frame = frame->fp;
         depth++;
