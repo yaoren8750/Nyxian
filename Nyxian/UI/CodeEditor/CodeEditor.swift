@@ -62,11 +62,11 @@ class CodeEditorViewController: UIViewController {
         self.line = line
         self.column = column
         
-        let cachePath = self.project!.getCachePath()
-        
-        self.database = DebugDatabase.getDatabase(ofPath: "\(cachePath)/debug.json")
-        
         if let project = project {
+            let cachePath = self.project!.getCachePath()
+            
+            self.database = DebugDatabase.getDatabase(ofPath: "\(cachePath)/debug.json")
+            
             let suffix = self.path.URLGet().pathExtension
             if suffix == "c" || suffix == "m" || suffix == "cpp" || suffix == "mm" || suffix == "h" {
                 var genericCompilerFlags: [String] = [
@@ -131,17 +131,16 @@ class CodeEditorViewController: UIViewController {
             self.navigationItem.setLeftBarButton(closeButton, animated: true)
         }
         
-        if let theme = currentTheme {
-            theme.fontSize = self.project?.codeEditorConfig.fontSize ?? 10.0
+        let theme: LindDEThemer = currentTheme ?? LindDEThemer()
+        theme.fontSize = self.project?.codeEditorConfig.fontSize ?? 10.0
             
-            self.view.backgroundColor = .systemBackground
-            self.textView.backgroundColor = theme.backgroundColor
-            self.textView.theme = theme
+        self.view.backgroundColor = .systemBackground
+        self.textView.backgroundColor = theme.backgroundColor
+        self.textView.theme = theme
             
-            self.navigationController?.navigationBar.prefersLargeTitles = false
-            self.navigationController?.navigationBar.standardAppearance = currentNavigationBarAppearance
-            self.navigationController?.navigationBar.scrollEdgeAppearance = currentNavigationBarAppearance
-        }
+        self.navigationController?.navigationBar.prefersLargeTitles = false
+        self.navigationController?.navigationBar.standardAppearance = currentNavigationBarAppearance
+        self.navigationController?.navigationBar.scrollEdgeAppearance = currentNavigationBarAppearance
         
         self.textView.showLineNumbers = self.project?.codeEditorConfig.showLine ?? true
         self.textView.showSpaces = self.project?.codeEditorConfig.showSpaces ?? true
