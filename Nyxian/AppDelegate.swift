@@ -73,20 +73,35 @@ import UIKit
             let vc: UIViewController = UIViewController()
             vc.view.addSubview(blurView)
             
-            let closeButton: UIButton = self.createDebugButton(symbolName: "arrow.right", action: UIAction { _ in
+            let closeButton: UIButton = self.createDebugButton(symbolName: "xmark", action: UIAction { _ in
                 self.window?.rootViewController = tabViewController
                 self.window?.makeKeyAndVisible()
             })
             
+            let replayButton: UIButton = self.createDebugButton(symbolName: "memories", action: UIAction { _ in
+                if let projectSelected: String = UserDefaults.standard.string(forKey: "LDELastProjectSelected") {
+                    let appProject: AppProject = AppProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
+                    UserDefaults.standard.set(appProject.getBundlePath(), forKey: "LDEAppPath")
+                    UserDefaults.standard.set(appProject.getHomePath(), forKey: "LDEHomePath")
+                    restartProcess()
+                }
+            })
+            
             blurView.contentView.addSubview(closeButton)
+            blurView.contentView.addSubview(replayButton)
             blurView.contentView.addSubview(label)
             blurView.contentView.addSubview(reasonLabel)
             
             NSLayoutConstraint.activate([
-                closeButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
+                closeButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor, constant: -45),
                 closeButton.centerYAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -100),
                 closeButton.widthAnchor.constraint(equalToConstant: 75),
                 closeButton.heightAnchor.constraint(equalToConstant: 75),
+                
+                replayButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor, constant: 45),
+                replayButton.centerYAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -100),
+                replayButton.widthAnchor.constraint(equalToConstant: 75),
+                replayButton.heightAnchor.constraint(equalToConstant: 75),
                 
                 label.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
                 label.centerYAnchor.constraint(equalTo: blurView.topAnchor, constant: 100),
