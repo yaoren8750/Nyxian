@@ -39,10 +39,6 @@ NyxianDebugger *nxdebugger;
 /*
  Hooks
  */
-
-extern NSUserDefaults *backupDefaults;
-extern NSString *appPath;
-
 #define MAX_TRACE_DEPTH 64
 
 typedef struct stack_frame {

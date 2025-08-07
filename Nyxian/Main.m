@@ -26,10 +26,9 @@
 /*
  Entry point
  */
-NSString *appPath;
 int main(int argc, char * argv[]) {
     @autoreleasepool {
-        appPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEAppPath"];
+        NSString *appPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEAppPath"];
         if(appPath) {
             [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"LDEAppPath"];
             debugger_main();
