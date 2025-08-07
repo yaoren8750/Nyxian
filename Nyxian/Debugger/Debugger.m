@@ -309,6 +309,7 @@ void debugger_main(void)
     signal(SIGSEGV, debugger_signal_handler);
     signal(SIGABRT, debugger_signal_handler);
     signal(SIGBUS, debugger_signal_handler);
+    signal(SIGTRAP, debugger_signal_handler);
     
     /// Debugger init
     nxdebugger = [[NyxianDebugger alloc] init];
