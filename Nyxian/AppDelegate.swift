@@ -129,7 +129,7 @@ import UIKit
         if let markColor = markColor {
             button.tintColor = markColor
         } else {
-            button.tintColor = UIColor.white
+            button.tintColor = UIColor.label
         }
         
         button.addAction(action, for: .touchUpInside)

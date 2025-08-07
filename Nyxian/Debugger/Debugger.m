@@ -247,7 +247,7 @@ void debugger_signal_handler(int sig) {
     [button setImage:symbolImage forState:UIControlStateNormal];
     
     if(!markColor)
-        button.tintColor = UIColor.whiteColor;
+        button.tintColor = UIColor.labelColor;
     else
         button.tintColor = markColor;
 
