@@ -32,6 +32,7 @@
 #include <mach/thread_act.h>
 #include <mach/thread_state.h>
 #import <Decompiler/Decompiler.h>
+#include "Utils.h"
 
 UINavigationController *nxloggerview;
 NyxianDebugger *nxdebugger;
@@ -56,8 +57,8 @@ const char* symbol_for_address(void *addr) {
     return "<unknown>";
 }
 
-NSString* stack_trace_from_thread_state(arm_thread_state64_t state, int ignoreDepth) {
-    void *pc = (void *)state.__pc;
+NSString* stack_trace_from_thread_state(arm_thread_state64_t state,
+                                        int ignoreDepth) {
     void *fp = (void *)state.__fp;
     
     stack_frame_t *frame = (stack_frame_t *)fp;

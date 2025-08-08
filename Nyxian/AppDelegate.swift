@@ -93,14 +93,14 @@ import UIKit
             blurView.contentView.addSubview(reasonLabel)
             
             NSLayoutConstraint.activate([
-                closeButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor, constant: -45),
                 closeButton.centerYAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -100),
-                closeButton.widthAnchor.constraint(equalToConstant: 75),
+                closeButton.leftAnchor.constraint(equalTo: blurView.leftAnchor, constant: 25),
+                closeButton.rightAnchor.constraint(equalTo: blurView.centerXAnchor, constant: -12.5),
                 closeButton.heightAnchor.constraint(equalToConstant: 75),
                 
-                replayButton.centerXAnchor.constraint(equalTo: blurView.centerXAnchor, constant: 45),
                 replayButton.centerYAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -100),
-                replayButton.widthAnchor.constraint(equalToConstant: 75),
+                replayButton.rightAnchor.constraint(equalTo: blurView.rightAnchor, constant: -25),
+                replayButton.leftAnchor.constraint(equalTo: blurView.centerXAnchor, constant: 12.5),
                 replayButton.heightAnchor.constraint(equalToConstant: 75),
                 
                 label.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
