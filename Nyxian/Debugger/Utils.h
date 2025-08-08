@@ -1,17 +1,39 @@
-//
-//  Utils.h
-//  Nyxian
-//
-//  Created by SeanIsTethered on 08.08.25.
-//
+/*
+ Copyright (C) 2025 cr4zyengineer
+ Copyright (C) 2025 expo
 
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <dlfcn.h>
 #include <mach/mach.h>
 #include <mach/exc.h>
 #include <mach/exception.h>
 #include <mach/exception_types.h>
 #include <mach/thread_act.h>
 #include <mach/thread_state.h>
+#import <Foundation/Foundation.h>
+#import <Decompiler/Decompiler.h>
 
 kern_return_t suspend_self_task(void);
 kern_return_t resume_self_task(void);
+
+const char *symbol_for_address(void *addr);
+NSString* stack_trace_from_thread_state(arm_thread_state64_t state,
+                                        int ignoreDepth);

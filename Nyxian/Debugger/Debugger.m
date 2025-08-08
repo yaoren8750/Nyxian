@@ -40,61 +40,6 @@ NyxianDebugger *nxdebugger;
 /*
  Hooks
  */
-#define MAX_TRACE_DEPTH 64
-
-typedef struct stack_frame {
-    struct stack_frame *fp;
-    uintptr_t lr;
-} stack_frame_t;
-
-const char* symbol_for_address(void *addr) {
-    static char buffer[256];
-    Dl_info info;
-    if (dladdr(addr, &info) && info.dli_sname) {
-        snprintf(buffer, sizeof(buffer), "%s", info.dli_sname);
-        return buffer;
-    }
-    return "<unknown>";
-}
-
-NSString* stack_trace_from_thread_state(arm_thread_state64_t state,
-                                        int ignoreDepth) {
-    void *fp = (void *)state.__fp;
-    
-    stack_frame_t *frame = (stack_frame_t *)fp;
-    
-    for(int depth = 0; depth < ignoreDepth; depth++)
-        frame = frame->fp;
-
-    NSString *stringNS = @"Call Trace\n";
-    
-    if (frame && frame->lr) {
-        void *retAddr = (void *)frame->lr;
-        const char *func = symbol_for_address(retAddr);
-
-        // Decompile around this return address
-        NSString *disasm = [Decompiler getDecompiledCodeBuffer:(UInt64)retAddr - 4];
-
-        stringNS = [stringNS stringByAppendingFormat:@"Exception Raised at %s\n", func];
-        stringNS = [stringNS stringByAppendingFormat:@"ASM Exception Trace:\n%@\n", disasm];
-    }
-    
-    frame = frame->fp;
-
-    int depth = 0;
-
-    while (frame && depth < MAX_TRACE_DEPTH) {
-        void *ret = (void *)frame->lr;
-        const char *name = symbol_for_address(ret);
-        if(strcmp(name, "<unknown>") != 0)
-            stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n\n", name, [Decompiler getDecompiledCodeBuffer:(UInt64)ret - 4]];
-
-        frame = frame->fp;
-        depth++;
-    }
-    
-    return stringNS;
-}
 
 /// Escape `exit()`
 void debugger_store_exception(NSString *exception)
@@ -312,5 +257,5 @@ void debugger_main(void)
     nxdebugger = [[NyxianDebugger alloc] init];
     nxloggerview = [[UINavigationController alloc] initWithRootViewController:[[LoggerView alloc] init]];
     
-    printf("[*] Nyxian Debugger 1.0\n");
+    printf("[*] Nyxian Debugger\n");
 }
