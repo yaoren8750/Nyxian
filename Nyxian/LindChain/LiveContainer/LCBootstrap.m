@@ -20,32 +20,8 @@
 
 static int (*appMain)(int, char**);
 NSUserDefaults *lcUserDefaults;
-NSUserDefaults *lcSharedDefaults;
-NSString *lcAppGroupPath;
-NSString* lcAppUrlScheme;
 NSBundle* lcMainBundle;
 NSString* lcGuestAppId;
-
-@implementation NSUserDefaults(LiveContainer)
-+ (instancetype)lcUserDefaults {
-    return lcUserDefaults;
-}
-+ (instancetype)lcSharedDefaults {
-    return lcSharedDefaults;
-}
-+ (NSString *)lcAppGroupPath {
-    return lcAppGroupPath;
-}
-+ (NSString *)lcAppUrlScheme {
-    return lcAppUrlScheme;
-}
-+ (NSBundle *)lcMainBundle {
-    return lcMainBundle;
-}
-+ (NSString*)lcGuestAppId {
-    return lcGuestAppId;
-}
-@end
 
 static uint64_t rnd64(uint64_t v, uint64_t r) {
     r--;

@@ -14,6 +14,8 @@
 @import Foundation;
 @import MachO;
 
+extern NSBundle *lcMainBundle;
+
 typedef uint32_t dyld_platform_t;
 
 typedef struct {
@@ -125,7 +127,7 @@ void hideLiveContainerImageCallback(const struct mach_header* header, intptr_t v
 }
 
 void* getCachedSymbol(NSString* symbolName, mach_header_u* header) {
-    NSDictionary* symbolOffsetDict = [NSUserDefaults.lcSharedDefaults objectForKey:@"symbolOffsetCache"][symbolName];
+    NSMutableDictionary *symbolOffsetDict = NULL;
     if(!symbolOffsetDict) {
         return NULL;
     }
@@ -141,7 +143,7 @@ void* getCachedSymbol(NSString* symbolName, mach_header_u* header) {
 }
 
 void saveCachedSymbol(NSString* symbolName, mach_header_u* header, uint64_t offset) {
-    NSMutableDictionary* allSymbolOffsetDict = [[NSUserDefaults.lcSharedDefaults objectForKey:@"symbolOffsetCache"] mutableCopy];
+    NSMutableDictionary* allSymbolOffsetDict = NULL;
     if(!allSymbolOffsetDict) {
         allSymbolOffsetDict = [[NSMutableDictionary alloc] init];
     }
@@ -149,7 +151,7 @@ void saveCachedSymbol(NSString* symbolName, mach_header_u* header, uint64_t offs
         @"uuid": [NSData dataWithBytes:LCGetMachOUUID(header) length:16],
         @"offset": @(offset)
     };
-    [NSUserDefaults.lcSharedDefaults setObject:allSymbolOffsetDict forKey:@"symbolOffsetCache"];
+    //[lcSharedDefaults setObject:allSymbolOffsetDict forKey:@"symbolOffsetCache"];
 }
 
 bool hook_dyld_program_sdk_at_least(void* dyldApiInstancePtr, dyld_build_version_t version) {
@@ -329,7 +331,7 @@ void DyldHooksInit(bool hideLiveContainer, uint32_t spoofSDKVersion) {
         }
     }
     
-    lcMainBundlePath = NSUserDefaults.lcMainBundle.bundlePath.fileSystemRepresentation;
+    lcMainBundlePath = lcMainBundle.bundlePath.fileSystemRepresentation;
     orig_dyld_get_image_header = _dyld_get_image_header;
     
     // hook dlopen and dlsym to solve RTLD_MAIN_ONLY, hook other functions to hide LiveContainer itself
