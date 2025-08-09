@@ -2,7 +2,7 @@
 
 @interface LCSharedUtils : NSObject
 
-+ (NSString*) teamIdentifier;
+//+ (NSString*) teamIdentifier;
 //+ (NSString *)appGroupID;
 //+ (NSURL*) appGroupPath;
 //+ (NSString *)certificatePassword;

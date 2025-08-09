@@ -3,13 +3,16 @@
 #import <objc/runtime.h>
 
 @implementation NSString(LiveContainer)
+
 - (NSString *)lc_realpath {
     // stringByResolvingSymlinksInPath does not fully resolve symlink, and some apps will crash without /private prefix
     char result[PATH_MAX];
     realpath(self.fileSystemRepresentation, result);
     return [NSString stringWithUTF8String:result];
 }
+
 @end
+
 @implementation NSBundle(LiveContainer)
 // Built-in initWith* will strip out the /private prefix, which could crash certain apps
 // This initializer replicates +[NSBundle mainBundle] to solve this issue

@@ -17,15 +17,16 @@ OSStatus (*orig_SecItemCopyMatching)(CFDictionaryRef query, CFTypeRef *result) =
 OSStatus (*orig_SecItemUpdate)(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) = SecItemUpdate;
 OSStatus (*orig_SecItemDelete)(CFDictionaryRef query) = SecItemDelete;
 
-NSString* accessGroup = nil;
-NSString* containerId = nil;
-
 OSStatus new_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
 {
     NSMutableDictionary *attributesCopy = ((__bridge NSDictionary *)attributes).mutableCopy;
-    attributesCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
-    // for keychain deletion in LCUI
-    attributesCopy[@"alis"] = containerId;
+    NSString *accessGroup = attributesCopy[(__bridge id)kSecAttrAccessGroup];
+    if(!accessGroup)
+        accessGroup = [[NSBundle mainBundle] bundleIdentifier];
+    NSString *account = attributesCopy[(__bridge id)kSecAttrAccount];
+    [attributesCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+    
+    attributesCopy[(__bridge id)kSecAttrAccount] = [NSString stringWithFormat:@"%@@%@", accessGroup, account];
     
     OSStatus status = orig_SecItemAdd((__bridge CFDictionaryRef)attributesCopy, result);
     if(status == errSecParam) {
@@ -38,27 +39,65 @@ OSStatus new_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
 OSStatus new_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
 {
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
-    queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
-    OSStatus status = orig_SecItemCopyMatching((__bridge CFDictionaryRef)queryCopy, result);
-    if(status == errSecParam) {
-        // if this search don't support kSecAttrAccessGroup, we just use the original search
-        return orig_SecItemCopyMatching(query, result);
+
+    NSString *accessGroup = queryCopy[(__bridge id)kSecAttrAccessGroup];
+    NSString *account = queryCopy[(__bridge id)kSecAttrAccount];
+
+    if (!accessGroup) {
+        accessGroup = [[NSBundle mainBundle] bundleIdentifier];
     }
-    
+
+    if (account) {
+        // Remove original keys to avoid conflicts
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccount];
+
+        // Create combined account string
+        queryCopy[(__bridge id)kSecAttrAccount] = [NSString stringWithFormat:@"%@@%@", accessGroup, account];
+    }
+
+    // Try original call with modified query
+    OSStatus status = orig_SecItemCopyMatching((__bridge CFDictionaryRef)queryCopy, result);
+    if (status == errSecParam) {
+        // Fallback: try with original query unmodified
+        status = orig_SecItemCopyMatching(query, result);
+    }
+
     return status;
 }
 
 OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
 {
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
-    queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
-    
     NSMutableDictionary *attrCopy = ((__bridge NSDictionary *)attributesToUpdate).mutableCopy;
-    attrCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
+    
+    NSString *accessGroup = queryCopy[(__bridge id)kSecAttrAccessGroup];
+    if (!accessGroup) {
+        accessGroup = [[NSBundle mainBundle] bundleIdentifier];
+    }
+    
+    NSString *queryAccount = queryCopy[(__bridge id)kSecAttrAccount];
+    if (queryAccount) {
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccount];
+        queryCopy[(__bridge id)kSecAttrAccount] = [NSString stringWithFormat:@"%@@%@", accessGroup, queryAccount];
+    } else {
+        // Even if no account in query, remove kSecAttrAccessGroup to avoid conflicts
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+    }
 
+    NSString *attrAccount = attrCopy[(__bridge id)kSecAttrAccount];
+    if (attrAccount) {
+        [attrCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+        [attrCopy removeObjectForKey:(__bridge id)kSecAttrAccount];
+        attrCopy[(__bridge id)kSecAttrAccount] = [NSString stringWithFormat:@"%@@%@", accessGroup, attrAccount];
+    } else {
+        // Remove access group if present in attributes too
+        [attrCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+    }
+    
     OSStatus status = orig_SecItemUpdate((__bridge CFDictionaryRef)queryCopy, (__bridge CFDictionaryRef)attrCopy);
-
-    if(status == errSecParam) {
+    if (status == errSecParam) {
         return orig_SecItemUpdate(query, attributesToUpdate);
     }
     
@@ -68,43 +107,35 @@ OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUp
 OSStatus new_SecItemDelete(CFDictionaryRef query)
 {
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
-    queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
-    OSStatus status = orig_SecItemDelete((__bridge CFDictionaryRef)queryCopy);
-    if(status == errSecParam) {
-        return new_SecItemDelete(query);
+
+    NSString *accessGroup = queryCopy[(__bridge id)kSecAttrAccessGroup];
+    if (!accessGroup) {
+        accessGroup = [[NSBundle mainBundle] bundleIdentifier];
     }
-    
+
+    NSString *account = queryCopy[(__bridge id)kSecAttrAccount];
+    if (account) {
+        // Remove original keys to avoid conflicts
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccount];
+        // Combine accessGroup and account like in other functions
+        queryCopy[(__bridge id)kSecAttrAccount] = [NSString stringWithFormat:@"%@@%@", accessGroup, account];
+    } else {
+        // Remove access group if no account to avoid param errors
+        [queryCopy removeObjectForKey:(__bridge id)kSecAttrAccessGroup];
+    }
+
+    OSStatus status = orig_SecItemDelete((__bridge CFDictionaryRef)queryCopy);
+    if (status == errSecParam) {
+        // fallback to original query unmodified
+        status = orig_SecItemDelete(query);
+    }
+
     return status;
 }
 
 void SecItemGuestHooksInit(void)
 {
-    containerId = [NSString stringWithUTF8String:getenv("HOME")].lastPathComponent;
-    NSString* containerInfoPath = [[NSString stringWithUTF8String:getenv("HOME")] stringByAppendingPathComponent:@"LCContainerInfo.plist"];
-    NSDictionary* infoDict = [NSDictionary dictionaryWithContentsOfFile:containerInfoPath];
-    int keychainGroupId = [infoDict[@"keychainGroupId"] intValue];
-    NSString* groupId = [LCSharedUtils teamIdentifier];
-    if(keychainGroupId == 0) {
-        accessGroup = [NSString stringWithFormat:@"%@.com.kdt.livecontainer.shared", groupId];
-    } else {
-        accessGroup = [NSString stringWithFormat:@"%@.com.kdt.livecontainer.shared.%d", groupId, keychainGroupId];
-    }
-    
-    // check if the keychain access group is available
-    NSDictionary *query = @{
-        (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrAccount: @"NonExistentKey",
-        (__bridge id)kSecAttrService: @"NonExistentService",
-        (__bridge id)kSecAttrAccessGroup: accessGroup,
-        (__bridge id)kSecReturnData: @NO
-    };
-    
-    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, NULL);
-    if(status == errSecMissingEntitlement) {
-        NSLog(@"[LC] failed to access keychain access group %@", accessGroup);
-        return;
-    }
-    
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemAdd, new_SecItemAdd, nil);
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemCopyMatching, new_SecItemCopyMatching, nil);
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemUpdate, new_SecItemUpdate, nil);
