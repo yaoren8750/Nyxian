@@ -52,7 +52,7 @@ void debugger_store_exception(NSString *exception)
     mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
     thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
     
-    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"Exception\n%@\n\nRegister\npc: 0x%llx\nsp: 0x%llx\n\n%@", exception, state.__pc, state.__sp, stack_trace_from_thread_state(state,6)] forKey:@"LDEAppException"];
+    [lcUserDefaults setObject:[NSString stringWithFormat:@"Exception\n%@\n\nRegister\npc: 0x%llx\nsp: 0x%llx\n\n%@", exception, state.__pc, state.__sp, stack_trace_from_thread_state(state,6)] forKey:@"LDEAppException"];
 }
 
 void debugger_exit(int code)

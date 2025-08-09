@@ -45,6 +45,7 @@ void NUDGuestHooksInit(void)
         uint64_t offset = (uint64_t)((void*)_CFPrefsCurrentAppIdentifierCache - (void*)coreFoundationHeader);
         saveCachedSymbol(@"__CFPrefsCurrentAppIdentifierCache", coreFoundationHeader, offset);
     }
+    lcUserDefaults = [[NSUserDefaults alloc] init];
     [lcUserDefaults _setIdentifier:(__bridge NSString*)CFStringCreateCopy(nil, *_CFPrefsCurrentAppIdentifierCache)];
     *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)lcGuestAppId;
     
