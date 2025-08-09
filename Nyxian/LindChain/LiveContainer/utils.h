@@ -6,9 +6,6 @@
 const char **_CFGetProgname(void);
 const char **_CFGetProcessPath(void);
 int _NSGetExecutablePath(char* buf, uint32_t* bufsize);
-int csops_audittoken(pid_t pid, unsigned int ops, void * useraddr, size_t usersize, audit_token_t * token);
-#define CS_DEBUGGED 0x10000000
-int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
 void os_unfair_recursive_lock_lock_with_options(void* lock, uint32_t options);
 void os_unfair_recursive_lock_unlock(void* lock);
 bool os_unfair_recursive_lock_trylock(void* lock);
@@ -26,15 +23,12 @@ uint64_t aarch64_emulate_adrp_add(uint32_t instruction, uint32_t addInstruction,
 uint64_t aarch64_emulate_adrp_ldr(uint32_t instruction, uint32_t ldrInstruction, uint64_t pc);
 
 @interface NSUserDefaults(LiveContainer)
+
 + (instancetype)lcUserDefaults;
 + (instancetype)lcSharedDefaults;
 + (NSString *)lcAppGroupPath;
 + (NSString *)lcAppUrlScheme;
 + (NSBundle *)lcMainBundle;
-//+ (NSDictionary *)guestAppInfo;
-+ (bool)isLiveProcess;
-+ (bool)isSharedApp;
 + (NSString*)lcGuestAppId;
-+ (bool)isSideStore;
-+ (bool)sideStoreExist;
+
 @end

@@ -22,6 +22,7 @@
 
 @interface Decompiler : NSObject
 
++ (NSString*)decompileBinary:(uint8_t*)code withSize:(size_t)size;
 + (NSString*)getDecompiledCodeBuffer:(UInt64)markAddress;
 
 @end

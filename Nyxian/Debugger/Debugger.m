@@ -37,6 +37,9 @@
 UINavigationController *nxloggerview;
 NyxianDebugger *nxdebugger;
 
+extern NSUserDefaults *lcUserDefaults;
+extern NSUserDefaults *lcSharedDefaults;
+
 /*
  Hooks
  */

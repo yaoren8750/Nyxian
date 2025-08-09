@@ -20,7 +20,8 @@ OSStatus (*orig_SecItemDelete)(CFDictionaryRef query) = SecItemDelete;
 NSString* accessGroup = nil;
 NSString* containerId = nil;
 
-OSStatus new_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
+OSStatus new_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
+{
     NSMutableDictionary *attributesCopy = ((__bridge NSDictionary *)attributes).mutableCopy;
     attributesCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
     // for keychain deletion in LCUI
@@ -34,7 +35,8 @@ OSStatus new_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
     return status;
 }
 
-OSStatus new_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
+OSStatus new_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
+{
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
     queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
     OSStatus status = orig_SecItemCopyMatching((__bridge CFDictionaryRef)queryCopy, result);
@@ -46,7 +48,8 @@ OSStatus new_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
     return status;
 }
 
-OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
+OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
+{
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
     queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
     
@@ -62,7 +65,8 @@ OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUp
     return status;
 }
 
-OSStatus new_SecItemDelete(CFDictionaryRef query){
+OSStatus new_SecItemDelete(CFDictionaryRef query)
+{
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
     queryCopy[(__bridge id)kSecAttrAccessGroup] = accessGroup;
     OSStatus status = orig_SecItemDelete((__bridge CFDictionaryRef)queryCopy);
@@ -73,8 +77,8 @@ OSStatus new_SecItemDelete(CFDictionaryRef query){
     return status;
 }
 
-void SecItemGuestHooksInit(void)  {
-
+void SecItemGuestHooksInit(void)
+{
     containerId = [NSString stringWithUTF8String:getenv("HOME")].lastPathComponent;
     NSString* containerInfoPath = [[NSString stringWithUTF8String:getenv("HOME")] stringByAppendingPathComponent:@"LCContainerInfo.plist"];
     NSDictionary* infoDict = [NSDictionary dictionaryWithContentsOfFile:containerInfoPath];

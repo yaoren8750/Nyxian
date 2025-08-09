@@ -24,12 +24,7 @@ NSUserDefaults *lcSharedDefaults;
 NSString *lcAppGroupPath;
 NSString* lcAppUrlScheme;
 NSBundle* lcMainBundle;
-//NSDictionary* guestAppInfo;
 NSString* lcGuestAppId;
-bool isLiveProcess = false;
-bool isSharedBundle = false;
-bool isSideStore = false;
-bool sideStoreExist = false;
 
 @implementation NSUserDefaults(LiveContainer)
 + (instancetype)lcUserDefaults {
@@ -47,23 +42,6 @@ bool sideStoreExist = false;
 + (NSBundle *)lcMainBundle {
     return lcMainBundle;
 }
-/*+ (NSDictionary *)guestAppInfo {
-    return guestAppInfo;
-}*/
-
-+ (bool)isLiveProcess {
-    return isLiveProcess;
-}
-+ (bool)isSharedApp {
-    return isSharedBundle;
-}
-+ (bool)isSideStore {
-    return isSideStore;
-}
-+ (bool)sideStoreExist {
-    return sideStoreExist;
-}
-
 + (NSString*)lcGuestAppId {
     return lcGuestAppId;
 }
@@ -200,6 +178,7 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     // Overwrite NSUserDefaults
     lcGuestAppId = appBundle.bundleIdentifier;
     
+    setenv("LC_HOME_PATH", getenv("HOME"), 1);
     setenv("CFFIXED_USER_HOME", homePath.UTF8String, 1);
     setenv("HOME", homePath.UTF8String, 1);
     setenv("TMPDIR", [[NSString stringWithFormat:@"%@/Tmp", homePath] UTF8String], 1);
@@ -236,12 +215,10 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     
     // hook NSUserDefault before running libraries' initializers
     // TODO: Fix NUDGuestHooksInit(); to comply to Nyxian needs
-    //NUDGuestHooksInit();
-    if(!isSideStore) {
-        SecItemGuestHooksInit();
-        NSFMGuestHooksInit();
-        initDead10ccFix();
-    }
+    NUDGuestHooksInit();
+    SecItemGuestHooksInit();
+    NSFMGuestHooksInit();
+    
     // ignore setting handler from guest app
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSSetUncaughtExceptionHandler, hook_do_nothing, nil);
     

@@ -37,6 +37,19 @@ CFTypeRef SecTaskCopyValueForEntitlement(void *task, CFStringRef key, CFErrorRef
 @end
 
 @interface CFPrefsPlistSource2 : NSObject
--(id)hook_initWithDomain:(CFStringRef)arg1 user:(CFStringRef)arg2 byHost:(bool)arg3 containerPath:(CFStringRef)arg4 containingPreferences:(id)arg5 ;
+
+-(id)hook_initWithDomain:(CFStringRef)arg1 user:(CFStringRef)arg2 byHost:(bool)arg3 containerPath:(CFStringRef)arg4 containingPreferences:(id)arg5;
+
 @end
 
+@interface CFPrefsPlistSource : NSObject
+
+-(id)initWithDomain:(CFStringRef)domain user:(CFStringRef)user byHost:(bool)host containerPath:(CFStringRef)containerPath containingPreferences:(id)arg5;
+
+@end
+
+@interface NSFileManager(LiveContainerHooks)
+
+- ( NSURL * _Nullable)hook_containerURLForSecurityApplicationGroupIdentifier:(NSString * _Nonnull)groupIdentifier;
+
+@end

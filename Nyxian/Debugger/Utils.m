@@ -130,7 +130,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state,
         frame = frame->fp;
     
     if (frame && frame->lr) {
-        stringNS = [stringNS stringByAppendingFormat:@"Exception Raised at %s%@\n", symbol_for_address((void *)frame->lr),
+        stringNS = [stringNS stringByAppendingFormat:@"Exception Raised at %s\n%@\n\n", symbol_for_address((void *)frame->lr),
                     [Decompiler getDecompiledCodeBuffer:(UInt64)frame->lr - 4]];
     }
     

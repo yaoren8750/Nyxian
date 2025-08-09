@@ -25,6 +25,15 @@ std::vector<std::string> disassembleARM64iOS(uint8_t* code, size_t codeSize);
 
 @implementation Decompiler
 
++ (NSString*)decompileBinary:(uint8_t*)code withSize:(size_t)size
+{
+    std::vector<std::string> array = disassembleARM64iOS(code, size);
+    NSMutableString *result = [NSMutableString string];
+    for (size_t i = 0; i < array.size(); i++)
+        [result appendFormat:@"%@\n", [NSString stringWithUTF8String:array[i].c_str()]];
+    return result;
+}
+
 + (NSString*)getDecompiledCodeBuffer:(UInt64)markAddress
 {
     uint8_t *codeBuffer = ((uint8_t*)markAddress) - 32;

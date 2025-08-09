@@ -137,44 +137,6 @@ extern NSBundle *lcMainBundle;
     return infoPath;
 }
 
-+ (BOOL)isLCSchemeInUse:(NSString*)lc {
-    NSURL* infoPath = [self containerLockPath];
-    NSMutableDictionary *info = [NSMutableDictionary dictionaryWithContentsOfFile:infoPath.path];
-    if (!info) {
-        return NO;
-    }
-    
-    uint64_t val57 = [info[lc] longLongValue];
-    audit_token_t token;
-    token.val[5] = val57 >> 32;
-    token.val[7] = val57 & 0xffffffff;
-    
-    errno = 0;
-    csops_audittoken(token.val[5], 0, NULL, 0, &token);
-    return errno != ESRCH;
-}
-
-+ (NSString*)getContainerUsingLCSchemeWithFolderName:(NSString*)folderName {
-    NSURL* infoPath = [self containerLockPath];
-    NSMutableDictionary *info = [NSMutableDictionary dictionaryWithContentsOfFile:infoPath.path];
-    if (!info) {
-        return nil;
-    }
-    
-    NSDictionary* appUsageInfo = info[folderName];
-    if (!appUsageInfo) {
-        return nil;
-    }
-    uint64_t val57 = [appUsageInfo[@"auditToken57"] longLongValue];
-    audit_token_t token;
-    token.val[5] = val57 >> 32;
-    token.val[7] = val57 & 0xffffffff;
-    
-    errno = 0;
-    csops_audittoken(token.val[5], 0, NULL, 0, &token);
-    return errno==ESRCH ? nil : appUsageInfo[@"runningLC"];
-}
-
 + (void)setContainerUsingByLC:(NSString*)lc folderName:(NSString*)folderName {
     NSURL* infoPath = [self containerLockPath];
     
@@ -197,9 +159,7 @@ extern NSBundle *lcMainBundle;
         @"auditToken57": @(val57)
     };
     
-    if(!NSUserDefaults.isLiveProcess) {
-        info[lc] = @(val57);
-    }
+    info[lc] = @(val57);
 
     [info writeToFile:infoPath.path atomically:YES];
 }
