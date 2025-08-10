@@ -10,7 +10,7 @@ bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** or
 
 void NUDGuestHooksInit(void);
 void SecItemGuestHooksInit(void);
-void DyldHooksInit(bool hideLiveContainer, uint32_t spoofSDKVersion);
+void DyldHooksInit(void);
 void NSFMGuestHooksInit(void);
 
 @interface NSBundle(LiveContainer)
@@ -22,8 +22,6 @@ extern uint32_t appMainImageIndex;
 extern void* appExecutableHandle;
 extern bool tweakLoaderLoaded;
 void* getGuestAppHeader(void);
-void* getCachedSymbol(NSString* symbolName, struct mach_header_64* header);
-void saveCachedSymbol(NSString* symbolName, struct mach_header_64* header, uint64_t offset);
 void* dlopenBypassingLock(const char *path, int mode);
 
 static void hook_do_nothing(void) {}

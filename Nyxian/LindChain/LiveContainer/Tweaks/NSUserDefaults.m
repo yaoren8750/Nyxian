@@ -1,9 +1,22 @@
-//
-//  NSUserDefaults.m
-//  LiveContainer
-//
-//  Created by s s on 2024/11/29.
-//
+/*
+ Copyright (C) 2025 cr4zyengineer
+ Copyright (C) 2025 expo
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #import "FoundationPrivate.h"
 #import "LCMachOUtils.h"
@@ -34,17 +47,10 @@ void NUDGuestHooksInit(void)
     [sources removeObjectForKey:@"C/A//B/L"];
     [sources removeObjectForKey:@"C/C//*/L"];
     
-    // replace _CFPrefsCurrentAppIdentifierCache so kCFPreferencesCurrentApplication refers to the guest app
     const char* coreFoundationPath = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
     mach_header_u* coreFoundationHeader = LCGetLoadedImageHeader(2, coreFoundationPath);
     
-    CFStringRef* _CFPrefsCurrentAppIdentifierCache = getCachedSymbol(@"__CFPrefsCurrentAppIdentifierCache", coreFoundationHeader);
-    if(!_CFPrefsCurrentAppIdentifierCache)
-    {
-        _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
-        uint64_t offset = (uint64_t)((void*)_CFPrefsCurrentAppIdentifierCache - (void*)coreFoundationHeader);
-        saveCachedSymbol(@"__CFPrefsCurrentAppIdentifierCache", coreFoundationHeader, offset);
-    }
+    CFStringRef* _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
     lcUserDefaults = [[NSUserDefaults alloc] init];
     [lcUserDefaults _setIdentifier:(__bridge NSString*)CFStringCreateCopy(nil, *_CFPrefsCurrentAppIdentifierCache)];
     *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)lcGuestAppId;
@@ -53,7 +59,6 @@ void NUDGuestHooksInit(void)
     [newStandardUserDefaults _setIdentifier:lcGuestAppId];
     NSUserDefaults.standardUserDefaults = newStandardUserDefaults;
     
-    // Create Library/Preferences folder in app's data folder in case it does not exist
     NSFileManager* fm = NSFileManager.defaultManager;
     NSURL* libraryPath = [fm URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].lastObject;
     NSURL* preferenceFolderPath = [libraryPath URLByAppendingPathComponent:@"Preferences"];

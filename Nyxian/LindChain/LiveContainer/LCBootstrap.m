@@ -198,7 +198,7 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     // ignore setting handler from guest app
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSSetUncaughtExceptionHandler, hook_do_nothing, nil);
     
-    DyldHooksInit(false , 0);
+    DyldHooksInit();
     
     // Preload executable to bypass RT_NOLOAD
     appMainImageIndex = _dyld_image_count();
@@ -278,7 +278,7 @@ NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
         method_setImplementation(class_getInstanceMethod(swiftNSProcessInfo, selector), class_getMethodImplementation(NSProcessInfo.class, selector));
     }
     
-    DyldHooksInit(false , 0);
+    DyldHooksInit();
     
     // Preload executable to bypass RT_NOLOAD
     appMainImageIndex = _dyld_image_count();
