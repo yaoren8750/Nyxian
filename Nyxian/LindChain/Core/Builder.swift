@@ -144,29 +144,21 @@ class Builder {
         let group: DispatchGroup = DispatchGroup()
         let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads)
         
-        // Now compile
-        for _ in self.dirtySourceFiles {
-            group.enter()
-        }
-        
         for filePath in self.dirtySourceFiles {
+            group.enter()
             threader.spawn {
-                let outputFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())))"
-                
-                var issues: NSMutableArray? = NSMutableArray()
+                var issues: NSMutableArray?
                 
                 if self.compiler.compileObject(
                     filePath,
-                    outputFile: outputFilePath,
+                    outputFile: "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())))",
                     platformTriple: self.project.projectConfig.platformTriple,
                     issues: &issues
                 ) != 0 {
                     threader.lockdown()
                 }
                 
-                if let nsArray = issues as? [Synitem] {
-                    self.database.setFileDebug(ofPath: filePath, synItems: nsArray)
-                }
+                self.database.setFileDebug(ofPath: filePath, synItems: (issues as? [Synitem]) ?? [])
                 
                 XCodeButton.incrementProgress(progress: pstep)
             } completion: {
@@ -210,8 +202,7 @@ class Builder {
             ["Resources","Config"]
         ) + self.project.projectConfig.linker_flags
         
-        let array: NSArray = ldArgs as NSArray
-        if LinkMachO(array.mutableCopy() as? NSMutableArray) != 0 {
+        if LinkMachO((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
             throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:"Linking object files together to a executable failed"])
         }
     }
