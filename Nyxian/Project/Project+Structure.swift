@@ -38,10 +38,7 @@ Project Structure:
 class ProjectConfig: PlistHelper {
     enum ProjectType: Int {
         case App = 1
-        case Staticlib = 2
-        case Dylib = 3
-        case Binary = 4
-        case LiveApp = 5
+        case Binary = 2
     }
     
     var executable: String { self.readKeySecure(key: "LDEExecutable", defaultValue: "Unknown") }
@@ -187,12 +184,6 @@ class AppProject: Identifiable {
                         return AppCodeTemplate.AppCodeTemplateScheme.objc
                     case .Binary:
                         return AppCodeTemplate.AppCodeTemplateScheme.binary
-                    case .Dylib:
-                        return AppCodeTemplate.AppCodeTemplateScheme.objc
-                    case .LiveApp:
-                        return AppCodeTemplate.AppCodeTemplateScheme.objc
-                    case .Staticlib:
-                        return AppCodeTemplate.AppCodeTemplateScheme.objc
                     }
                 }()
             )
@@ -253,8 +244,7 @@ class AppProject: Identifiable {
     
     func getMachOPath() -> String {
         if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
-            self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
-            self.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
+            self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
             return "\(cachePath)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
         } else {
             return "\(cachePath)/\(projectConfig.executable)"

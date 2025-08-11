@@ -116,8 +116,7 @@ class Builder {
     
     func prepare() throws {
         if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
-            project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
-            project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
+            project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
             let bundlePath: String = self.project.getBundlePath()
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
@@ -221,16 +220,11 @@ class Builder {
         let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
         LCAppInfo(bundlePath: project.getBundlePath())?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.getMachOPath() as NSString).utf8String) {
-                if self.project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-                    appInfo?.save()
-                    UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
-                    UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
-                    restartProcess()
-                } else if self.project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
-                            self.project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
-                    appInfo?.save()
-                    invokeBinaryMain(appInfo?.bundlePath(), 0, nil)
-                }
+                appInfo?.save()
+                UserDefaults.standard.set(self.project.projectConfig.projectType, forKey: "LDEProjectType")
+                UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
+                UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
+                restartProcess()
             } else {
                 print(meow ?? "Unk")
             }
