@@ -26,16 +26,12 @@
 
 @interface ObjCSwizzler : NSObject
 
-+ (void)replaceOriginalAction:(SEL)originalAction
-                      ofClass:(Class)class
-                   withAction:(SEL)replacementAction;
-+ (void)replaceOriginalAction:(SEL)originalAction
-                      ofClass:(Class)class
-                   withAction:(SEL)replacementAction
-                      ofClass:(Class)replacementClass;
-+ (void)replaceOriginalAction:(SEL)originalAction
-                      ofClass:(Class)class
-                   withSymbol:(void*)symbol;
++ (void)replaceInstanceAction:(SEL)originalAction ofClass:(Class)class withAction:(SEL)replacementAction;
++ (void)replaceClassAction:(SEL)originalAction ofClass:(Class)class withAction:(SEL)replacementAction;
++ (void)replaceInstanceAction:(SEL)originalAction ofClass:(Class)class withAction:(SEL)replacementAction ofClass:(Class)replacementClass;
++ (void)replaceClassAction:(SEL)originalAction ofClass:(Class)class withAction:(SEL)replacementAction ofClass:(Class)replacementClass;
++ (void)replaceInstanceAction:(SEL)originalAction ofClass:(Class)class withSymbol:(void*)symbol;
++ (void)replaceClassAction:(SEL)originalAction ofClass:(Class)class withSymbol:(void*)symbol;
 
 @end
 

@@ -37,7 +37,7 @@ void NUDGuestHooksInit(void)
     appContainerPath = [NSString stringWithUTF8String:getenv("HOME")];
     appContainerURL = [NSURL URLWithString:appContainerPath];
 
-    [ObjCSwizzler replaceOriginalAction:@selector(initWithDomain:user:byHost:containerPath:containingPreferences:)
+    [ObjCSwizzler replaceInstanceAction:@selector(initWithDomain:user:byHost:containerPath:containingPreferences:)
                                 ofClass:NSClassFromString(@"CFPrefsPlistSource")
                              withAction:@selector(hook_initWithDomain:user:byHost:containerPath:containingPreferences:)
                                 ofClass:CFPrefsPlistSource2.class];

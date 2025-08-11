@@ -34,6 +34,11 @@ void os_thread_self_restrict_tpro_to_ro(void);
     static return_type (*orig_##func)signature; \
     static return_type hook_##func signature
 
-#define DO_HOOK_GLOBAL(func) \
+#define DO_HOOK(func, type) \
     orig_##func = func; \
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, func, hook_##func, nil);
+    litehook_rebind_symbol(type, func, hook_##func, nil);
+
+#define DO_HOOK_GLOBAL(func) \
+    DO_HOOK(func,LITEHOOK_REBIND_GLOBAL)
+/*    orig_##func = func; \
+    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, func, hook_##func, nil);*/

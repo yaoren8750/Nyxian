@@ -22,14 +22,21 @@
 
 @implementation ObjCSwizzler
 
-+ (void)replaceOriginalAction:(SEL)originalAction
++ (void)replaceInstanceAction:(SEL)originalAction
                       ofClass:(Class)class
                    withAction:(SEL)replacementAction
 {
     method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, replacementAction));
 }
 
-+ (void)replaceOriginalAction:(SEL)originalAction
++ (void)replaceClassAction:(SEL)originalAction
+                   ofClass:(Class)class
+                withAction:(SEL)replacementAction
+{
+    method_exchangeImplementations(class_getClassMethod(class, originalAction), class_getClassMethod(class, replacementAction));
+}
+
++ (void)replaceInstanceAction:(SEL)originalAction
                       ofClass:(Class)class
                    withAction:(SEL)replacementAction
                       ofClass:(Class)replacementClass
@@ -39,11 +46,29 @@
     method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, replacementAction));
 }
 
-+ (void)replaceOriginalAction:(SEL)originalAction
++ (void)replaceClassAction:(SEL)originalAction
+                   ofClass:(Class)class
+                withAction:(SEL)replacementAction
+                   ofClass:(Class)replacementClass
+{
+    Method replacementMethod = class_getClassMethod(replacementClass, replacementAction);
+    class_addMethod(class, replacementAction, method_getImplementation(replacementMethod), method_getTypeEncoding(replacementMethod));
+    method_exchangeImplementations(class_getClassMethod(class, originalAction), class_getClassMethod(class, replacementAction));
+}
+
++ (void)replaceInstanceAction:(SEL)originalAction
                       ofClass:(Class)class
                    withSymbol:(void*)symbol
 {
     Method targetMethod = class_getInstanceMethod(class, originalAction);
+    method_setImplementation(targetMethod, (IMP)symbol);
+}
+
++ (void)replaceClassAction:(SEL)originalAction
+                   ofClass:(Class)class
+                withSymbol:(void*)symbol
+{
+    Method targetMethod = class_getClassMethod(class, originalAction);
     method_setImplementation(targetMethod, (IMP)symbol);
 }
 
