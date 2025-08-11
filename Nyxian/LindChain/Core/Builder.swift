@@ -219,32 +219,22 @@ class Builder {
     
     func install() throws {
         let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
-            appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
-                if result {
-                    appInfo?.save()                    
+        LCAppInfo(bundlePath: project.getBundlePath())?.patchExecAndSignIfNeed(completionHandler: { result, meow in
+            if result, checkCodeSignature((self.project.getMachOPath() as NSString).utf8String) {
+                if self.project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+                    appInfo?.save()
                     UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
                     UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
                     restartProcess()
-                } else {
-                    print(meow ?? "Unk")
-                }
-            }, progressHandler: { progress in
-                print(progress!.fractionCompleted)
-            }, forceSign: false)
-        } else if project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
-                    project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
-            appInfo?.patchExecAndSignIfNeed(completionHandler: { result, meow in
-                if result {
+                } else if self.project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue ||
+                            self.project.projectConfig.projectType == ProjectConfig.ProjectType.LiveApp.rawValue {
                     appInfo?.save()
                     invokeBinaryMain(appInfo?.bundlePath(), 0, nil)
-                } else {
-                    print(meow ?? "Unk")
                 }
-            }, progressHandler: { progress in
-                print(progress!.fractionCompleted)
-            }, forceSign: false)
-        }
+            } else {
+                print(meow ?? "Unk")
+            }
+        }, progressHandler: { progress in }, forceSign: false)
     }
     
     ///

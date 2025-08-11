@@ -1,41 +1,24 @@
-@import Darwin;
-@import Foundation;
-@import MachO;
+#import <Foundation/Foundation.h>
+#import <sys/stat.h>
+#import <libgen.h>
 #import "litehook_internal.h"
 #import "LCUtils.h"
 
-static uint32_t rnd32(uint32_t v, uint32_t r) {
+static uint32_t rnd32(uint32_t v,
+                      uint32_t r)
+{
     r--;
     return (v + r) & ~r;
 }
 
-struct dyld_all_image_infos *_alt_dyld_get_all_image_infos(void) {
-    static struct dyld_all_image_infos *result;
-    if (result) {
-        return result;
-    }
-    struct task_dyld_info dyld_info;
-    mach_vm_address_t image_infos;
-    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
-    kern_return_t ret;
-    ret = task_info(mach_task_self_,
-                    TASK_DYLD_INFO,
-                    (task_info_t)&dyld_info,
-                    &count);
-    if (ret != KERN_SUCCESS) {
-        return NULL;
-    }
-    image_infos = dyld_info.all_image_info_addr;
-    result = (struct dyld_all_image_infos *)image_infos;
-    return result;
-}
-
-static void insertDylibCommand(uint32_t cmd, const char *path, struct mach_header_64 *header) {
+static void insertDylibCommand(uint32_t cmd,
+                               const char *path,
+                               struct mach_header_64 *header)
+{
     const char *name = cmd==LC_ID_DYLIB ? basename((char *)path) : path;
     struct dylib_command *dylib;
     size_t cmdsize = sizeof(struct dylib_command) + rnd32((uint32_t)strlen(name) + 1, 8);
-    if (cmd == LC_ID_DYLIB) {
-        // Make this the first load command on the list (like dylibify does), or some UE3 games may break
+    if(cmd == LC_ID_DYLIB) {
         dylib = (struct dylib_command *)(sizeof(struct mach_header_64) + (uintptr_t)header);
         memmove((void *)((uintptr_t)dylib + cmdsize), (void *)dylib, header->sizeofcmds);
         bzero(dylib, cmdsize);
@@ -43,7 +26,7 @@ static void insertDylibCommand(uint32_t cmd, const char *path, struct mach_heade
         dylib = (struct dylib_command *)(sizeof(struct mach_header_64) + (void *)header+header->sizeofcmds);
     }
     dylib->cmd = cmd;
-    dylib->cmdsize = cmdsize;
+    dylib->cmdsize = (uint32_t)cmdsize;
     dylib->dylib.name.offset = sizeof(struct dylib_command);
     dylib->dylib.compatibility_version = 0x10000;
     dylib->dylib.current_version = 0x10000;
@@ -51,21 +34,6 @@ static void insertDylibCommand(uint32_t cmd, const char *path, struct mach_heade
     strncpy((void *)dylib + dylib->dylib.name.offset, name, strlen(name));
     header->ncmds++;
     header->sizeofcmds += dylib->cmdsize;
-}
-
-static void insertRPathCommand(const char *path, struct mach_header_64 *header) {
-    struct rpath_command *rpath = (struct rpath_command *)(sizeof(struct mach_header_64) + (void *)header+header->sizeofcmds);
-    rpath->cmd = LC_RPATH;
-    rpath->cmdsize = sizeof(struct rpath_command) + rnd32((uint32_t)strlen(path) + 1, 8);
-    rpath->path.offset = sizeof(struct rpath_command);
-    strncpy((void *)rpath + rpath->path.offset, path, strlen(path));
-    header->ncmds++;
-    header->sizeofcmds += rpath->cmdsize;
-}
-
-void LCPatchAddRPath(const char *path, struct mach_header_64 *header) {
-    insertRPathCommand("@executable_path/../../Tweaks", header);
-    insertRPathCommand("@loader_path", header);
 }
 
 int LCPatchExecSlice(const char *path, struct mach_header_64 *header, bool doInject) {
@@ -271,40 +239,6 @@ void LCChangeMachOUUID(struct mach_header_64 *header) {
     }
 }
 
-const uint8_t* LCGetMachOUUID(struct mach_header_64 *header) {
-    if (!header) return NULL;
-
-    // Find load commands
-    const struct load_command* command = (const struct load_command*)(header + 1);
-
-    // Iterate through load commands to find LC_SYMTAB
-    for(uint32_t i = 0; i < header->ncmds; i++) {
-        if(command->cmd == LC_UUID) {
-            return ((const struct uuid_command*)command)->uuid;
-        }
-        command = (const struct load_command*)((void *)command + command->cmdsize);
-    }
-    return NULL;
-}
-
-uint64_t LCFindSymbolOffset(const char *basePath, const char *symbol) {
-#if !TARGET_OS_SIMULATOR
-    const char *path = basePath;
-#else
-    char path[PATH_MAX];
-    const char *rootPath = getenv("DYLD_ROOT_PATH") ?: "";
-    snprintf(path, sizeof(path), "%s%s", rootPath, basePath);
-#endif
-    __block uint64_t offset = 0;
-    LCParseMachO(path, true, ^(const char *path, struct mach_header_64 *header, int fd, void *filePtr) {
-        if(header->cputype != CPU_TYPE_ARM64) return;
-        void *result = litehook_find_symbol(header, symbol);
-        offset = (uint64_t)result - (uint64_t)header;
-    });
-    NSCAssert(offset != 0, @"Failed to find symbol %s in %s", symbol, path);
-    return offset;
-}
-
 mach_header_u *LCGetLoadedImageHeader(int i0, const char* name) {
     for(uint32_t i = i0; i < _dyld_image_count(); ++i) {
         const char* imgName = _dyld_get_image_name(i);
@@ -314,36 +248,6 @@ mach_header_u *LCGetLoadedImageHeader(int i0, const char* name) {
         }
     }
     return NULL;
-}
-
-#if TARGET_OS_SIMULATOR
-// Make it init first on simulator to find dyld_sim
-__attribute__((constructor))
-#endif
-void *getDyldBase(void) {
-    void *dyldBase = (void *)_alt_dyld_get_all_image_infos()->dyldImageLoadAddress;
-#if !TARGET_OS_SIMULATOR
-    return dyldBase;
-#else
-    static void *dyldSimBase = NULL;
-    if(!dyldSimBase) {
-        __block size_t textSize = 0;
-        LCParseMachO("/usr/lib/dyld", true, ^(const char *path, struct mach_header_64 *header, int fd, void *filePtr) {
-            if(header->cputype != CPU_TYPE_ARM64) return;
-            getsegmentdata(header, SEG_TEXT, &textSize);
-        });
-        NSArray *callStack = [NSThread callStackReturnAddresses];
-        for(NSNumber *addr in callStack.reverseObjectEnumerator) {
-            // the first addresss outside of dyld's text is dyld_sim
-            uintptr_t addrValue = addr.unsignedLongLongValue;
-            if(addrValue < (uintptr_t)dyldBase || addrValue >= (uintptr_t)dyldBase + textSize) {
-                dyldSimBase = (void *)(addrValue & ~PAGE_MASK);
-                break;
-            }
-        }
-    }
-    return dyldSimBase;
-#endif
 }
 
 struct code_signature_command {
@@ -480,31 +384,4 @@ NSString* getLCEntitlementXML(void) {
         ans = getEntitlementXML(header, 0);
     });
     return ans;
-}
-
-void Dylibify(NSString* ExecutablePath) {
-    const char* path = (const char*)ExecutablePath.UTF8String;
-    int fd = open(path, O_RDWR, (mode_t)0600);
-    struct stat s;
-    fstat(fd, &s);
-    void *map = mmap(NULL, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    uint32_t magic = *(uint32_t *)map;
-    if (magic == FAT_CIGAM) {
-        // Find compatible slice
-        struct fat_header *header = (struct fat_header *)map;
-        struct fat_arch *arch = (struct fat_arch *)(map + sizeof(struct fat_header));
-        for (int i = 0; i < OSSwapInt32(header->nfat_arch); i++) {
-            if (OSSwapInt32(arch->cputype) == CPU_TYPE_ARM64) {
-                LCPatchExecSlice(path, (struct mach_header_64 *)(map + OSSwapInt32(arch->offset)), false);
-            }
-            arch = (struct fat_arch *)((void *)arch + sizeof(struct fat_arch));
-        }
-    } else if (magic == MH_MAGIC_64) {
-        LCPatchExecSlice(path, (struct mach_header_64 *)map, false);
-    } else {
-        printf("Error: 32-bit app is not supported\n");
-    }
-    msync(map, s.st_size, MS_SYNC);
-    munmap(map, s.st_size);
-    close(fd);
 }

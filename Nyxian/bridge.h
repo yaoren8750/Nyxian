@@ -28,8 +28,8 @@
 #import <LiveContainer/LCAppInfo.h>
 #import <LiveContainer/LCUtils.h>
 #import <LiveContainer/ZSign/zsigner.h>
+#import <LiveContainer/LCMachOUtils.h>
 
-void Dylibify(NSString* ExecutablePath);
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);
 void debugger_main(void);
