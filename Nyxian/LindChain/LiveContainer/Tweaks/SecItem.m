@@ -22,11 +22,6 @@
 #import <Security/Security.h>
 #import <litehook/src/litehook.h>
 
-static OSStatus (*orig_SecItemAdd)(CFDictionaryRef attributes, CFTypeRef *result) = SecItemAdd;
-static OSStatus (*orig_SecItemCopyMatching)(CFDictionaryRef query, CFTypeRef *result) = SecItemCopyMatching;
-static OSStatus (*orig_SecItemUpdate)(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) = SecItemUpdate;
-static OSStatus (*orig_SecItemDelete)(CFDictionaryRef query) = SecItemDelete;
-
 NSMutableDictionary *SecItemPrepare(CFDictionaryRef query)
 {
     NSMutableDictionary *queryCopy = ((__bridge NSDictionary *)query).mutableCopy;
@@ -46,30 +41,30 @@ NSMutableDictionary *SecItemPrepare(CFDictionaryRef query)
     return queryCopy;
 }
 
-OSStatus new_SecItemAdd(CFDictionaryRef query, CFTypeRef *result)
+DEFINE_HOOK(SecItemAdd, OSStatus, (CFDictionaryRef query, CFTypeRef *result))
 {
     return orig_SecItemAdd((__bridge CFDictionaryRef)SecItemPrepare(query), result);
 }
 
-OSStatus new_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
+DEFINE_HOOK(SecItemCopyMatching, OSStatus, (CFDictionaryRef query, CFTypeRef *result))
 {
     return orig_SecItemCopyMatching((__bridge CFDictionaryRef)SecItemPrepare(query), result);
 }
 
-OSStatus new_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
+DEFINE_HOOK(SecItemUpdate, OSStatus, (CFDictionaryRef query, CFDictionaryRef attributesToUpdate))
 {
     return orig_SecItemUpdate((__bridge CFDictionaryRef)SecItemPrepare(query), (__bridge CFDictionaryRef)SecItemPrepare(attributesToUpdate));
 }
 
-OSStatus new_SecItemDelete(CFDictionaryRef query)
+DEFINE_HOOK(SecItemDelete, OSStatus, (CFDictionaryRef query))
 {
     return orig_SecItemDelete((__bridge CFDictionaryRef)SecItemPrepare(query));
 }
 
 void SecItemGuestHooksInit(void)
 {
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemAdd, new_SecItemAdd, nil);
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemCopyMatching, new_SecItemCopyMatching, nil);
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemUpdate, new_SecItemUpdate, nil);
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, SecItemDelete, new_SecItemDelete, nil);
+    DO_HOOK_GLOBAL(SecItemAdd)
+    DO_HOOK_GLOBAL(SecItemCopyMatching)
+    DO_HOOK_GLOBAL(SecItemUpdate)
+    DO_HOOK_GLOBAL(SecItemDelete)
 }
