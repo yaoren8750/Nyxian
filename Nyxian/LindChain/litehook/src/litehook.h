@@ -29,3 +29,11 @@ void litehook_rebind_symbol(const mach_header_u *targetHeader, void *replacee, v
 bool os_tpro_is_supported(void);
 void os_thread_self_restrict_tpro_to_rw(void);
 void os_thread_self_restrict_tpro_to_ro(void);
+
+#define DEFINE_HOOK(func, return_type, signature) \
+    static return_type (*orig_##func)signature; \
+    static return_type hook_##func signature
+
+#define DO_HOOK_GLOBAL(func) \
+    orig_##func = func; \
+    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, func, hook_##func, nil);

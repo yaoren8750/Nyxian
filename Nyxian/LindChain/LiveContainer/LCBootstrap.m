@@ -190,7 +190,6 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     }
     
     // hook NSUserDefault before running libraries' initializers
-    // TODO: Fix NUDGuestHooksInit(); to comply to Nyxian needs
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
