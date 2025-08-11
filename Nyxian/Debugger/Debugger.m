@@ -54,20 +54,17 @@ void debugger_store_exception(NSString *exception)
     [lcUserDefaults setObject:[NSString stringWithFormat:@"Exception\n%@\n\nRegister\npc: 0x%llx\nsp: 0x%llx\n\n%@", exception, state.__pc, state.__sp, stack_trace_from_thread_state(state,6)] forKey:@"LDEAppException"];
 }
 
-void debugger_exit(int code)
+DEFINE_HOOK(exit, void, (int code))
 {
     if(code != 0)
-    {
         debugger_store_exception([NSString stringWithFormat:@"App did exit with %d", code]);
-    }
-    
     restartProcess();
 }
 
 /// Escape memory corruption
 void debugger_signal_handler(int sig) {
     debugger_store_exception([NSString stringWithFormat:@"App raised signal %d", sig]);
-    debugger_exit(0);
+    hook_exit(0);
 }
 
 /*
@@ -249,7 +246,7 @@ void debugger_signal_handler(int sig) {
 void debugger_main(void)
 {
     /// Escape the death
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, exit, debugger_exit, nil);
+    DO_HOOK_GLOBAL(exit);
     signal(SIGSEGV, debugger_signal_handler);
     signal(SIGABRT, debugger_signal_handler);
     signal(SIGBUS, debugger_signal_handler);

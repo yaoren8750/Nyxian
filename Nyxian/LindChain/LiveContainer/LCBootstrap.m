@@ -18,10 +18,9 @@
 #include <mach-o/ldsyms.h>
 #import <LogService/LogService.h>
 
-static int (*appMain)(int, char**);
 NSUserDefaults *lcUserDefaults;
-NSBundle* lcMainBundle;
-NSString* lcGuestAppId;
+NSBundle *lcMainBundle;
+NSBundle *guestMainBundle;
 
 static uint64_t rnd64(uint64_t v, uint64_t r) {
     r--;
@@ -53,6 +52,8 @@ void overwriteMainNSBundle(NSBundle *newBundle) {
     // iOS 16: x19 is _MergedGlobals
     // iOS 17: x19 is _MergedGlobals+4
 
+    lcMainBundle = [NSBundle mainBundle];
+    
     NSString *oldPath = NSBundle.mainBundle.executablePath;
     uint32_t *mainBundleImpl = (uint32_t *)method_getImplementation(class_getClassMethod(NSBundle.class, @selector(mainBundle)));
     for (int i = 0; i < 20; i++) {
@@ -74,6 +75,19 @@ void overwriteMainNSBundle(NSBundle *newBundle) {
     }
 
     assert(![NSBundle.mainBundle.executablePath isEqualToString:oldPath]);
+    
+    // Overwriting the process information from previous main bundle
+    NSMutableArray<NSString *> *objcArgv = NSProcessInfo.processInfo.arguments.mutableCopy;
+    objcArgv[0] = guestMainBundle.executablePath;
+    [NSProcessInfo.processInfo performSelector:@selector(setArguments:) withObject:objcArgv];
+    NSProcessInfo.processInfo.processName = guestMainBundle.infoDictionary[@"CFBundleExecutable"];
+    *_CFGetProgname() = NSProcessInfo.processInfo.processName.UTF8String;
+    Class swiftNSProcessInfo = NSClassFromString(@"_NSSwiftProcessInfo");
+    if(swiftNSProcessInfo) {
+        // Swizzle the arguments method to return the ObjC arguments
+        SEL selector = @selector(arguments);
+        method_setImplementation(class_getInstanceMethod(swiftNSProcessInfo, selector), class_getMethodImplementation(NSProcessInfo.class, selector));
+    }
 }
 
 int hook__NSGetExecutablePath_overwriteExecPath(char*** dyldApiInstancePtr, char* newPath, uint32_t* bufsize) {
@@ -133,196 +147,56 @@ static void *getAppEntryPoint(void *handle) {
 }
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]) {
-    NSString *appError = nil;
-    NSFileManager *fm = NSFileManager.defaultManager;
-    
-    NSBundle *appBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
-    
-    if(!appBundle) {
+    // Getting guestMainBundle
+    guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
+    if(!guestMainBundle)
         return @"App not found";
-    }
+    else if(!guestMainBundle.executablePath)
+        return @"App's executable path not found. Please try force re-signing or reinstalling this app.";
 
-    // Locate dyld image name address
-    const char **path = _CFGetProcessPath();
-    const char *oldPath = *path;
+    // Setup directories
+    NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData", @"Tmp"];
+    for (NSString *dir in dirList)
+        [[NSFileManager defaultManager] createDirectoryAtPath:[homePath stringByAppendingPathComponent:dir] withIntermediateDirectories:YES attributes:nil error:nil];
     
-    // Overwrite @executable_path
-    const char *appExecPath = appBundle.executablePath.fileSystemRepresentation;
-    *path = appExecPath;
-    overwriteExecPath(appExecPath);
-    
-    // Overwrite NSUserDefaults
-    lcGuestAppId = appBundle.bundleIdentifier;
-    
+    // Setup environment variables
     setenv("LC_HOME_PATH", getenv("HOME"), 1);
     setenv("CFFIXED_USER_HOME", homePath.UTF8String, 1);
     setenv("HOME", homePath.UTF8String, 1);
     setenv("TMPDIR", [[NSString stringWithFormat:@"%@/Tmp", homePath] UTF8String], 1);
-
-    // Setup directories
-    NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData", @"Tmp"];
-    for (NSString *dir in dirList) {
-        NSString *dirPath = [homePath stringByAppendingPathComponent:dir];
-        [fm createDirectoryAtPath:dirPath withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    // Preload executable to bypass RT_NOLOAD
+    appMainImageIndex = _dyld_image_count();
+    void *appHandle = dlopenBypassingLock(guestMainBundle.executablePath.fileSystemRepresentation, RTLD_LAZY|RTLD_GLOBAL|RTLD_FIRST);
+    appExecutableHandle = appHandle;
+    const char *dlerr = dlerror();
+    
+    if (!appHandle || (uint64_t)appHandle > 0xf00000000000) {
+        if (dlerr)
+            return @(dlerr);
+        return @"dlopen: an unknown error occurred";
     }
     
-    // Overwrite NSBundle
-    overwriteMainNSBundle(appBundle);
-
-    // Overwrite CFBundle
+    // Before execution setup
+    // TODO: Hook NSExecption handler thingy again
+    overwriteExecPath(guestMainBundle.executablePath.fileSystemRepresentation);
+    overwriteMainNSBundle(guestMainBundle);
     overwriteMainCFBundle();
-
-    // Overwrite executable info
-    if(!appBundle.executablePath) {
-        return @"App's executable path not found. Please try force re-signing or reinstalling this app.";
-    }
-
-    NSMutableArray<NSString *> *objcArgv = NSProcessInfo.processInfo.arguments.mutableCopy;
-    objcArgv[0] = appBundle.executablePath;
-    [NSProcessInfo.processInfo performSelector:@selector(setArguments:) withObject:objcArgv];
-    NSProcessInfo.processInfo.processName = appBundle.infoDictionary[@"CFBundleExecutable"];
-    *_CFGetProgname() = NSProcessInfo.processInfo.processName.UTF8String;
-    Class swiftNSProcessInfo = NSClassFromString(@"_NSSwiftProcessInfo");
-    if(swiftNSProcessInfo) {
-        // Swizzle the arguments method to return the ObjC arguments
-        SEL selector = @selector(arguments);
-        method_setImplementation(class_getInstanceMethod(swiftNSProcessInfo, selector), class_getMethodImplementation(NSProcessInfo.class, selector));
-    }
-    
-    // hook NSUserDefault before running libraries' initializers
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
-    
-    // ignore setting handler from guest app
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSSetUncaughtExceptionHandler, hook_do_nothing, nil);
-    
     DyldHooksInit();
-    
-    // Preload executable to bypass RT_NOLOAD
-    appMainImageIndex = _dyld_image_count();
-    void *appHandle = dlopenBypassingLock(appExecPath, RTLD_LAZY|RTLD_GLOBAL|RTLD_FIRST);
-    appExecutableHandle = appHandle;
-    const char *dlerr = dlerror();
-    
-    if (!appHandle || (uint64_t)appHandle > 0xf00000000000) {
-        
-        if (dlerr) {
-            appError = @(dlerr);
-        } else {
-            appError = @"dlopen: an unknown error occurred";
-        }
-        NSLog(@"[LCBootstrap] %@", appError);
-        *path = oldPath;
-        return appError;
-    }
 
     // Find main()
-    appMain = getAppEntryPoint(appHandle);
-    if (!appMain) {
-        appError = @"Could not find the main entry point";
-        NSLog(@"[LCBootstrap] %@", appError);
-        *path = oldPath;
-        return appError;
-    }
+    int (*appMain)(int, char**) = getAppEntryPoint(appHandle);
+    if (!appMain)
+        return @"Could not find the main entry point";
 
-    // Go!
-    NSLog(@"[LCBootstrap] jumping to main %p", appMain);
-    int ret;
-    
-    //‚argv[0] = (char *)appExecPath;
-    ret = appMain(argc, argv);
-
-    return [NSString stringWithFormat:@"App returned from its main function with code %d.", ret];
-}
-
-void signal_handler(int sig) {
-    if (sig == SIGSEGV) {
-        ls_printf("Caught SIGSEGV (possible EXC_BAD_ACCESS)\n");
-    } else if (sig == SIGBUS) {
-        ls_printf("Caught SIGBUS (alignment error or EXC_BAD_ACCESS)\n");
-    }
+    return [NSString stringWithFormat:@"App returned from its main function with code %d.", appMain(argc, argv)];
 }
 
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]) {
-    NSString *appError = nil;
-    NSBundle *appBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
-    
-    if(!appBundle) {
-        return @"App not found";
-    }
-
-    // Locate dyld image name address
-    const char **path = _CFGetProcessPath();
-    const char *oldPath = *path;
-    
-    // Overwrite @executable_path
-    const char *appExecPath = appBundle.executablePath.fileSystemRepresentation;
-    *path = appExecPath;
-
-    // Overwrite executable info
-    if(!appBundle.executablePath) {
-        return @"App's executable path not found. Please try force re-signing or reinstalling this app.";
-    }
-
-    NSMutableArray<NSString *> *objcArgv = NSProcessInfo.processInfo.arguments.mutableCopy;
-    objcArgv[0] = appBundle.executablePath;
-    [NSProcessInfo.processInfo performSelector:@selector(setArguments:) withObject:objcArgv];
-    NSProcessInfo.processInfo.processName = appBundle.infoDictionary[@"CFBundleExecutable"];
-    *_CFGetProgname() = NSProcessInfo.processInfo.processName.UTF8String;
-    Class swiftNSProcessInfo = NSClassFromString(@"_NSSwiftProcessInfo");
-    if(swiftNSProcessInfo) {
-        // Swizzle the arguments method to return the ObjC arguments
-        SEL selector = @selector(arguments);
-        method_setImplementation(class_getInstanceMethod(swiftNSProcessInfo, selector), class_getMethodImplementation(NSProcessInfo.class, selector));
-    }
-    
-    DyldHooksInit();
-    
-    // Preload executable to bypass RT_NOLOAD
-    appMainImageIndex = _dyld_image_count();
-    void *appHandle = dlopenBypassingLock(appExecPath, RTLD_LAZY|RTLD_GLOBAL|RTLD_FIRST);
-    appExecutableHandle = appHandle;
-    const char *dlerr = dlerror();
-    
-    if (!appHandle || (uint64_t)appHandle > 0xf00000000000) {
-        
-        if (dlerr) {
-            appError = @(dlerr);
-        } else {
-            appError = @"dlopen: an unknown error occurred";
-        }
-        NSLog(@"[LCBootstrap] %@", appError);
-        *path = oldPath;
-        return appError;
-    }
-
-    // Find main()
-    appMain = getAppEntryPoint(appHandle);
-    if (!appMain) {
-        appError = @"Could not find the main entry point";
-        NSLog(@"[LCBootstrap] %@", appError);
-        *path = oldPath;
-        return appError;
-    }
-
-    // Go!
-    NSLog(@"[LCBootstrap] jumping to main %p", appMain);
-    int ret;
-    
-    // Escape fault
-    signal(SIGSEGV, signal_handler);
-    signal(SIGBUS, signal_handler);
-    
-    ret = appMain(argc, argv);
-    
-    // Stop escaping fault
-    signal(SIGSEGV, SIG_IGN);
-    signal(SIGBUS, SIG_IGN);
-    
-    dlclose(appHandle);
-
-    return [NSString stringWithFormat:@"App returned from its main function with code %d.", ret];
+    return @"No!";
 }
 
 static void exceptionHandler(NSException *exception) {

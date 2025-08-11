@@ -43,7 +43,7 @@
                       ofClass:(Class)class
                    withSymbol:(void*)symbol
 {
-    Method targetMethod = class_getClassMethod(class, originalAction);
+    Method targetMethod = class_getInstanceMethod(class, originalAction);
     method_setImplementation(targetMethod, (IMP)symbol);
 }
 

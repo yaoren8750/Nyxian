@@ -21,16 +21,17 @@
 #import <Foundation/Foundation.h>
 #import <Private/LSApplicationWorkspace.h>
 
+extern NSBundle* lcMainBundle;
+
 void restartProcess(void)
 {
+    NSBundle *targetBundle = lcMainBundle ? lcMainBundle : [NSBundle mainBundle];
+    
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             while(YES)
-            {
-                // FIXME: Fix it in case someone uses a other bundleID
-                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.cr4zy.nyxian"];
-            }
+                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:[targetBundle bundleIdentifier]];
         });
         
         usleep(1000);

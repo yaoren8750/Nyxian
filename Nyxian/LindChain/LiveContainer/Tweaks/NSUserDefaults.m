@@ -27,7 +27,7 @@
 #import <ObjC/Swizzle.h>
 
 extern NSUserDefaults *lcUserDefaults;
-extern NSString* lcGuestAppId;
+extern NSBundle *guestMainBundle;
 
 NSURL* appContainerURL = 0;
 NSString* appContainerPath = 0;
@@ -53,10 +53,10 @@ void NUDGuestHooksInit(void)
     CFStringRef* _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
     lcUserDefaults = [[NSUserDefaults alloc] init];
     [lcUserDefaults _setIdentifier:(__bridge NSString*)CFStringCreateCopy(nil, *_CFPrefsCurrentAppIdentifierCache)];
-    *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)lcGuestAppId;
+    *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)[guestMainBundle bundleIdentifier];
     
     NSUserDefaults* newStandardUserDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"whatever"];
-    [newStandardUserDefaults _setIdentifier:lcGuestAppId];
+    [newStandardUserDefaults _setIdentifier:[guestMainBundle bundleIdentifier]];
     NSUserDefaults.standardUserDefaults = newStandardUserDefaults;
     
     NSFileManager* fm = NSFileManager.defaultManager;

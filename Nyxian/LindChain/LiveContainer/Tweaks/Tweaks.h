@@ -22,5 +22,3 @@ extern void* appExecutableHandle;
 extern bool tweakLoaderLoaded;
 void* getGuestAppHeader(void);
 void* dlopenBypassingLock(const char *path, int mode);
-
-static void hook_do_nothing(void) {}
