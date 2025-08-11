@@ -48,7 +48,7 @@ static void overwriteAppExecutableFileType(void)
         struct mach_header_64 *header = (struct mach_header_64*) orig_dyld_get_image_header(appMainImageIndex);
         kern_return_t kr = builtin_vm_protect(mach_task_self(), (vm_address_t)header, sizeof(header), false, PROT_READ | PROT_WRITE | VM_PROT_COPY);
         if(kr != KERN_SUCCESS)
-            exit(0);
+            return;
         header->filetype = MH_EXECUTE;
         builtin_vm_protect(mach_task_self(), appMainImageIndex, sizeof(struct mach_header), false, PROT_READ);
     });

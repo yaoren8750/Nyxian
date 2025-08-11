@@ -1,13 +1,50 @@
+/*
+ Copyright (C) 2025 cr4zyengineer
+ Copyright (C) 2025 expo
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #import <ObjC/Swizzle.h>
 
-void swizzle(Class class, SEL originalAction, SEL swizzledAction)
+@implementation ObjCSwizzler
+
++ (void)replaceOriginalAction:(SEL)originalAction
+                      ofClass:(Class)class
+                   withAction:(SEL)replacementAction
 {
-    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, swizzledAction));
+    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, replacementAction));
 }
 
-void swizzle2(Class class, SEL originalAction, Class class2, SEL swizzledAction)
++ (void)replaceOriginalAction:(SEL)originalAction
+                      ofClass:(Class)class
+                   withAction:(SEL)replacementAction
+                      ofClass:(Class)replacementClass
 {
-    Method m1 = class_getInstanceMethod(class2, swizzledAction);
-    class_addMethod(class, swizzledAction, method_getImplementation(m1), method_getTypeEncoding(m1));
-    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, swizzledAction));
+    Method replacementMethod = class_getInstanceMethod(replacementClass, replacementAction);
+    class_addMethod(class, replacementAction, method_getImplementation(replacementMethod), method_getTypeEncoding(replacementMethod));
+    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, replacementAction));
 }
+
++ (void)replaceOriginalAction:(SEL)originalAction
+                      ofClass:(Class)class
+                   withSymbol:(void*)symbol
+{
+    Method targetMethod = class_getClassMethod(class, originalAction);
+    method_setImplementation(targetMethod, (IMP)symbol);
+}
+
+@end

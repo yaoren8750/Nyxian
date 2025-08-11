@@ -2,11 +2,12 @@
 #import <Foundation/Foundation.h>
 #import "LCSharedUtils.h"
 #import "Tweaks.h"
+#import <ObjC/Swizzle.h>
 
 extern NSString *lcAppGroupPath;
 
 void NSFMGuestHooksInit(void) {
-    swizzle(NSFileManager.class, @selector(containerURLForSecurityApplicationGroupIdentifier:), @selector(hook_containerURLForSecurityApplicationGroupIdentifier:));
+    [ObjCSwizzler replaceOriginalAction:@selector(containerURLForSecurityApplicationGroupIdentifier:) ofClass:NSFileManager.class withAction:@selector(hook_containerURLForSecurityApplicationGroupIdentifier:)];
 }
 
 // NSFileManager simulate app group

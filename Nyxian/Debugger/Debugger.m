@@ -258,6 +258,4 @@ void debugger_main(void)
     /// Debugger init
     nxdebugger = [[NyxianDebugger alloc] init];
     nxloggerview = [[UINavigationController alloc] initWithRootViewController:[[LoggerView alloc] init]];
-    
-    printf("[*] Nyxian Debugger\n");
 }

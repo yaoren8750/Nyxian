@@ -36,10 +36,11 @@ void NUDGuestHooksInit(void)
 {
     appContainerPath = [NSString stringWithUTF8String:getenv("HOME")];
     appContainerURL = [NSURL URLWithString:appContainerPath];
-    
-    Class CFPrefsPlistSourceClass = NSClassFromString(@"CFPrefsPlistSource");
 
-    swizzle2(CFPrefsPlistSourceClass, @selector(initWithDomain:user:byHost:containerPath:containingPreferences:), CFPrefsPlistSource2.class, @selector(hook_initWithDomain:user:byHost:containerPath:containingPreferences:));
+    [ObjCSwizzler replaceOriginalAction:@selector(initWithDomain:user:byHost:containerPath:containingPreferences:)
+                                ofClass:NSClassFromString(@"CFPrefsPlistSource")
+                             withAction:@selector(hook_initWithDomain:user:byHost:containerPath:containingPreferences:)
+                                ofClass:CFPrefsPlistSource2.class];
 
     Class CFXPreferencesClass = NSClassFromString(@"_CFXPreferences");
     NSMutableDictionary* sources = object_getIvar([CFXPreferencesClass copyDefaultPreferences], class_getInstanceVariable(CFXPreferencesClass, "_sources"));
@@ -48,7 +49,6 @@ void NUDGuestHooksInit(void)
     [sources removeObjectForKey:@"C/C//*/L"];
     
     const char* coreFoundationPath = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
-    mach_header_u* coreFoundationHeader = LCGetLoadedImageHeader(2, coreFoundationPath);
     
     CFStringRef* _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
     lcUserDefaults = [[NSUserDefaults alloc] init];
