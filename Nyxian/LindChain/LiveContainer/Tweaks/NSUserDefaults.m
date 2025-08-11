@@ -20,7 +20,6 @@
 
 #import "FoundationPrivate.h"
 #import "LCMachOUtils.h"
-#import "LCSharedUtils.h"
 #import "utils.h"
 #import "litehook_internal.h"
 #include "Tweaks.h"

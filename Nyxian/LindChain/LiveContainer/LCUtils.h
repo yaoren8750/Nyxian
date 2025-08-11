@@ -24,11 +24,6 @@ int dyld_get_program_sdk_version(void);
 + (NSData *)certificateData;
 + (NSString *)certificatePassword;
 
-+ (BOOL)launchToGuestApp;
-+ (BOOL)launchToGuestAppWithURL:(NSURL *)url;
-+ (void)launchMultitaskGuestApp:(NSString *)displayName completionHandler:(void (^)(NSError *error))completionHandler API_AVAILABLE(ios(16.0));
-+ (NSString*)getContainerUsingLCSchemeWithFolderName:(NSString*)folderName;
-
 + (NSProgress *)signAppBundleWithZSign:(NSURL *)path completionHandler:(void (^)(BOOL success, NSError *error))completionHandler;
 + (NSString*)getCertTeamIdWithKeyData:(NSData*)keyData password:(NSString*)password;
 + (int)validateCertificateWithCompletionHandler:(void(^)(int status, NSDate *expirationDate, NSString *error))completionHandler;
@@ -41,6 +36,7 @@ int dyld_get_program_sdk_version(void);
 + (NSURL *)appGroupPath;
 + (NSString *)storeInstallURLScheme;
 + (NSString *)getVersionInfo;
+
 @end
 
 @interface NSUserDefaults(LiveContainer)
