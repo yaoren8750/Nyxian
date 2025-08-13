@@ -103,7 +103,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     
     char *crashBuffer = (char*)bufferAddr;
     sprintf(crashBuffer, "[%s] faulting thread port %d at 0x%llx(%s)\n\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x", exceptionName(exception), thread, state.__pc, symbol_for_address((void*)state.__pc), state.__pc, state.__sp, state.__fp, state.__lr, state.__cpsr, state.__pad);
-    for(uint8_t i = 0; i < 28; i++)
+    for(uint8_t i = 0; i < 29; i++)
         sprintf(crashBuffer, "%s\nX%d: 0x%llx", crashBuffer, i, state.__x[i]);
     sprintf(crashBuffer, "%s\n\n", crashBuffer);
     printf("%s\n", crashBuffer);
