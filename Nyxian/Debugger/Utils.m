@@ -51,7 +51,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
     {
         const char *name = symbol_for_address(frame->lr);
         if(strcmp(name, "<unknown>") != 0)
-            stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n\n", name, [Decompiler getDecompiledCodeBuffer:((UInt64)(depth == 0 ? frame->lr : frame->lr - 4))]];
+            stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n", name, [Decompiler getDecompiledCodeBuffer:((UInt64)(depth == 0 ? frame->lr : frame->lr - 4))]];
         if(strcmp(name, "main") == 0)
             break;
             

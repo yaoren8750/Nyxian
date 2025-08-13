@@ -20,35 +20,38 @@
 
 #import <Decompiler/Decompiler.h>
 #include <iostream>
+#include <dlfcn.h>
 
-std::vector<std::string> disassembleARM64iOS(uint8_t* code, size_t codeSize);
+std::vector<std::string> disassembleARM64iOS(uint8_t* code);
 
 @implementation Decompiler
 
 + (NSString*)decompileBinary:(uint8_t*)code withSize:(size_t)size
 {
-    std::vector<std::string> array = disassembleARM64iOS(code, size);
+    /*std::vector<std::string> array = disassembleARM64iOS(code, size);
     NSMutableString *result = [NSMutableString string];
     for (size_t i = 0; i < array.size(); i++)
         [result appendFormat:@"%@\n", [NSString stringWithUTF8String:array[i].c_str()]];
-    return result;
+    return result;*/
+    
+    return NULL;
 }
 
 + (NSString*)getDecompiledCodeBuffer:(UInt64)markAddress
 {
-    uint8_t *codeBuffer = ((uint8_t*)markAddress) - 32;
-    size_t totalSize = 64;
+    Dl_info info;
+    dladdr((void*)markAddress, &info);
     size_t instrSize = 4;
-
-    std::vector<std::string> array = disassembleARM64iOS(codeBuffer, totalSize);
-
+    
+    std::vector<std::string> array = disassembleARM64iOS((uint8_t*)info.dli_saddr);
+    
     NSMutableString *result = [NSMutableString string];
     for (size_t i = 0; i < array.size(); i++) {
-        uint64_t currAddr = (uint64_t)(codeBuffer + i * instrSize);
+        uint64_t currAddr = (uint64_t)(((uintptr_t)info.dli_saddr) + i * instrSize);
         NSString *prefix = (currAddr == markAddress) ? @"-> " : @"   ";
         [result appendFormat:@"%@%@\n", prefix, [NSString stringWithUTF8String:array[i].c_str()]];
     }
-
+    
     return result;
 }
 

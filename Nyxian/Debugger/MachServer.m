@@ -96,7 +96,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     
     char *crashBuffer = (char*)bufferAddr;
     sprintf(crashBuffer,
-            "[%s] thread %d faulting at 0x%llx(%s)\n\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
+            "Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
             exceptionName(exception),
             get_thread_index_from_port(thread),
             state.__pc,
