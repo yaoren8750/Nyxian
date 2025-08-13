@@ -33,39 +33,10 @@
 #include <mach/thread_state.h>
 #import <Decompiler/Decompiler.h>
 #include "Utils.h"
+#include "MachServer.h"
 
 UINavigationController *nxloggerview;
 NyxianDebugger *nxdebugger;
-
-extern NSUserDefaults *lcUserDefaults;
-
-/*
- Hooks
- */
-
-/// Escape `exit()`
-void debugger_store_exception(NSString *exception)
-{
-    thread_t thread = mach_thread_self();
-    arm_thread_state64_t state;
-    mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
-    thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
-    
-    [lcUserDefaults setObject:[NSString stringWithFormat:@"Exception\n%@\n\nRegister\npc: 0x%llx\nsp: 0x%llx\n\n%@", exception, state.__pc, state.__sp, stack_trace_from_thread_state(state,6)] forKey:@"LDEAppException"];
-}
-
-DEFINE_HOOK(exit, void, (int code))
-{
-    if(code != 0)
-        debugger_store_exception([NSString stringWithFormat:@"App did exit with %d", code]);
-    restartProcess();
-}
-
-/// Escape memory corruption
-void debugger_signal_handler(int sig) {
-    debugger_store_exception([NSString stringWithFormat:@"App raised signal %d", sig]);
-    hook_exit(0);
-}
 
 /*
  The Debugger it self
@@ -246,11 +217,18 @@ void debugger_signal_handler(int sig) {
 void debugger_main(void)
 {
     /// Escape the death
-    DO_HOOK_GLOBAL(exit);
-    signal(SIGSEGV, debugger_signal_handler);
-    signal(SIGABRT, debugger_signal_handler);
-    signal(SIGBUS, debugger_signal_handler);
-    signal(SIGTRAP, debugger_signal_handler);
+    /*DO_HOOK_GLOBAL(exit);
+    struct sigaction sa;
+    sa.sa_sigaction = debugger_signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO;
+
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
+    sigaction(SIGBUS, &sa, NULL);
+    sigaction(SIGTRAP, &sa, NULL);*/
+    
+    machServerInit();
     
     /// Debugger init
     nxdebugger = [[NyxianDebugger alloc] init];

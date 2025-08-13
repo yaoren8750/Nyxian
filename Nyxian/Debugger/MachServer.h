@@ -18,18 +18,4 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dlfcn.h>
-#include <mach/mach.h>
-#include <mach/exc.h>
-#include <mach/exception.h>
-#include <mach/exception_types.h>
-#include <mach/thread_act.h>
-#include <mach/thread_state.h>
-#import <Foundation/Foundation.h>
-#import <Decompiler/Decompiler.h>
-
-const char *symbol_for_address(void *addr);
-NSString* stack_trace_from_thread_state(arm_thread_state64_t state);
+void machServerInit(void);
