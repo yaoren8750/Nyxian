@@ -63,7 +63,7 @@ import UIKit
             reasonLabel.isSelectable = true
             reasonLabel.isScrollEnabled = true
             reasonLabel.text = appException
-            reasonLabel.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+            reasonLabel.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
             reasonLabel.translatesAutoresizingMaskIntoConstraints = false
             reasonLabel.backgroundColor = UIColor.systemGray3
             reasonLabel.layer.borderWidth = 1
