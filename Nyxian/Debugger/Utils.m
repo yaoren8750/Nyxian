@@ -39,7 +39,7 @@ typedef struct stack_frame {
 
 NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
 {
-    NSString *stringNS = @"Call Trace\n";
+    NSString *stringNS = @"Fault Trace\n";
     
     stack_frame_t start_frame;
     start_frame.lr = (void*)state.__pc;
@@ -47,7 +47,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
     stack_frame_t *frame = &start_frame;
 
     int depth = 0;
-    while(frame && depth < 64)
+    while(frame && depth < 1)
     {
         const char *name = symbol_for_address(frame->lr);
         if(strcmp(name, "<unknown>") != 0)

@@ -110,7 +110,7 @@ std::vector<std::string> disassembleARM64iOS(uint8_t* code)
         raw_string_ostream finalOS(finalStr);
         Printer->printInst(&inst, address, "", *STI, os);
         
-        finalOS << llvm::format("%llx ", (code + address)) << "<" << "+" << llvm::format("%d", address) << ">:" << os.str();
+        finalOS << llvm::format("0x%llx ", (code + address)) << "<" << "+" << llvm::format("%d", address) << ">:" << os.str();
         
         result.push_back(finalStr);
         
