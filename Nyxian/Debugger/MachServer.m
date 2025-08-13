@@ -23,17 +23,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <dlfcn.h>
-#include <mach/mach.h>
 #include <mach/exc.h>
 #include <mach/exception.h>
 #include <mach/exception_types.h>
-#include <mach/thread_act.h>
 #include <mach/thread_state.h>
 #include "litehook.h"
-#include <dlfcn.h>
-#include <malloc/malloc.h>
-#include <mach-o/dyld.h>
 #include "Utils.h"
 
 void restartProcess(void);
@@ -45,7 +39,8 @@ void saveExceptionAndRestart(const char *crashBuffer)
     restartProcess();
 }
 
-const char *exceptionName(exception_type_t exception) {
+const char *exceptionName(exception_type_t exception)
+{
     switch(exception)
     {
         case EXC_BAD_ACCESS: return "EXC_BAD_ACCESS";
@@ -71,9 +66,6 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
                                                  mach_exception_data_type_t *code,
                                                  mach_msg_type_number_t codeCnt)
 {
-    if(exception == EXC_SOFTWARE)
-        return KERN_SUCCESS;
-    
     arm_thread_state64_t state;
     mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
     thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
@@ -84,30 +76,41 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     kern_return_t kr = KERN_SUCCESS;
     static vm_size_t bufferSize = 0x00;
     static vm_address_t bufferAddr = 0x00;
-    if(!bufferAddr) {
+    if(!bufferAddr)
+    {
         // Handle buffer not being allocated yet
         bufferSize = 4086 + debugStringSize;
         kr = vm_allocate(task, &bufferAddr, bufferSize, VM_FLAGS_ANYWHERE);
-        if (kr != KERN_SUCCESS)
+        if(kr != KERN_SUCCESS)
             return kr;
-    } else if(debugStringSize > (bufferSize - 4086)) {
+    }
+    else if(debugStringSize > (bufferSize - 4086))
+    {
         // Handling buffer being too small
-        kr = vm_deallocate(task, bufferAddr, bufferSize);
-        if (kr != KERN_SUCCESS)
-            return kr;
+        vm_deallocate(task, bufferAddr, bufferSize);
         bufferSize = 4086 + debugStringSize;
         kr = vm_allocate(task, &bufferAddr, bufferSize, VM_FLAGS_ANYWHERE);
-        if (kr != KERN_SUCCESS)
+        if(kr != KERN_SUCCESS)
             return kr;
     }
     
     char *crashBuffer = (char*)bufferAddr;
-    sprintf(crashBuffer, "[%s] faulting thread port %d at 0x%llx(%s)\n\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x", exceptionName(exception), thread, state.__pc, symbol_for_address((void*)state.__pc), state.__pc, state.__sp, state.__fp, state.__lr, state.__cpsr, state.__pad);
+    sprintf(crashBuffer,
+            "[%s] thread %d faulting at 0x%llx(%s)\n\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
+            exceptionName(exception),
+            get_thread_index_from_port(thread),
+            state.__pc,
+            symbol_for_address((void*)state.__pc),
+            state.__pc,
+            state.__sp,
+            state.__fp,
+            state.__lr,
+            state.__cpsr,
+            state.__pad
+    );
     for(uint8_t i = 0; i < 29; i++)
         sprintf(crashBuffer, "%s\nX%d: 0x%llx", crashBuffer, i, state.__x[i]);
-    sprintf(crashBuffer, "%s\n\n", crashBuffer);
-    printf("%s\n", crashBuffer);
-    sprintf(crashBuffer, "%s%s", crashBuffer, [debugString UTF8String]);
+    sprintf(crashBuffer, "%s\n\n%s", crashBuffer, [debugString UTF8String]);
     
     state.__pc = (uint64_t)saveExceptionAndRestart;
     state.__x[0] = (uint64_t)crashBuffer;
@@ -137,9 +140,9 @@ void* mach_exception_self_server(void *arg)
     
     // Allocating the request structure to have a writing destination
     kr = vm_allocate(mach_task_self(), (vm_address_t *) &request, request_size, VM_FLAGS_ANYWHERE);
-    if (kr != KERN_SUCCESS)
+    if(kr != KERN_SUCCESS)
     {
-        /* Shouldn't happen ... */
+        // Shouldn't happen ...
         fprintf(stderr, "Unexpected error in vm_allocate(): %x\n", kr);
         return NULL;
     }
@@ -158,26 +161,27 @@ void* mach_exception_self_server(void *arg)
                       MACH_PORT_NULL);
         
         // Microsofts code to handle if the exception message send by the kernel is valid to process
-        if (mr != MACH_MSG_SUCCESS && mr == MACH_RCV_TOO_LARGE)
+        if(mr != MACH_MSG_SUCCESS && mr == MACH_RCV_TOO_LARGE)
         {
-            /* Determine the new size (before dropping the buffer) */
+            // Determine the new size (before dropping the buffer)
             request_size = round_page(request->Head.msgh_size);
             
-            /* Drop the old receive buffer */
+            // Drop the old receive buffer
             vm_deallocate(mach_task_self(), (vm_address_t) request, request_size);
             
-            /* Re-allocate a larger receive buffer */
+            // Re-allocate a larger receive buffer
             kr = vm_allocate(mach_task_self(), (vm_address_t *) &request, request_size, VM_FLAGS_ANYWHERE);
-            if (kr != KERN_SUCCESS)
+            if(kr != KERN_SUCCESS)
             {
-                /* Shouldn't happen ... */
+                // Shouldn't happen ...
                 fprintf(stderr, "Unexpected error in vm_allocate(): 0x%x\n", kr);
                 return NULL;
             }
            
             continue;
             
-        } else if (mr != MACH_MSG_SUCCESS)
+        }
+        else if (mr != MACH_MSG_SUCCESS)
         {
             // If the message was send and the kernel and is not successful, which shall never happen exit
             exit(-1);
@@ -185,9 +189,7 @@ void* mach_exception_self_server(void *arg)
         
         // Sanity checks
         if (request->Head.msgh_size < sizeof(*request) || request_size - sizeof(*request) < (sizeof(mach_exception_data_type_t) * request->codeCnt))
-        {
             exit(-1);
-        }
         
         mach_exception_data_type_t *code64 = (mach_exception_data_type_t *) request->code;
         
@@ -213,12 +215,6 @@ void* mach_exception_self_server(void *arg)
     }
 }
 
-void abort_handler(int signal)
-{
-    // Causes EXC_BREAKPOINT
-    __builtin_trap();
-}
-
 DEFINE_HOOK(exit, void, (int code))
 {
     // Causes EXC_BREAKPOINT
@@ -239,7 +235,7 @@ void machServerInit(void)
     pthread_sigmask(SIG_BLOCK, &set, NULL);
     
     // Its raised by stuff like malloc API symbols but doesnt matter so much... we raise the mach exception manually in our abort handler. the thread wont continue running as its literally raised by the abort() function that calls based on libc source raise(SIGABRT) which mean it directly jump to our handler.
-    signal(SIGABRT, abort_handler);
+    signal(SIGABRT, hook_exit);
     
     // Executing finally out mach exception server
     pthread_t serverThread;

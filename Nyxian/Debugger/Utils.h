@@ -33,3 +33,6 @@
 
 const char *symbol_for_address(void *addr);
 NSString* stack_trace_from_thread_state(arm_thread_state64_t state);
+
+uint64_t get_thread_id_from_port(thread_t thread);
+int get_thread_index_from_port(thread_t target);

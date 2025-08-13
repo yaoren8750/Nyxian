@@ -52,7 +52,6 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
         const char *name = symbol_for_address(frame->lr);
         if(strcmp(name, "<unknown>") != 0)
             stringNS = [stringNS stringByAppendingFormat:@"%s\n%@\n\n", name, [Decompiler getDecompiledCodeBuffer:((UInt64)(depth == 0 ? frame->lr : frame->lr - 4))]];
-
         if(strcmp(name, "main") == 0)
             break;
             
@@ -61,4 +60,48 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
     }
     
     return stringNS;
+}
+
+uint64_t get_thread_id_from_port(thread_t thread)
+{
+    thread_identifier_info_data_t info;
+    mach_msg_type_number_t count = THREAD_IDENTIFIER_INFO_COUNT;
+
+    kern_return_t kr = thread_info(thread,
+                                   THREAD_IDENTIFIER_INFO,
+                                   (thread_info_t)&info,
+                                   &count);
+    if(kr != KERN_SUCCESS)
+    {
+        fprintf(stderr, "thread_info failed: %d\n", kr);
+        return 0;
+    }
+    return info.thread_id;
+}
+
+int get_thread_index_from_port(thread_t target)
+{
+    thread_act_array_t threads;
+    mach_msg_type_number_t count;
+
+    kern_return_t kr = task_threads(mach_task_self(), &threads, &count);
+    if (kr != KERN_SUCCESS)
+    {
+        fprintf(stderr, "task_threads failed: %d\n", kr);
+        return -1;
+    }
+
+    int index = -1;
+    for (mach_msg_type_number_t i = 0; i < count; i++)
+    {
+        if (threads[i] == target) {
+            index = i;
+            break;
+        }
+    }
+
+    for (mach_msg_type_number_t i = 0; i < count; i++)
+        mach_port_deallocate(mach_task_self(), threads[i]);
+
+    return index;
 }
