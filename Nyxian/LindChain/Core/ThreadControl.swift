@@ -42,6 +42,7 @@ func pthread_dispatch(_ code: @escaping () -> Void) {
         block()
         return nil
     }, blockPointer)
+    pthread_detach(thread!)
 }
 
 func getCpuThreads() -> Int {

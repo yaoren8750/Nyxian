@@ -46,6 +46,7 @@ NSString* stack_trace_from_thread_state(arm_thread_state64_t state)
     start_frame.fp = (void*)state.__fp;
     stack_frame_t *frame = &start_frame;
 
+    // FIXME: Decompiler gets symbols that shouldnt be there anymore
     int depth = 0;
     while(frame && depth < 1)
     {

@@ -40,6 +40,8 @@
 
 #define CodeBufferMax 10000
 
+extern "C" const char *symbol_for_address(void *addr);
+
 using namespace llvm;
 
 std::vector<std::string> disassembleARM64iOS(uint8_t* code)
@@ -104,17 +106,18 @@ std::vector<std::string> disassembleARM64iOS(uint8_t* code)
             continue;
         }
 
+        const MCInstrDesc &desc = MCII->get(inst.getOpcode());
         std::string asmStr;
         std::string finalStr;
         raw_string_ostream os(asmStr);
         raw_string_ostream finalOS(finalStr);
         Printer->printInst(&inst, address, "", *STI, os);
         
-        finalOS << llvm::format("0x%llx ", (code + address)) << "<" << "+" << llvm::format("%d", address) << ">:" << os.str();
+        uint64_t currAddr = ((uint64_t)code + address);
+        finalOS << llvm::format("0x%llx ", currAddr) << "<" << "+" << llvm::format("%d", address) << ">:" << os.str();
         
         result.push_back(finalStr);
         
-        const MCInstrDesc &desc = MCII->get(inst.getOpcode());
         if (desc.isReturn())
             break;
 

@@ -73,6 +73,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     NSString *debugString = stack_trace_from_thread_state(state);
     
     vm_size_t debugStringSize = [[debugString dataUsingEncoding:NSUTF8StringEncoding] length];
+    size_t offset = 0;
     kern_return_t kr = KERN_SUCCESS;
     static vm_size_t bufferSize = 0x00;
     static vm_address_t bufferAddr = 0x00;
@@ -95,22 +96,32 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     }
     
     char *crashBuffer = (char*)bufferAddr;
-    sprintf(crashBuffer,
-            "Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\nPC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
-            exceptionName(exception),
-            get_thread_index_from_port(thread),
-            state.__pc,
-            symbol_for_address((void*)state.__pc),
-            state.__pc,
-            state.__sp,
-            state.__fp,
-            state.__lr,
-            state.__cpsr,
-            state.__pad
-    );
-    for(uint8_t i = 0; i < 29; i++)
-        sprintf(crashBuffer, "%s\nX%d: 0x%llx", crashBuffer, i, state.__x[i]);
-    sprintf(crashBuffer, "%s\n\n%s", crashBuffer, [debugString UTF8String]);
+
+    offset += snprintf(crashBuffer + offset,
+                       bufferSize - offset,
+                       "Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
+                       "PC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
+                       exceptionName(exception),
+                       get_thread_index_from_port(thread),
+                       state.__pc,
+                       symbol_for_address((void*)state.__pc),
+                       state.__pc,
+                       state.__sp,
+                       state.__fp,
+                       state.__lr,
+                       state.__cpsr,
+                       state.__pad);
+
+    for (uint8_t i = 0; i < 29 && offset < bufferSize; i++)
+        offset += snprintf(crashBuffer + offset,
+                           bufferSize - offset,
+                           "\nX%d: 0x%llx",
+                           i,
+                           state.__x[i]);
+    
+    if (offset < bufferSize)
+        offset += snprintf(crashBuffer + offset, bufferSize - offset,
+                           "\n\n%s", [debugString UTF8String]);
     
     state.__pc = (uint64_t)saveExceptionAndRestart;
     state.__x[0] = (uint64_t)crashBuffer;
