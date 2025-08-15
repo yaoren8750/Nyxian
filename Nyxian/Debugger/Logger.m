@@ -22,15 +22,16 @@
 
 @implementation LogTextView
 
-- (instancetype)init
+- (instancetype)initWithPipe:(NSPipe*)pipe withFileHandle:(NSFileHandle*)fileHandle withLog:(NSString*)log
 {
     self = [super init];
     
     self.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightBold];
     self.editable = NO;
     self.selectable = YES;
+    self.text = log;
     
-    _pipe = [NSPipe pipe];
+    /*_pipe = [NSPipe pipe];
     _handle = self.pipe.fileHandleForReading;
     
     dup2(_pipe.fileHandleForWriting.fileDescriptor, fileno(stdout));
@@ -44,7 +45,15 @@
      selector:@selector(handleNotification:)
      name:NSFileHandleReadCompletionNotification
      object:_handle
-    ];
+    ];*/
+    
+    _pipe = pipe;
+    _handle = fileHandle;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleNotification:)
+                                                 name:NSFileHandleReadCompletionNotification
+                                               object:_handle];
     
     [self.handle readInBackgroundAndNotify];
     
@@ -77,6 +86,25 @@
 - (instancetype)init
 {
     self = [super init];
+    
+    _logString = @"Nyxian 0.5 (Moonshine) Runtime Debugger\n";
+    
+    _pipe = [NSPipe pipe];
+    _handle = self.pipe.fileHandleForReading;
+    
+    dup2(_pipe.fileHandleForWriting.fileDescriptor, fileno(stdout));
+    dup2(_pipe.fileHandleForWriting.fileDescriptor, fileno(stderr));
+    
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleNotification:)
+                                                 name:NSFileHandleReadCompletionNotification
+                                               object:_handle];
+    
+    [self.handle readInBackgroundAndNotify];
+    
     return self;
 }
 
@@ -84,9 +112,13 @@
 {
     [super viewDidLoad];
     
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:NSFileHandleReadCompletionNotification
+                                                  object:_handle];
+    
     self.title = @"Console";
     
-    _loggerText = [[LogTextView alloc] init];
+    _loggerText = [[LogTextView alloc] initWithPipe:_pipe withFileHandle:_handle withLog:_logString];
     _loggerText.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:_loggerText];
@@ -97,6 +129,15 @@
         [_loggerText.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [_loggerText.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
     ]];
+}
+
+- (void)handleNotification:(NSNotification*)notification
+{
+    NSData *data = notification.userInfo[NSFileHandleNotificationDataItem];
+    if(data.length > 0) {
+        _logString = [_logString stringByAppendingString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
+    }
+    [self.handle readInBackgroundAndNotify];
 }
 
 @end

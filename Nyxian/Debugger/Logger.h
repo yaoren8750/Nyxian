@@ -26,11 +26,18 @@
 @property (nonatomic,strong,readonly) NSPipe *pipe;
 @property (nonatomic,strong,readonly) NSFileHandle *handle;
 
+- (instancetype)initWithPipe:(NSPipe*)pipe
+              withFileHandle:(NSFileHandle*)fileHandle
+                     withLog:(NSString*)log;
+
 @end
 
 @interface LoggerView : UIViewController
 
 @property (nonatomic,strong,readonly) LogTextView *loggerText;
+@property (nonatomic,strong,readonly) NSPipe *pipe;
+@property (nonatomic,strong,readonly) NSFileHandle *handle;
+@property (nonatomic,readonly) NSString *logString;
 
 @end
 

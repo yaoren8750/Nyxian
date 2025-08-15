@@ -21,18 +21,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Private/Restart.h>
-#import "Logger.h"
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
 #import <Nyxian-Swift.h>
-#import <litehook/src/litehook.h>
-#include <dlfcn.h>
-#include <mach/mach.h>
-#include <mach/thread_act.h>
-#include <mach/thread_state.h>
-#import <Decompiler/Decompiler.h>
-#include "Utils.h"
+#import "Logger.h"
 #include "MachServer.h"
 
 @implementation NyxianDebugger

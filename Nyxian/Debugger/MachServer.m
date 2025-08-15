@@ -19,6 +19,7 @@
 */
 
 #import <Foundation/Foundation.h>
+#import <Private/Restart.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +31,6 @@
 #include "litehook.h"
 #include "Utils.h"
 
-void restartProcess(void);
 extern NSUserDefaults *lcUserDefaults;
 
 void saveExceptionAndRestart(const char *crashBuffer)
