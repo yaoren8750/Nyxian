@@ -42,3 +42,6 @@ void os_thread_self_restrict_tpro_to_ro(void);
     DO_HOOK(func,LITEHOOK_REBIND_GLOBAL)
 /*    orig_##func = func; \
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, func, hook_##func, nil);*/
+
+#define ORIG_FUNC(func) \
+    orig_##func

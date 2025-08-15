@@ -45,7 +45,7 @@ DEFINE_HOOK(_dyld_image_count, uint32_t, (void))
 
 DEFINE_HOOK(_dyld_get_image_header, const struct mach_header*, (uint32_t image_index))
 {
-    __attribute__((musttail)) return orig__dyld_get_image_header(translateImageIndex(image_index));
+    __attribute__((musttail)) return ORIG_FUNC(_dyld_get_image_header)(translateImageIndex(image_index));
 }
 
 DEFINE_HOOK(dlsym, void*, (void * __handle, const char * __symbol))
@@ -55,12 +55,12 @@ DEFINE_HOOK(dlsym, void*, (void * __handle, const char * __symbol))
         if(strcmp(__symbol, MH_EXECUTE_SYM) == 0)
         {
             overwriteAppExecutableFileType();
-            return (void*)orig__dyld_get_image_header(appMainImageIndex);
+            return (void*)ORIG_FUNC(_dyld_get_image_header)(appMainImageIndex);
         }
         __handle = appExecutableHandle;
     } else if (__handle != (void*)RTLD_SELF && __handle != (void*)RTLD_NEXT)
     {
-        void* ans = orig_dlsym(__handle, __symbol);
+        void* ans = ORIG_FUNC(dlsym)(__handle, __symbol);
         if(!ans)
             return 0;
         for(int i = 0; i < gRebindCount; i++)
@@ -72,17 +72,17 @@ DEFINE_HOOK(dlsym, void*, (void * __handle, const char * __symbol))
         return ans;
     }
     
-    __attribute__((musttail)) return orig_dlsym(__handle, __symbol);
+    __attribute__((musttail)) return ORIG_FUNC(dlsym)(__handle, __symbol);
 }
 
 DEFINE_HOOK(_dyld_get_image_vmaddr_slide, intptr_t, (uint32_t image_index))
 {
-    __attribute__((musttail)) return orig__dyld_get_image_vmaddr_slide(translateImageIndex(image_index));
+    __attribute__((musttail)) return ORIG_FUNC(_dyld_get_image_vmaddr_slide)(translateImageIndex(image_index));
 }
 
 DEFINE_HOOK(_dyld_get_image_name, const char*, (uint32_t image_index))
 {
-    __attribute__((musttail)) return orig__dyld_get_image_name(translateImageIndex(image_index));
+    __attribute__((musttail)) return ORIG_FUNC(_dyld_get_image_name)(translateImageIndex(image_index));
 }
 
 // Rewrite End

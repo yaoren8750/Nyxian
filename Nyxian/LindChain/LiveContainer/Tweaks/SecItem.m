@@ -43,22 +43,22 @@ NSMutableDictionary *SecItemPrepare(CFDictionaryRef query)
 
 DEFINE_HOOK(SecItemAdd, OSStatus, (CFDictionaryRef query, CFTypeRef *result))
 {
-    return orig_SecItemAdd((__bridge CFDictionaryRef)SecItemPrepare(query), result);
+    return ORIG_FUNC(SecItemAdd)((__bridge CFDictionaryRef)SecItemPrepare(query), result);
 }
 
 DEFINE_HOOK(SecItemCopyMatching, OSStatus, (CFDictionaryRef query, CFTypeRef *result))
 {
-    return orig_SecItemCopyMatching((__bridge CFDictionaryRef)SecItemPrepare(query), result);
+    return ORIG_FUNC(SecItemCopyMatching)((__bridge CFDictionaryRef)SecItemPrepare(query), result);
 }
 
 DEFINE_HOOK(SecItemUpdate, OSStatus, (CFDictionaryRef query, CFDictionaryRef attributesToUpdate))
 {
-    return orig_SecItemUpdate((__bridge CFDictionaryRef)SecItemPrepare(query), (__bridge CFDictionaryRef)SecItemPrepare(attributesToUpdate));
+    return ORIG_FUNC(SecItemUpdate)((__bridge CFDictionaryRef)SecItemPrepare(query), (__bridge CFDictionaryRef)SecItemPrepare(attributesToUpdate));
 }
 
 DEFINE_HOOK(SecItemDelete, OSStatus, (CFDictionaryRef query))
 {
-    return orig_SecItemDelete((__bridge CFDictionaryRef)SecItemPrepare(query));
+    return ORIG_FUNC(SecItemDelete)((__bridge CFDictionaryRef)SecItemPrepare(query));
 }
 
 void SecItemGuestHooksInit(void)
