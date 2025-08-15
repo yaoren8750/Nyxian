@@ -36,51 +36,36 @@
 #include "MachServer.h"
 
 UINavigationController *nxloggerview;
-NyxianDebugger *nxdebugger;
 
-/*
- The Debugger it self
- */
 @implementation NyxianDebugger
 
 - (instancetype)init {
     self = [super init];
     if (self) {
         _blurView = NULL;
-        _gestureAdded = NO;
-        [self waitForRootViewControllerAndAttachGesture];
     }
     return self;
 }
 
-- (void)waitForRootViewControllerAndAttachGesture {
-    __weak typeof(self) weakSelf = self;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf tryAttachGesture];
++ (NyxianDebugger*)shared
+{
+    static NyxianDebugger *nxdebugger = NULL;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        nxdebugger = [[NyxianDebugger alloc] init];
     });
+    return nxdebugger;
 }
 
-- (void)tryAttachGesture {
-    if (_gestureAdded) {
-        return;
-    }
-    
-    UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
+- (void)attachGestureToWindow:(UIWindow*)keyWindow {
     UIViewController *rootVC = keyWindow.rootViewController;
-
+    
     if (rootVC) {
         UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
         longPress.minimumPressDuration = 0.5;
         [rootVC.view addGestureRecognizer:longPress];
         
         _rootViewController = rootVC;
-        _gestureAdded = YES;
-    } else {
-        // Retry after delay
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self tryAttachGesture];
-        });
     }
 }
 
@@ -193,22 +178,6 @@ NyxianDebugger *nxdebugger;
     restartProcess();
 }
 
-/*
- Crash View
- */
-- (void)crashHandle
-{
-    // TODO: Implement a function that lets the blurview appear in both cases with NULL and without NULL and to safe time in the future for future implementations
-    if (_blurView == NULL) {
-        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
-        self.blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
-        self.blurView.frame = _rootViewController.view.bounds;
-        self.blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.blurView.alpha = 0.0;
-        [_rootViewController.view addSubview:self.blurView];
-    }
-}
-
 @end
 
 /*
@@ -216,21 +185,9 @@ NyxianDebugger *nxdebugger;
  */
 void debugger_main(void)
 {
-    /// Escape the death
-    /*DO_HOOK_GLOBAL(exit);
-    struct sigaction sa;
-    sa.sa_sigaction = debugger_signal_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_SIGINFO;
-
-    sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGABRT, &sa, NULL);
-    sigaction(SIGBUS, &sa, NULL);
-    sigaction(SIGTRAP, &sa, NULL);*/
-    
     machServerInit();
     
     /// Debugger init
-    nxdebugger = [[NyxianDebugger alloc] init];
+    [NyxianDebugger shared];
     nxloggerview = [[UINavigationController alloc] initWithRootViewController:[[LoggerView alloc] init]];
 }

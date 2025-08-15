@@ -18,28 +18,27 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+#import "../Debugger/Logger.h"
+#import <ObjC/Swizzle.h>
 
-@interface NyxianDebugger : NSObject
+@implementation UIWindow(LiveContainer)
 
-@property (nonatomic,readonly,strong) UIViewController *rootViewController;
-@property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
-
-- (void)attachGestureToWindow:(UIWindow*)keyWindow;
-+ (NyxianDebugger*)shared;
-
-@end
-
-@interface LogTextView : UITextView
-
-@property (nonatomic,strong,readonly) NSPipe *pipe;
-@property (nonatomic,strong,readonly) NSFileHandle *handle;
-
-@end
-
-@interface LoggerView : UIViewController
-
-@property (nonatomic,strong,readonly) LogTextView *loggerText;
+- (void)lc_makeKeyAndVisible
+{
+    [self lc_makeKeyAndVisible];
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [[NyxianDebugger shared] attachGestureToWindow:self];
+    });
+}
 
 @end
+
+void UIWindowHooksInit(void)
+{
+    [ObjCSwizzler replaceInstanceAction:@selector(lc_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
+}

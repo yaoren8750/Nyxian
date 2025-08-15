@@ -22,3 +22,4 @@ extern void* appExecutableHandle;
 extern bool tweakLoaderLoaded;
 void* getGuestAppHeader(void);
 void* dlopenBypassingLock(const char *path, int mode);
+void UIWindowHooksInit(void);

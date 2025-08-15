@@ -184,6 +184,7 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
+    UIWindowHooksInit();
     DyldHooksInit();
 
     // Find main()
