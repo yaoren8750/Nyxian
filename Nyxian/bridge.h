@@ -29,7 +29,7 @@
 #import <LiveContainer/LCUtils.h>
 #import <LiveContainer/ZSign/zsigner.h>
 #import <LiveContainer/LCMachOUtils.h>
+#import "Debugger/Logger.h"
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);
-void debugger_main(void);

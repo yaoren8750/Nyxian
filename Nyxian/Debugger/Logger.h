@@ -21,16 +21,6 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
-@interface NyxianDebugger : NSObject
-
-@property (nonatomic,readonly,strong) UIViewController *rootViewController;
-@property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
-
-- (void)attachGestureToWindow:(UIWindow*)keyWindow;
-+ (NyxianDebugger*)shared;
-
-@end
-
 @interface LogTextView : UITextView
 
 @property (nonatomic,strong,readonly) NSPipe *pipe;
@@ -41,5 +31,16 @@
 @interface LoggerView : UIViewController
 
 @property (nonatomic,strong,readonly) LogTextView *loggerText;
+
+@end
+
+@interface NyxianDebugger : NSObject
+
+@property (nonatomic,readonly,strong) UIViewController *rootViewController;
+@property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
+@property (nonatomic,readwrite,strong) UINavigationController *loggerViewController;
+
+- (void)attachGestureToWindow:(UIWindow*)keyWindow;
++ (NyxianDebugger*)shared;
 
 @end
