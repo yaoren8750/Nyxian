@@ -40,5 +40,8 @@
 
 void UIWindowHooksInit(void)
 {
-    [ObjCSwizzler replaceInstanceAction:@selector(lc_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [ObjCSwizzler replaceInstanceAction:@selector(lc_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
+    });
 }

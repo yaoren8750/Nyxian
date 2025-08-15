@@ -63,8 +63,11 @@ DEFINE_HOOK(SecItemDelete, OSStatus, (CFDictionaryRef query))
 
 void SecItemGuestHooksInit(void)
 {
-    DO_HOOK_GLOBAL(SecItemAdd)
-    DO_HOOK_GLOBAL(SecItemCopyMatching)
-    DO_HOOK_GLOBAL(SecItemUpdate)
-    DO_HOOK_GLOBAL(SecItemDelete)
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        DO_HOOK_GLOBAL(SecItemAdd)
+        DO_HOOK_GLOBAL(SecItemCopyMatching)
+        DO_HOOK_GLOBAL(SecItemUpdate)
+        DO_HOOK_GLOBAL(SecItemDelete)
+    });
 }

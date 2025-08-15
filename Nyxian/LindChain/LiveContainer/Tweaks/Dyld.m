@@ -148,23 +148,26 @@ void overwriteAppExecutableFileType(void)
 
 void DyldHooksInit(void)
 {
-    int imageCount = _dyld_image_count();
-    for(int i = 0; i < imageCount; ++i)
-    {
-        const struct mach_header* currentImageHeader = _dyld_get_image_header(i);
-        if(currentImageHeader->filetype == MH_EXECUTE)
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        int imageCount = _dyld_image_count();
+        for(int i = 0; i < imageCount; ++i)
         {
-            lcImageIndex = i;
-            break;
+            const struct mach_header* currentImageHeader = _dyld_get_image_header(i);
+            if(currentImageHeader->filetype == MH_EXECUTE)
+            {
+                lcImageIndex = i;
+                break;
+            }
         }
-    }
-    lcMainBundlePath = lcMainBundle.bundlePath.fileSystemRepresentation;
-    
-    DO_HOOK_GLOBAL(dlsym)
-    DO_HOOK_GLOBAL(_dyld_image_count)
-    DO_HOOK_GLOBAL(_dyld_get_image_header)
-    DO_HOOK_GLOBAL(_dyld_get_image_vmaddr_slide)
-    DO_HOOK_GLOBAL(_dyld_get_image_name)
+        lcMainBundlePath = lcMainBundle.bundlePath.fileSystemRepresentation;
+        
+        DO_HOOK_GLOBAL(dlsym)
+        DO_HOOK_GLOBAL(_dyld_image_count)
+        DO_HOOK_GLOBAL(_dyld_get_image_header)
+        DO_HOOK_GLOBAL(_dyld_get_image_vmaddr_slide)
+        DO_HOOK_GLOBAL(_dyld_get_image_name)
+    });
 }
 
 void* getGuestAppHeader(void)

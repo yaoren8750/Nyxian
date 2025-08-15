@@ -33,40 +33,42 @@ NSString* appContainerPath = 0;
 
 void NUDGuestHooksInit(void)
 {
-    appContainerPath = [NSString stringWithUTF8String:getenv("HOME")];
-    appContainerURL = [NSURL URLWithString:appContainerPath];
-
-    [ObjCSwizzler replaceInstanceAction:@selector(initWithDomain:user:byHost:containerPath:containingPreferences:)
-                                ofClass:NSClassFromString(@"CFPrefsPlistSource")
-                             withAction:@selector(hook_initWithDomain:user:byHost:containerPath:containingPreferences:)
-                                ofClass:CFPrefsPlistSource2.class];
-
-    Class CFXPreferencesClass = NSClassFromString(@"_CFXPreferences");
-    NSMutableDictionary* sources = object_getIvar([CFXPreferencesClass copyDefaultPreferences], class_getInstanceVariable(CFXPreferencesClass, "_sources"));
-
-    [sources removeObjectForKey:@"C/A//B/L"];
-    [sources removeObjectForKey:@"C/C//*/L"];
-    
-    const char* coreFoundationPath = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
-    
-    CFStringRef* _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
-    lcUserDefaults = [[NSUserDefaults alloc] init];
-    [lcUserDefaults _setIdentifier:(__bridge NSString*)CFStringCreateCopy(nil, *_CFPrefsCurrentAppIdentifierCache)];
-    *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)[guestMainBundle bundleIdentifier];
-    
-    NSUserDefaults* newStandardUserDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"whatever"];
-    [newStandardUserDefaults _setIdentifier:[guestMainBundle bundleIdentifier]];
-    NSUserDefaults.standardUserDefaults = newStandardUserDefaults;
-    
-    NSFileManager* fm = NSFileManager.defaultManager;
-    NSURL* libraryPath = [fm URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].lastObject;
-    NSURL* preferenceFolderPath = [libraryPath URLByAppendingPathComponent:@"Preferences"];
-    if(![fm fileExistsAtPath:preferenceFolderPath.path])
-    {
-        NSError* error;
-        [fm createDirectoryAtPath:preferenceFolderPath.path withIntermediateDirectories:YES attributes:@{} error:&error];
-    }
-    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        appContainerPath = [NSString stringWithUTF8String:getenv("HOME")];
+        appContainerURL = [NSURL URLWithString:appContainerPath];
+        
+        [ObjCSwizzler replaceInstanceAction:@selector(initWithDomain:user:byHost:containerPath:containingPreferences:)
+                                    ofClass:NSClassFromString(@"CFPrefsPlistSource")
+                                 withAction:@selector(hook_initWithDomain:user:byHost:containerPath:containingPreferences:)
+                                    ofClass:CFPrefsPlistSource2.class];
+        
+        Class CFXPreferencesClass = NSClassFromString(@"_CFXPreferences");
+        NSMutableDictionary* sources = object_getIvar([CFXPreferencesClass copyDefaultPreferences], class_getInstanceVariable(CFXPreferencesClass, "_sources"));
+        
+        [sources removeObjectForKey:@"C/A//B/L"];
+        [sources removeObjectForKey:@"C/C//*/L"];
+        
+        const char* coreFoundationPath = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
+        
+        CFStringRef* _CFPrefsCurrentAppIdentifierCache = litehook_find_dsc_symbol(coreFoundationPath, "__CFPrefsCurrentAppIdentifierCache");
+        lcUserDefaults = [[NSUserDefaults alloc] init];
+        [lcUserDefaults _setIdentifier:(__bridge NSString*)CFStringCreateCopy(nil, *_CFPrefsCurrentAppIdentifierCache)];
+        *_CFPrefsCurrentAppIdentifierCache = (__bridge CFStringRef)[guestMainBundle bundleIdentifier];
+        
+        NSUserDefaults* newStandardUserDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"whatever"];
+        [newStandardUserDefaults _setIdentifier:[guestMainBundle bundleIdentifier]];
+        NSUserDefaults.standardUserDefaults = newStandardUserDefaults;
+        
+        NSFileManager* fm = NSFileManager.defaultManager;
+        NSURL* libraryPath = [fm URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].lastObject;
+        NSURL* preferenceFolderPath = [libraryPath URLByAppendingPathComponent:@"Preferences"];
+        if(![fm fileExistsAtPath:preferenceFolderPath.path])
+        {
+            NSError* error;
+            [fm createDirectoryAtPath:preferenceFolderPath.path withIntermediateDirectories:YES attributes:@{} error:&error];
+        }
+    });
 }
 
 @implementation CFPrefsPlistSource2

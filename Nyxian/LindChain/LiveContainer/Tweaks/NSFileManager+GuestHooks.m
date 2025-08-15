@@ -33,7 +33,10 @@ NSURL *hook_containerURLForSecurityApplicationGroupIdentifier(id self, SEL _cmd,
 }
 
 void NSFMGuestHooksInit(void) {
-    [ObjCSwizzler replaceInstanceAction:@selector(containerURLForSecurityApplicationGroupIdentifier:)
-                                ofClass:NSFileManager.class
-                             withSymbol:hook_containerURLForSecurityApplicationGroupIdentifier];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [ObjCSwizzler replaceInstanceAction:@selector(containerURLForSecurityApplicationGroupIdentifier:)
+                                    ofClass:NSFileManager.class
+                                 withSymbol:hook_containerURLForSecurityApplicationGroupIdentifier];
+    });
 }
