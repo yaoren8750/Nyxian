@@ -19,6 +19,7 @@
 */
 
 import Foundation
+import Darwin
 
 func getOptimalThreadCount() -> Int {
     var cpuCount: Int = 0
@@ -48,7 +49,7 @@ func pthread_dispatch(_ code: @escaping () -> Void) {
 func getCpuThreads() -> Int {
     let value = (UserDefaults.standard.object(forKey: "cputhreads") != nil)
     ? UserDefaults.standard.integer(forKey: "cputhreads")
-    : 1
+    : getOptimalThreadCount()
     
     if value == 0 { return 1 }
     return value
