@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import "Logger.h"
+#import <Debugger/Logger.h>
 
 @implementation LogTextView
 
@@ -30,22 +30,6 @@
     self.editable = NO;
     self.selectable = YES;
     self.text = log;
-    
-    /*_pipe = [NSPipe pipe];
-    _handle = self.pipe.fileHandleForReading;
-    
-    dup2(_pipe.fileHandleForWriting.fileDescriptor, fileno(stdout));
-    dup2(_pipe.fileHandleForWriting.fileDescriptor, fileno(stderr));
-    
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-    
-    [[NSNotificationCenter defaultCenter]
-     addObserver:self
-     selector:@selector(handleNotification:)
-     name:NSFileHandleReadCompletionNotification
-     object:_handle
-    ];*/
     
     _pipe = pipe;
     _handle = fileHandle;

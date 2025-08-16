@@ -18,28 +18,12 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef LINDCHAIN_DEBUGGER_DEBUGGER_H
+#define LINDCHAIN_DEBUGGER_DEBUGGER_H
+
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
-
-@interface LogTextView : UITextView
-
-@property (nonatomic,strong,readonly) NSPipe *pipe;
-@property (nonatomic,strong,readonly) NSFileHandle *handle;
-
-- (instancetype)initWithPipe:(NSPipe*)pipe
-              withFileHandle:(NSFileHandle*)fileHandle
-                     withLog:(NSString*)log;
-
-@end
-
-@interface LoggerView : UIViewController
-
-@property (nonatomic,strong,readonly) LogTextView *loggerText;
-@property (nonatomic,strong,readonly) NSPipe *pipe;
-@property (nonatomic,strong,readonly) NSFileHandle *handle;
-@property (nonatomic,readonly) NSString *logString;
-
-@end
+#import <Debugger/Logger.h>
 
 @interface NyxianDebugger : NSObject
 
@@ -47,7 +31,10 @@
 @property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
 @property (nonatomic,readwrite,strong) UINavigationController *loggerViewController;
 
+- (instancetype)init;
++ (instancetype)shared;
 - (void)attachGestureToWindow:(UIWindow*)window;
-+ (NyxianDebugger*)shared;
 
 @end
+
+#endif /* LINDCHAIN_DEBUGGER_DEBUGGER_H */

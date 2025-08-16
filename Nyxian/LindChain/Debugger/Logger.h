@@ -18,27 +18,30 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef LINDCHAIN_DEBUGGER_LOGGER_H
+#define LINDCHAIN_DEBUGGER_LOGGER_H
+
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <objc/runtime.h>
-#import <Debugger/Debugger.h>
-#import <ObjC/Swizzle.h>
-#import <CoreGraphics/CoreGraphics.h>
 
-@implementation UIWindow (LiveContainer)
+@interface LogTextView : UITextView
 
-- (void)hook_makeKeyAndVisible
-{
-    [self hook_makeKeyAndVisible];
-    [[NyxianDebugger shared] attachGestureToWindow:self];
-}
+@property (nonatomic,strong,readonly) NSPipe *pipe;
+@property (nonatomic,strong,readonly) NSFileHandle *handle;
+
+- (instancetype)initWithPipe:(NSPipe*)pipe
+              withFileHandle:(NSFileHandle*)fileHandle
+                     withLog:(NSString*)log;
 
 @end
 
-void UIWindowHooksInit(void)
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        [ObjCSwizzler replaceInstanceAction:@selector(hook_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
-    });
-}
+@interface LoggerView : UIViewController
+
+@property (nonatomic,strong,readonly) LogTextView *loggerText;
+@property (nonatomic,strong,readonly) NSPipe *pipe;
+@property (nonatomic,strong,readonly) NSFileHandle *handle;
+@property (nonatomic,readonly) NSString *logString;
+
+@end
+
+#endif /* LINDCHAIN_DEBUGGER_LOGGER_H */

@@ -22,7 +22,7 @@
 #import <UIKit/UIKit.h>
 #import <Private/Restart.h>
 #import <Nyxian-Swift.h>
-#import "Logger.h"
+#import "Debugger.h"
 #include "MachServer.h"
 
 @implementation NyxianDebugger
@@ -36,7 +36,7 @@
     return self;
 }
 
-+ (NyxianDebugger*)shared
++ (instancetype)shared
 {
     static NyxianDebugger *nxdebugger = NULL;
     static dispatch_once_t onceToken;

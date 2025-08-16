@@ -21,6 +21,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Nyxian-Swift.h>
+#import <Debugger/Debugger.h>
 #import "bridge.h"
 
 /*
