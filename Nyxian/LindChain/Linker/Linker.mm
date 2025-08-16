@@ -18,13 +18,11 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <Linker/Linker.h>
 #include "lld/Common/Driver.h"
 #include "lld/Common/ErrorHandler.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/Support/raw_ostream.h"
-
-#include <vector>
-#include <string>
 
 extern "C" void ls_printf(const char *format, ...);
 
@@ -37,25 +35,47 @@ bool link(llvm::ArrayRef<const char *> args, llvm::raw_ostream &stdoutOS,
 } // namespace macho
 } // namespace lld
 
-extern "C" {
+@implementation Linker
 
-int linker(int argc, char **argv) {
+- (instancetype)init
+{
+    self = [super init];
+    return self;
+}
+
+- (int)ld64:(NSMutableArray*)flags
+{
+    // Allocating a C array by the given _flags array
+    const int argc = (int)[flags count] + 1;
+    char **argv = (char **)malloc(sizeof(char*) * argc);
+    argv[0] = strdup("ld64.lld");
+    for(int i = 1; i < argc; i++) argv[i] = strdup([[flags objectAtIndex:i - 1] UTF8String]);
+    
+    // Creating a ArrayRef for LLVM
     llvm::ArrayRef<const char*> args(argv, argc);
     
+    // Creating a errBuffer
     std::string errBuffer;
     llvm::raw_string_ostream errStream(errBuffer);
     
+    // Definining the drivers
     const lld::DriverDef drivers[] = {
         {lld::Darwin, &lld::macho::link},
     };
-
+    
+    // Link!
     lld::Result result = lld::lldMain(args, llvm::outs(), errStream, drivers);
     
+    // Flusing the error stram and priting it
     errStream.flush();
     
     ls_printf("%s", errBuffer.c_str());
     
+    // Deallocating the entire C array
+    for(int i = 0; i < argc; i++) free(argv[i]);
+    free(argv);
+    
     return result.retCode;
 }
 
-}
+@end

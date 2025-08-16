@@ -18,6 +18,16 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef LINDCHAIN_LINKER_LINKER_H
+#define LINDCHAIN_LINKER_LINKER_H
+
 #import <Foundation/Foundation.h>
 
-int LinkMachO(NSMutableArray *flags);
+@interface Linker : NSObject
+
+- (instancetype)init;
+- (int)ld64:(NSMutableArray*)flags;
+
+@end
+
+#endif /* LINDCHAIN_LINKER_LINKER_H */

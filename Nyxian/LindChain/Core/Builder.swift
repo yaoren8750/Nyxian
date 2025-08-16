@@ -24,6 +24,7 @@ import Combine
 class Builder {
     private let project: AppProject
     private let compiler: Compiler
+    private let linker: Linker
     private let argsString: String
     
     private var dirtySourceFiles: [String] = []
@@ -47,6 +48,7 @@ class Builder {
         genericCompilerFlags.append(contentsOf: compilerFlags)
         
         self.compiler = Compiler(genericCompilerFlags)
+        self.linker = Linker()
         
         let cachePath = project.getCachePath()
         
@@ -202,7 +204,7 @@ class Builder {
             ["Resources","Config"]
         ) + self.project.projectConfig.linker_flags
         
-        if LinkMachO((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
+        if self.linker.ld64((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
             throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:"Linking object files together to a executable failed"])
         }
     }

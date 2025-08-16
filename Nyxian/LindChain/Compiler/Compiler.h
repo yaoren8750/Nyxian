@@ -36,9 +36,4 @@
 
 @end
 
-///
-/// Function to typecheck code before we compile it to prevent memory leakage before compilation.
-///
-int typecheck( NSArray * _Nonnull nsargs);
-
 #endif /* FCMBridge_H */
