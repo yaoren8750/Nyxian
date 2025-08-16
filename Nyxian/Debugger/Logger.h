@@ -43,11 +43,11 @@
 
 @interface NyxianDebugger : NSObject
 
-@property (nonatomic,readonly,strong) UIViewController *rootViewController;
+@property (nonatomic,readwrite,strong) UIWindow *window;
 @property (nonatomic,readwrite,strong) UIVisualEffectView *blurView;
 @property (nonatomic,readwrite,strong) UINavigationController *loggerViewController;
 
-- (void)attachGestureToWindow:(UIWindow*)keyWindow;
+- (void)attachGestureToWindow:(UIWindow*)window;
 + (NyxianDebugger*)shared;
 
 @end

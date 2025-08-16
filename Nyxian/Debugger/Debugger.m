@@ -47,58 +47,57 @@
     return nxdebugger;
 }
 
-- (void)attachGestureToWindow:(UIWindow*)keyWindow {
-    UIViewController *rootVC = keyWindow.rootViewController;
+- (void)attachGestureToWindow:(UIWindow*)window {
+    _window = window;
     
-    if (rootVC) {
-        UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-        longPress.minimumPressDuration = 0.5;
-        [rootVC.view addGestureRecognizer:longPress];
+    if(!_window)
+        return;
+    
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
+    self.blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+    self.blurView.frame = _window.bounds;
+    self.blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    self.blurView.alpha = 0.0;
+    [_window addSubview:self.blurView];
+    
+    UIButton *consoleButton = [self createDebuggerButtonWithSymbol:@"apple.terminal.fill"
+                                                         markColor:nil
+                                                            action:@selector(handleConsoleButton:)];
+    UIButton *fileButton = [self createDebuggerButtonWithSymbol:@"folder.fill"
+                                                      markColor:nil
+                                                         action:@selector(handleFileButton:)];
+    UIButton *backButton = [self createDebuggerButtonWithSymbol:@"arrowshape.turn.up.backward.fill"
+                                                      markColor:UIColor.systemRedColor
+                                                         action:@selector(handleBackButton:)];
+    
+    [_blurView.contentView addSubview:consoleButton];
+    [_blurView.contentView addSubview:fileButton];
+    [_blurView.contentView addSubview:backButton];
+    
+    [NSLayoutConstraint activateConstraints:@[
+        [consoleButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
+        [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-45],
         
-        _rootViewController = rootVC;
-    }
+        [fileButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
+        [fileButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:45],
+        
+        [backButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
+        [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.bottomAnchor constant:-100],
+    ]];
+    
+    UITapGestureRecognizer *blurTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
+    blurTap.numberOfTapsRequired = 1;
+    [self.blurView addGestureRecognizer:blurTap];
+    
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    longPress.minimumPressDuration = 0.5;
+    [_window addGestureRecognizer:longPress];
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture
 {
-    if (gesture.state == UIGestureRecognizerStateBegan && _blurView == NULL)
+    if (gesture.state == UIGestureRecognizerStateBegan)
     {
-        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
-        self.blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
-        self.blurView.frame = _rootViewController.view.bounds;
-        self.blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.blurView.alpha = 0.0;
-        [_rootViewController.view addSubview:self.blurView];
-        
-        UIButton *consoleButton = [self createDebuggerButtonWithSymbol:@"apple.terminal.fill"
-                                                             markColor:nil
-                                                                action:@selector(handleConsoleButton:)];
-        UIButton *fileButton = [self createDebuggerButtonWithSymbol:@"folder.fill"
-                                                          markColor:nil
-                                                             action:@selector(handleFileButton:)];
-        UIButton *backButton = [self createDebuggerButtonWithSymbol:@"arrowshape.turn.up.backward.fill"
-                                                          markColor:UIColor.systemRedColor
-                                                             action:@selector(handleBackButton:)];
-        
-        [_blurView.contentView addSubview:consoleButton];
-        [_blurView.contentView addSubview:fileButton];
-        [_blurView.contentView addSubview:backButton];
-        
-        [NSLayoutConstraint activateConstraints:@[
-            [consoleButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-            [consoleButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:-45],
-            
-            [fileButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-            [fileButton.centerYAnchor constraintEqualToAnchor:self.blurView.centerYAnchor constant:45],
-            
-            [backButton.centerXAnchor constraintEqualToAnchor:self.blurView.centerXAnchor],
-            [backButton.centerYAnchor constraintEqualToAnchor:self.blurView.bottomAnchor constant:-100],
-        ]];
-        
-        UITapGestureRecognizer *blurTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleBlurTap:)];
-        blurTap.numberOfTapsRequired = 1;
-        [self.blurView addGestureRecognizer:blurTap];
-        
         [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
             self.blurView.alpha = 1.0;
         } completion:nil];
@@ -109,13 +108,7 @@
 {
     [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionCurveEaseOut animations:^{
         self.blurView.alpha = 0.0;
-    } completion:^(BOOL isFinished) {
-        if(isFinished)
-        {
-            [self.blurView removeFromSuperview];
-            self.blurView = NULL;
-        }
-    }];
+    } completion:nil];
 }
 
 - (UIButton *)createDebuggerButtonWithSymbol:(NSString *)symbolName markColor:(UIColor*)markColor action:(SEL)selector
@@ -155,14 +148,14 @@
  */
 - (void)handleConsoleButton:(UIButton *)sender
 {
-    [self.rootViewController presentViewController:self.loggerViewController animated:YES completion:nil];
+    [_window.rootViewController presentViewController:self.loggerViewController animated:YES completion:nil];
 }
 
 - (void)handleFileButton:(UIButton *)sender
 {
     FileListViewController *fileVC = [[FileListViewController alloc] initWithIsSublink:NO path:NSHomeDirectory()];
     UINavigationController *fileNav = [[UINavigationController alloc] initWithRootViewController:fileVC];
-    [self.rootViewController presentViewController:fileNav animated:YES completion:nil];
+    [_window.rootViewController presentViewController:fileNav animated:YES completion:nil];
 }
 
 - (void)handleBackButton:(UIButton *)sender

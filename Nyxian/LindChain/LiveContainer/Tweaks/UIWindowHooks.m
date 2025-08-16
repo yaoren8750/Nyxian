@@ -23,17 +23,14 @@
 #import <objc/runtime.h>
 #import "../Debugger/Logger.h"
 #import <ObjC/Swizzle.h>
+#import <CoreGraphics/CoreGraphics.h>
 
-@implementation UIWindow(LiveContainer)
+@implementation UIWindow (LiveContainer)
 
-- (void)lc_makeKeyAndVisible
+- (void)hook_makeKeyAndVisible
 {
-    [self lc_makeKeyAndVisible];
-    
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        [[NyxianDebugger shared] attachGestureToWindow:self];
-    });
+    [self hook_makeKeyAndVisible];
+    [[NyxianDebugger shared] attachGestureToWindow:self];
 }
 
 @end
@@ -42,6 +39,6 @@ void UIWindowHooksInit(void)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        [ObjCSwizzler replaceInstanceAction:@selector(lc_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
+        [ObjCSwizzler replaceInstanceAction:@selector(hook_makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(makeKeyAndVisible)];
     });
 }
