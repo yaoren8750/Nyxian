@@ -186,7 +186,10 @@ class SplitScreenDetailViewController: UIViewController {
         ])
         
         let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
-            self.buildProject()
+            buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
+        })
+        let packageButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "archivebox.fill"), primaryAction: UIAction { _ in
+            buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .InstallPackagedApp)
         })
         let issueNavigator: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "exclamationmark.triangle.fill"), primaryAction: UIAction { _ in
             let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
@@ -198,7 +201,7 @@ class SplitScreenDetailViewController: UIViewController {
             loggerView.modalPresentationStyle = .formSheet
             self.present(loggerView, animated: true)
         })
-        self.navigationItem.rightBarButtonItems = [buildButton,issueNavigator,console]
+        self.navigationItem.rightBarButtonItems = [buildButton,packageButton,issueNavigator,console]
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleMyNotification(_:)), name: Notification.Name("FileListAct"), object: nil)
     }
@@ -210,35 +213,6 @@ class SplitScreenDetailViewController: UIViewController {
             self.addTab(path: args[1])
         } else {
             return
-        }
-    }
-    
-    private func buildProject() {
-        self.navigationItem.titleView?.isUserInteractionEnabled = false
-        XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
-        LDELogger.clear()
-        guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
-        let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
-
-        self.navigationItem.setRightBarButton(barButton, animated: true)
-        self.navigationItem.setHidesBackButton(true, animated: true)
-        
-        Builder.buildProject(withProject: project) { result in
-            DispatchQueue.main.async {
-                self.navigationItem.setRightBarButton(oldBarButton, animated: true)
-                self.navigationItem.setHidesBackButton(false, animated: true)
-                
-                if !result {
-                    /*if self.project.projectConfig.restartApp {
-                        self.openTheLogSheet = true
-                        restartProcess()
-                    } else {*/
-                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
-                    loggerView.modalPresentationStyle = .formSheet
-                    self.present(loggerView, animated: true)
-                    //}
-                }
-            }
         }
     }
     

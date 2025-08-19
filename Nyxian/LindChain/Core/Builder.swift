@@ -113,6 +113,11 @@ class Builder {
             if FileManager.default.fileExists(atPath: payloadPath) {
                 try? FileManager.default.removeItem(atPath: payloadPath)
             }
+            
+            let packagedApp: String = self.project.getPackagePath()
+            if FileManager.default.fileExists(atPath: packagedApp) {
+                try? FileManager.default.removeItem(atPath: packagedApp)
+            }
         }
     }
     
@@ -224,10 +229,20 @@ class Builder {
         }, progressHandler: { progress in }, forceSign: false)
     }
     
+    func package() throws {
+        try FileManager.default.zipItem(at: URL(fileURLWithPath: project.getPayloadPath()), to: URL(fileURLWithPath: project.getPackagePath()))
+    }
+    
     ///
     /// Static function to build the project
     ///
+    enum BuildType {
+        case RunningApp
+        case InstallPackagedApp
+    }
+    
     static func buildProject(withProject project: AppProject,
+                             buildType: Builder.BuildType,
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
         
@@ -268,14 +283,22 @@ class Builder {
             }
             
             do {
-                // doit
-                try progressFlowBuilder(flow: [
+                // prepare
+                var flow: [(String?,Double?,() throws -> Void)] = [
                     (nil,nil,{ try builder.clean() }),
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
-                    ("link",0.3,{ try builder.link() }),
-                    ("arrow.down.app.fill",nil,{try builder.install() })
-                ])
+                    ("link",0.3,{ try builder.link() })
+                ];
+                
+                if buildType == .RunningApp {
+                    flow.append(("arrow.down.app.fill",nil,{try builder.install() }))
+                } else {
+                    flow.append(("",nil,{try builder.package()}))
+                }
+                
+                // doit
+                try progressFlowBuilder(flow: flow)
             } catch {
                 try? builder.clean()
                 result = false
@@ -285,6 +308,35 @@ class Builder {
             builder.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
             
             completion(result)
+        }
+    }
+}
+
+func buildProjectWithArgumentUI(targetViewController: UIViewController,
+                                project: AppProject,
+                                buildType: Builder.BuildType) {
+    targetViewController.navigationItem.titleView?.isUserInteractionEnabled = false
+    XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
+    LDELogger.clear()
+    guard let oldBarButtons: [UIBarButtonItem] = targetViewController.navigationItem.rightBarButtonItems else { return }
+    
+    let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
+    
+    targetViewController.navigationItem.setRightBarButtonItems([barButton], animated: true)
+    targetViewController.navigationItem.setHidesBackButton(true, animated: true)
+    
+    Builder.buildProject(withProject: project, buildType: buildType) { result in
+        DispatchQueue.main.async {
+            targetViewController.navigationItem.setRightBarButtonItems(oldBarButtons, animated: true)
+            targetViewController.navigationItem.setHidesBackButton(false, animated: true)
+            
+            if !result {
+                let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
+                loggerView.modalPresentationStyle = .formSheet
+                targetViewController.present(loggerView, animated: true)
+            } else if buildType == .InstallPackagedApp {
+                share(url: URL(fileURLWithPath: project.getPackagePath()), remove: true)
+            }
         }
     }
 }

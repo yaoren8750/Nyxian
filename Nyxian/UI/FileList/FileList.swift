@@ -161,7 +161,10 @@ import UniformTypeIdentifiers
         if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad, let project = self.project {
             var projectMenuElements: [UIMenuElement] = []
             projectMenuElements.append(UIAction(title: "Run", image: UIImage(systemName: "play.fill"), handler: { _ in
-                self.buildProject()
+                buildProjectWithArgumentUI(targetViewController: self, project: project, buildType: .RunningApp)
+            }))
+            projectMenuElements.append(UIAction(title: "Export", image: UIImage(systemName: "archivebox.fill"), handler: { _ in
+                buildProjectWithArgumentUI(targetViewController: self, project: project, buildType: .InstallPackagedApp)
             }))
             projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { _ in
                 let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
@@ -548,70 +551,47 @@ import UniformTypeIdentifiers
             addFile(destination: destination)
         }
     }
-    
-    ///
-    /// Private: Function to initiate building the app
-    ///
-    private func buildProject() {
-        if let project = self.project {
-            self.navigationItem.titleView?.isUserInteractionEnabled = false
-            XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
-            LDELogger.clear()
-            guard let oldBarButton: UIBarButtonItem = self.navigationItem.rightBarButtonItem else { return }
-            let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)
-            
-            self.navigationItem.setRightBarButton(barButton, animated: true)
-            self.navigationItem.setHidesBackButton(true, animated: true)
-            
-            Builder.buildProject(withProject: project) { result in
-                DispatchQueue.main.async {
-                    self.navigationItem.setRightBarButton(oldBarButton, animated: true)
-                    self.navigationItem.setHidesBackButton(false, animated: true)
-                    
-                    if !result {
-                        if project.projectConfig.restartApp {
-                            self.openTheLogSheet = true
-                            restartProcess()
-                        } else {
-                            let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
-                            loggerView.modalPresentationStyle = .formSheet
-                            self.present(loggerView, animated: true)
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
-func share(url: URL, remove: Bool = false) -> Void {
+func share(url: URL, remove: Bool = false) {
     let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-    activityViewController.modalPresentationStyle = .popover
-        if remove {
-        activityViewController.completionWithItemsHandler = { activity, success, items, error in
+    
+    if remove {
+        activityViewController.completionWithItemsHandler = { _, _, _, _ in
             do {
                 try FileManager.default.removeItem(at: url)
             } catch {
+                print("Failed to remove file: \(error)")
             }
         }
     }
+    
+    activityViewController.modalPresentationStyle = .popover
 
     DispatchQueue.main.async {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            if let rootViewController = windowScene.windows.first?.rootViewController {
-                if let popoverController = activityViewController.popoverPresentationController {
-                    popoverController.sourceView = rootViewController.view
-                    popoverController.sourceRect = CGRect(x: rootViewController.view.bounds.midX,
-                                                      y: rootViewController.view.bounds.midY,
-                                                      width: 0, height: 0)
-                    popoverController.permittedArrowDirections = []
-                }
-                rootViewController.present(activityViewController, animated: true, completion: nil)
-            } else {
-                print("No root view controller found.")
-            }
-        } else {
-            print("No window scene found.")
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow }),
+              let rootViewController = keyWindow.rootViewController else {
+            print("No key window or root view controller found.")
+            return
         }
+
+        var topController = rootViewController
+        while let presented = topController.presentedViewController {
+            topController = presented
+        }
+
+        if let popoverController = activityViewController.popoverPresentationController {
+            popoverController.sourceView = topController.view
+            popoverController.sourceRect = CGRect(
+                x: topController.view.bounds.midX,
+                y: topController.view.bounds.midY,
+                width: 0,
+                height: 0
+            )
+            popoverController.permittedArrowDirections = []
+        }
+
+        topController.present(activityViewController, animated: true)
     }
 }
