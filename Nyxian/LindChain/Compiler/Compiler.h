@@ -32,7 +32,7 @@
 - (int)compileObject:(nonnull NSString*)filePath
           outputFile:(NSString*)outputFilePath
       platformTriple:(NSString*)platformTriple
-              issues:(NSMutableArray<Synitem*> * _Nullable * _Nonnull)issues;
+              issues:(NSArray<Synitem*> * * _Nonnull)issues;
 
 @end
 

@@ -63,7 +63,7 @@ int CompileObject(int argc,
 - (int)compileObject:(nonnull NSString*)filePath
           outputFile:(NSString*)outputFilePath
       platformTriple:(NSString*)platformTriple
-              issues:(NSMutableArray<Synitem*> * _Nullable * _Nonnull)issues
+              issues:(NSArray<Synitem*> * * _Nonnull)issues
 {
     // Allocating a C array by the given _flags array
     const int argc = (int)[_flags count] + 2;
@@ -83,12 +83,8 @@ int CompileObject(int argc,
     // Check if errorString is allocated, if so...
     if(errorString)
     {
-        // Check if pointer to issues exists, if so allocate a array for it
-        if(issues)
-            *issues = [[NSMutableArray alloc] init];
-        
         NSString *errorObjCString = [NSString stringWithCString:errorString encoding:NSUTF8StringEncoding];
-        [Synitem OfClangErrorWithString:errorObjCString usingArray:issues];
+        *issues = [Synitem OfClangErrorWithString:errorObjCString];
         free(errorString);
     }
     
