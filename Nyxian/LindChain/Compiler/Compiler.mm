@@ -80,8 +80,13 @@ int CompileObject(int argc,
     char *errorString = NULL;
     const int result = CompileObject(argc, (const char**)argv, [outputFilePath UTF8String], [platformTriple UTF8String], &errorString);
     
+    // Check if errorString is allocated, if so...
     if(errorString)
     {
+        // Check if pointer to issues exists, if so allocate a array for it
+        if(issues)
+            *issues = [[NSMutableArray alloc] init];
+        
         NSString *errorObjCString = [NSString stringWithCString:errorString encoding:NSUTF8StringEncoding];
         [Synitem OfClangErrorWithString:errorObjCString usingArray:issues];
         free(errorString);

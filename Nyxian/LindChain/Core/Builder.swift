@@ -154,7 +154,7 @@ class Builder {
         for filePath in self.dirtySourceFiles {
             group.enter()
             threader.spawn {
-                var issues: NSMutableArray? = NSMutableArray()
+                var issues: NSMutableArray?
                 
                 if self.compiler.compileObject(
                     filePath,
