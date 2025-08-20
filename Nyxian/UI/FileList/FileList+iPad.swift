@@ -102,12 +102,21 @@ class SplitScreenDetailViewController: UIViewController {
     private let tabBarView = UIView()
     private let stack = UIStackView()
     private var tabs: [UIButtonTab] = []
+    
     func addTab(path: String) {
+        if let existingTab = tabs.first(where: { $0.path == path }) {
+            self.childButton = existingTab
+            self.childVC = existingTab.vc
+            updateTabSelection(selectedTab: existingTab)
+            return
+        }
+
         let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100),
                                  project: self.project,
                                  path: path) { button in
             self.childButton = button
             self.childVC = button.vc
+            self.updateTabSelection(selectedTab: button)
         } closeAction: { button in
             if self.childVC == button.vc {
                 self.childVC = nil
@@ -116,9 +125,22 @@ class SplitScreenDetailViewController: UIViewController {
                 synpushServer.deinit()
             }
             self.stack.removeArrangedSubview(button)
+            button.removeFromSuperview()
+            if let index = self.tabs.firstIndex(of: button) {
+                self.tabs.remove(at: index)
+            }
+
+            if let lastTab = self.tabs.last {
+                self.childButton = lastTab
+                self.childVC = lastTab.vc
+                self.updateTabSelection(selectedTab: lastTab)
+            }
         }
-        
+
         self.stack.addArrangedSubview(button)
+        self.tabs.append(button)
+        
+        self.updateTabSelection(selectedTab: button)
     }
     
     /*
@@ -213,6 +235,18 @@ class SplitScreenDetailViewController: UIViewController {
             self.addTab(path: args[1])
         } else {
             return
+        }
+    }
+    
+    private func updateTabSelection(selectedTab: UIButtonTab?) {
+        let selectionColor = currentTheme?.gutterBackgroundColor ?? UIColor.systemGray4
+        
+        for tab in tabs {
+            if tab == selectedTab {
+                tab.backgroundColor = selectionColor
+            } else {
+                tab.backgroundColor = selectionColor.darker(by: 4)
+            }
         }
     }
     
@@ -317,3 +351,20 @@ class UIButtonTab: UIButton {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+extension UIColor {
+    func darker(by percentage: CGFloat = 30.0) -> UIColor {
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else {
+            return self
+        }
+
+        let newBrightness = max(brightness - percentage/100, 0)
+        return UIColor(hue: hue, saturation: saturation, brightness: newBrightness, alpha: alpha)
+    }
+}
+
