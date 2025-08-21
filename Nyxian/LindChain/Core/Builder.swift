@@ -128,15 +128,26 @@ class Builder {
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
             
-            // Now copy info dictionary given info dictionary and add/overwrite info
-            var infoPlistData: [String:Any] = self.project.projectConfig.infoDictionary
-            infoPlistData["CFBundleExecutable"] = self.project.projectConfig.executable
-            infoPlistData["CFBundleIdentifier"] = self.project.projectConfig.bundleid
-            infoPlistData["CFBundleName"] = self.project.projectConfig.displayname
-            infoPlistData["CFBundleShortVersionString"] = self.project.projectConfig.version
-            infoPlistData["CFBundleVersion"] = self.project.projectConfig.shortVersion
-            infoPlistData["MinimumOSVersion"] = self.project.projectConfig.minimum_version
-            infoPlistData["UIDeviceFamily"] = [1,2]
+            var infoPlistData: [String: Any] = [
+                "CFBundleExecutable": self.project.projectConfig.executable,
+                "CFBundleIdentifier": self.project.projectConfig.bundleid,
+                "CFBundleName": self.project.projectConfig.displayname,
+                "CFBundleShortVersionString": self.project.projectConfig.version,
+                "CFBundleVersion": self.project.projectConfig.shortVersion,
+                "MinimumOSVersion": self.project.projectConfig.minimum_version,
+                "UIDeviceFamily": [1, 2],
+                "UIRequiresFullScreen": false,
+                "UISupportedInterfaceOrientations~ipad": [
+                    "UIInterfaceOrientationPortrait",
+                    "UIInterfaceOrientationPortraitUpsideDown",
+                    "UIInterfaceOrientationLandscapeLeft",
+                    "UIInterfaceOrientationLandscapeRight"
+                ]
+            ]
+
+            for (key, value) in self.project.projectConfig.infoDictionary {
+                infoPlistData[key] = value
+            }
             
             let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
             FileManager.default.createFile(atPath:"\(bundlePath)/Info.plist", contents: infoPlistDataSerialized, attributes: nil)

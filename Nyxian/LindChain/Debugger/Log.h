@@ -18,26 +18,19 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LINDCHAIN_DEBUGGER_UTILS_H
-#define LINDCHAIN_DEBUGGER_UTILS_H
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dlfcn.h>
-#include <mach/mach.h>
-#include <mach/exc.h>
-#include <mach/exception.h>
-#include <mach/exception_types.h>
-#include <mach/thread_act.h>
-#include <mach/thread_state.h>
 #import <Foundation/Foundation.h>
-#import <Decompiler/Decompiler.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <sys/stat.h>
 
-const char *symbol_for_address(void *addr);
-void stack_trace_from_thread_state(arm_thread_state64_t state);
-
-uint64_t get_thread_id_from_port(thread_t thread);
-int get_thread_index_from_port(thread_t target);
-
-#endif /* LINDCHAIN_DEBUGGER_UTILS_H */
+void log_init(void);
+void log_putc(char c);
+void log_puts(const char *buf);
+void log_putf(const char *fmt, ...);
+void log_deinit(void);
+NSString *logReadIfAvailable(void);

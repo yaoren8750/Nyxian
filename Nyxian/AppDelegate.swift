@@ -43,7 +43,7 @@ import UIKit
         
         tabViewController.viewControllers = [projectsNavigationController, settingsNavigationController]
         
-        if let appException = UserDefaults.standard.string(forKey: "LDEAppException") {
+        if let appException = logReadIfAvailable() {
             UserDefaults.standard.set(nil, forKey: "LDEAppException")
             
             let blurEffect: UIBlurEffect = UIBlurEffect(style: .systemMaterial)

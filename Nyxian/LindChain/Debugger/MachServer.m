@@ -30,14 +30,7 @@
 #include <mach/thread_state.h>
 #include "litehook.h"
 #include "Utils.h"
-
-extern NSUserDefaults *lcUserDefaults;
-
-void saveExceptionAndRestart(const char *crashBuffer)
-{
-    [lcUserDefaults setValue:[NSString stringWithCString:crashBuffer encoding:NSUTF8StringEncoding] forKey:@"LDEAppException"];
-    restartProcess();
-}
+#include "Log.h"
 
 const char *exceptionName(exception_type_t exception)
 {
@@ -70,61 +63,27 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
     thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
     
-    NSString *debugString = stack_trace_from_thread_state(state);
+    log_putf("Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
+             "PC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
+             exceptionName(exception),
+             get_thread_index_from_port(thread),
+             state.__pc,
+             symbol_for_address((void*)state.__pc),
+             state.__pc,
+             state.__sp,
+             state.__fp,
+             state.__lr,
+             state.__cpsr,
+             state.__pad);
     
-    vm_size_t debugStringSize = [[debugString dataUsingEncoding:NSUTF8StringEncoding] length];
-    size_t offset = 0;
-    kern_return_t kr = KERN_SUCCESS;
-    static vm_size_t bufferSize = 0x00;
-    static vm_address_t bufferAddr = 0x00;
-    if(!bufferAddr)
-    {
-        // Handle buffer not being allocated yet
-        bufferSize = 4086 + debugStringSize;
-        kr = vm_allocate(task, &bufferAddr, bufferSize, VM_FLAGS_ANYWHERE);
-        if(kr != KERN_SUCCESS)
-            return kr;
-    }
-    else if(debugStringSize > (bufferSize - 4086))
-    {
-        // Handling buffer being too small
-        vm_deallocate(task, bufferAddr, bufferSize);
-        bufferSize = 4086 + debugStringSize;
-        kr = vm_allocate(task, &bufferAddr, bufferSize, VM_FLAGS_ANYWHERE);
-        if(kr != KERN_SUCCESS)
-            return kr;
-    }
+    for (uint8_t i = 0; i < 29; i++)
+        log_putf("\nX%d: 0x%llx",
+                 i,
+                 state.__x[i]);
+    stack_trace_from_thread_state(state);
+    log_deinit();
     
-    char *crashBuffer = (char*)bufferAddr;
-
-    offset += snprintf(crashBuffer + offset,
-                       bufferSize - offset,
-                       "Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
-                       "PC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
-                       exceptionName(exception),
-                       get_thread_index_from_port(thread),
-                       state.__pc,
-                       symbol_for_address((void*)state.__pc),
-                       state.__pc,
-                       state.__sp,
-                       state.__fp,
-                       state.__lr,
-                       state.__cpsr,
-                       state.__pad);
-
-    for (uint8_t i = 0; i < 29 && offset < bufferSize; i++)
-        offset += snprintf(crashBuffer + offset,
-                           bufferSize - offset,
-                           "\nX%d: 0x%llx",
-                           i,
-                           state.__x[i]);
-    
-    if (offset < bufferSize)
-        offset += snprintf(crashBuffer + offset, bufferSize - offset,
-                           "\n\n%s", [debugString UTF8String]);
-    
-    state.__pc = (uint64_t)saveExceptionAndRestart;
-    state.__x[0] = (uint64_t)crashBuffer;
+    state.__pc = (uint64_t)restartProcess;
     
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     
@@ -234,6 +193,9 @@ DEFINE_HOOK(exit, void, (int code))
 
 void machServerInit(void)
 {
+    // Init log
+    log_init();
+    
     // Hooking exit to avoid exiting the process
     DO_HOOK_GLOBAL(exit);
     
