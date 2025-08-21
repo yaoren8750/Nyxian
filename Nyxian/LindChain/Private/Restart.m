@@ -30,7 +30,7 @@ void restartProcess(void)
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // iOS 26 Beta 7 fix
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.apple.springboard"];
             [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:targetBundle.bundleIdentifier];
             exit(0);
