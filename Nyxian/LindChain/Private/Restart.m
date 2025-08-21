@@ -29,11 +29,20 @@ void restartProcess(void)
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // iOS 26 Beta 7 fix
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.apple.springboard"];
-            [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:targetBundle.bundleIdentifier];
+        if (@available(iOS 19, *)) {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.apple.springboard"];
+                [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:targetBundle.bundleIdentifier];
+                exit(0);
+            });
+        } else {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                while(YES)
+                    [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:[targetBundle bundleIdentifier]];
+            });
+            
+            usleep(1000);
             exit(0);
-        });
+        }
     });
 }
