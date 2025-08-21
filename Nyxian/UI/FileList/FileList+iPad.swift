@@ -66,21 +66,19 @@ class SplitScreenDetailViewController: UIViewController {
                     return
                 }
                 
-                self.view.constraints
-                    .filter { constraint in
-                        return constraint.firstItem as? UIView == oldVC.view || constraint.secondItem as? UIView == oldVC.view
-                    }
-                    .forEach { constraint in
-                        self.view.removeConstraint(constraint)
-                    }
-
-                oldVC.view.removeFromSuperview()
-                oldVC.removeFromParent()
+                // Animate oldVC out
+                UIView.animate(withDuration: 0.3, animations: {
+                    oldVC.view.alpha = 0
+                }, completion: { _ in
+                    oldVC.view.removeFromSuperview()
+                    oldVC.removeFromParent()
+                })
             }
 
             if let vc = newValue {
                 childVCMaster = vc
                 self.addChild(vc)
+                vc.view.alpha = 0 // Start invisible
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
@@ -89,6 +87,11 @@ class SplitScreenDetailViewController: UIViewController {
                     vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
                 ])
+                
+                // Animate new VC in
+                UIView.animate(withDuration: 0.3) {
+                    vc.view.alpha = 1
+                }
             }
             
             self.lock.unlock()
@@ -124,16 +127,30 @@ class SplitScreenDetailViewController: UIViewController {
             if let synpushServer = button.vc.synpushServer {
                 synpushServer.deinit()
             }
+            
+            guard let index = self.tabs.firstIndex(of: button) else { return }
+            
             self.stack.removeArrangedSubview(button)
             button.removeFromSuperview()
-            if let index = self.tabs.firstIndex(of: button) {
-                self.tabs.remove(at: index)
+            self.tabs.remove(at: index)
+            
+            var newSelectedTab: UIButtonTab? = nil
+            if self.tabs.count > 0 {
+                if index < self.tabs.count {
+                    newSelectedTab = self.tabs[index]
+                } else if index - 1 >= 0 {
+                    newSelectedTab = self.tabs[index - 1]
+                }
             }
-
-            if let lastTab = self.tabs.last {
-                self.childButton = lastTab
-                self.childVC = lastTab.vc
-                self.updateTabSelection(selectedTab: lastTab)
+            
+            if let tabToSelect = newSelectedTab {
+                self.childButton = tabToSelect
+                self.childVC = tabToSelect.vc
+                self.updateTabSelection(selectedTab: tabToSelect)
+            } else {
+                self.childButton = nil
+                self.childVC = nil
+                self.updateTabSelection(selectedTab: nil)
             }
         }
 
@@ -240,12 +257,17 @@ class SplitScreenDetailViewController: UIViewController {
     
     private func updateTabSelection(selectedTab: UIButtonTab?) {
         let selectionColor = currentTheme?.gutterBackgroundColor ?? UIColor.systemGray4
+
+        let selectedColor: UIColor = selectionColor
+        let unselectedColor: UIColor = selectedColor.darker(by: 4)
         
         for tab in tabs {
-            if tab == selectedTab {
-                tab.backgroundColor = selectionColor
-            } else {
-                tab.backgroundColor = selectionColor.darker(by: 4)
+            let targetColor: UIColor = (tab == selectedTab) ? selectedColor : unselectedColor
+            let targetAlpha: CGFloat = (tab == selectedTab) ? 1.0 : 0.0
+            
+            UIView.animate(withDuration: 0.25) {
+                tab.backgroundColor = targetColor
+                tab.closeButton.alpha = targetAlpha
             }
         }
     }
@@ -258,6 +280,7 @@ class SplitScreenDetailViewController: UIViewController {
 class UIButtonTab: UIButton {
     let path: String
     let vc: CodeEditorViewController
+    let closeButton: UIButton
     
     init(frame: CGRect,
          project: AppProject,
@@ -266,6 +289,7 @@ class UIButtonTab: UIButton {
          closeAction: @escaping (UIButtonTab) -> Void) {
         self.path = path
         self.vc = CodeEditorViewController(project: project, path: path)
+        self.closeButton = UIButton()
         
         super.init(frame: frame)
         
@@ -306,20 +330,19 @@ class UIButtonTab: UIButton {
         }, for: .touchUpInside)
         
         // Close button
-        let closeButton: UIButton = UIButton()
-        closeButton.setImage(UIImage(systemName: "ellipsis"), for: .normal)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(closeButton)
+        self.closeButton.setImage(UIImage(systemName: "ellipsis"), for: .normal)
+        self.closeButton.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(self.closeButton)
         
         NSLayoutConstraint.activate([
-            closeButton.topAnchor.constraint(equalTo: self.topAnchor),
-            closeButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-            closeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            closeButton.heightAnchor.constraint(equalTo: self.heightAnchor),
-            closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor)
+            self.closeButton.topAnchor.constraint(equalTo: self.topAnchor),
+            self.closeButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            self.closeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            self.closeButton.heightAnchor.constraint(equalTo: self.heightAnchor),
+            self.closeButton.widthAnchor.constraint(equalTo: self.closeButton.heightAnchor)
         ])
         
-        closeButton.showsMenuAsPrimaryAction = true
+        self.closeButton.showsMenuAsPrimaryAction = true
         
         // Open before making the menu
         openAction(self)
