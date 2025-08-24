@@ -34,3 +34,9 @@
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);
+void addr_to_line(const char *binaryPath);
+void checkDWARFSection(const char* path);
+
+const char *getExceptionFromObjectFile(const char *objectFilePath,
+                                       const char *functionName,
+                                       uint64_t offset);

@@ -80,8 +80,9 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
         log_putf("\nX%d: 0x%llx",
                  i,
                  state.__x[i]);
+    
     stack_trace_from_thread_state(state);
-    log_deinit();
+    log_deinitCrash(state.__pc);
     
     state.__pc = (uint64_t)restartProcess;
     

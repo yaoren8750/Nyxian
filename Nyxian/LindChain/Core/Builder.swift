@@ -28,6 +28,7 @@ class Builder {
     private let argsString: String
     
     private var dirtySourceFiles: [String] = []
+    private var objectFiles: [String] = []
     
     let database: DebugDatabase
     
@@ -55,6 +56,9 @@ class Builder {
         try? syncFolderStructure(from: project.getPath().URLGet(), to: cachePath.URLGet())
         
         self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
+        for item in dirtySourceFiles {
+            objectFiles.append("\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())))")
+        }
         
         // Check if args have changed
         self.argsString = compilerFlags.joined(separator: " ")
@@ -211,14 +215,11 @@ class Builder {
             "-arch",
             "arm64",
             "-syslibroot",
-            Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
+            Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk")
+        ] + self.project.projectConfig.linker_flags + [
             "-o",
             self.project.getMachOPath()
-        ] + FindFilesStack(
-            project.getCachePath(),
-            ["o"],
-            ["Resources","Config"]
-        ) + self.project.projectConfig.linker_flags
+        ] + objectFiles
         
         if self.linker.ld64((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
             throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:"Linking object files together to a executable failed"])

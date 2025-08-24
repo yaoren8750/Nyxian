@@ -19,16 +19,45 @@
 */
 
 #import <Debugger/Log.h>
+#include <dlfcn.h>
+#include "Utils.h"
 
-static int destination_file_descriptor = 0;
+@implementation LogContext
+@end
 
+static int destination_file_descriptor = -1;
+
+/*
+ Private
+ */
+static const char *log_init_logDocumentPath(void)
+{
+    // Holder for document path
+    static char logDocumentPath[512];
+    
+    // Singleton
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        off_t offset = sprintf(logDocumentPath, "%s", [NSHomeDirectory() UTF8String]);
+        snprintf(logDocumentPath + offset, 120 - offset, "%s", "/Documents/crash.txt");
+    });
+    
+    return logDocumentPath;
+}
+
+static void log_init_open_fd(const char *path)
+{
+    destination_file_descriptor = open(path, O_RDWR | O_CREAT | O_TRUNC, 0777);
+}
+
+/*
+ Public
+ */
 void log_init(void)
 {
-    if(destination_file_descriptor != 0) return;
-    char logDocumentPath[120];
-    off_t offset = sprintf(logDocumentPath, "%s", [NSHomeDirectory() UTF8String]);
-    snprintf(logDocumentPath + offset, 120 - offset, "%s", "/Documents/crash.txt");
-    destination_file_descriptor = open(logDocumentPath, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+    if(destination_file_descriptor != -1) return;
+    const char *logDocumentPath = log_init_logDocumentPath();
+    log_init_open_fd(logDocumentPath);
 }
 
 void log_putc(char c)
@@ -44,15 +73,60 @@ void log_puts(const char *buf)
 
 void log_putf(const char *fmt, ...)
 {
-    char buffer[1024];
     va_list args;
     va_start(args, fmt);
-    int n = vsnprintf(buffer, sizeof(buffer), fmt, args);
+
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int n = vsnprintf(NULL, 0, fmt, args_copy);
+    va_end(args_copy);
+
+    if (n < 0) {
+        va_end(args);
+        return;
+    }
+
+    char *buffer = malloc(n + 1);
+    if (!buffer) {
+        va_end(args);
+        return; // allocation failed
+    }
+
+    vsnprintf(buffer, n + 1, fmt, args);
     va_end(args);
 
-    if (n > 0) {
-        write(destination_file_descriptor, buffer, n);
-    }
+    write(destination_file_descriptor, buffer, n);
+
+    free(buffer);
+}
+
+void log_deinitCrash(uintptr_t crashAddr)
+{
+    // Get symbol information
+    Dl_info info;
+    dladdr((void*)crashAddr, &info);
+    
+    uint64_t offset = crashAddr - (uintptr_t)info.dli_saddr;
+    
+    // Write info
+    char nullTermination = '\0';
+    write(destination_file_descriptor, &nullTermination, 1);
+    dprintf(destination_file_descriptor, "%s", info.dli_sname);
+    write(destination_file_descriptor, &nullTermination, 1);
+    write(destination_file_descriptor, &offset, sizeof(uint64_t));
+    close(destination_file_descriptor);
+}
+
+void log_deinitCrashLazy(const char *functionName,
+                         off_t offset)
+{
+    // Write info
+    char nullTermination = '\0';
+    write(destination_file_descriptor, &nullTermination, 1);
+    dprintf(destination_file_descriptor, "%s", functionName);
+    write(destination_file_descriptor, &nullTermination, 1);
+    write(destination_file_descriptor, &offset, sizeof(uint64_t));
+    close(destination_file_descriptor);
 }
 
 void log_deinit(void)
@@ -60,33 +134,69 @@ void log_deinit(void)
     close(destination_file_descriptor);
 }
 
-NSString *logReadIfAvailable(void)
+LogContext *logReadIfAvailable(void)
 {
-    // Open up
-    if(destination_file_descriptor != 0) return NULL;
-    char logDocumentPath[120];
+    // Ensure no active log writing session
+    if (destination_file_descriptor != -1) return NULL;
+
+    // Construct log file path
+    char logDocumentPath[PATH_MAX];
     off_t offset = sprintf(logDocumentPath, "%s", [NSHomeDirectory() UTF8String]);
-    snprintf(logDocumentPath + offset, 120 - offset, "%s", "/Documents/crash.txt");
-    destination_file_descriptor = open(logDocumentPath, O_RDONLY);
-    
-    // Read raw buffer
+    snprintf(logDocumentPath + offset, sizeof(logDocumentPath) - offset, "%s", "/Documents/crash.txt");
+
+    // Open log file for reading
+    int fd = open(logDocumentPath, O_RDONLY);
+    if (fd < 0) return NULL;
+
+    // Get file size
     struct stat fdstat;
-    fstat(destination_file_descriptor, &fdstat);
+    if (fstat(fd, &fdstat) < 0 || fdstat.st_size == 0) {
+        close(fd);
+        return NULL;
+    }
     size_t bufferSize = fdstat.st_size;
-    printf("%zu bytes long!\n", bufferSize);
+
+    // Allocate and read buffer
     char *buffer = malloc(bufferSize);
-    read(destination_file_descriptor, buffer, bufferSize);
+    if (!buffer) {
+        close(fd);
+        return NULL;
+    }
+    read(fd, buffer, bufferSize);
+    close(fd);
+
+    // Create log context
+    LogContext *logContext = [[LogContext alloc] init];
+
+    // Parse format: [log string]\0[function name]\0[offset: uint64_t]
+    char *ptr = buffer;
+    char *end = buffer + bufferSize;
+
+    // Extract log string
+    size_t logLen = strlen(ptr/*, end - ptr*/); // MARK: WAS strlen before
+    logContext.log = [[NSString alloc] initWithBytes:ptr length:logLen encoding:NSUTF8StringEncoding];
+    ptr += logLen + 1; // Move past null terminator
+
+    // Extract function name (if available)
+    if (ptr < end) {
+        size_t funcLen = strlen(ptr/*, end - ptr*/); // MARK: WAS strlen before
+        logContext.func = [[NSString alloc] initWithBytes:ptr length:funcLen encoding:NSUTF8StringEncoding];
+        ptr += funcLen + 1;
+    }
     
-    // Convert into NSString
-    NSString *result = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-    
-    // Releasing buffer
+    // Extract offset (if available)
+    if (ptr + sizeof(uint64_t) <= end) {
+        uint64_t loc = 0;
+        memcpy(&loc, ptr, sizeof(uint64_t));
+        logContext.offset = loc;
+    } else {
+        logContext.offset = 0;
+    }
+
+    // Clean up
     free(buffer);
-    
-    close(destination_file_descriptor);
-    
     remove(logDocumentPath);
-    
-    // Return log buffer
-    return ([result length] == 0) ? NULL : result;
+
+    // Return valid context if log has data
+    return ([logContext.log length] == 0) ? nil : logContext;
 }

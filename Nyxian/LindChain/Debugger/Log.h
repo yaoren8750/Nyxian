@@ -28,9 +28,19 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+
+@interface LogContext : NSObject
+
+@property (nonatomic,strong,readwrite) NSString *log;
+@property (nonatomic,strong,readwrite) NSString *func;
+@property (nonatomic,readwrite) UInt64 offset;
+
+@end
+
 void log_init(void);
 void log_putc(char c);
 void log_puts(const char *buf);
 void log_putf(const char *fmt, ...);
 void log_deinit(void);
-NSString *logReadIfAvailable(void);
+void log_deinitCrash(uintptr_t crashAddr);
+LogContext *logReadIfAvailable(void);

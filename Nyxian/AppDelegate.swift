@@ -58,11 +58,30 @@ import UIKit
             label.textAlignment = .center
             label.translatesAutoresizingMaskIntoConstraints = false;
             
+            // Candy Info :3
+            var candyInfo: NSString? = nil
+            if let projectSelected: String = UserDefaults.standard.string(forKey: "LDELastProjectSelected"),
+               let functionName: String = appException.func {
+                let appProject: AppProject = AppProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
+                
+                let sourceStack = FindFilesStack(appProject.getPath(), ["c","cpp","m","mm"], ["Resources"])
+                var objectStack: [String] = []
+                for item in sourceStack {
+                    objectStack.append("\(appProject.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: appProject.getPath().URLGet(), to: item.URLGet())))")
+                }
+                for item in objectStack {
+                    let ptr = getExceptionFromObjectFile((item as NSString).utf8String, ("\(functionName)" as NSString).utf8String, appException.offset)
+                    if(ptr != nil) {
+                        candyInfo = NSString(cString: ptr!, encoding: NSUTF8StringEncoding);
+                    }
+                }
+            }
+            
             let reasonLabel: UITextView = UITextView()
             reasonLabel.isEditable = false
             reasonLabel.isSelectable = true
             reasonLabel.isScrollEnabled = true
-            reasonLabel.text = appException
+            reasonLabel.text = "\(appException.log ?? "")\n\(candyInfo ?? "Unknown file")"
             reasonLabel.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
             reasonLabel.translatesAutoresizingMaskIntoConstraints = false
             reasonLabel.backgroundColor = UIColor.systemGray3
