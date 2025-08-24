@@ -25,10 +25,8 @@ extern "C" {
         
         // Getting obj file representation by LLVM
         auto objOrErr = llvm::object::ObjectFile::createObjectFile(objectFilePath);
-        if (!objOrErr) {
-            std::cerr << "Failed to open object file.\n";
+        if (!objOrErr)
             return NULL;
-        }
         
         llvm::object::ObjectFile* objFile = objOrErr->getBinary();
         
@@ -54,24 +52,22 @@ extern "C" {
         auto dwarfContext = llvm::DWARFContext::create(*objFile);
         
         for (const auto &cu : dwarfContext->compile_units()) {
-            // The line table ;3
             const llvm::DWARFDebugLine::LineTable *lineTable = dwarfContext->getLineTableForUnit(cu.get());
-            if (lineTable) {
-                for (const auto &row : lineTable->Rows) {
-                    const auto &fileEntry = lineTable->Prologue.FileNames[row.File];
+            
+            if(!lineTable)
+                continue;
+            
+            for (const auto &row : lineTable->Rows) {
+                const auto &fileEntry = lineTable->Prologue.FileNames[row.File];
+                
+                if(row.Address.Address >= exceptionAddressInObjFile)
+                {
+                    llvm::Expected<const char*> maybeStr = fileEntry.Name.getAsCString();
                     
-                    if(row.Address.Address >= exceptionAddressInObjFile)
+                    if (maybeStr)
                     {
-                        llvm::Expected<const char*> maybeStr = fileEntry.Name.getAsCString();
-                        
-                        if (!maybeStr) {
-                            std::cout << "Error: " << llvm::toString(maybeStr.takeError()) << "\n";
-                        } else {
-                            // MARK: We got em!
-                            std::snprintf(buf, 1024, "Exception at: %s:%d", maybeStr.get(), row.Line);
-                            std::printf("%s", buf);
-                            return buf;
-                        }
+                        std::snprintf(buf, 1024, "Exception at: %s:%d", maybeStr.get(), row.Line);
+                        return buf;
                     }
                 }
             }

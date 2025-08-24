@@ -40,6 +40,7 @@ class Builder {
         self.database.reuseDatabase()
         
         var genericCompilerFlags: [String] = [
+            "-g",
             "-isysroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
             "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
@@ -61,7 +62,7 @@ class Builder {
         }
         
         // Check if args have changed
-        self.argsString = compilerFlags.joined(separator: " ")
+        self.argsString = genericCompilerFlags.joined(separator: " ")
         var fileArgsString: String = ""
         if FileManager.default.fileExists(atPath: "\(cachePath)/args.txt") {
             // Check if the args string matches up
