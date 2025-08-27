@@ -21,9 +21,9 @@
 import UIKit
 
 class MainSplitViewController: UISplitViewController, UISplitViewControllerDelegate {
-    let project: AppProject
+    let project: NXProject
     
-    init(project: AppProject) {
+    init(project: NXProject) {
         self.project = project
         super.init(nibName: nil, bundle: nil)
     }
@@ -47,7 +47,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 }
 
 class SplitScreenDetailViewController: UIViewController {
-    let project: AppProject
+    let project: NXProject
     let label = UILabel()
     var titleView: UIView?
     
@@ -163,7 +163,7 @@ class SplitScreenDetailViewController: UIViewController {
     /*
      Initial Class
      */
-    init(project: AppProject) {
+    init(project: NXProject) {
         self.project = project
         super.init(nibName: nil, bundle: nil)
         self.titleView = self.navigationItem.titleView
@@ -283,7 +283,7 @@ class UIButtonTab: UIButton {
     let closeButton: UIButton
     
     init(frame: CGRect,
-         project: AppProject,
+         project: NXProject,
          path: String,
          openAction: @escaping (UIButtonTab) -> Void,
          closeAction: @escaping (UIButtonTab) -> Void) {

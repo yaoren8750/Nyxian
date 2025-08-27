@@ -49,8 +49,8 @@ import Foundation
         log = ""
     }
     
-    static func log(forProject project: AppProject) {
-        self.key = project.getPath().URLGet().lastPathComponent
+    static func log(forProject project: NXProject) {
+        self.key = project.path.URLGet().lastPathComponent
     }
     
     @objc static func getfd() -> Int32 {

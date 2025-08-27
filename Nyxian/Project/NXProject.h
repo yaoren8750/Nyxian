@@ -18,9 +18,14 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef NXPROJECT_H
+#define NXPROJECT_H
+
 #import <Foundation/Foundation.h>
 #import <Project/NXPlistHelper.h>
 #import <LindChain/Core/LDEThreadControl.h>
+#import <UI/TableCells/NXProjectTableCell.h>
+#import <Project/NXCodeTemplate.h>
 
 typedef int NXProjectType NS_TYPED_ENUM;
 static NXProjectType const NXProjectTypeApp = 1;
@@ -55,3 +60,35 @@ static NXProjectType const NXProjectTypeBinary = 2;
 @property (nonatomic,strong,readonly) NSNumber *fontSize;
 
 @end
+
+@interface NXProject : NSObject
+
+@property (nonatomic,strong,readonly) UITableViewCell *tableCell;
+@property (nonatomic,strong,readonly) NXProjectConfig *projectConfig;
+@property (nonatomic,strong,readonly) NXCodeEditorConfig *codeEditorConfig;
+
+@property (nonatomic,strong,readonly) NSString *path;
+@property (nonatomic,strong,readonly) NSString *cachePath;
+@property (nonatomic,strong,readonly) NSString *resourcesPath;
+@property (nonatomic,strong,readonly) NSString *payloadPath;
+@property (nonatomic,strong,readonly) NSString *bundlePath;
+@property (nonatomic,strong,readonly) NSString *machoPath;
+@property (nonatomic,strong,readonly) NSString *packagePath;
+@property (nonatomic,strong,readonly) NSString *homePath;
+@property (nonatomic,strong,readonly) NSString *temporaryPath;
+@property (nonatomic,strong,readonly) NSString *uuid;
+
+- (instancetype)initWithPath:(NSString*)path;
+
++ (NXProject*)createProjectAtPath:(NSString*)path
+                         withName:(NSString*)name
+             withBundleIdentifier:(NSString*)bundleid
+                         withType:(NXProjectType)type;
++ (NSMutableArray<NXProject*>*)listProjectsAtPath:(NSString*)path;
++ (void)removeProject:(NXProject*)project;
+
+- (BOOL)reload;
+
+@end
+
+#endif /* NXPROJECT_H */

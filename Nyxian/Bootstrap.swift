@@ -34,7 +34,7 @@ import ZIPFoundation
   └── Projects/
  */
 
-class Bootstrap {
+@objc class Bootstrap: NSObject {
     var semaphore: DispatchSemaphore?
     let rootPath: String = "\(NSHomeDirectory())/Documents"
     let newestBootstrapVersion: Int = 7
@@ -56,7 +56,7 @@ class Bootstrap {
         }
     }
     
-    func bootstrapPath(_ path: String) -> String {
+    @objc func bootstrapPath(_ path: String) -> String {
         var path: String = path
         if path.hasPrefix("/") { path.removeFirst() }
         return URL(fileURLWithPath: path, relativeTo: URL(fileURLWithPath: rootPath)).path
@@ -196,5 +196,5 @@ class Bootstrap {
         XCodeButton.switchImage(systemName: "hammer.fill")
     }
     
-    static var shared: Bootstrap = Bootstrap()
+    @objc static var shared: Bootstrap = Bootstrap()
 }

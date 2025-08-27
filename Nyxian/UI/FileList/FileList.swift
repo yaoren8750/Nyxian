@@ -22,7 +22,7 @@ import UIKit
 import UniformTypeIdentifiers
 
 @objc class FileListViewController: UIThemedTableViewController, UIDocumentPickerDelegate {
-    let project: AppProject?
+    let project: NXProject?
     let path: String
     var entries: [FileListEntry]
     let isSublink: Bool
@@ -37,14 +37,14 @@ import UniformTypeIdentifiers
     
     init(
         isSublink: Bool = false,
-        project: AppProject?,
+        project: NXProject?,
         path: String? = nil
     ) {
         self.project = project
         
         if let project = project {
             NXUser.shared().projectName = project.projectConfig.displayName
-            self.path = path ?? project.getPath()
+            self.path = path ?? project.path
         } else {
             self.path = path ?? ""
         }
@@ -355,9 +355,9 @@ import UniformTypeIdentifiers
                 let entry = self.entries[indexPath.row]
                 let fileUrl: URL = URL(fileURLWithPath: "\(self.path)/\(entry.name)")
                 if ((try? FileManager.default.removeItem(at: fileUrl)) != nil), let project = self.project {
-                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(project.getCachePath())/debug.json")
+                    let database: DebugDatabase = DebugDatabase.getDatabase(ofPath: "\(project.cachePath!))/debug.json")
                     database.removeFileDebug(ofPath: fileUrl.path)
-                    database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
+                    database.saveDatabase(toPath: "\(project.cachePath!)/debug.json")
                     self.entries.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }

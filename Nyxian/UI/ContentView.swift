@@ -22,7 +22,7 @@ import Foundation
 import UIKit
 
 @objc class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
-    var projects: [AppProject] = []
+    var projects: [NXProject] = []
     var path: String
     
     var lastProjectSelected: String? {
@@ -78,12 +78,12 @@ import UIKit
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         self.tableView.rowHeight = 70
         
-        self.projects = AppProject.listProjects(ofPath: self.path)
+        self.projects = NXProject.listProjects(atPath: self.path) as! [NXProject]
         
         self.tableView.reloadData()
         
         if let lastProjectSelected = lastProjectSelected {
-            openProject(project: AppProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
+            openProject(project: NXProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
         }
     }
     
@@ -106,11 +106,11 @@ import UIKit
             let name = (alert.textFields![0]).text!
             let bundleid = (alert.textFields![1]).text!
             
-            self.projects.append(AppProject.createAppProject(
+            self.projects.append(NXProject.createProject(
                 atPath: self.path,
-                executable: name,
-                bundleid: bundleid,
-                mode: mode
+                withName: name,
+                withBundleIdentifier: bundleid,
+                withType: mode
             ))
             
             let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
@@ -137,7 +137,7 @@ import UIKit
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         self.projects[indexPath.row].reload()
-        return self.projects[indexPath.row].projectTableCell
+        return self.projects[indexPath.row].tableCell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -146,8 +146,8 @@ import UIKit
         openProject(index: indexPath.row)
     }
     
-    func openProject(index: Int = 0, project: AppProject? = nil, animated: Bool = true, saveProject: Bool = true) {
-        let selectedProject: AppProject = {
+    func openProject(index: Int = 0, project: NXProject? = nil, animated: Bool = true, saveProject: Bool = true) {
+        let selectedProject: NXProject = {
             guard let project = project else { return projects[index] }
             return project
         }()
@@ -162,7 +162,7 @@ import UIKit
         }
         
         if saveProject {
-            lastProjectSelected = selectedProject.getUUID()
+            lastProjectSelected = selectedProject.uuid
         }
     }
     
@@ -172,7 +172,7 @@ import UIKit
                 DispatchQueue.global().async {
                     let project = self.projects[indexPath.row]
                     
-                    try? FileManager.default.zipItem(at: project.getPath().URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"))
+                    try? FileManager.default.zipItem(at: project.path.URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"))
                     
                     share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"), remove: true)
                 }
@@ -187,17 +187,17 @@ import UIKit
                     confirmTitle: "Remove",
                     confirmStyle: .destructive)
                 {
-                    AppProject.removeProject(project: project)
-                    self.projects = AppProject.listProjects(ofPath: self.path)
+                    NXProject.remove(project)
+                    self.projects = NXProject.listProjects(atPath: self.path) as! [NXProject]
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
             }
             
             let settings: UIAction = UIAction(title: "Settings", image: UIImage(systemName: "gear")) { _ in
-                let settingsViewController: UINavigationController = UINavigationController(rootViewController: ProjectSettingsViewController(style: .insetGrouped, project: self.projects[indexPath.row]))
+                /*let settingsViewController: UINavigationController = UINavigationController(rootViewController: ProjectSettingsViewController(style: .insetGrouped, project: self.projects[indexPath.row]))
                 settingsViewController.modalPresentationStyle = .pageSheet
                 settingsViewController.presentationController?.delegate = self
-                self.present(settingsViewController, animated: true)
+                self.present(settingsViewController, animated: true)*/
             }
             
             return UIMenu(children: [export, item, settings])
@@ -216,7 +216,7 @@ import UIKit
             try FileManager.default.moveItem(atPath: extractFirst.appendingPathComponent(items.first ?? "").path, toPath: projectPath)
             try FileManager.default.removeItem(at: extractFirst)
             
-            self.projects.append(AppProject.init(path: projectPath))
+            self.projects.append(NXProject(path: projectPath))
             let newIndexPath = IndexPath(row: self.projects.count - 1, section: 0)
             self.tableView.insertRows(at: [newIndexPath], with: .automatic)
         } catch {

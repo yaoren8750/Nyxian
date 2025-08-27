@@ -40,7 +40,7 @@ class OnDisappearUIView: UIView {
 class CodeEditorViewController: UIViewController {
     private(set) var path: String
     private(set) var textView: TextView
-    private(set) var project: AppProject?
+    private(set) var project: NXProject?
     private(set) var synpushServer: SynpushServer?
     private(set) var coordinator: Coordinator?
     private(set) var database: DebugDatabase?
@@ -48,7 +48,7 @@ class CodeEditorViewController: UIViewController {
     private(set) var column: UInt64?
     
     init(
-        project: AppProject?,
+        project: NXProject?,
         path: String,
         line: UInt64? = nil,
         column: UInt64? = nil
@@ -63,7 +63,7 @@ class CodeEditorViewController: UIViewController {
         self.column = column
         
         if let project = project {
-            let cachePath = self.project!.getCachePath()
+            let cachePath = project.cachePath!
             
             self.database = DebugDatabase.getDatabase(ofPath: "\(cachePath)/debug.json")
             
@@ -311,10 +311,13 @@ class CodeEditorViewController: UIViewController {
             try? self.textView.text.write(to: URL(fileURLWithPath: self.path), atomically: true, encoding: .utf8)
         }
         
-        guard let synpushServer = self.synpushServer, let coordinator = self.coordinator else { return }
+        guard let project = self.project,
+              let database = self.database,
+              let synpushServer = self.synpushServer,
+              let coordinator = self.coordinator else { return }
         
-        self.database!.setFileDebug(ofPath: self.path, synItems: self.coordinator?.diag ?? [])
-        self.database!.saveDatabase(toPath: "\(self.project!.getCachePath())/debug.json")
+        database.setFileDebug(ofPath: self.path, synItems: coordinator.diag)
+        database.saveDatabase(toPath: "\(project.cachePath!)/debug.json")
     }
     
     @objc func closeEditor() {

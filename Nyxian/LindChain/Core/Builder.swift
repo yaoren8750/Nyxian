@@ -22,7 +22,7 @@ import Foundation
 import Combine
 
 class Builder {
-    private let project: AppProject
+    private let project: NXProject
     private let compiler: Compiler
     private let linker: Linker
     private let argsString: String
@@ -32,11 +32,11 @@ class Builder {
     
     let database: DebugDatabase
     
-    init(project: AppProject) {
+    init(project: NXProject) {
         self.project = project
         self.project.reload()
         
-        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.getCachePath())/debug.json")
+        self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.cachePath!)/debug.json")
         self.database.reuseDatabase()
         
         var genericCompilerFlags: [String] = [
@@ -52,21 +52,19 @@ class Builder {
         self.compiler = Compiler(genericCompilerFlags)
         self.linker = Linker()
         
-        let cachePath = project.getCachePath()
+        try? syncFolderStructure(from: project.path.URLGet(), to: project.cachePath.URLGet())
         
-        try? syncFolderStructure(from: project.getPath().URLGet(), to: cachePath.URLGet())
-        
-        self.dirtySourceFiles = FindFilesStack(self.project.getPath(), ["c","cpp","m","mm"], ["Resources"])
+        self.dirtySourceFiles = FindFilesStack(self.project.path, ["c","cpp","m","mm"], ["Resources"])
         for item in dirtySourceFiles {
-            objectFiles.append("\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())))")
+            objectFiles.append("\(self.project.cachePath!)/\(expectedObjectFile(forPath: relativePath(from: self.project.path.URLGet(), to: item.URLGet())))")
         }
         
         // Check if args have changed
         self.argsString = genericCompilerFlags.joined(separator: " ")
         var fileArgsString: String = ""
-        if FileManager.default.fileExists(atPath: "\(cachePath)/args.txt") {
+        if FileManager.default.fileExists(atPath: "\(self.project.cachePath!)/args.txt") {
             // Check if the args string matches up
-            fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath)/args.txt"), encoding: .utf8)) ?? ""
+            fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(self.project.cachePath!)/args.txt"), encoding: .utf8)) ?? ""
         }
         
         if(fileArgsString == self.argsString), self.project.projectConfig.increment.boolValue {
@@ -78,7 +76,7 @@ class Builder {
     /// Function to detect if a file is dirty (has to be recompiled)
     ///
     private func isFileDirty(_ item: String) -> Bool {
-        let objectFilePath = "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: item.URLGet())))"
+        let objectFilePath = "\(self.project.cachePath!)/\(expectedObjectFile(forPath: relativePath(from: self.project.path.URLGet(), to: item.URLGet())))"
         
         // Checking if the source file is newer than the compiled object file
         guard let sourceDate = try? FileManager.default.attributesOfItem(atPath: item)[.modificationDate] as? Date,
@@ -105,7 +103,7 @@ class Builder {
     func clean() throws {
         // now remove what was find
         for file in FindFilesStack(
-            self.project.getPath(),
+            self.project.path,
             ["o","tmp"],
             ["Resources","Config"]
         ) {
@@ -114,12 +112,12 @@ class Builder {
         
         // if payload exists remove it
         if self.project.projectConfig.type.int32Value == NXProjectType.app.rawValue {
-            let payloadPath: String = self.project.getPayloadPath()
+            let payloadPath: String = self.project.payloadPath
             if FileManager.default.fileExists(atPath: payloadPath) {
                 try? FileManager.default.removeItem(atPath: payloadPath)
             }
             
-            let packagedApp: String = self.project.getPackagePath()
+            let packagedApp: String = self.project.packagePath
             if FileManager.default.fileExists(atPath: packagedApp) {
                 try? FileManager.default.removeItem(atPath: packagedApp)
             }
@@ -129,7 +127,7 @@ class Builder {
     func prepare() throws {
         if project.projectConfig.type.int32Value == NXProjectType.app.rawValue ||
             project.projectConfig.type.int32Value == NXProjectType.binary.rawValue {
-            let bundlePath: String = self.project.getBundlePath()
+            let bundlePath: String = self.project.bundlePath
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
             
@@ -175,7 +173,7 @@ class Builder {
                 
                 if self.compiler.compileObject(
                     filePath,
-                    outputFile: "\(self.project.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: self.project.getPath().URLGet(), to: filePath.URLGet())))",
+                    outputFile: "\(self.project.cachePath!)/\(expectedObjectFile(forPath: relativePath(from: self.project.path.URLGet(), to: filePath.URLGet())))",
                     platformTriple: self.project.projectConfig.platformTriple,
                     issues: &issues
                 ) != 0 {
@@ -202,7 +200,7 @@ class Builder {
         }
         
         do {
-            try self.argsString.write(to: URL(fileURLWithPath: "\(project.getCachePath())/args.txt"), atomically: false, encoding: .utf8)
+            try self.argsString.write(to: URL(fileURLWithPath: "\(project.cachePath!)/args.txt"), atomically: false, encoding: .utf8)
         } catch {
             print(error.localizedDescription)
         }
@@ -220,7 +218,7 @@ class Builder {
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk")
         ] + self.project.projectConfig.linkerFlags as! [String] + [
             "-o",
-            self.project.getMachOPath()
+            self.project.machoPath
         ] + objectFiles
         
         if self.linker.ld64((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
@@ -229,13 +227,13 @@ class Builder {
     }
     
     func install() throws {
-        let appInfo = LCAppInfo(bundlePath: project.getBundlePath())
-        LCAppInfo(bundlePath: project.getBundlePath())?.patchExecAndSignIfNeed(completionHandler: { result, meow in
-            if result, checkCodeSignature((self.project.getMachOPath() as NSString).utf8String) {
+        let appInfo = LCAppInfo(bundlePath: project.bundlePath)
+        LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
+            if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
                 UserDefaults.standard.set(self.project.projectConfig.type, forKey: "LDEProjectType")
-                UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
-                UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
+                UserDefaults.standard.set(self.project.bundlePath, forKey: "LDEAppPath")
+                UserDefaults.standard.set(self.project.homePath, forKey: "LDEHomePath")
                 restartProcess()
             } else {
                 print(meow ?? "Unk")
@@ -244,7 +242,7 @@ class Builder {
     }
     
     func package() throws {
-        try FileManager.default.zipItem(at: URL(fileURLWithPath: project.getPayloadPath()), to: URL(fileURLWithPath: project.getPackagePath()))
+        try FileManager.default.zipItem(at: URL(fileURLWithPath: project.payloadPath), to: URL(fileURLWithPath: project.packagePath))
     }
     
     ///
@@ -255,7 +253,7 @@ class Builder {
         case InstallPackagedApp
     }
     
-    static func buildProject(withProject project: AppProject,
+    static func buildProject(withProject project: NXProject,
                              buildType: Builder.BuildType,
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
@@ -319,7 +317,7 @@ class Builder {
                 builder.database.addInternalMessage(message: error.localizedDescription, severity: .Error)
             }
             
-            builder.database.saveDatabase(toPath: "\(project.getCachePath())/debug.json")
+            builder.database.saveDatabase(toPath: "\(project.cachePath!)/debug.json")
             
             completion(result)
         }
@@ -327,7 +325,7 @@ class Builder {
 }
 
 func buildProjectWithArgumentUI(targetViewController: UIViewController,
-                                project: AppProject,
+                                project: NXProject,
                                 buildType: Builder.BuildType) {
     targetViewController.navigationItem.titleView?.isUserInteractionEnabled = false
     XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
@@ -349,7 +347,7 @@ func buildProjectWithArgumentUI(targetViewController: UIViewController,
                 loggerView.modalPresentationStyle = .formSheet
                 targetViewController.present(loggerView, animated: true)
             } else if buildType == .InstallPackagedApp {
-                share(url: URL(fileURLWithPath: project.getPackagePath()), remove: true)
+                share(url: URL(fileURLWithPath: project.packagePath), remove: true)
             }
         }
     }

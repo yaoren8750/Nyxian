@@ -194,7 +194,7 @@ extension String {
  */
 class UIDebugViewController: UITableViewController {
     let file: String
-    var project: AppProject
+    var project: NXProject
     var debugDatabase: DebugDatabase
     
     var sortedDebugObjects: [DebugObject] {
@@ -209,9 +209,9 @@ class UIDebugViewController: UITableViewController {
         }
     }
     
-    init(project: AppProject) {
+    init(project: NXProject) {
         self.project = project
-        self.file = "\(project.getCachePath())/debug.json"
+        self.file = "\(project.cachePath!)/debug.json"
         self.debugDatabase = DebugDatabase.getDatabase(ofPath: self.file)
         super.init(style: .insetGrouped)
         NotificationCenter.default.addObserver(self, selector: #selector(refreshDebugDatabase), name: Notification.Name("CodeEditorDismissed"), object: nil)
@@ -356,11 +356,11 @@ class UIDebugViewController: UITableViewController {
         let item: DebugItem = object.debugItems[indexPath.row]
         
         if UIDevice.current.userInterfaceIdiom == .pad {
-            NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["open","\(self.project.getPath())/\(object.title)"])
+            NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["open","\(self.project.path!)/\(object.title)"])
         } else {
             let fileVC = UINavigationController(rootViewController: CodeEditorViewController(
                 project: project,
-                path: "\(self.project.getPath())/\(object.title)",
+                path: "\(self.project.path!)/\(object.title)",
                 line: item.line,
                 column: item.column
             ))
