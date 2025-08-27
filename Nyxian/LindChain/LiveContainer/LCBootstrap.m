@@ -15,7 +15,7 @@
 #include "../litehook/src/litehook.h"
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
-#import <LogService/LogService.h>
+#import <LindChain/LogService/LogService.h>
 
 NSUserDefaults *lcUserDefaults;
 NSBundle *lcMainBundle;

@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <Private/Restart.h>
+#import <LindChain/Private/Restart.h>
 #import <Nyxian-Swift.h>
 #import "Debugger.h"
 #include "MachServer.h"

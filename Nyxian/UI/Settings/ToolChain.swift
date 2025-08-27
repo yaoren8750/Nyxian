@@ -80,7 +80,7 @@ class ToolChainController: UIThemedTableViewController {
             cell = SwitchTableCell(title: "Incremental Build", key: "LDEIncrementalBuild", defaultValue: true)
             break
         case 1:
-            let optimCpuCount: Int = getOptimalThreadCount()
+            let optimCpuCount: Int = (Int)(LDEThreadControl.getOptimalThreadCount())
             cell = StepperTableCell(title: "Use Threads", key: "cputhreads", defaultValue: optimCpuCount, minValue: 1, maxValue: optimCpuCount)
             break
         case 2:

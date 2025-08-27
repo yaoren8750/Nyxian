@@ -43,7 +43,7 @@ import UniformTypeIdentifiers
         self.project = project
         
         if let project = project {
-            Author.shared.setTargetProject(project.projectConfig.displayname)
+            NXUser.shared().projectName = project.projectConfig.displayName
             self.path = path ?? project.getPath()
         } else {
             self.path = path ?? ""
@@ -119,7 +119,7 @@ import UniformTypeIdentifiers
                 LDELogger.log(forProject: project)
             }
             
-            self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayname
+            self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayName
         } else {
             self.title = URL(fileURLWithPath: self.path).lastPathComponent
         }
@@ -140,17 +140,17 @@ import UniformTypeIdentifiers
         
         if !self.isSublink, let project = self.project {
             if project.reload() {
-                self.title = project.projectConfig.displayname
+                self.title = project.projectConfig.displayName
             }
             
-            if project.projectConfig.restartApp {
+            /*if project.projectConfig.restartApp {
                 if self.openTheLogSheet {
                     let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
                     loggerView.modalPresentationStyle = .formSheet
                     self.present(loggerView, animated: true)
                     self.openTheLogSheet = false
                 }
-            }
+            }*/
         }
     }
     

@@ -18,19 +18,32 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Compiler/Compiler.h>
-#import <Private/LSApplicationWorkspace.h>
-#import <Synpush/Synpush.h>
-#import <LogService/LogService.h>
-#import <Private/Restart.h>
-#import <Downloader/fdownload.h>
-#import <Linker/linker.h>
-#import <LiveContainer/LCAppInfo.h>
-#import <LiveContainer/LCUtils.h>
-#import <LiveContainer/ZSign/zsigner.h>
-#import <LiveContainer/LCMachOUtils.h>
-#import "Debugger/Logger.h"
-#import <Debugger/Log.h>
+#import <LindChain/Compiler/Compiler.h>
+#import <LindChain/Private/LSApplicationWorkspace.h>
+#import <LindChain/Private/Restart.h>
+#import <LindChain/Synpush/Synpush.h>
+#import <LindChain/LogService/LogService.h>
+#import <LindChain/Downloader/fdownload.h>
+#import <LindChain/Linker/linker.h>
+#import <LindChain/LiveContainer/LCAppInfo.h>
+#import <LindChain/LiveContainer/LCUtils.h>
+#import <LindChain/LiveContainer/ZSign/zsigner.h>
+#import <LindChain/LiveContainer/LCMachOUtils.h>
+#import <LindChain/Debugger/Logger.h>
+#import <LindChain/Debugger/Log.h>
+
+/*
+ Project
+ */
+#import <Project/NXUser.h>
+#import <Project/NXCodeTemplate.h>
+#import <Project/NXPlistHelper.h>
+#import <Project/NXProject.h>
+
+/*
+ Core
+ */
+#import <LindChain/Core/LDEThreadControl.h>
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);

@@ -46,7 +46,7 @@ class Builder {
             "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
         ]
         
-        let compilerFlags: [String] = self.project.projectConfig.getCompilerFlags()
+        let compilerFlags: [String] = self.project.projectConfig.generateCompilerFlags() as! [String]
         genericCompilerFlags.append(contentsOf: compilerFlags)
         
         self.compiler = Compiler(genericCompilerFlags)
@@ -69,7 +69,7 @@ class Builder {
             fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(cachePath)/args.txt"), encoding: .utf8)) ?? ""
         }
         
-        if(fileArgsString == self.argsString), self.project.projectConfig.increment {
+        if(fileArgsString == self.argsString), self.project.projectConfig.increment.boolValue {
             self.dirtySourceFiles = self.dirtySourceFiles.filter { self.isFileDirty($0) }
         }
     }
@@ -113,7 +113,7 @@ class Builder {
         }
         
         // if payload exists remove it
-        if self.project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue {
+        if self.project.projectConfig.type.int32Value == NXProjectType.app.rawValue {
             let payloadPath: String = self.project.getPayloadPath()
             if FileManager.default.fileExists(atPath: payloadPath) {
                 try? FileManager.default.removeItem(atPath: payloadPath)
@@ -127,19 +127,19 @@ class Builder {
     }
     
     func prepare() throws {
-        if project.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
-            project.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
+        if project.projectConfig.type.int32Value == NXProjectType.app.rawValue ||
+            project.projectConfig.type.int32Value == NXProjectType.binary.rawValue {
             let bundlePath: String = self.project.getBundlePath()
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
             
             var infoPlistData: [String: Any] = [
-                "CFBundleExecutable": self.project.projectConfig.executable,
-                "CFBundleIdentifier": self.project.projectConfig.bundleid,
-                "CFBundleName": self.project.projectConfig.displayname,
-                "CFBundleShortVersionString": self.project.projectConfig.version,
-                "CFBundleVersion": self.project.projectConfig.shortVersion,
-                "MinimumOSVersion": self.project.projectConfig.minimum_version,
+                "CFBundleExecutable": self.project.projectConfig.executable!,
+                "CFBundleIdentifier": self.project.projectConfig.bundleid!,
+                "CFBundleName": self.project.projectConfig.displayName!,
+                "CFBundleShortVersionString": self.project.projectConfig.version!,
+                "CFBundleVersion": self.project.projectConfig.shortVersion!,
+                "MinimumOSVersion": self.project.projectConfig.platformMinimumVersion!,
                 "UIDeviceFamily": [1, 2],
                 "UIRequiresFullScreen": false,
                 "UISupportedInterfaceOrientations~ipad": [
@@ -151,7 +151,7 @@ class Builder {
             ]
 
             for (key, value) in self.project.projectConfig.infoDictionary {
-                infoPlistData[key] = value
+                infoPlistData[key as! String] = value
             }
             
             let infoPlistDataSerialized = try PropertyListSerialization.data(fromPropertyList: infoPlistData, format: .xml, options: 0)
@@ -165,11 +165,12 @@ class Builder {
     func compile() throws {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
         let group: DispatchGroup = DispatchGroup()
-        let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads)
+        //let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads.intValue)
+        let threader = LDEThreadControl(threads: self.project.projectConfig.threads.int32Value)
         
         for filePath in self.dirtySourceFiles {
             group.enter()
-            threader.spawn {
+            threader?.dispatchExecution {
                 var issues: NSArray?
                 
                 if self.compiler.compileObject(
@@ -178,25 +179,25 @@ class Builder {
                     platformTriple: self.project.projectConfig.platformTriple,
                     issues: &issues
                 ) != 0 {
-                    threader.lockdown()
+                    threader?.lockdown()
                 }
                 
                 self.database.setFileDebug(ofPath: filePath, synItems: (issues as? [Synitem]) ?? [])
                 
                 XCodeButton.incrementProgress(progress: pstep)
-            } completion: {
+            } withCompletion: {
                 group.leave()
             }
         }
         
         DispatchQueue.global().async {
             sleep(1)
-            threader.lockdown()
+            threader?.lockdown()
         }
         
         group.wait()
         
-        if threader.isLockdown {
+        if threader?.isLockdown ?? true {
             throw NSError(domain: "com.cr4zy.nyxian.builder.compile", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to compile source code"])
         }
         
@@ -211,13 +212,13 @@ class Builder {
         let ldArgs: [String] = [
             "-platform_version",
             "ios",
-            project.projectConfig.minimum_version,
+            project.projectConfig.platformMinimumVersion!,
             "18.5",
             "-arch",
             "arm64",
             "-syslibroot",
             Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk")
-        ] + self.project.projectConfig.linker_flags + [
+        ] + self.project.projectConfig.linkerFlags as! [String] + [
             "-o",
             self.project.getMachOPath()
         ] + objectFiles
@@ -232,7 +233,7 @@ class Builder {
         LCAppInfo(bundlePath: project.getBundlePath())?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.getMachOPath() as NSString).utf8String) {
                 appInfo?.save()
-                UserDefaults.standard.set(self.project.projectConfig.projectType, forKey: "LDEProjectType")
+                UserDefaults.standard.set(self.project.projectConfig.type, forKey: "LDEProjectType")
                 UserDefaults.standard.set(self.project.getBundlePath(), forKey: "LDEAppPath")
                 UserDefaults.standard.set(self.project.getHomePath(), forKey: "LDEHomePath")
                 restartProcess()
@@ -268,7 +269,7 @@ class Builder {
         
         XCodeButton.resetProgress()
         
-        pthread_dispatch {
+        LDEThreadControl.pthreadDispatch {
             Bootstrap.shared.waitTillDone()
             
             var result: Bool = true

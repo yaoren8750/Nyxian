@@ -23,7 +23,7 @@
 #import "utils.h"
 #import "litehook_internal.h"
 #include "Tweaks.h"
-#import <ObjC/Swizzle.h>
+#import <LindChain/ObjC/Swizzle.h>
 
 extern NSUserDefaults *lcUserDefaults;
 extern NSBundle *guestMainBundle;

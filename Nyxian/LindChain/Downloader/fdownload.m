@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Downloader/fdownload.h>
+#import <LindChain/Downloader/fdownload.h>
 
 /**
  * @brief This function is for downloading files online

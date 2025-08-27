@@ -1,0 +1,57 @@
+/*
+ Copyright (C) 2025 cr4zyengineer
+ Copyright (C) 2025 expo
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#import <Foundation/Foundation.h>
+#import <Project/NXPlistHelper.h>
+#import <LindChain/Core/LDEThreadControl.h>
+
+typedef int NXProjectType NS_TYPED_ENUM;
+static NXProjectType const NXProjectTypeApp = 1;
+static NXProjectType const NXProjectTypeBinary = 2;
+
+@interface NXProjectConfig : NXPlistHelper
+
+@property (nonatomic,strong,readonly) NSString *executable;
+@property (nonatomic,strong,readonly) NSString *displayName;
+@property (nonatomic,strong,readonly) NSString *bundleid;
+@property (nonatomic,strong,readonly) NSString *version;
+@property (nonatomic,strong,readonly) NSString *shortVersion;
+@property (nonatomic,strong,readonly) NSDictionary *infoDictionary;
+@property (nonatomic,strong,readonly) NSString *platformTriple;
+@property (nonatomic,strong,readonly) NSNumber *type;
+@property (nonatomic,strong,readonly) NSArray *compilerFlags;
+@property (nonatomic,strong,readonly) NSArray *linkerFlags;
+@property (nonatomic,strong,readonly) NSString *platformMinimumVersion;
+@property (nonatomic,strong,readonly) NSNumber *threads;
+@property (nonatomic,strong,readonly) NSNumber *increment;
+
+- (NSMutableArray*)generateCompilerFlags;
+
+@end
+
+@interface NXCodeEditorConfig : NXPlistHelper
+
+@property (nonatomic,strong,readonly) NSNumber *showLine;
+@property (nonatomic,strong,readonly) NSNumber *showSpaces;
+@property (nonatomic,strong,readonly) NSNumber *showReturn;
+@property (nonatomic,strong,readonly) NSNumber *wrapLine;
+@property (nonatomic,strong,readonly) NSNumber *fontSize;
+
+@end

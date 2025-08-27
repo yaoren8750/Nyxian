@@ -26,8 +26,8 @@
 #include <string>
 #include <pthread.h>
 #include "llvm/Support/raw_ostream.h"
-#import <Compiler/Compiler.h>
-#import <Synpush/Synpush.h>
+#import <LindChain/Compiler/Compiler.h>
+#import <LindChain/Synpush/Synpush.h>
 
 // TODO: Might want to extract a header
 int CompileObject(int argc,

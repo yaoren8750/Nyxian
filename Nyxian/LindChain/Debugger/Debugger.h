@@ -23,7 +23,7 @@
 
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
-#import <Debugger/Logger.h>
+#import <LindChain/Debugger/Logger.h>
 
 @interface NyxianDebugger : NSObject
 

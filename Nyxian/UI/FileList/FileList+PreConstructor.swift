@@ -37,7 +37,7 @@ func getFileContentForName(filename: String) -> String {
     }
     
     // now generate author if needed
-    if authgen { content.append(Author.shared.signatureForFile(filename)) }
+    if authgen { content.append(NXUser.shared().generateHeader(forFileName: filename)) }
     if headergate {
         // generate header lock name macro
         let macroname: String = filename.uppercased().replacingOccurrences(of: ".", with: "_").replacingOccurrences(of: " ", with: "_")

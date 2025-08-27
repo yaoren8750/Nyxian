@@ -19,7 +19,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <Private/LSApplicationWorkspace.h>
+#import <LindChain/Private/LSApplicationWorkspace.h>
 
 extern NSBundle* lcMainBundle;
 

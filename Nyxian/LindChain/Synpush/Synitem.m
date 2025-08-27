@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Synpush/Synitem.h>
+#import <LindChain/Synpush/Synitem.h>
 
 @implementation Synitem
 

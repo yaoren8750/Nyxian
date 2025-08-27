@@ -37,7 +37,7 @@ class ProjectTableCell: UITableViewCell {
     }
     
     func setupViews() {
-        self.textLabel?.text = self.project.projectConfig.displayname
+        self.textLabel?.text = self.project.projectConfig.displayName
         self.textLabel?.font = UIFont.systemFont(ofSize: 14, weight: .heavy)
         self.detailTextLabel?.text = self.project.projectConfig.bundleid
         self.detailTextLabel?.font = UIFont.systemFont(ofSize: 10)
@@ -87,7 +87,7 @@ class ProjectTableCell: UITableViewCell {
     }
     
     func reload() {
-        self.textLabel?.text = self.project.projectConfig.displayname
+        self.textLabel?.text = self.project.projectConfig.displayName
         self.detailTextLabel?.text = self.project.projectConfig.bundleid
     }
 }

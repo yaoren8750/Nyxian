@@ -22,7 +22,7 @@
 #define FCMBridge_H
 
 #import <Foundation/Foundation.h>
-#import <Synpush/Synpush.h>
+#import <LindChain/Synpush/Synpush.h>
 
 /// Class (intended to be single-instanced) to provide LLVM C++ service to Swift front-end
 @interface Compiler : NSObject

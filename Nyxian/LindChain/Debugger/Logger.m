@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Debugger/Logger.h>
+#import <LindChain/Debugger/Logger.h>
 
 @implementation LogTextView
 

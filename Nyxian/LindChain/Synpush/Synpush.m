@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Synpush/Synpush.h>
+#import <LindChain/Synpush/Synpush.h>
 
 uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
     switch (severity) {

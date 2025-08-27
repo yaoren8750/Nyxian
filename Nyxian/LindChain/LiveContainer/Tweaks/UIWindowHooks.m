@@ -21,8 +21,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-#import <Debugger/Debugger.h>
-#import <ObjC/Swizzle.h>
+#import <LindChain/Debugger/Debugger.h>
+#import <LindChain/ObjC/Swizzle.h>
 #import <CoreGraphics/CoreGraphics.h>
 
 @implementation UIWindow (LiveContainer)

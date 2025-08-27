@@ -75,7 +75,7 @@ class Bootstrap {
     
     func bootstrap() {
         print("[*] Hello LindDE:Bootstrap")
-        pthread_dispatch {
+        LDEThreadControl.pthreadDispatch {
             print("[*] install status: \(self.isBootstrapInstalled)")
             print("[*] version: \(self.bootstrapVersion)")
             

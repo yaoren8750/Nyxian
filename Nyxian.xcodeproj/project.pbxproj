@@ -359,7 +359,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = M77WGRRYJQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/LindChain;
+				HEADER_SEARCH_PATHS = Nyxian/;
 				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -408,7 +408,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = M77WGRRYJQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/LindChain;
+				HEADER_SEARCH_PATHS = Nyxian/;
 				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

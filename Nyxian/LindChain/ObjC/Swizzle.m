@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <ObjC/Swizzle.h>
+#import <LindChain/ObjC/Swizzle.h>
 
 @implementation ObjCSwizzler
 

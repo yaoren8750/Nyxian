@@ -19,7 +19,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <Private/Restart.h>
+#import <LindChain/Private/Restart.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Debugger/Log.h>
+#import <LindChain/Debugger/Log.h>
 #include <dlfcn.h>
 #include "Utils.h"
 

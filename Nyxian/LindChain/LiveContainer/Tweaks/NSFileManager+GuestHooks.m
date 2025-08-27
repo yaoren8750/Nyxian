@@ -21,7 +21,7 @@
 #import "../FoundationPrivate.h"
 #import <Foundation/Foundation.h>
 #import "Tweaks.h"
-#import <ObjC/Swizzle.h>
+#import <LindChain/ObjC/Swizzle.h>
 
 // NSFileManager simulate app group
 NSURL *hook_containerURLForSecurityApplicationGroupIdentifier(id self, SEL _cmd, NSString *groupIdentifier)

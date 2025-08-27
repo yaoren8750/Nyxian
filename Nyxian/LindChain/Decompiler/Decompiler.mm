@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Decompiler/Decompiler.h>
+#import <LindChain/Decompiler/Decompiler.h>
 #include <iostream>
 #include <dlfcn.h>
 

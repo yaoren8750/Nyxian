@@ -31,14 +31,14 @@ class ProjectSettingsViewController: UITableViewController {
         self.project = project
         self.vtkey = [
             [
-                (self.project.projectConfig.displayname,"Display Name","LDEDisplayName"),
+                (self.project.projectConfig.displayName,"Display Name","LDEDisplayName"),
                 (self.project.projectConfig.bundleid,"BundleID","LDEBundleIdentifier"),
                 (self.project.projectConfig.version,"Version","LDEBundleVersion"),
                 (self.project.projectConfig.shortVersion,"Short Version","LDEBundleShortVersion")
             ],
             [
                 (self.project.projectConfig.executable,"Executable","LDEExecutable"),
-                (self.project.projectConfig.minimum_version,"Minimum Deployments","LDEMinimumVersion")
+                (self.project.projectConfig.platformMinimumVersion,"Minimum Deployments","LDEMinimumVersion")
             ]
         ]
 
@@ -80,7 +80,7 @@ class ProjectSettingsViewController: UITableViewController {
         if indexPath.section != 0 {
             let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.section - 1][indexPath.row].1, value: self.vtkey[indexPath.section - 1][indexPath.row].0)
             cell.writeHandler = { value in
-                self.project.projectConfig.writeKey(key: self.vtkey[indexPath.section - 1][indexPath.row].2, value: value)
+                self.project.projectConfig.writeKey(self.vtkey[indexPath.section - 1][indexPath.row].2, withValue: value)
                 self.project.projectTableCell.reload()
             }
             return cell

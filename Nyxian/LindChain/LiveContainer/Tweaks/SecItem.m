@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/Security.h>
-#import <litehook/src/litehook.h>
+#import <LindChain/litehook/src/litehook.h>
 
 NSMutableDictionary *SecItemPrepare(CFDictionaryRef query)
 {

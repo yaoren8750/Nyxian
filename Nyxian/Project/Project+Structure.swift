@@ -35,29 +35,29 @@ Project Structure:
  └── appdelegate.m          // UIKit app delegation of the iOS application
 */
 
-class ProjectConfig: PlistHelper {
+/*class ProjectConfig: NXPlistHelper {
     enum ProjectType: Int {
         case App = 1
         case Binary = 2
     }
     
-    var executable: String { self.readKeySecure(key: "LDEExecutable", defaultValue: "Unknown") }
-    var displayname: String { self.readKeySecure(key: "LDEDisplayName", defaultValue: self.executable) }
-    var bundleid: String { self.readKeySecure(key: "LDEBundleIdentifier", defaultValue: "com.unknown.fallback.app" ) }
-    var minimum_version: String { self.readKeySecure(key: "LDEMinimumVersion", defaultValue: UIDevice.current.systemVersion) }
-    var version: String { self.readKeySecure(key: "LDEBundleVersion", defaultValue: "1.0") }
-    var shortVersion: String { self.readKeySecure(key: "LDEBundleShortVersion", defaultValue: "1.0") }
-    var platformTriple: String { self.readKeySecure(key: "LDEOverwriteTriple", defaultValue: "apple-arm64-ios\(self.minimum_version)") }
-    var infoDictionary: [String:Any] { (self.readKey(key: "LDEBundleInfo") as? [String:Any]) ?? [:] }
-    var subTargets: [String] { self.readKeySecure(key: "LDESubTargets", defaultValue: []) }
-    var projectType: Int { self.readKeySecure(key: "LDEProjectType", defaultValue: ProjectType.App.rawValue) }
-    var compiler_flags: [String] { self.readKeySecure(key: "LDECompilerFlags", defaultValue: []) }
-    var linker_flags: [String] { self.readKeySecure(key: "LDELinkerFlags", defaultValue: []) }
+    var executable: String { self.readString(forKey: "LDEExecutable", withDefaultValue: "Unknown") }
+    var displayname: String { self.readString(forKey: "LDEDisplayName", withDefaultValue: self.executable) }
+    var bundleid: String { self.readString(forKey: "LDEBundleIdentifier", withDefaultValue: "com.unknown.fallback.id") }
+    var minimum_version: String { self.readString(forKey: "LDEMinimumVersion", withDefaultValue: UIDevice.current.systemVersion) }
+    var version: String { self.readString(forKey: "LDEBundleVersion", withDefaultValue: "1.0") }
+    var shortVersion: String { self.readString(forKey: "LDEBundleShortVersion", withDefaultValue: "1.0") }
+    var platformTriple: String { self.readString(forKey: "LDEOverwriteTriple", withDefaultValue: "apple-arm64-ios\(self.minimum_version)") }
+    var infoDictionary: [String:Any] { self.readSecure(fromKey: "LDEBundleInfo", withDefaultValue: [:], classType: NSClassFromString("NSMutableDictionary")) as! [String:Any] }
+    var subTargets: [String] { self.readArray(forKey: "LDESubTargets", withDefaultValue: []) as! [String] }
+    var projectType: Int { self.readInteger(forKey: "LDEProjectType", withDefaultValue: ProjectType.App.rawValue) }
+    var compiler_flags: [String] { self.readArray(forKey: "LDECompilerFlags", withDefaultValue: []) as! [String] }
+    var linker_flags: [String] { self.readArray(forKey: "LDELinkerFlags", withDefaultValue: []) as! [String] }
     
     // Overwritable variables
     var threads: Int {
         let maxThreads: Int = getOptimalThreadCount()
-        var pthreads: Int = self.readKeySecure(key: "LDEOverwriteThreads", defaultValue: getCpuThreads())
+        var pthreads: Int = (self.readSecure(fromKey: "LDEOverwriteThreads", withDefaultValue: NSNumber(value: getCpuThreads()), classType: NSClassFromString("NSNumber")) as! NSNumber).intValue
         if pthreads == 0 {
             pthreads = getCpuThreads()
         } else if pthreads > maxThreads {
@@ -66,19 +66,19 @@ class ProjectConfig: PlistHelper {
         return pthreads
     }
     var increment: Bool {
-        self.readKey(key: "LDEOverwriteIncrementalBuild") as? Bool
+        self.readKey("LDEOverwriteIncrementalBuild") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEIncrementalBuild") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEIncrementalBuild")
             : true)
     }
     var restartApp: Bool {
-        self.readKey(key: "LDEOverwriteReopen") as? Bool
+        self.readKey("LDEOverwriteReopen") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEReopen") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEReopen")
             : false)
     }
     var restartAppOnSucceed: Bool {
-        self.readKey(key: "LDEOverwriteReopenSucceed") as? Bool
+        self.readKey("LDEOverwriteReopenSucceed") as? Bool
         ?? ((UserDefaults.standard.object(forKey: "LDEReopenSucceed") != nil)
             ? UserDefaults.standard.bool(forKey: "LDEReopenSucceed")
             : true)
@@ -92,20 +92,20 @@ class ProjectConfig: PlistHelper {
     }
 }
 
-class CodeEditorConfig: PlistHelper {
-    var showLine: Bool { self.readKeySecure(key: "LDEShowLines", defaultValue: true) }
-    var showSpaces: Bool { self.readKeySecure(key: "LDEShowSpace", defaultValue: true) }
-    var showReturn: Bool { self.readKeySecure(key: "LDEShowReturn", defaultValue: true) }
-    var wrapLine: Bool { self.readKeySecure(key: "LDEWrapLine", defaultValue: true) }
-    var fontSize: Double { self.readKeySecure(key: "LDEFontSize", defaultValue: 10.0) }
-}
+class CodeEditorConfig: NXPlistHelper {
+    var showLine: Bool { self.readBoolean(forKey: "LDEShowLines", withDefaultValue: true) }
+    var showSpaces: Bool { self.readBoolean(forKey: "LDEShowSpace", withDefaultValue: true) }
+    var showReturn: Bool { self.readBoolean(forKey: "LDEShowReturn", withDefaultValue: true) }
+    var wrapLine: Bool { self.readBoolean(forKey: "LDEWrapLine", withDefaultValue: true) }
+    var fontSize: Double { self.readDouble(forKey: "LDEFontSize", withDefaultValue: 10.0) }
+}*/
 
 class AppProject: Identifiable {
     let id: UUID = UUID()
 
     private(set) var projectTableCell: ProjectTableCell!
-    let projectConfig: ProjectConfig
-    let codeEditorConfig: CodeEditorConfig
+    let projectConfig: NXProjectConfig
+    let codeEditorConfig: NXCodeEditorConfig
     
     private let path: String
     private let cachePath: String
@@ -116,15 +116,15 @@ class AppProject: Identifiable {
         self.cachePath = Bootstrap.shared.bootstrapPath("/Cache/\(self.path.URLGet().lastPathComponent)")
         
         // validate if the project plist exists and extract information
-        self.projectConfig = ProjectConfig(plistPath: "\(self.path)/Config/Project.plist")
-        self.codeEditorConfig = CodeEditorConfig(plistPath: "\(self.path)/Config/Editor.plist")
+        self.projectConfig = NXProjectConfig(plistPath: "\(self.path)/Config/Project.plist")
+        self.codeEditorConfig = NXCodeEditorConfig(plistPath: "\(self.path)/Config/Editor.plist")
         self.projectTableCell = ProjectTableCell(project: self)
     }
     
     static func createAppProject(atPath path: String,
                                  executable: String,
                                  bundleid: String,
-                                 mode: ProjectConfig.ProjectType) -> AppProject {
+                                 mode: NXProjectType) -> AppProject {
         
         // first we prepare all information we need
         let path: String = "\(path)/\(UUID())"
@@ -160,35 +160,21 @@ class AppProject: Identifiable {
             
             // writing plist data
             func writeDict(usingDict dict: [String:Any],
-                           toPath path: String) {
-                
-                do {
-                    var plistData = try PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0)
-                    try plistData.write(to: URL(fileURLWithPath: path))
-                } catch {
-                    print(error.localizedDescription)
-                    NotificationServer.NotifyUser(level: .error, notification: "Failed to create project: \(error.localizedDescription)")
-                }
+                           toPath path: String) throws {
+                let plistData = try PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0)
+                try plistData.write(to: URL(fileURLWithPath: path))
             }
             
-            writeDict(usingDict: projectdict, toPath: "\(path)/Config/Project.plist")
-            writeDict(usingDict: editordict, toPath: "\(path)/Config/Editor.plist")
+            try writeDict(usingDict: projectdict, toPath: "\(path)/Config/Project.plist")
+            try writeDict(usingDict: editordict, toPath: "\(path)/Config/Editor.plist")
             
             // MARK: For testing
-            AppCodeTemplate.shared.createCode(
-                withProjectName: executable,
-                atPath: path,
-                withScheme: {
-                    switch mode {
-                    case .App:
-                        return AppCodeTemplate.AppCodeTemplateScheme.objc
-                    case .Binary:
-                        return AppCodeTemplate.AppCodeTemplateScheme.binary
-                    }
-                }()
-            )
+            NXCodeTemplate.shared().generateCodeStructure(fromTemplateScheme: .objCApp,
+                                                          withProjectName: executable,
+                                                          intoPath: path)
         } catch {
-            print(error)
+            print(error.localizedDescription)
+            NotificationServer.NotifyUser(level: .error, notification: "Failed to create project: \(error.localizedDescription)")
         }
         
         return AppProject(path: path)
@@ -239,20 +225,20 @@ class AppProject: Identifiable {
     }
     
     func getBundlePath() -> String {
-        return "\(cachePath)/Payload/\(projectConfig.executable).app"
+        return "\(cachePath)/Payload/\(projectConfig.executable!).app"
     }
     
     func getMachOPath() -> String {
-        if self.projectConfig.projectType == ProjectConfig.ProjectType.App.rawValue ||
-            self.projectConfig.projectType == ProjectConfig.ProjectType.Binary.rawValue {
-            return "\(cachePath)/Payload/\(projectConfig.executable).app/\(projectConfig.executable)"
+        if self.projectConfig.type.int32Value == NXProjectType.app.rawValue ||
+            self.projectConfig.type.int32Value == NXProjectType.binary.rawValue {
+            return "\(cachePath)/Payload/\(projectConfig.executable!).app/\(projectConfig.executable!)"
         } else {
-            return "\(cachePath)/\(projectConfig.executable)"
+            return "\(cachePath)/\(projectConfig.executable!)"
         }
     }
     
     func getPackagePath() -> String {
-        return "\(cachePath)/\(projectConfig.executable).ipa"
+        return "\(cachePath)/\(projectConfig.executable!).ipa"
     }
     
     func getHomePath() -> String {

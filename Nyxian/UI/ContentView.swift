@@ -56,10 +56,10 @@ import UIKit
         
         // TODO: Create a menu
         let createItem: UIMenu = UIMenu(title: "Create", image: UIImage(systemName: "plus.circle.fill"), children: [UIAction(title: "App") { _ in
-            self.createProject(mode: .App)
+            self.createProject(mode: .app)
         },
                                                                                                                     UIAction(title: "Binary") { _ in
-            self.createProject(mode: .Binary)
+            self.createProject(mode: .binary)
         }])
         
         let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
@@ -87,7 +87,7 @@ import UIKit
         }
     }
     
-    func createProject(mode: ProjectConfig.ProjectType) {
+    func createProject(mode: NXProjectType) {
         let alert = UIAlertController(title: "Create Project",
                                       message: "",
                                       preferredStyle: .alert)
@@ -172,9 +172,9 @@ import UIKit
                 DispatchQueue.global().async {
                     let project = self.projects[indexPath.row]
                     
-                    try? FileManager.default.zipItem(at: project.getPath().URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayname).zip"))
+                    try? FileManager.default.zipItem(at: project.getPath().URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"))
                     
-                    share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayname).zip"), remove: true)
+                    share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"), remove: true)
                 }
             }
             
@@ -183,7 +183,7 @@ import UIKit
                 
                 self.presentConfirmationAlert(
                     title: "Warning",
-                    message: "Are you sure you want to remove \"\(project.projectConfig.displayname)\"?",
+                    message: "Are you sure you want to remove \"\(project.projectConfig.displayName!)\"?",
                     confirmTitle: "Remove",
                     confirmStyle: .destructive)
                 {

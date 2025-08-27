@@ -18,26 +18,21 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LINDCHAIN_DEBUGGER_UTILS_H
-#define LINDCHAIN_DEBUGGER_UTILS_H
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dlfcn.h>
-#include <mach/mach.h>
-#include <mach/exc.h>
-#include <mach/exception.h>
-#include <mach/exception_types.h>
-#include <mach/thread_act.h>
-#include <mach/thread_state.h>
 #import <Foundation/Foundation.h>
-#import <LindChain/Decompiler/Decompiler.h>
 
-const char *symbol_for_address(void *addr);
-void stack_trace_from_thread_state(arm_thread_state64_t state);
+@interface LDEThreadControl : NSObject
 
-uint64_t get_thread_id_from_port(thread_t thread);
-int get_thread_index_from_port(thread_t target);
+@property (nonatomic,readonly) BOOL isLockdown;
 
-#endif /* LINDCHAIN_DEBUGGER_UTILS_H */
+- (instancetype)initWithThreads:(int)threads;
+- (instancetype)init;
+
++ (int)getOptimalThreadCount;
++ (int)getUserSetThreadCount;
++ (void)pthreadDispatch:(void (^)(void))code;
+
+- (void)dispatchExecution:(void (^)(void))code
+           withCompletion:(void (^)(void))completion;
+- (void)lockdown;
+
+@end

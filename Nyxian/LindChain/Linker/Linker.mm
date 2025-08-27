@@ -18,7 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Linker/Linker.h>
+#import <LindChain/Linker/Linker.h>
 #include "lld/Common/Driver.h"
 #include "lld/Common/ErrorHandler.h"
 #include "llvm/ADT/ArrayRef.h"

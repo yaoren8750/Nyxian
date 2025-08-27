@@ -36,7 +36,7 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Support/TargetSelect.h"
 #include <pthread.h>
-#include <LogService/LogService.h>
+#include <LindChain/LogService/LogService.h>
 
 using namespace clang;
 using namespace clang::driver;

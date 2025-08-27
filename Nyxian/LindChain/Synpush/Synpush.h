@@ -19,7 +19,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <Synpush/Synitem.h>
+#import <LindChain/Synpush/Synitem.h>
 #include <clang-c/Index.h>
 #include <stdio.h>
 #include <stdlib.h>
