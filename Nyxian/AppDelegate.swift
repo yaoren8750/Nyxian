@@ -62,12 +62,12 @@ import UIKit
             var candyInfo: NSString? = nil
             if let projectSelected: String = UserDefaults.standard.string(forKey: "LDELastProjectSelected"),
                let functionName: String = appException.func {
-                let appProject: AppProject = AppProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
+                let project: NXProject = NXProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
                 
-                let sourceStack = FindFilesStack(appProject.getPath(), ["c","cpp","m","mm"], ["Resources"])
+                let sourceStack = FindFilesStack(project.path, ["c","cpp","m","mm"], ["Resources"])
                 var objectStack: [String] = []
                 for item in sourceStack {
-                    objectStack.append("\(appProject.getCachePath())/\(expectedObjectFile(forPath: relativePath(from: appProject.getPath().URLGet(), to: item.URLGet())))")
+                    objectStack.append("\(project.cachePath!)/\(expectedObjectFile(forPath: relativePath(from: project.path.URLGet(), to: item.URLGet())))")
                 }
                 for item in objectStack {
                     let ptr = getExceptionFromObjectFile((item as NSString).utf8String, ("\(functionName)" as NSString).utf8String, appException.offset)
@@ -99,9 +99,9 @@ import UIKit
             
             let replayButton: UIButton = self.createDebugButton(symbolName: "memories", action: UIAction { _ in
                 if let projectSelected: String = UserDefaults.standard.string(forKey: "LDELastProjectSelected") {
-                    let appProject: AppProject = AppProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
-                    UserDefaults.standard.set(appProject.getBundlePath(), forKey: "LDEAppPath")
-                    UserDefaults.standard.set(appProject.getHomePath(), forKey: "LDEHomePath")
+                    let project: NXProject = NXProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
+                    UserDefaults.standard.set(project.bundlePath, forKey: "LDEAppPath")
+                    UserDefaults.standard.set(project.homePath, forKey: "LDEHomePath")
                     restartProcess()
                 }
             })

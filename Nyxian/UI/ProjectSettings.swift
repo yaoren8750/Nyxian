@@ -22,12 +22,12 @@ import Foundation
 import UIKit
 
 class ProjectSettingsViewController: UITableViewController {
-    let project: AppProject
+    let project: NXProject
     
     let vtkey: [[(String, String, String)]]
     
     init(style: UITableView.Style,
-         project: AppProject) {
+         project: NXProject) {
         self.project = project
         self.vtkey = [
             [
@@ -81,7 +81,7 @@ class ProjectSettingsViewController: UITableViewController {
             let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.section - 1][indexPath.row].1, value: self.vtkey[indexPath.section - 1][indexPath.row].0)
             cell.writeHandler = { value in
                 self.project.projectConfig.writeKey(self.vtkey[indexPath.section - 1][indexPath.row].2, withValue: value)
-                self.project.projectTableCell.reload()
+                (self.project.tableCell as! NXProjectTableCell).reload()
             }
             return cell
         } else {
