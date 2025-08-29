@@ -67,7 +67,7 @@ class Builder {
             fileArgsString = (try? String(contentsOf: URL(fileURLWithPath: "\(self.project.cachePath!)/args.txt"), encoding: .utf8)) ?? ""
         }
         
-        if(fileArgsString == self.argsString), self.project.projectConfig.increment.boolValue {
+        if(fileArgsString == self.argsString), self.project.projectConfig.increment {
             self.dirtySourceFiles = self.dirtySourceFiles.filter { self.isFileDirty($0) }
         }
     }
@@ -111,7 +111,7 @@ class Builder {
         }
         
         // if payload exists remove it
-        if self.project.projectConfig.type.int32Value == NXProjectType.app.rawValue {
+        if self.project.projectConfig.type == NXProjectType.app.rawValue {
             let payloadPath: String = self.project.payloadPath
             if FileManager.default.fileExists(atPath: payloadPath) {
                 try? FileManager.default.removeItem(atPath: payloadPath)
@@ -125,8 +125,8 @@ class Builder {
     }
     
     func prepare() throws {
-        if project.projectConfig.type.int32Value == NXProjectType.app.rawValue ||
-            project.projectConfig.type.int32Value == NXProjectType.binary.rawValue {
+        if project.projectConfig.type == NXProjectType.app.rawValue ||
+            project.projectConfig.type == NXProjectType.binary.rawValue {
             let bundlePath: String = self.project.bundlePath
             
             try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
@@ -164,7 +164,7 @@ class Builder {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
         let group: DispatchGroup = DispatchGroup()
         //let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads.intValue)
-        let threader = LDEThreadControl(threads: self.project.projectConfig.threads.int32Value)
+        let threader = LDEThreadControl(threads: self.project.projectConfig.threads)
         
         for filePath in self.dirtySourceFiles {
             group.enter()

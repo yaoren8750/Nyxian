@@ -40,12 +40,12 @@ static NXProjectType const NXProjectTypeBinary = 2;
 @property (nonatomic,strong,readonly) NSString *shortVersion;
 @property (nonatomic,strong,readonly) NSDictionary *infoDictionary;
 @property (nonatomic,strong,readonly) NSString *platformTriple;
-@property (nonatomic,strong,readonly) NSNumber *type;
 @property (nonatomic,strong,readonly) NSArray *compilerFlags;
 @property (nonatomic,strong,readonly) NSArray *linkerFlags;
 @property (nonatomic,strong,readonly) NSString *platformMinimumVersion;
-@property (nonatomic,strong,readonly) NSNumber *threads;
-@property (nonatomic,strong,readonly) NSNumber *increment;
+@property (nonatomic,readonly) int type;
+@property (nonatomic,readonly) int threads;
+@property (nonatomic,readonly) BOOL increment;
 
 - (NSMutableArray*)generateCompilerFlags;
 
@@ -53,11 +53,11 @@ static NXProjectType const NXProjectTypeBinary = 2;
 
 @interface NXCodeEditorConfig : NXPlistHelper
 
-@property (nonatomic,strong,readonly) NSNumber *showLine;
-@property (nonatomic,strong,readonly) NSNumber *showSpaces;
-@property (nonatomic,strong,readonly) NSNumber *showReturn;
-@property (nonatomic,strong,readonly) NSNumber *wrapLine;
-@property (nonatomic,strong,readonly) NSNumber *fontSize;
+@property (nonatomic,readonly) BOOL showLine;
+@property (nonatomic,readonly) BOOL showSpaces;
+@property (nonatomic,readonly) BOOL showReturn;
+@property (nonatomic,readonly) BOOL wrapLine;
+@property (nonatomic,readonly) double fontSize;
 
 @end
 

@@ -30,26 +30,27 @@
 - (NSString*)shortVersion { return [self readStringForKey:@"LDEBundleShortVersion" withDefaultValue:@"1.0"]; }
 - (NSString*)platformTriple { return [self readStringForKey:@"LDEOverwriteTriple" withDefaultValue:[NSString stringWithFormat:@"apple-arm64-ios%@", [self platformMinimumVersion]]]; }
 - (NSDictionary*)infoDictionary { return [self readSecureFromKey:@"LDEBundleInfo" withDefaultValue:[[NSDictionary alloc] init] classType:NSDictionary.class]; }
-- (NSNumber*)type { return [self readSecureFromKey:@"LDEProjectType" withDefaultValue:[NSNumber numberWithInteger:NXProjectTypeApp] classType:NSNumber.class]; }
 - (NSArray*)compilerFlags { return [self readArrayForKey:@"LDECompilerFlags" withDefaultValue:@[]]; }
 - (NSArray*)linkerFlags { return [self readArrayForKey:@"LDELinkerFlags" withDefaultValue:@[]]; }
 - (NSString*)platformMinimumVersion { return [self readStringForKey:@"LDEMinimumVersion" withDefaultValue:@"1.0"]; }
-- (NSNumber*)threads
+- (int)type { return (int)[self readIntegerForKey:@"LDEProjectType" withDefaultValue:NXProjectTypeApp]; }
+- (int)threads
 {
     const int maxThreads = [LDEThreadControl getOptimalThreadCount];
-    NSInteger pthreads = [self readIntegerForKey:@"LDEOverwriteThreads" withDefaultValue:[LDEThreadControl getUserSetThreadCount]];
+    int pthreads = (int)[self readIntegerForKey:@"LDEOverwriteThreads" withDefaultValue:[LDEThreadControl getUserSetThreadCount]];
     if(pthreads == 0)
         pthreads = [LDEThreadControl getUserSetThreadCount];
     else if(pthreads > maxThreads)
         pthreads = maxThreads;
-    return [NSNumber numberWithInteger:pthreads];
+    return pthreads;
 }
-- (NSNumber*)increment {
+
+- (BOOL)increment {
     NSNumber *value = [self readKey:@"LDEOverwriteIncrementalBuild"];
     NSNumber *userSetValue = [[NSUserDefaults standardUserDefaults] objectForKey:@"LDEIncrementalBuild"];
     if(!value)
         return userSetValue ? userSetValue : [NSNumber numberWithBool:YES];
-    return value;
+    return value.boolValue;
 }
 
 - (NSMutableArray*)generateCompilerFlags
@@ -64,11 +65,11 @@
 
 @implementation NXCodeEditorConfig
 
-- (NSNumber*)showLine { return [NSNumber numberWithBool:[self readBooleanForKey:@"LDEShowLines" withDefaultValue:YES]]; }
-- (NSNumber*)showSpaces { return [NSNumber numberWithBool:[self readBooleanForKey:@"LDEShowSpace" withDefaultValue:YES]]; }
-- (NSNumber*)showReturn { return [NSNumber numberWithBool:[self readBooleanForKey:@"LDEShowReturn" withDefaultValue:YES]]; }
-- (NSNumber*)wrapLine { return [NSNumber numberWithBool:[self readBooleanForKey:@"LDEWrapLine" withDefaultValue:YES]]; }
-- (NSNumber*)fontSize { return [NSNumber numberWithDouble:[self readDoubleForKey:@"LDEFontSize" withDefaultValue:YES]]; }
+- (BOOL)showLine { return [self readBooleanForKey:@"LDEShowLines" withDefaultValue:YES]; }
+- (BOOL)showSpaces { return [self readBooleanForKey:@"LDEShowSpace" withDefaultValue:YES]; }
+- (BOOL)showReturn { return [self readBooleanForKey:@"LDEShowReturn" withDefaultValue:YES]; }
+- (BOOL)wrapLine { return [self readBooleanForKey:@"LDEWrapLine" withDefaultValue:YES]; }
+- (double)fontSize { return [self readDoubleForKey:@"LDEFontSize" withDefaultValue:YES]; }
 
 @end
 

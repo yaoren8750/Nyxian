@@ -133,7 +133,7 @@ class CodeEditorViewController: UIViewController {
         }
         
         let theme: LindDEThemer = currentTheme ?? LindDEThemer()
-        theme.fontSize = CGFloat(self.project?.codeEditorConfig.fontSize.floatValue ?? 10.0)
+        theme.fontSize = CGFloat(self.project?.codeEditorConfig.fontSize ?? 10.0)
             
         self.view.backgroundColor = .systemBackground
         self.textView.backgroundColor = theme.backgroundColor
@@ -143,10 +143,10 @@ class CodeEditorViewController: UIViewController {
         self.navigationController?.navigationBar.standardAppearance = currentNavigationBarAppearance
         self.navigationController?.navigationBar.scrollEdgeAppearance = currentNavigationBarAppearance
         
-        self.textView.showLineNumbers = self.project?.codeEditorConfig.showLine.boolValue ?? true
-        self.textView.showSpaces = self.project?.codeEditorConfig.showSpaces.boolValue  ?? true
-        self.textView.isLineWrappingEnabled = self.project?.codeEditorConfig.wrapLine.boolValue  ?? true
-        self.textView.showLineBreaks = self.project?.codeEditorConfig.showReturn.boolValue  ?? true
+        self.textView.showLineNumbers = self.project?.codeEditorConfig.showLine ?? true
+        self.textView.showSpaces = self.project?.codeEditorConfig.showSpaces  ?? true
+        self.textView.isLineWrappingEnabled = self.project?.codeEditorConfig.wrapLine  ?? true
+        self.textView.showLineBreaks = self.project?.codeEditorConfig.showReturn  ?? true
         self.textView.lineSelectionDisplayType = .line
         
         self.textView.lineHeightMultiplier = 1.3
