@@ -23,15 +23,13 @@ API_AVAILABLE(ios(16.0))
 API_AVAILABLE(ios(16.0))
 @interface AppSceneViewController : UIViewController<_UISceneSettingsDiffAction>
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
-@property(nonatomic) NSString* bundleId;
-@property(nonatomic) NSString* dataUUID;
 @property(nonatomic) int pid;
 @property(nonatomic) id<AppSceneViewControllerDelegate> delegate;
 @property(nonatomic) BOOL isAppRunning;
 @property(nonatomic) CGFloat scaleRatio;
 @property(nonatomic) UIView* contentView;
 @property(nonatomic) _UIScenePresenter *presenter;
-- (instancetype)initWithBundleId:(NSString*)bundleId dataUUID:(NSString*)dataUUID delegate:(id<AppSceneViewControllerDelegate>)delegate;
+- (instancetype)initWithDelegate:(id<AppSceneViewControllerDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)updateFrameWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block;
 - (void)appTerminationCleanUp;

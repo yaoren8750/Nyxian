@@ -5,13 +5,15 @@
 //  Created by SeanIsTethered on 30.08.25.
 //
 
-#import <LindChain/Private/FoundationPrivate.h>
+//#import <LindChain/Private/FoundationPrivate.h>
 #import <../LiveProcess/serverDelegate.h>
 #import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Multitask/AppSceneViewController.h>
+#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
 pid_t proc_spawn_ios(UIViewController *target)
 {
-    __block pid_t childPid = 0;
+    /*__block pid_t childPid = 0;
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     NSError *error = nil;
     NSExtension *ext = [NSExtension extensionWithIdentifier:[liveProcessBundle bundleIdentifier] error:&error];
@@ -94,17 +96,22 @@ pid_t proc_spawn_ios(UIViewController *target)
         }];
         [presenter activate];
         
-        /*__weak typeof(self) weakSelf = self;
+        __weak typeof(self) weakSelf = self;
          [ext setRequestInterruptionBlock:^(NSUUID *uuid) {
          [weakSelf appTerminationCleanUp];
-         }];*/
+         }];
         
         [target.view addSubview:presenter.presentationView];
         target.view.layer.anchorPoint = CGPointMake(0, 0);
         target.view.layer.position = CGPointMake(0, 0);
         
         //[target.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
+    });*/
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:@""];
+        [target.view addSubview:decoratedAppSceneViewController.view];
     });
     
-    return childPid;
+    return 0;
 }

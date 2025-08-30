@@ -6,10 +6,6 @@
 //
 @import Foundation;
 
-@interface NSUserDefaults(Localization)
-+ (NSBundle*_Nonnull)lcMainBundle;
-@end
-
 @interface NSString (Localization)
 @property(readonly, nonnull, getter=localized) NSString* loc;
 - (instancetype _Nonnull)localized;

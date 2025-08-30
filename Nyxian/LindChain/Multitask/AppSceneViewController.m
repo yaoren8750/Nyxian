@@ -10,6 +10,7 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "PiPManager.h"
 #import "Localization.h"
+#import "../../../LiveProcess/serverDelegate.h"
 
 @interface AppSceneViewController()
 @property int resizeDebounceToken;
@@ -29,14 +30,12 @@
 @implementation AppSceneViewController
 
 
-- (instancetype)initWithBundleId:(NSString*)bundleId dataUUID:(NSString*)dataUUID delegate:(id<AppSceneViewControllerDelegate>)delegate {
+- (instancetype)initWithDelegate:(id<AppSceneViewControllerDelegate>)delegate {
     self = [super initWithNibName:nil bundle:nil];
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];
     [self.view addSubview:_contentView];
     self.delegate = delegate;
-    self.dataUUID = dataUUID;
-    self.bundleId = bundleId;
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
     // init extension
@@ -56,16 +55,17 @@
     
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = @{
-        @"selected": _bundleId,
-        @"selectedContainer": _dataUUID,
+        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
     };
     
     __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
+        NSLog(@"Extension down!");
         [weakSelf appTerminationCleanUp];
         [weakSelf.delegate appSceneVC:weakSelf didInitializeWithError:error];
     }];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+        NSLog(@"Extension down!");
         [weakSelf appTerminationCleanUp];
     }];
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
@@ -73,18 +73,19 @@
             //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
             self.identifier = identifier;
             self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            
+            NSLog(@"child process spawned with %u\n", self.pid);
             [delegate appSceneVC:self didInitializeWithError:nil];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self setUpAppPresenter];
             });
         } else {
             NSError* error = [NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"Failed to start app. Child process has unexpectedly crashed"}];
+            NSLog(@"%@", [error localizedDescription]);
             [delegate appSceneVC:self didInitializeWithError:error];
         }
     }];
     
-    
-
     _isNativeWindow = [[[NSUserDefaults alloc] initWithSuiteName:[LCUtils appGroupID]] integerForKey:@"LCMultitaskMode" ] == 1;
 
     return self;

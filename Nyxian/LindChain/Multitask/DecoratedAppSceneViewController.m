@@ -34,7 +34,7 @@ void UIKitFixesInit(void) {
 
 @interface DecoratedAppSceneViewController()
 @property(nonatomic) NSArray* activatedVerticalConstraints;
-@property(nonatomic) NSString* dataUUID;
+//@property(nonatomic) NSString* dataUUID;
 @property(nonatomic) NSString* windowName;
 @property(nonatomic) int pid;
 @property(nonatomic) CGRect originalFrame;
@@ -43,14 +43,14 @@ void UIKitFixesInit(void) {
 @end
 
 @implementation DecoratedAppSceneViewController
-- (instancetype)initWindowName:(NSString*)windowName bundleId:(NSString*)bundleId dataUUID:(NSString*)dataUUID {
+- (instancetype)initWindowName:(NSString*)windowName {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithBundleId:bundleId dataUUID:dataUUID delegate:self];
+    _appSceneVC = [[AppSceneViewController alloc] initWithDelegate:self];
     [self setupDecoratedView];
     
     //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
     
-    self.dataUUID = dataUUID;
+    //self.dataUUID = dataUUID;
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
@@ -109,6 +109,7 @@ void UIKitFixesInit(void) {
     } else {
         self.navigationItem.rightBarButtonItems = barButtonItems;
     }*/
+    self.navigationItem.rightBarButtonItems = barButtonItems;
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:-4.0];
@@ -151,6 +152,7 @@ void UIKitFixesInit(void) {
     } else {
         [self.view addArrangedSubview:fixedPositionContentView];
     }*/
+    [self.view addArrangedSubview:fixedPositionContentView];
     [self.view sendSubviewToBack:fixedPositionContentView];
     
     self.contentView = [[UIView alloc] initWithFrame:contentFrame];

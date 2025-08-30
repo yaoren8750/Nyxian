@@ -10,9 +10,25 @@
 
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
+#import "../../litehook/src/litehook.h"
 
 static NSObject<TestServiceProtocol> *staticProxy;
-void NSLog(NSString *format, ...) {
+DEFINE_HOOK(NSLog, void, (NSString *format, ...))
+{
+    va_list args;
+    va_start(args, format);
+
+    NSString *msg = [[NSString alloc] initWithFormat:format arguments:args];
+    va_end(args);
+
+    // Send message via your proxy
+    [staticProxy sendMessage:msg withReply:^(NSString *reply){
+        // Optional: handle reply
+    }];
+}
+
+void NXLog(NSString *format, ...)
+{
     va_list args;
     va_start(args, format);
 
@@ -86,6 +102,8 @@ void exec(NSObject<TestServiceProtocol> *proxy,
           NSData *certificateData,
           NSString *certificatePassword)
 {
+    DO_HOOK_GLOBAL(NSLog);
+    
     staticProxy = proxy;
     clearTemporaryDirectory(nil);
     
@@ -95,20 +113,20 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     BOOL success = [ipaPayload writeToFile:payloadPath atomically:YES];
     
     if(success)
-        NSLog(@"Wrote payload.ipa to tmp");
+        NXLog(@"Wrote payload.ipa to tmp");
     else
-        NSLog(@"Failed to write payload.ipa to tmp");
+        NXLog(@"Failed to write payload.ipa to tmp");
     
-    NSLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);
+    NXLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);
     
     // Unzip Payload
     unzipArchiveAtPath(payloadPath, NSTemporaryDirectory());
-    NSLog(@"Unzipped payload.ipa to tmp");
+    NXLog(@"Unzipped payload.ipa to tmp");
     
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
     
-    NSLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
+    NXLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
 
     // Sign iOS app
     NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
@@ -118,26 +136,26 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
     [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
     
-    NSLog(@"Set certificate successfully");
+    NXLog(@"Set certificate successfully");
     
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
     [proxy sendMessage:@"Created LCAppInfo" withReply:^(NSString *msg){}];
     [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL result, NSString *meow){
         if(result)
         {
-            NSLog(@"Successfully signed iOS application payload");
+            NXLog(@"Successfully signed iOS application payload");
             [appInfo save];
         }
         else
         {
-            NSLog(@"Failed signing iOS application payload");
+            NXLog(@"Failed signing iOS application payload");
         }
         CFRunLoopStop(CFRunLoopGetMain());
     } progressHandler:^(NSProgress *prog){
     } forceSign:NO];
     CFRunLoopRun();
     
-    NSLog(@"Lets go executing");
+    NXLog(@"Lets go executing");
     
     char *argv[1] = { NULL };
     int argc = 0;
@@ -145,7 +163,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     NSString *error = invokeAppMain(bundlePath, NSHomeDirectory(), argc, argv);
     [proxy sendMessage:error withReply:^(NSString *msg){}];
     
-    NSLog(@"HUH!");
+    NXLog(@"Shutting down!");
     
     //NSString *documentDirectory = [NSString stringWithFormat:@"%@/Documents", NSHomeDirectory()];
 }

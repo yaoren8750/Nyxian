@@ -6,15 +6,18 @@
 //
 #import "Localization.h"
 
+extern NSBundle *lcMainBundle;
+
 @implementation NSString (Localization)
 
 // Class method for the English language bundle
 + (NSBundle *)enBundle {
+    NSBundle *targetBundle = lcMainBundle ? lcMainBundle : [NSBundle mainBundle];
     static NSBundle *enBundle = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSString *language = @"en";
-        NSString *path = [[NSUserDefaults lcMainBundle] pathForResource:language ofType:@"lproj"];
+        NSString *path = [targetBundle pathForResource:language ofType:@"lproj"];
         enBundle = [NSBundle bundleWithPath:path];
     });
     return enBundle;
@@ -22,7 +25,8 @@
 
 // Instance method to return a localized string
 - (NSString *)localized {
-    NSString *message = [[NSUserDefaults lcMainBundle] localizedStringForKey:self value:@"" table:nil];
+    NSBundle *targetBundle = lcMainBundle ? lcMainBundle : [NSBundle mainBundle];
+    NSString *message = [targetBundle localizedStringForKey:self value:@"" table:nil];
     
     if (![message isEqualToString:self]) {
         return message;

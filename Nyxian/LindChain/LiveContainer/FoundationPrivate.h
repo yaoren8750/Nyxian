@@ -1,3 +1,6 @@
+#ifndef FOUNDATION_PRIVATE_H
+#define FOUNDATION_PRIVATE_H
+
 #include <Foundation/Foundation.h>
 
 @interface NSBundle(private)
@@ -53,3 +56,5 @@ CFTypeRef SecTaskCopyValueForEntitlement(void *task, CFStringRef key, CFErrorRef
 - ( NSURL * _Nullable)hook_containerURLForSecurityApplicationGroupIdentifier:(NSString * _Nonnull)groupIdentifier;
 
 @end
+
+#endif /* FOUNDATION_PRIVATE_H */
