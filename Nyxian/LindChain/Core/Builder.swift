@@ -240,7 +240,7 @@ class Builder {
             }
         }, progressHandler: { progress in }, forceSign: false)*/
         
-        proc_spawn_ios(tabViewController)
+        proc_spawn_ios(self.project.projectConfig.displayName)
     }
     
     func package() throws {

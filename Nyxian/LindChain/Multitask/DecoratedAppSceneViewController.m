@@ -57,11 +57,13 @@ void UIKitFixesInit(void) {
     self.windowName = windowName;
     self.navigationItem.title = windowName;
     
+    
+    
     NSArray *menuItems = @[
-        [UIAction actionWithTitle:@"lc.multitask.copyPid".loc image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
+        [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
             UIPasteboard.generalPasteboard.string = @(self.appSceneVC.pid).stringValue;
         }],
-        [UIAction actionWithTitle:@"lc.multitask.enablePip".loc image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
+        [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
             if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
                 [PiPManager.shared stopPiP];
             } else {
@@ -69,20 +71,9 @@ void UIKitFixesInit(void) {
             }
         }],
         [UICustomViewMenuElement elementWithViewProvider:^UIView *(UICustomViewMenuElement *element) {
-            return [self scaleSliderViewWithTitle:@"lc.multitask.scale".loc min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
+            return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
         }]
     ];
-    
-
-    __weak typeof(self) weakSelf = self;
-    [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
-        if(!weakSelf.appSceneVC.isAppRunning) {
-            return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
-        } else {
-            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.pid];
-            return [UIMenu menuWithTitle:pidText children:menuItems];
-        }
-    }];
     
     UIImage *minimizeImage = [UIImage systemImageNamed:@"minus.circle"];
     UIImageConfiguration *minimizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
@@ -101,20 +92,34 @@ void UIKitFixesInit(void) {
     closeImage = [closeImage imageWithConfiguration:closeConfig];
     UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
     closeButton.tintColor = [UIColor systemRedColor];
-    
-    NSArray *barButtonItems = @[closeButton, self.maximizeButton, minimizeButton];
-    /*if([NSUserDefaults.lcSharedDefaults boolForKey:@"LCMultitaskBottomWindowBar"]) {
-        // resize handle overlaps the close button, so put the buttons on the left
-        self.navigationItem.leftBarButtonItems = barButtonItems;
-    } else {
+
+    if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+        NSArray *barButtonItems = @[closeButton];
         self.navigationItem.rightBarButtonItems = barButtonItems;
-    }*/
-    self.navigationItem.rightBarButtonItems = barButtonItems;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            [self maximizeWindow];
+        });
+    } else {
+        NSArray *barButtonItems = @[closeButton, self.maximizeButton, minimizeButton];
+        self.navigationItem.rightBarButtonItems = barButtonItems;
+    }
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:-4.0];
+    __weak typeof(self) weakSelf = self;
+    [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
+        if(!weakSelf.appSceneVC.isAppRunning) {
+            return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
+        } else {
+            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.pid];
+            return [UIMenu menuWithTitle:pidText children:menuItems];
+        }
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
     });
-
+    
     return self;
 }
 

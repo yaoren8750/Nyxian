@@ -11,11 +11,11 @@
 #import <LindChain/Multitask/AppSceneViewController.h>
 #import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
-pid_t proc_spawn_ios(UIViewController *target)
-{    
+pid_t proc_spawn_ios(NSString *windowTitle)
+{
     dispatch_async(dispatch_get_main_queue(), ^{
-        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:@"appView"];
-        [target.view addSubview:decoratedAppSceneViewController.view];
+        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:windowTitle];
+        [[[UIApplication sharedApplication] keyWindow] addSubview:decoratedAppSceneViewController.view];
     });
     
     return 0;

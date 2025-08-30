@@ -316,6 +316,7 @@ void handleLiveContainerLaunch(NSURL* url) {
         }
     }
 }
+*/
 
 BOOL canAppOpenItself(NSURL* url) {
     static dispatch_once_t onceToken;
@@ -335,55 +336,6 @@ BOOL canAppOpenItself(NSURL* url) {
 
 // Handler for AppDelegate
 @implementation UIApplication(LiveContainerHook)
-- (void)hook__applicationOpenURLAction:(id)action payload:(NSDictionary *)payload origin:(id)origin {
-    NSString *url = payload[UIApplicationLaunchOptionsURLKey];
-    if ([url hasPrefix:@"file:"]) {
-        [[NSURL URLWithString:url] startAccessingSecurityScopedResource];
-        [self hook__applicationOpenURLAction:action payload:payload origin:origin];
-        return;
-    }
-    if ([url hasPrefix:[NSString stringWithFormat: @"%@://livecontainer-relaunch", NSUserDefaults.lcAppUrlScheme]]) {
-        // Ignore
-        return;
-    } else if ([url hasPrefix:[NSString stringWithFormat: @"%@://open-web-page?", NSUserDefaults.lcAppUrlScheme]]) {
-        // launch to UI and open web page
-        NSURLComponents* lcUrl = [NSURLComponents componentsWithString:url];
-        NSString* realUrlEncoded = lcUrl.queryItems[0].value;
-        if(!realUrlEncoded) return;
-        // Convert the base64 encoded url into String
-        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:realUrlEncoded options:0];
-        NSString *decodedUrl = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-        LCOpenWebPage(decodedUrl, url);
-        return;
-    } else if ([url hasPrefix:[NSString stringWithFormat: @"%@://open-url", NSUserDefaults.lcAppUrlScheme]]) {
-        // pass url to guest app
-        NSURLComponents* lcUrl = [NSURLComponents componentsWithString:url];
-        NSString* realUrlEncoded = lcUrl.queryItems[0].value;
-        if(!realUrlEncoded) return;
-        // Convert the base64 encoded url into String
-        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:realUrlEncoded options:0];
-        NSString *decodedUrl = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-        // it's a Universal link, let's call -[UIActivityContinuationManager handleActivityContinuation:isSuspended:]
-        if([decodedUrl hasPrefix:@"https"]) {
-            openUniversalLink(decodedUrl);
-        } else {
-            NSMutableDictionary* newPayload = [payload mutableCopy];
-            newPayload[UIApplicationLaunchOptionsURLKey] = decodedUrl;
-            [self hook__applicationOpenURLAction:action payload:newPayload origin:origin];
-        }
-        
-        return;
-    } else if ([url hasPrefix:[NSString stringWithFormat: @"%@://livecontainer-launch?bundle-name=", NSUserDefaults.lcAppUrlScheme]]) {
-        handleLiveContainerLaunch([NSURL URLWithString:url]);
-        // Not what we're looking for, pass it
-        
-    } else if ([url hasPrefix:[NSString stringWithFormat: @"%@://install", NSUserDefaults.lcAppUrlScheme]]) {
-        LCShowAlert(@"lc.guestTweak.restartToInstall".loc);
-        return;
-    }
-    [self hook__applicationOpenURLAction:action payload:payload origin:origin];
-    return;
-}
 
 - (void)hook__connectUISceneFromFBSScene:(id)scene transitionContext:(UIApplicationSceneTransitionContext*)context {
 #if !TARGET_OS_MACCATALYST
@@ -391,46 +343,6 @@ BOOL canAppOpenItself(NSURL* url) {
     context.actions = nil;
 #endif
     [self hook__connectUISceneFromFBSScene:scene transitionContext:context];
-}
-
--(BOOL)hook__handleDelegateCallbacksWithOptions:(id)arg1 isSuspended:(BOOL)arg2 restoreState:(BOOL)arg3 {
-    BOOL ans = [self hook__handleDelegateCallbacksWithOptions:arg1 isSuspended:arg2 restoreState:arg3];
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:@"com.apple.springboard"];
-            [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:NSUserDefaults.lcMainBundle.bundleIdentifier];
-        });
-
-    });
-
-
-    return ans;
-}
-
-- (void)hook_openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options completionHandler:(void (^)(_Bool))completion {
-    if(NSUserDefaults.isSideStore && ![url.scheme isEqualToString:@"livecontainer"]) {
-        [self hook_openURL:url options:options completionHandler:completion];
-        return;
-    }
-    
-    if(canAppOpenItself(url)) {
-        NSData *data = [url.absoluteString dataUsingEncoding:NSUTF8StringEncoding];
-        NSString *encodedUrl = [data base64EncodedStringWithOptions:0];
-        NSString* finalUrlStr = [NSString stringWithFormat:@"%@://open-url?url=%@", NSUserDefaults.lcAppUrlScheme, encodedUrl];
-        NSURL* finalUrl = [NSURL URLWithString:finalUrlStr];
-        [self hook_openURL:finalUrl options:options completionHandler:completion];
-    } else {
-        [self hook_openURL:url options:options completionHandler:completion];
-    }
-}
-- (BOOL)hook_canOpenURL:(NSURL *) url {
-    if(canAppOpenItself(url)) {
-        return YES;
-    } else {
-        return [self hook_canOpenURL:url];
-    }
 }
 
 - (void)hook_setDelegate:(id<UIApplicationDelegate>)delegate {
@@ -452,7 +364,7 @@ BOOL canAppOpenItself(NSURL* url) {
 
 // Handler for SceneDelegate
 @implementation UIScene(LiveContainerHook)
-- (void)hook_scene:(id)scene didReceiveActions:(NSSet *)actions fromTransitionContext:(id)context {
+/*- (void)hook_scene:(id)scene didReceiveActions:(NSSet *)actions fromTransitionContext:(id)context {
     UIOpenURLAction *urlAction = nil;
     for (id obj in actions.allObjects) {
         if ([obj isKindOfClass:UIOpenURLAction.class]) {
@@ -530,7 +442,7 @@ BOOL canAppOpenItself(NSURL* url) {
     } else {
         [self hook_openURL:url options:options completionHandler:completion];
     }
-}
+}*/
 @end
 
 @implementation FBSSceneParameters(LiveContainerHook)
@@ -588,7 +500,8 @@ BOOL canAppOpenItself(NSURL* url) {
     [self hook_setHidden:hidden];
 }
 - (void)updateWindowScene {
-    for(UIWindowScene *windowScene in UIApplication.sharedApplication.connectedScenes) {
+    UIApplication *app = [NSClassFromString(@"UIApplication") performSelector:NSSelectorFromString(@"sharedApplication")];
+    for(UIWindowScene *windowScene in app.connectedScenes) {
         if(!self.windowScene && self.screen == windowScene.screen) {
             self.windowScene = windowScene;
             break;
@@ -596,4 +509,3 @@ BOOL canAppOpenItself(NSURL* url) {
     }
 }
 @end
-*/
