@@ -12,6 +12,7 @@
 		79BF97F82E6291EE00C60D4C /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79281CBF2E3A44CA00E983C9 /* UniformTypeIdentifiers.framework */; };
 		79BF98042E6291EE00C60D4C /* LiveProcess.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 79BF97F72E6291EE00C60D4C /* LiveProcess.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		79BF9A8F2E62BA8700C60D4C /* libarchive.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BF9A8E2E62BA7D00C60D4C /* libarchive.tbd */; };
+		79BF9AE02E62BCEF00C60D4C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
 		AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */ = {isa = PBXBuildFile; productRef = AF9919572DC9175A00DDF895 /* TreeSitterObjc */; };
 		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
 		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -40,6 +41,16 @@
 				79BF98042E6291EE00C60D4C /* LiveProcess.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79BF9AC92E62BC2200C60D4C /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		79EE25D12E0D5D0D00AF61C1 /* Embed Foundation Extensions */ = {
@@ -78,7 +89,6 @@
 		79BF983D2E62930600C60D4C /* Exceptions for "LiveProcess" folder in "LiveProcess" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				dyld.m,
 				LindChain/LiveContainer/exec.m,
 				LindChain/LiveContainer/zip.m,
 				litehook/src/litehook.c,
@@ -93,9 +103,68 @@
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;
 		};
+		79BF9A972E62BB6900C60D4C /* Exceptions for "Nyxian" folder in "LiveProcess" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LindChain/Debugger/Debugger.m,
+				LindChain/Debugger/Dwarf.cpp,
+				LindChain/Debugger/Log.m,
+				LindChain/Debugger/Logger.m,
+				LindChain/Debugger/MachServer.m,
+				LindChain/Debugger/Utils.m,
+				LindChain/Decompiler/CodeBufferDecompiler.cpp,
+				LindChain/Decompiler/Decompiler.mm,
+				LindChain/LiveContainer/dyld_bypass_validation.m,
+				LindChain/LiveContainer/LCAppInfo.m,
+				LindChain/LiveContainer/LCBootstrap.m,
+				LindChain/LiveContainer/LCMachOUtils.m,
+				LindChain/LiveContainer/LCUtils.m,
+				LindChain/LiveContainer/Localization.m,
+				LindChain/LiveContainer/main.c,
+				LindChain/LiveContainer/Tweaks/Dyld.m,
+				"LindChain/LiveContainer/Tweaks/NSBundle+FixCydiaSubstrate.m",
+				"LindChain/LiveContainer/Tweaks/NSFileManager+GuestHooks.m",
+				LindChain/LiveContainer/Tweaks/NSUserDefaults.m,
+				LindChain/LiveContainer/Tweaks/SecItem.m,
+				LindChain/LiveContainer/Tweaks/UIWindowHooks.m,
+				LindChain/LiveContainer/utils.m,
+				LindChain/LiveContainer/ZSign/archo.cpp,
+				LindChain/LiveContainer/ZSign/bundle.cpp,
+				LindChain/LiveContainer/ZSign/common/base64.cpp,
+				LindChain/LiveContainer/ZSign/common/fs.cpp,
+				LindChain/LiveContainer/ZSign/common/json.cpp,
+				LindChain/LiveContainer/ZSign/common/log.cpp,
+				LindChain/LiveContainer/ZSign/common/sha.cpp,
+				LindChain/LiveContainer/ZSign/common/timer.cpp,
+				LindChain/LiveContainer/ZSign/common/util.cpp,
+				LindChain/LiveContainer/ZSign/macho.cpp,
+				LindChain/LiveContainer/ZSign/openssl.cpp,
+				LindChain/LiveContainer/ZSign/signing.cpp,
+				LindChain/LiveContainer/ZSign/Utils.mm,
+				LindChain/LiveContainer/ZSign/zsign.mm,
+				LindChain/LiveContainer/ZSign/zsigner.m,
+				LindChain/LLVM.xcframework,
+				LindChain/ObjC/Swizzle.m,
+				LindChain/OpenSSL.xcframework,
+				LindChain/Private/Restart.m,
+			);
+			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		79BF9ACA2E62BC2200C60D4C /* Exceptions for "Nyxian" folder in "Embed Frameworks" phase from "LiveProcess" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			attributesByRelativePath = {
+				LindChain/LLVM.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				LindChain/OpenSSL.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+			};
+			buildPhase = 79BF9AC92E62BC2200C60D4C /* Embed Frameworks */;
+			membershipExceptions = (
+				LindChain/LLVM.xcframework,
+				LindChain/OpenSSL.xcframework,
+			);
+		};
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
@@ -124,6 +193,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */,
+				79BF9A972E62BB6900C60D4C /* Exceptions for "Nyxian" folder in "LiveProcess" target */,
+				79BF9ACA2E62BC2200C60D4C /* Exceptions for "Nyxian" folder in "Embed Frameworks" phase from "LiveProcess" target */,
 			);
 			path = Nyxian;
 			sourceTree = "<group>";
@@ -136,6 +207,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				79BF97F82E6291EE00C60D4C /* UniformTypeIdentifiers.framework in Frameworks */,
+				79BF9AE02E62BCEF00C60D4C /* MobileCoreServices.framework in Frameworks */,
 				79BF9A8F2E62BA8700C60D4C /* libarchive.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -189,6 +261,7 @@
 				79BF97F32E6291EE00C60D4C /* Sources */,
 				79BF97F42E6291EE00C60D4C /* Frameworks */,
 				79BF97F52E6291EE00C60D4C /* Resources */,
+				79BF9AC92E62BC2200C60D4C /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -331,6 +404,7 @@
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = M77WGRRYJQ;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Nyxian/;
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -360,6 +434,7 @@
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = M77WGRRYJQ;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Nyxian/;
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

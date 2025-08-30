@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <LindChain/Private/Restart.h>
-#import <Nyxian-Swift.h>
+//#import <Nyxian-Swift.h>
 #import "Debugger.h"
 #include "MachServer.h"
 
@@ -153,9 +153,9 @@
 
 - (void)handleFileButton:(UIButton *)sender
 {
-    FileListViewController *fileVC = [[FileListViewController alloc] initWithIsSublink:NO path:NSHomeDirectory()];
+    /*FileListViewController *fileVC = [[FileListViewController alloc] initWithIsSublink:NO path:NSHomeDirectory()];
     UINavigationController *fileNav = [[UINavigationController alloc] initWithRootViewController:fileVC];
-    [_window.rootViewController presentViewController:fileNav animated:YES completion:nil];
+    [_window.rootViewController presentViewController:fileNav animated:YES completion:nil];*/
 }
 
 - (void)handleBackButton:(UIButton *)sender
