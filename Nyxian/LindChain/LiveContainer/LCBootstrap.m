@@ -186,12 +186,14 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     NSFMGuestHooksInit();
     UIWindowHooksInit();
     DyldHooksInit();
+    initDead10ccFix();
 
     // Find main()
     int (*appMain)(int, char**) = getAppEntryPoint(appHandle);
     if (!appMain)
         return @"Could not find the main entry point";
 
+    NSLog(@"Jumping to app main!");
     return [NSString stringWithFormat:@"App returned from its main function with code %d.", appMain(argc, argv)];
 }
 

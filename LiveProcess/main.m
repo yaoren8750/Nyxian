@@ -61,17 +61,26 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    [proxy getPayloadWithServerReply:^(NSData *payload){
-        [proxy getCertiticateWithServerReply:^(NSData *certificateData, NSString *certificatePassword){
+    __block NSData *payload;
+    __block NSData *certificateData;
+    __block NSString *certificatePassword;
+    
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    [proxy getPayloadWithServerReply:^(NSData *sPayload){
+        payload = sPayload;
+        [proxy getCertiticateWithServerReply:^(NSData *sCertificateData, NSString *sCertificatePassword){
+            certificateData = sCertificateData;
+            certificatePassword = sCertificatePassword;
             [proxy sendMessage:[NSString stringWithFormat:@"Payload: %@", payload] withReply:^(NSString *serverSaid) {}];
             [proxy sendMessage:[NSString stringWithFormat:@"Crt: %@", certificateData] withReply:^(NSString *serverSaid) {}];
             [proxy sendMessage:[NSString stringWithFormat:@"Pwd: %@", certificatePassword] withReply:^(NSString *serverSaid) {}];
-            exec(proxy, payload, certificateData, certificatePassword);
+            dispatch_semaphore_signal(semaphore);
         }];
     }];
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     
     // MARK: Keep it alive
-    CFRunLoopRun();
+    exec(proxy, payload, certificateData, certificatePassword);
     
     return 0;
 }

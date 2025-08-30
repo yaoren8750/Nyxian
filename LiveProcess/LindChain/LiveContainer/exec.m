@@ -8,6 +8,25 @@
 #import "exec.h"
 #import "zip.h"
 
+#import <LindChain/LiveContainer/LCUtils.h>
+#import <LindChain/LiveContainer/LCAppInfo.h>
+
+static NSObject<TestServiceProtocol> *staticProxy;
+void NSLog(NSString *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    NSString *msg = [[NSString alloc] initWithFormat:format arguments:args];
+    va_end(args);
+
+    // Send message via your proxy
+    [staticProxy sendMessage:msg withReply:^(NSString *reply){
+        // Optional: handle reply
+    }];
+}
+
+NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
+
 NSString *fileTreeAtPathWithArrows(NSString *path) {
     NSMutableString *treeString = [NSMutableString string];
     NSFileManager *fm = [NSFileManager defaultManager];
@@ -67,6 +86,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
           NSData *certificateData,
           NSString *certificatePassword)
 {
+    staticProxy = proxy;
     clearTemporaryDirectory(nil);
     
     // First write out payload
@@ -75,22 +95,57 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     BOOL success = [ipaPayload writeToFile:payloadPath atomically:YES];
     
     if(success)
-        [proxy sendMessage:@"Wrote payload.ipa to tmp" withReply:^(NSString *msg){}];
+        NSLog(@"Wrote payload.ipa to tmp");
     else
-        [proxy sendMessage:@"Failed to write payload.ipa to tmp" withReply:^(NSString *msg){}];
+        NSLog(@"Failed to write payload.ipa to tmp");
     
-    [proxy sendMessage:[NSString stringWithFormat:@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]] withReply:^(NSString *msg){}];
+    NSLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);
     
     // Unzip Payload
     unzipArchiveAtPath(payloadPath, NSTemporaryDirectory());
-    [proxy sendMessage:@"Unzipped payload.ipa to tmp" withReply:^(NSString *msg){}];
+    NSLog(@"Unzipped payload.ipa to tmp");
     
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
     
-    [proxy sendMessage:[NSString stringWithFormat:@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath)] withReply:^(NSString *msg){}];
-    
+    NSLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
+
     // Sign iOS app
+    NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
+    if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
+    [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
+    [appGroupUserDefault setObject:certificatePassword forKey:@"LCCertificatePassword"];
+    [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
+    [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
+    
+    NSLog(@"Set certificate successfully");
+    
+    LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
+    [proxy sendMessage:@"Created LCAppInfo" withReply:^(NSString *msg){}];
+    [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL result, NSString *meow){
+        if(result)
+        {
+            NSLog(@"Successfully signed iOS application payload");
+            [appInfo save];
+        }
+        else
+        {
+            NSLog(@"Failed signing iOS application payload");
+        }
+        CFRunLoopStop(CFRunLoopGetMain());
+    } progressHandler:^(NSProgress *prog){
+    } forceSign:NO];
+    CFRunLoopRun();
+    
+    NSLog(@"Lets go executing");
+    
+    char *argv[1] = { NULL };
+    int argc = 0;
+    
+    NSString *error = invokeAppMain(bundlePath, NSHomeDirectory(), argc, argv);
+    [proxy sendMessage:error withReply:^(NSString *msg){}];
+    
+    NSLog(@"HUH!");
     
     //NSString *documentDirectory = [NSString stringWithFormat:@"%@/Documents", NSHomeDirectory()];
 }

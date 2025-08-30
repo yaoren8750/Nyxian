@@ -11,12 +11,13 @@
 @implementation TestService
 
 - (void)sendMessage:(NSString *)message withReply:(void (^)(NSString *))reply {
-    printf("[Extension] %s\n",[message UTF8String]);
+    printf("[Guest App] %s\n",[message UTF8String]);
     reply(@"Extension I received ur message!\n");
 }
 
 - (void)getCertiticateWithServerReply:(void (^)(NSData *, NSString *))reply
 {
+    printf("[Host App] Guest app requested certificate data\n");
     // Literally sending certificate over to service
     reply(LCUtils.certificateData, LCUtils.certificatePassword);
 }
@@ -25,6 +26,7 @@
 {
     // Literally sending over Builder specified payload path mfckers!
     // FIXME: Not a fixme but in future implement sending of a zip payload from builder. so that the app extension doesnt need a shared document path.. it can just run the app
+    printf("[Host App] Guest app requested payload\n");
     NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
     reply([NSData dataWithContentsOfFile:payloadPath]);
 }
@@ -35,13 +37,14 @@
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
-    printf("Extension tries to connect!\n");
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
     
     TestService *exportedObject = [TestService alloc];
     newConnection.exportedObject = exportedObject;
     
     [newConnection resume];
+    
+    printf("[Host App] Guest app connected\n");
     
     return YES;
 }

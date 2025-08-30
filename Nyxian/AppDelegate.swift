@@ -20,6 +20,8 @@
 
 import UIKit
 
+var tabViewController: UIThemedTabBarController = UIThemedTabBarController()
+
 @objc class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
@@ -29,9 +31,7 @@ import UIKit
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         window = UIWindow(frame: UIScreen.main.bounds)
-        
-        let tabViewController: UIThemedTabBarController = UIThemedTabBarController()
-        
+
         let contentViewController: ContentViewController = ContentViewController(path: "\(NSHomeDirectory())/Documents/Projects")
         let settingsViewController: SettingsViewController = SettingsViewController(style: .insetGrouped)
         

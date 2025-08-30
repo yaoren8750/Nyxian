@@ -23,3 +23,4 @@ extern bool tweakLoaderLoaded;
 void* getGuestAppHeader(void);
 void* dlopenBypassingLock(const char *path, int mode);
 void UIWindowHooksInit(void);
+void initDead10ccFix(void);
