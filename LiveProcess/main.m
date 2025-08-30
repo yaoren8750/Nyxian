@@ -10,6 +10,7 @@
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
 #import "serverDelegate.h"
+#import "LindChain/LiveContainer/exec.h"
 
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
@@ -65,21 +66,9 @@ int LiveProcessMain(int argc, char *argv[]) {
             [proxy sendMessage:[NSString stringWithFormat:@"Payload: %@", payload] withReply:^(NSString *serverSaid) {}];
             [proxy sendMessage:[NSString stringWithFormat:@"Crt: %@", certificateData] withReply:^(NSString *serverSaid) {}];
             [proxy sendMessage:[NSString stringWithFormat:@"Pwd: %@", certificatePassword] withReply:^(NSString *serverSaid) {}];
-            exit(0);
+            exec(proxy, payload, certificateData, certificatePassword);
         }];
     }];
-    
-    /*[proxy sendMessage:[NSString stringWithFormat:@"Hello from process %u\nHome path: %@\n%@", getpid(), NSHomeDirectory(), [[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSHomeDirectory() error:nil]] withReply:^(NSString *serverSaid) {
-        exit(0);
-    }];*/
-    
-    /*id<AppProtocol> proxy = [connection remoteObjectProxyWithErrorHandler:^(NSError * _Nonnull error) {
-        NSLog(@"Error calling app: %@", error);
-    }];
-    
-    [proxy confirmConnectionWithReply:^(NSString *response){
-        NSLog(@"App replied: %@", response);
-    }];*/
     
     // MARK: Keep it alive
     CFRunLoopRun();
@@ -120,9 +109,4 @@ int NSExtensionMain(int argc, char * argv[]) {
     // call the real one
     int (*orig_NSExtensionMain)(int argc, char * argv[]) = dlsym(RTLD_NEXT, "NSExtensionMain");
     return orig_NSExtensionMain(argc, argv);
-}
-
-void __swift5_entry(void)
-{
-    // Screw Apple
 }
