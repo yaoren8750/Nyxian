@@ -8,7 +8,7 @@
 #import <LindChain/Private/FoundationPrivate.h>
 #import <../LiveProcess/serverDelegate.h>
 
-pid_t proc_spawn_ios(const char *proc_path)
+pid_t proc_spawn_ios(void)
 {
     __block pid_t childPid = 0;
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
@@ -39,11 +39,4 @@ pid_t proc_spawn_ios(const char *proc_path)
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     }
     return childPid;
-}
-
-__attribute__((constructor))
-void doIt(void)
-{
-    pid_t childPid = proc_spawn_ios("");
-    printf("spawned child as %u\n", childPid);
 }

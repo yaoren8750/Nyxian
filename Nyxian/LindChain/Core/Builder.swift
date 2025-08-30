@@ -227,7 +227,7 @@ class Builder {
     }
     
     func install() throws {
-        let appInfo = LCAppInfo(bundlePath: project.bundlePath)
+        /*let appInfo = LCAppInfo(bundlePath: project.bundlePath)
         LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
@@ -238,11 +238,14 @@ class Builder {
             } else {
                 print(meow ?? "Unk")
             }
-        }, progressHandler: { progress in }, forceSign: false)
+        }, progressHandler: { progress in }, forceSign: false)*/
+        
+        proc_spawn_ios()
     }
     
     func package() throws {
         try FileManager.default.zipItem(at: URL(fileURLWithPath: project.payloadPath), to: URL(fileURLWithPath: project.packagePath))
+        UserDefaults.standard.set(self.project.packagePath, forKey: "LDEPayloadPath")
     }
     
     ///
@@ -300,13 +303,12 @@ class Builder {
                     (nil,nil,{ try builder.clean() }),
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
-                    ("link",0.3,{ try builder.link() })
+                    ("link",0.3,{ try builder.link() }),
+                    ("",nil,{try builder.package()})
                 ];
                 
                 if buildType == .RunningApp {
                     flow.append(("arrow.down.app.fill",nil,{try builder.install() }))
-                } else {
-                    flow.append(("",nil,{try builder.package()}))
                 }
                 
                 // doit
