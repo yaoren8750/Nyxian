@@ -184,6 +184,9 @@
 @end
 
 @interface FBScene : NSObject
+
+@property (getter=isValid, nonatomic, readonly) bool valid;
+
 - (FBProcess *)clientProcess;
 - (UIScenePresentationManager *)uiPresentationManager;
 - (void)updateSettings:(UIMutableApplicationSceneSettings *)settings withTransitionContext:(id)context completion:(id)completion;
@@ -204,7 +207,8 @@
 @interface FBProcessManager : NSObject
 + (instancetype)sharedInstance;
 - (FBProcessExecutionContext *)launchProcessWithContext:(FBMutableProcessExecutionContext *)context;
-- (void)registerProcessForAuditToken:(audit_token_t)token;
+- (id)registerProcessForAuditToken:(audit_token_t)token;
+- (id)registerProcessForHandle:(id)arg1;
 @end
 
 @interface FBSSceneSpecification : NSObject
@@ -225,6 +229,8 @@
 @property(nonatomic, copy, readonly) RBSProcessIdentity *identity;
 + (instancetype)handleForPredicate:(RBSProcessPredicate *)predicate error:(NSError **)error;
 - (audit_token_t)auditToken;
+- (bool)isValid;
+- (int)pid;
 @end
 
 @interface RBSTarget : NSObject
@@ -344,6 +350,8 @@
 - (void)activate;
 - (void)deactivate;
 - (void)invalidate;
+- (bool)isActive;
+- (bool)_isHosting;
 @end
 
 @interface UIRootWindowScenePresentationBinder : UIScenePresentationBinder
