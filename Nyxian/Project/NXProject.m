@@ -154,7 +154,7 @@
 }
 
 - (NSString*)resourcesPath { return [NSString stringWithFormat:@"%@/Resources", self.path]; }
-- (NSString*)payloadPath { return [NSString stringWithFormat:@"%@/Payload", self.path]; }
+- (NSString*)payloadPath { return [NSString stringWithFormat:@"%@/Payload", self.cachePath]; }
 - (NSString*)bundlePath { return [NSString stringWithFormat:@"%@/%@.app", [self payloadPath], [[self projectConfig] executable]]; }
 - (NSString*)machoPath { return [NSString stringWithFormat:@"%@/%@", [self bundlePath], [[self projectConfig] executable]]; }
 - (NSString*)packagePath { return [NSString stringWithFormat:@"%@/%@.ipa", self.cachePath, [[self projectConfig] executable]]; }

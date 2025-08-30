@@ -102,7 +102,7 @@ void UIKitFixesInit(void) {
             [self maximizeWindow];
         });
     } else {
-        NSArray *barButtonItems = @[closeButton, self.maximizeButton, minimizeButton];
+        NSArray *barButtonItems = @[closeButton, self.maximizeButton];
         self.navigationItem.rightBarButtonItems = barButtonItems;
     }
 
@@ -336,7 +336,7 @@ void UIKitFixesInit(void) {
         label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         label.lineBreakMode = NSLineBreakByWordWrapping;
         label.numberOfLines = 0;
-        label.text = NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", @"");
+        label.text = @"Process crashed";
         label.textAlignment = NSTextAlignmentCenter;
         [self.view insertSubview:label atIndex:0];
     }
