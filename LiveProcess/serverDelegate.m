@@ -6,12 +6,27 @@
 //
 
 #import "serverDelegate.h"
+#import <LindChain/LiveContainer/LCUtils.h>
 
 @implementation TestService
 
 - (void)sendMessage:(NSString *)message withReply:(void (^)(NSString *))reply {
     printf("Extension has sent: %s\n",[message UTF8String]);
     reply(@"Extension I received ur message!\n");
+}
+
+- (void)getCertiticateWithServerReply:(void (^)(NSData *, NSString *))reply
+{
+    // Literally sending certificate over to service
+    reply(LCUtils.certificateData, LCUtils.certificatePassword);
+}
+
+- (void)getPayloadWithServerReply:(void (^)(NSData *))reply
+{
+    // Literally sending over Builder specified payload path mfckers!
+    // FIXME: Not a fixme but in future implement sending of a zip payload from builder. so that the app extension doesnt need a shared document path.. it can just run the app
+    NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
+    reply([NSData dataWithContentsOfFile:payloadPath]);
 }
 
 @end

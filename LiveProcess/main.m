@@ -60,9 +60,15 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    [proxy sendMessage:[NSString stringWithFormat:@"Hello from process %u\nHome path: %@\n%@", getpid(), NSHomeDirectory(), [[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSHomeDirectory() error:nil]] withReply:^(NSString *serverSaid) {
+    [proxy getCertiticateWithServerReply:^(NSData *certificateData, NSString *certificatePassword){
+        [proxy sendMessage:[NSString stringWithFormat:@"Crt: %@", certificateData] withReply:^(NSString *serverSaid) {}];
+        [proxy sendMessage:[NSString stringWithFormat:@"Pwd: %@", certificatePassword] withReply:^(NSString *serverSaid) {}];
         exit(0);
     }];
+    
+    /*[proxy sendMessage:[NSString stringWithFormat:@"Hello from process %u\nHome path: %@\n%@", getpid(), NSHomeDirectory(), [[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSHomeDirectory() error:nil]] withReply:^(NSString *serverSaid) {
+        exit(0);
+    }];*/
     
     /*id<AppProtocol> proxy = [connection remoteObjectProxyWithErrorHandler:^(NSError * _Nonnull error) {
         NSLog(@"Error calling app: %@", error);

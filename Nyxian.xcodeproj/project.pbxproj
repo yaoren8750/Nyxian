@@ -79,7 +79,6 @@
 				dyld.m,
 				litehook/src/litehook.c,
 				main.m,
-				serverDelegate.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
 		};
@@ -167,10 +166,10 @@
 				7944B5632DEC712700834134 /* PrivateConfig.xcconfig */,
 				AF99171F2DC8EA3C00DDF895 /* Shared */,
 				AF9916DB2DC8C42200DDF895 /* Nyxian */,
-				7944B5652DEC74EA00834134 /* Nyxian.app */,
 				798692F02E627A3B00390D7E /* LiveProcess */,
 				7944B5662DEC74FC00834134 /* Frameworks */,
 				79BF97F72E6291EE00C60D4C /* LiveProcess.appex */,
+				7944B5652DEC74EA00834134 /* Nyxian.app */,
 			);
 			sourceTree = "<group>";
 		};

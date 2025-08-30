@@ -13,6 +13,8 @@
 @protocol TestServiceProtocol
 
 - (void)sendMessage:(NSString*)message withReply:(void(^)(NSString*))reply;
+- (void)getCertiticateWithServerReply:(void(^)(NSData*,NSString*))reply;
+- (void)getPayloadWithServerReply:(void (^)(NSData *))reply;
 
 @end
 
