@@ -48,9 +48,7 @@
 - (BOOL)increment {
     NSNumber *value = [self readKey:@"LDEOverwriteIncrementalBuild"];
     NSNumber *userSetValue = [[NSUserDefaults standardUserDefaults] objectForKey:@"LDEIncrementalBuild"];
-    if(!value)
-        return userSetValue ? userSetValue : [NSNumber numberWithBool:YES];
-    return value.boolValue;
+    return userSetValue ? userSetValue.boolValue : YES;
 }
 
 - (NSMutableArray*)generateCompilerFlags
