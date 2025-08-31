@@ -55,8 +55,8 @@
     DecoratedAppSceneViewController *existingWindow = nil;
     for(DecoratedAppSceneViewController *window in self.windows)
     {
-        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
-        if([window.appSceneVC.project.projectConfig.plistPath isEqual:project.projectConfig.plistPath])
+        // Comparing using the most reliable way... using its bundleid because the current logic of LiveProcess will run two apps on the same bundle specifications
+        if([window.appSceneVC.project.projectConfig.bundleid isEqual:project.projectConfig.bundleid])
         {
             existingWindow = window;
             break;

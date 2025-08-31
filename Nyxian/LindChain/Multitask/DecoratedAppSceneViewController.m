@@ -450,17 +450,31 @@ void UIKitFixesInit(void) {
     [self updateOriginalFrame];
 }
 
-- (void)resizeWindow:(UIPanGestureRecognizer*)sender {
+- (void)resizeWindow:(UIPanGestureRecognizer*)gesture {
     if(_isMaximized) return;
     
-    CGPoint point = [sender translationInView:self.view];
-    [sender setTranslation:CGPointZero inView:self.view];
-
-    CGRect frame = self.view.frame;
-    frame.size.width = MAX(50, frame.size.width + point.x);
-    frame.size.height = MAX(50, frame.size.height + point.y);
-    self.view.frame = frame;
-    [self updateOriginalFrame];
+    switch (gesture.state) {
+        case UIGestureRecognizerStateBegan:
+            [self.appSceneVC resizeActionStart];
+            break;
+        case UIGestureRecognizerStateChanged: {
+            CGPoint point = [gesture translationInView:self.view];
+            [gesture setTranslation:CGPointZero inView:self.view];
+            CGRect frame = self.view.frame;
+            frame.size.width = MAX(50, frame.size.width + point.x);
+            frame.size.height = MAX(50, frame.size.height + point.y);
+            self.view.frame = frame;
+            [self updateOriginalFrame];
+            break;
+        }
+        case UIGestureRecognizerStateEnded:
+        case UIGestureRecognizerStateCancelled:
+        case UIGestureRecognizerStateFailed:
+            [self.appSceneVC resizeActionEnd];
+            break;
+        default:
+            break;
+    }
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {

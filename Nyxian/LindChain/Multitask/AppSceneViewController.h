@@ -39,4 +39,7 @@ API_AVAILABLE(ios(16.0))
 - (void)terminate;
 - (void)restart;
 
+- (void)resizeActionStart;
+- (void)resizeActionEnd;
+
 @end

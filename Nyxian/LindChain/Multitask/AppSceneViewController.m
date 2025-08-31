@@ -271,6 +271,7 @@
     if (!self.resizeDisplayLink) {
         self.resizeDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateSceneFrame)];
         [self.resizeDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+        self.resizeDisplayLink.paused = YES;
     }
 }
 
@@ -303,6 +304,16 @@
     [self.resizeDisplayLink invalidate];
     self.resizeDisplayLink = nil;
     self.pendingSettingsBlock = nil;
+}
+
+- (void)resizeActionStart
+{
+    self.resizeDisplayLink.paused = NO;
+}
+
+- (void)resizeActionEnd
+{
+    self.resizeDisplayLink.paused = YES;
 }
 
 @end
