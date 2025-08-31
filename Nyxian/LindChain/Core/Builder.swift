@@ -128,8 +128,10 @@ class Builder {
         if project.projectConfig.type == NXProjectType.app.rawValue ||
             project.projectConfig.type == NXProjectType.binary.rawValue {
             let bundlePath: String = self.project.bundlePath
+            let resourcesPath: String = self.project.resourcesPath
             
-            try FileManager.default.createDirectory(atPath: bundlePath, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(atPath: self.project.payloadPath, withIntermediateDirectories: true)
+            try FileManager.default.copyItem(atPath: resourcesPath, toPath: bundlePath)
             
             var infoPlistData: [String: Any] = [
                 "CFBundleExecutable": self.project.projectConfig.executable!,
