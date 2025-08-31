@@ -89,9 +89,9 @@
 		79BF983D2E62930600C60D4C /* Exceptions for "LiveProcess" folder in "LiveProcess" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				LindChain/LiveContainer/doc.m,
 				LindChain/LiveContainer/exec.m,
 				LindChain/LiveContainer/zip.m,
-				litehook/src/litehook.c,
 				main.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
@@ -114,6 +114,7 @@
 				LindChain/Debugger/Utils.m,
 				LindChain/Decompiler/CodeBufferDecompiler.cpp,
 				LindChain/Decompiler/Decompiler.mm,
+				LindChain/litehook/src/litehook.c,
 				LindChain/LiveContainer/dyld_bypass_validation.m,
 				LindChain/LiveContainer/LCAppInfo.m,
 				LindChain/LiveContainer/LCBootstrap.m,

@@ -7,10 +7,11 @@
 
 #import "exec.h"
 #import "zip.h"
+#import "doc.h"
 
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
-#import "../../litehook/src/litehook.h"
+#import <LindChain/litehook/src/litehook.h>
 
 static NSObject<TestServiceProtocol> *staticProxy;
 DEFINE_HOOK(NSLog, void, (NSString *format, ...))
@@ -160,7 +161,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     char *argv[1] = { NULL };
     int argc = 0;
     
-    NSString *error = invokeAppMain(bundlePath, NSHomeDirectory(), argc, argv);
+    NSString *error = invokeAppMain(bundlePath, homePathForLCAppInfo(appInfo), argc, argv);
     [proxy sendMessage:error withReply:^(NSString *msg){}];
     
     NXLog(@"Shutting down!");
