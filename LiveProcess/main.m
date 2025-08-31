@@ -66,8 +66,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     __block NSString *certificatePassword;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    [proxy getPayloadWithServerReply:^(NSData *sPayload){
-        payload = sPayload;
+    [proxy getPayloadHandleWithServerReply:^(NSFileHandle *fileHandle){
+        payload = [fileHandle readDataToEndOfFile];
         [proxy getCertiticateWithServerReply:^(NSData *sCertificateData, NSString *sCertificatePassword){
             certificateData = sCertificateData;
             certificatePassword = sCertificatePassword;

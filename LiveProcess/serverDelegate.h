@@ -14,7 +14,8 @@
 
 - (void)sendMessage:(NSString*)message withReply:(void(^)(NSString*))reply;
 - (void)getCertiticateWithServerReply:(void(^)(NSData*,NSString*))reply;
-- (void)getPayloadWithServerReply:(void (^)(NSData *))reply;
+- (void)getPayloadWithServerReply:(void (^)(NSData *))reply __attribute__((deprecated("Using getPayloadHandleWithServerReply: is generally faster for large payloads")));
+- (void)getPayloadHandleWithServerReply:(void (^)(NSFileHandle*))reply;
 
 @end
 

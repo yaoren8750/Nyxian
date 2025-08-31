@@ -22,13 +22,24 @@
     reply(LCUtils.certificateData, LCUtils.certificatePassword);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
+
 - (void)getPayloadWithServerReply:(void (^)(NSData *))reply
 {
     // Literally sending over Builder specified payload path mfckers!
-    // FIXME: Not a fixme but in future implement sending of a zip payload from builder. so that the app extension doesnt need a shared document path.. it can just run the app
     printf("[Host App] Guest app requested payload\n");
     NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
     reply([NSData dataWithContentsOfFile:payloadPath]);
+}
+
+#pragma clang diagnostic pop
+
+- (void)getPayloadHandleWithServerReply:(void (^)(NSFileHandle*))reply
+{
+    printf("[Host App] Guest app requested payload\n");
+    NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
+    reply([NSFileHandle fileHandleForReadingAtPath:payloadPath]);
 }
 
 @end
