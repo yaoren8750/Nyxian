@@ -22,7 +22,7 @@
 
 @interface LDEThreadControl : NSObject
 
-@property (nonatomic,readonly) BOOL isLockdown;
+@property (atomic,readonly) BOOL isLockdown;
 
 - (instancetype)initWithThreads:(int)threads;
 - (instancetype)init;

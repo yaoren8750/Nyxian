@@ -31,20 +31,16 @@ void *pthreadBlockTrampoline(void *ptr) {
 @interface LDEThreadControl ()
 
 @property (nonatomic,strong,readonly) dispatch_semaphore_t semaphore;
-@property (nonatomic,strong,readonly) dispatch_queue_t lockdownQueue;
 @property (nonatomic,readonly) int threads;
 
 @end
 
 @implementation LDEThreadControl
 
-@synthesize isLockdown = _isLockdown;
-
 - (instancetype)initWithThreads:(int)threads
 {
     self = [super init];
     _semaphore = dispatch_semaphore_create(threads);
-    _lockdownQueue = dispatch_queue_create("threadLimiter.lockdown.queue", DISPATCH_QUEUE_CONCURRENT);
     _threads = threads;
     return self;
 }
@@ -83,29 +79,12 @@ void *pthreadBlockTrampoline(void *ptr) {
     pthread_detach(thread);
 }
 
-- (void)setIsLockdown:(BOOL)isLockdown
-{
-    dispatch_sync(self.lockdownQueue, ^{
-        _isLockdown = isLockdown;
-    });
-}
-
-- (BOOL)isLockdown
-{
-    __block BOOL result = false;
-    dispatch_sync(self.lockdownQueue, ^{
-        result = _isLockdown;
-    });
-    return result;
-}
-
 - (void)dispatchExecution:(void (^)(void))code
            withCompletion:(void (^)(void))completion
 {
     if(self.isLockdown)
     {
         completion();
-        dispatch_semaphore_signal(self.semaphore);
         return;
     }
     
@@ -127,7 +106,7 @@ void *pthreadBlockTrampoline(void *ptr) {
 
 - (void)lockdown
 {
-    [self setIsLockdown:YES];
+    _isLockdown = YES;
 }
 
 @end
