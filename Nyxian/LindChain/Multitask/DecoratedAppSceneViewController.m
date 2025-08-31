@@ -45,7 +45,6 @@ void UIKitFixesInit(void) {
 @implementation DecoratedAppSceneViewController
 - (instancetype)initWithProject:(NXProject*)project {
     self = [super initWithNibName:nil bundle:nil];
-    self.project = project;
     _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:self];
     [self setupDecoratedView];
     

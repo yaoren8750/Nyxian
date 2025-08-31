@@ -23,6 +23,8 @@ API_AVAILABLE(ios(16.0))
 
 API_AVAILABLE(ios(16.0))
 @interface AppSceneViewController : UIViewController<_UISceneSettingsDiffAction>
+
+@property(nonatomic) NXProject *project;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) int pid;
 @property(nonatomic) id<AppSceneViewControllerDelegate> delegate;
@@ -35,4 +37,6 @@ API_AVAILABLE(ios(16.0))
 - (void)updateFrameWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block;
 - (void)appTerminationCleanUp;
 - (void)terminate;
+- (void)restart;
+
 @end

@@ -37,20 +37,27 @@
     self.delegate = delegate;
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
+    self.project = project;
+
+    return [self execute] ? self : nil;
+}
+
+- (BOOL)execute
+{
     // init extension
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
-        [delegate appSceneVC:self didInitializeWithError:[NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"LiveProcess extension not found. Please reinstall LiveContainer and select Keep Extensions"}]];
-        return nil;
+        [self.delegate appSceneVC:self didInitializeWithError:[NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"LiveProcess extension not found. Please reinstall LiveContainer and select Keep Extensions"}]];
+        return NO;
     }
     
     NSError* error = nil;
     _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
     if(error) {
-        [delegate appSceneVC:self didInitializeWithError:error];
-        return nil;
+        [self.delegate appSceneVC:self didInitializeWithError:error];
+        return NO;
     } else {
-        [[NSUserDefaults standardUserDefaults] setValue:project.packagePath forKey:@"LDEPayloadPath"];
+        [[NSUserDefaults standardUserDefaults] setValue:self.project.packagePath forKey:@"LDEPayloadPath"];
     }
     _extension.preferredLanguages = @[];
     
@@ -76,20 +83,20 @@
             self.pid = [self.extension pidForRequestIdentifier:self.identifier];
             
             NSLog(@"child process spawned with %u\n", self.pid);
-            [delegate appSceneVC:self didInitializeWithError:nil];
+            [self.delegate appSceneVC:self didInitializeWithError:nil];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self setUpAppPresenter];
             });
         } else {
             NSError* error = [NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"Failed to start app. Child process has unexpectedly crashed"}];
             NSLog(@"%@", [error localizedDescription]);
-            [delegate appSceneVC:self didInitializeWithError:error];
+            [self.delegate appSceneVC:self didInitializeWithError:error];
         }
     }];
     
     _isNativeWindow = [[[NSUserDefaults alloc] initWithSuiteName:[LCUtils appGroupID]] integerForKey:@"LCMultitaskMode" ] == 1;
-
-    return self;
+    
+    return YES;
 }
 
 - (void)setUpAppPresenter {
@@ -167,11 +174,24 @@
 
 - (void)terminate {
     if(self.isAppRunning) {
-        [self.extension _kill:SIGTERM];
+        NSExtension *targetExtension = self.extension;
+        [targetExtension _kill:SIGTERM];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self.extension _kill:SIGKILL];
+            [targetExtension _kill:SIGKILL];
         });
     }
+}
+
+- (void)restart {
+    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {}];
+    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {}];
+    [self terminate];
+    [self appTerminationCleanUp];
+    _isAppTerminationCleanUpCalled = NO;
+    
+    //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self execute];
+    //});
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
@@ -227,23 +247,27 @@
 }
 
 - (void)appTerminationCleanUp {
-    if(_isAppTerminationCleanUpCalled) {
+    if (_isAppTerminationCleanUpCalled) {
         return;
     }
     _isAppTerminationCleanUpCalled = true;
+
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     dispatch_async(dispatch_get_main_queue(), ^{
-        if(self.sceneID) {
+        if (self.sceneID) {
             [[PrivClass(FBSceneManager) sharedInstance] destroyScene:self.sceneID withTransitionContext:nil];
         }
-        if(self.presenter){
+        if (self.presenter) {
             [self.presenter deactivate];
             [self.presenter invalidate];
             self.presenter = nil;
         }
-        
+
         [self.delegate appSceneVCAppDidExit:self];
-        //[MultitaskManager unregisterMultitaskContainerWithContainer:self.dataUUID];
+
+        dispatch_semaphore_signal(sema);
     });
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
 }
 
 - (void)setBackgroundNotificationEnabled:(bool)enabled {

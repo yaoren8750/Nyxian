@@ -56,7 +56,7 @@
     for(DecoratedAppSceneViewController *window in self.windows)
     {
         // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
-        if([window.project.projectConfig.plistPath isEqual:project.projectConfig.plistPath])
+        if([window.appSceneVC.project.projectConfig.plistPath isEqual:project.projectConfig.plistPath])
         {
             existingWindow = window;
             break;
@@ -67,11 +67,14 @@
     if(existingWindow)
     {
         // Executing it on main thread
-        dispatch_async(dispatch_get_main_queue(), ^{
+        /*dispatch_async(dispatch_get_main_queue(), ^{
             // Closing window
             [existingWindow closeWindow];
         });
-        [self.windows removeObject:existingWindow];
+        [self.windows removeObject:existingWindow];*/
+        
+        [existingWindow.appSceneVC restart];
+        return YES;
     }
     
     // Storing the result inside of a block
