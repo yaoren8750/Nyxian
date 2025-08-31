@@ -10,7 +10,7 @@
 NSString *homePathForLCAppInfo(LCAppInfo *appInfo)
 {
     NSString *bundleIdentifier = [appInfo bundleIdentifier];
-    NSString *homePath = [NSString stringWithFormat:@"%@/Documents/Document/%@", NSHomeDirectory(), bundleIdentifier];
+    NSString *homePath = [NSString stringWithFormat:@"%@/Documents/Container/%@", NSHomeDirectory(), bundleIdentifier];
     return homePath;
 }
 
