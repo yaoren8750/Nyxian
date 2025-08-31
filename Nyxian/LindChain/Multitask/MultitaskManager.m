@@ -25,38 +25,96 @@
 #import <LindChain/Multitask/AppSceneViewController.h>
 #import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
-@interface PassthroughWindow : UIWindow
-@end
+///
+/// Class to make it easier,cleaner and more reliable to multitask
+///
+@implementation LDEMultitaskManager
 
-@implementation PassthroughWindow
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
-    /*UIView *hitView = [super hitTest:point withEvent:event];
-
-    // If hitView is the root view controller's view (background), return nil
-    if (hitView == self.rootViewController.view) {
-        return nil;
-    }
-    // If hitView is nil, also return nil
-    return hitView;*/
-    return nil;
-}
-@end
-
-pid_t proc_spawn_ios(NSString *windowTitle)
+- (instancetype)init
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        static PassthroughWindow *overlayWindow = nil;
+    return [super init];
+}
+
+///
+/// Shared singleton to make all happen on the same thing
+///
++ (LDEMultitaskManager*)shared
+{
+    static LDEMultitaskManager *multitaskManagerSingleton = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        multitaskManagerSingleton = [[LDEMultitaskManager alloc] init];
+    });
+    return multitaskManagerSingleton;
+}
+
+///
+/// Open the target application in a window with the target payload path and title
+///
+/// `payloadPath` points to a zip archive that contains a iOS application package
+/// `title` contains the title of the spawning window
+///
+- (BOOL)openApplicationWithPayloadPath:(NSString *)payloadPath
+                             withTitle:(NSString *)title
+{
+    __block BOOL result = NO;
+    void (^workBlock)(void) = ^{
+        static UIWindow *targetWindow = nil;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            overlayWindow = [[PassthroughWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-            overlayWindow.windowLevel = UIWindowLevelAlert + 1000; // Higher than normal alerts
-            [[[UIApplication sharedApplication] keyWindow] addSubview:overlayWindow];
-            [overlayWindow makeKeyAndVisible];
+            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes)
+            {
+                if ([scene isKindOfClass:[UIWindowScene class]])
+                {
+                    UIWindowScene *windowScene = (UIWindowScene *)scene;
+                    for (UIWindow *w in windowScene.windows)
+                    {
+                        if (w.isKeyWindow)
+                        {
+                            targetWindow = w;
+                            break;
+                        }
+                    }
+                }
+            }
         });
-        
-        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:windowTitle];
-        [overlayWindow addSubview:decoratedAppSceneViewController.view];
-    });
-    
-    return 0;
+        if (!targetWindow)
+        {
+            result = NO;
+            return;
+        }
+        [[NSUserDefaults standardUserDefaults] setValue:payloadPath forKey:@"LDEPayloadPath"];
+        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:title];
+        [targetWindow addSubview:decoratedAppSceneViewController.view];
+        result = YES;
+    };
+
+    if ([NSThread isMainThread])
+        workBlock();
+    else
+        dispatch_sync(dispatch_get_main_queue(), workBlock);
+
+    return result;
 }
+
+///
+/// Open the target application in a window with the project referencing the application
+///
+/// `project` is the project referencing the application
+///
+- (BOOL)openApplicationWithProject:(NXProject *)project
+{
+    return [self openApplicationWithPayloadPath:project.packagePath withTitle:project.projectConfig.displayName];
+}
+
+///
+/// Open the target application in a window with the path to the project referencing the application
+///
+/// `projectPath` is the project path referencing the applications project
+///
+- (BOOL)openApplicationWithProjectPath:(NSString *)projectPath
+{
+    return [self openApplicationWithProject:[[NXProject alloc] initWithPath:projectPath]];
+}
+
+@end

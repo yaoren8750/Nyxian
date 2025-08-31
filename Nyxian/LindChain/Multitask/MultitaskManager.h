@@ -26,10 +26,11 @@
 @interface LDEMultitaskManager : NSObject
 
 - (instancetype)init;
-+ (instancetype)shared;
++ (LDEMultitaskManager*)shared;
 
-- (void)openApplicationWithProject:(NXProject*)project;
-- (void)openApplicationWithProjectPath:(NSString*)projectPath;
+- (BOOL)openApplicationWithPayloadPath:(NSString*)payloadPath withTitle:(NSString*)title;
+- (BOOL)openApplicationWithProject:(NXProject*)project;
+- (BOOL)openApplicationWithProjectPath:(NSString*)projectPath;
 
 @end
 

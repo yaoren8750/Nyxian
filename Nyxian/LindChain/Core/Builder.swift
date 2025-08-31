@@ -240,7 +240,9 @@ class Builder {
             }
         }, progressHandler: { progress in }, forceSign: false)*/
         
-        proc_spawn_ios(self.project.projectConfig.displayName)
+        //proc_spawn_ios(self.project.projectConfig.displayName)
+        
+        LDEMultitaskManager.shared().openApplication(with: self.project)
     }
     
     func package() throws {
