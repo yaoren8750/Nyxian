@@ -9,3 +9,4 @@
 #import <LindChain/LiveContainer/LCAppInfo.h>
 
 NSString *homePathForLCAppInfo(LCAppInfo *appInfo);
+NSString *bundlePathForLCAppInfo(LCAppInfo *appInfo);

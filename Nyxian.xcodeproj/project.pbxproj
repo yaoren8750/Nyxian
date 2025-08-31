@@ -89,8 +89,8 @@
 		79BF983D2E62930600C60D4C /* Exceptions for "LiveProcess" folder in "LiveProcess" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				LindChain/LiveContainer/doc.m,
 				LindChain/LiveContainer/exec.m,
+				LindChain/LiveContainer/path.m,
 				LindChain/LiveContainer/zip.m,
 				main.m,
 			);

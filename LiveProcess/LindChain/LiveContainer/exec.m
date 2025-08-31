@@ -7,7 +7,7 @@
 
 #import "exec.h"
 #import "zip.h"
-#import "doc.h"
+#import "path.h"
 
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
@@ -105,6 +105,8 @@ void exec(NSObject<TestServiceProtocol> *proxy,
 {
     DO_HOOK_GLOBAL(NSLog);
     
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
     staticProxy = proxy;
     clearTemporaryDirectory(nil);
     
@@ -127,9 +129,13 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
     
+    // Move it
+    
+    
     NXLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
 
     // Sign iOS app
+    // TODO: Only synchronise the certificate with the server
     NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
     if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
     [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
@@ -161,7 +167,17 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     char *argv[1] = { NULL };
     int argc = 0;
     
-    NSString *error = invokeAppMain(bundlePath, homePathForLCAppInfo(appInfo), argc, argv);
+    NSString *homePath = homePathForLCAppInfo(appInfo);
+    
+    // Relocate application bundle to a stable path
+    NSString *newBundlePath = bundlePathForLCAppInfo(appInfo);
+    if([fileManager fileExistsAtPath:newBundlePath])
+        [fileManager removeItemAtPath:newBundlePath error:nil];
+    [fileManager createDirectoryAtURL:[[NSURL fileURLWithPath:newBundlePath] URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:nil];
+    [fileManager moveItemAtPath:bundlePath toPath:newBundlePath error:nil];
+    bundlePath = newBundlePath;
+    
+    NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
     [proxy sendMessage:error withReply:^(NSString *msg){}];
     
     NXLog(@"Shutting down!");
