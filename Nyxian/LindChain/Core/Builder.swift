@@ -163,7 +163,6 @@ class Builder {
     func compile() throws {
         let pstep: Double = 1.00 / Double(self.dirtySourceFiles.count)
         let group: DispatchGroup = DispatchGroup()
-        //let threader = ThreadDispatchLimiter(threads: self.project.projectConfig.threads.intValue)
         let threader = LDEThreadControl(threads: self.project.projectConfig.threads)
         
         for filePath in self.dirtySourceFiles {
@@ -186,11 +185,6 @@ class Builder {
             } withCompletion: {
                 group.leave()
             }
-        }
-        
-        DispatchQueue.global().async {
-            sleep(1)
-            threader?.lockdown()
         }
         
         group.wait()
