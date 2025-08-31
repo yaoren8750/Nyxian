@@ -18,11 +18,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-//#import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/Multitask/MultitaskManager.h>
-#import <../LiveProcess/serverDelegate.h>
-#import <LindChain/LiveContainer/UIKitPrivate.h>
-#import <LindChain/Multitask/AppSceneViewController.h>
 #import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
 ///
