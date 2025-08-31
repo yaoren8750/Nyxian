@@ -33,6 +33,8 @@
 - (BOOL)openApplicationWithProject:(NXProject*)project;
 - (BOOL)openApplicationWithProjectPath:(NSString*)projectPath;
 
+- (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
+
 @end
 
 pid_t proc_spawn_ios(NSString *windowTitle);

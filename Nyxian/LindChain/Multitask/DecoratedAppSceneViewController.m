@@ -7,6 +7,7 @@
 #import "../LiveContainer/Localization.h"
 #import "utils.h"
 #import <objc/runtime.h>
+#import <LindChain/Multitask/MultitaskManager.h>
 
 @implementation RBSTarget(hook)
 + (instancetype)hook_targetWithPid:(pid_t)pid environmentIdentifier:(NSString *)environmentIdentifier {
@@ -254,6 +255,7 @@ void UIKitFixesInit(void) {
     } else {
         [self appSceneVCAppDidExit:self.appSceneVC];
     }
+    [[LDEMultitaskManager shared] removeWindowObject:self];
 }
 
 - (void)minimizeWindow {

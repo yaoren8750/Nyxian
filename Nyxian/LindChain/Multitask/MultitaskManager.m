@@ -125,6 +125,11 @@
     return result;
 }
 
+- (void)removeWindowObject:(DecoratedAppSceneViewController*)window
+{
+    [self.windows removeObject:window];
+}
+
 ///
 /// Open the target application in a window with the path to the project referencing the application
 ///
