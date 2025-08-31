@@ -88,7 +88,7 @@ class SplitScreenDetailViewController: UIViewController {
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
-                    vc.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
+                    vc.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
                     vc.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
                     vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -108,6 +108,7 @@ class SplitScreenDetailViewController: UIViewController {
     /*
      TabBarView -> Experiment
      */
+    private let scrollView = UIScrollView()
     private let tabBarView = UIView()
     private let stack = UIStackView()
     private var tabs: [UIButtonTab] = []
@@ -185,8 +186,9 @@ class SplitScreenDetailViewController: UIViewController {
         self.view.backgroundColor = currentTheme?.gutterBackgroundColor
         self.view.addSubview(label)
         
+        // Adding the indicator of the empty editor
         self.label.textAlignment = .center
-        self.label.text = "Empty"
+        self.label.text = "No Editor"
         self.label.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             self.label.topAnchor.constraint(equalTo: self.view.topAnchor),
@@ -195,28 +197,37 @@ class SplitScreenDetailViewController: UIViewController {
             self.label.leftAnchor.constraint(equalTo: self.view.leftAnchor)
         ])
         
-        self.view.addSubview(self.tabBarView)
+        // Adding the scrollview used for the file stack
+        self.scrollView.backgroundColor = UIColor.clear
+        self.scrollView.translatesAutoresizingMaskIntoConstraints = false;
+        self.scrollView.showsHorizontalScrollIndicator = false
+        self.scrollView.showsVerticalScrollIndicator = false
+        self.scrollView.isScrollEnabled = true
+        self.view.addSubview(self.scrollView)
         
-        self.tabBarView.backgroundColor = .clear
-        self.tabBarView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            self.tabBarView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.tabBarView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            self.tabBarView.heightAnchor.constraint(equalToConstant: 100)
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
+        // Adding the stack
+        self.stack.backgroundColor = UIColor.clear
         self.stack.axis = .horizontal
-        self.stack.alignment = .bottom
-        self.stack.distribution = .fillEqually
+        self.stack.alignment = .top
+        self.stack.distribution = .fillProportionally
         self.stack.translatesAutoresizingMaskIntoConstraints = false
                 
-        self.tabBarView.addSubview(self.stack)
+        self.scrollView.addSubview(self.stack)
         NSLayoutConstraint.activate([
-            self.stack.leftAnchor.constraint(equalTo: self.tabBarView.leftAnchor),
-            self.stack.rightAnchor.constraint(equalTo: self.tabBarView.rightAnchor),
-            self.stack.topAnchor.constraint(equalTo: self.tabBarView.topAnchor),
-            self.stack.bottomAnchor.constraint(equalTo: self.tabBarView.bottomAnchor)
+            self.stack.leftAnchor.constraint(equalTo: self.scrollView.leftAnchor),
+            self.stack.rightAnchor.constraint(equalTo: self.scrollView.rightAnchor),
+            self.stack.topAnchor.constraint(equalTo: self.scrollView.topAnchor),
+            self.stack.bottomAnchor.constraint(equalTo: self.scrollView.bottomAnchor)
         ])
+        
+        /*
         
         let bottomBorderView = UIView()
         bottomBorderView.backgroundColor = currentTheme?.gutterHairlineColor
@@ -228,7 +239,7 @@ class SplitScreenDetailViewController: UIViewController {
             bottomBorderView.leftAnchor.constraint(equalTo: self.tabBarView.leftAnchor),
             bottomBorderView.rightAnchor.constraint(equalTo: self.tabBarView.rightAnchor),
             bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
-        ])
+        ])*/
         
         let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
             buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
@@ -299,6 +310,13 @@ class UIButtonTab: UIButton {
         
         super.init(frame: frame)
         
+        self.translatesAutoresizingMaskIntoConstraints = false;
+        
+        NSLayoutConstraint.activate([
+            self.heightAnchor.constraint(equalToConstant: 30)
+        ])
+        
+        self.contentEdgeInsets = UIEdgeInsets(top: 0, left: 32, bottom: 0, right: 32)
         self.setTitle(vc.path.URLGet().lastPathComponent, for: .normal)
         self.setTitleColor(currentTheme?.textColor, for: .normal)
         self.titleLabel?.font = .systemFont(ofSize: 13)
