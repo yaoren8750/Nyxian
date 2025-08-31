@@ -29,8 +29,7 @@
 
 @implementation AppSceneViewController
 
-
-- (instancetype)initWithDelegate:(id<AppSceneViewControllerDelegate>)delegate {
+- (instancetype)initWithProject:(NXProject*)project withDelegate:(id<AppSceneViewControllerDelegate>)delegate {
     self = [super initWithNibName:nil bundle:nil];
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];

@@ -21,14 +21,15 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Project/NXProject.h>
-#include <stddef.h>
+#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
 @interface LDEMultitaskManager : NSObject
+
+@property (nonatomic,strong,readonly) NSMutableArray<DecoratedAppSceneViewController*> *windows;
 
 - (instancetype)init;
 + (LDEMultitaskManager*)shared;
 
-- (BOOL)openApplicationWithPayloadPath:(NSString*)payloadPath withTitle:(NSString*)title;
 - (BOOL)openApplicationWithProject:(NXProject*)project;
 - (BOOL)openApplicationWithProjectPath:(NSString*)projectPath;
 

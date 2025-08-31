@@ -19,7 +19,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <LindChain/Private/Restart.h>
+//#import <LindChain/Private/Restart.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,7 +84,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     stack_trace_from_thread_state(state);
     log_deinitCrash(state.__pc);
     
-    state.__pc = (uint64_t)restartProcess;
+    //state.__pc = (uint64_t)restartProcess;
     
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     

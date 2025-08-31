@@ -20,7 +20,6 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <LindChain/Private/Restart.h>
 //#import <Nyxian-Swift.h>
 #import "Debugger.h"
 #include "MachServer.h"
@@ -160,7 +159,7 @@
 
 - (void)handleBackButton:(UIButton *)sender
 {
-    restartProcess();
+    //restartProcess();
 }
 
 @end

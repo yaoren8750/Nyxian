@@ -5,6 +5,7 @@
 //  Created by s s on 2025/5/17.
 //
 #import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <Project/NXProject.h>
 #import "FoundationPrivate.h"
 @import UIKit;
 @import Foundation;
@@ -29,7 +30,7 @@ API_AVAILABLE(ios(16.0))
 @property(nonatomic) CGFloat scaleRatio;
 @property(nonatomic) UIView* contentView;
 @property(nonatomic) _UIScenePresenter *presenter;
-- (instancetype)initWithDelegate:(id<AppSceneViewControllerDelegate>)delegate;
+- (instancetype)initWithProject:(NXProject*)project withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)updateFrameWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block;
 - (void)appTerminationCleanUp;

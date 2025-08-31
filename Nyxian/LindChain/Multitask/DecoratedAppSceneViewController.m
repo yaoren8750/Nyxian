@@ -43,9 +43,9 @@ void UIKitFixesInit(void) {
 @end
 
 @implementation DecoratedAppSceneViewController
-- (instancetype)initWindowName:(NSString*)windowName {
+- (instancetype)initWithProject:(NXProject*)project {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithDelegate:self];
+    _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:nil];
     [self setupDecoratedView];
     
     //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
@@ -54,8 +54,8 @@ void UIKitFixesInit(void) {
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
-    self.windowName = windowName;
-    self.navigationItem.title = windowName;
+    self.windowName = project.projectConfig.displayName;
+    self.navigationItem.title = project.projectConfig.displayName;
     
     
     

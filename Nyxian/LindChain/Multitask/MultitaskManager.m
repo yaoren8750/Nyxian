@@ -19,7 +19,6 @@
 */
 
 #import <LindChain/Multitask/MultitaskManager.h>
-#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
 ///
 /// Class to make it easier,cleaner and more reliable to multitask
@@ -28,6 +27,7 @@
 
 - (instancetype)init
 {
+    _windows = [[NSMutableArray alloc] init];
     return [super init];
 }
 
@@ -45,13 +45,11 @@
 }
 
 ///
-/// Open the target application in a window with the target payload path and title
+/// Open the target application in a window with the project referencing the application
 ///
-/// `payloadPath` points to a zip archive that contains a iOS application package
-/// `title` contains the title of the spawning window
+/// `project` is the project referencing the application
 ///
-- (BOOL)openApplicationWithPayloadPath:(NSString *)payloadPath
-                             withTitle:(NSString *)title
+- (BOOL)openApplicationWithProject:(NXProject *)project
 {
     __block BOOL result = NO;
     void (^workBlock)(void) = ^{
@@ -79,9 +77,10 @@
             result = NO;
             return;
         }
-        [[NSUserDefaults standardUserDefaults] setValue:payloadPath forKey:@"LDEPayloadPath"];
-        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWindowName:title];
+        [[NSUserDefaults standardUserDefaults] setValue:project.packagePath forKey:@"LDEPayloadPath"];
+        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWithProject:project];
         [targetWindow addSubview:decoratedAppSceneViewController.view];
+        [self.windows addObject:decoratedAppSceneViewController];
         result = YES;
     };
 
@@ -91,16 +90,6 @@
         dispatch_sync(dispatch_get_main_queue(), workBlock);
 
     return result;
-}
-
-///
-/// Open the target application in a window with the project referencing the application
-///
-/// `project` is the project referencing the application
-///
-- (BOOL)openApplicationWithProject:(NXProject *)project
-{
-    return [self openApplicationWithPayloadPath:project.packagePath withTitle:project.projectConfig.displayName];
 }
 
 ///

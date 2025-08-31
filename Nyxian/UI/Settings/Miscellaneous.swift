@@ -86,7 +86,8 @@ class MiscellaneousController: UITableViewController {
                     
                     Bootstrap.shared.bootstrapVersion = 0
                     Bootstrap.shared.clearPath(path: "/")
-                    restartProcess()
+                    exit(0)
+                    //restartProcess()
                 })
                 
                 self.present(alert, animated: true)

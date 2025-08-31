@@ -19,8 +19,6 @@
 */
 
 #import <LindChain/Compiler/Compiler.h>
-#import <LindChain/Private/LSApplicationWorkspace.h>
-#import <LindChain/Private/Restart.h>
 #import <LindChain/Synpush/Synpush.h>
 #import <LindChain/LogService/LogService.h>
 #import <LindChain/Downloader/fdownload.h>

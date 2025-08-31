@@ -102,7 +102,7 @@ var tabViewController: UIThemedTabBarController = UIThemedTabBarController()
                     let project: NXProject = NXProject(path: "\(NSHomeDirectory())/Documents/Projects/\(projectSelected)")
                     UserDefaults.standard.set(project.bundlePath, forKey: "LDEAppPath")
                     UserDefaults.standard.set(project.homePath, forKey: "LDEHomePath")
-                    restartProcess()
+                    //restartProcess()
                 }
             })
             
