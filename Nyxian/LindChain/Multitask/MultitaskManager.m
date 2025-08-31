@@ -66,13 +66,6 @@
     // If it found a existing window we call closeWindow remotely
     if(existingWindow)
     {
-        // Executing it on main thread
-        /*dispatch_async(dispatch_get_main_queue(), ^{
-            // Closing window
-            [existingWindow closeWindow];
-        });
-        [self.windows removeObject:existingWindow];*/
-        
         [existingWindow.appSceneVC restart];
         return YES;
     }
@@ -80,9 +73,6 @@
     // Storing the result inside of a block
     __block BOOL result = NO;
     void (^workBlock)(void) = ^{
-        // Holder for targetView. To avoid mixing window and targetView up i called it targetView.
-        static UIWindow *targetView = nil;
-        
         // Looking once for the keyWindow which is our targetView
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
@@ -95,7 +85,7 @@
                     {
                         if (w.isKeyWindow)
                         {
-                            targetView = w;
+                            self.targetView = w;
                             break;
                         }
                     }
@@ -104,7 +94,7 @@
         });
         
         // If looking for it failed, return
-        if (!targetView)
+        if (!self.targetView)
         {
             result = NO;
             return;
@@ -112,7 +102,7 @@
         
         // Go!
         DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWithProject:project];
-        [targetView addSubview:decoratedAppSceneViewController.view];
+        [self.targetView addSubview:decoratedAppSceneViewController.view];
         [self.windows addObject:decoratedAppSceneViewController];
         result = YES;
     };
@@ -125,11 +115,6 @@
     return result;
 }
 
-- (void)removeWindowObject:(DecoratedAppSceneViewController*)window
-{
-    [self.windows removeObject:window];
-}
-
 ///
 /// Open the target application in a window with the path to the project referencing the application
 ///
@@ -138,6 +123,41 @@
 - (BOOL)openApplicationWithProjectPath:(NSString *)projectPath
 {
     return [self openApplicationWithProject:[[NXProject alloc] initWithPath:projectPath]];
+}
+
+///
+/// Pulls the view of an speciific project up in the view hirrachie
+///
+- (void)pullWindowIfExistingUpOfProject:(NXProject*)project
+{
+    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
+    DecoratedAppSceneViewController *existingWindow = nil;
+    for(DecoratedAppSceneViewController *window in self.windows)
+    {
+        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
+        if([window.appSceneVC.project.projectConfig.plistPath isEqual:project.projectConfig.plistPath])
+        {
+            existingWindow = window;
+            break;
+        }
+    }
+    
+    // If it found a existing window we call closeWindow remotely
+    if(existingWindow)
+    {
+        [self.targetView bringSubviewToFront:existingWindow.view];
+        return;
+    }
+}
+
+///
+/// Removes a window object from instance windows (meant to be exclusively for the windows to call back)
+///
+/// `window` is the window that is meant to be removed
+///
+- (void)removeWindowObject:(DecoratedAppSceneViewController*)window
+{
+    [self.windows removeObject:window];
 }
 
 @end

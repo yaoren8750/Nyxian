@@ -25,6 +25,7 @@
 
 @interface LDEMultitaskManager : NSObject
 
+@property (nonatomic,strong) UIWindow *targetView;
 @property (nonatomic,strong,readonly) NSMutableArray<DecoratedAppSceneViewController*> *windows;
 
 - (instancetype)init;
@@ -32,6 +33,8 @@
 
 - (BOOL)openApplicationWithProject:(NXProject*)project;
 - (BOOL)openApplicationWithProjectPath:(NSString*)projectPath;
+
+- (void)pullWindowIfExistingUpOfProject:(NXProject*)project;
 
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
 

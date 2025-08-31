@@ -44,6 +44,12 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 
         self.delegate = self
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        LDEMultitaskManager.shared().pullWindowIfExistingUp(of: self.project)
+    }
 }
 
 class SplitScreenDetailViewController: UIViewController {
