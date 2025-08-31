@@ -25,6 +25,8 @@
 @property(nonatomic) NSString *sceneID;
 @property(nonatomic) NSExtension* extension;
 @property(nonatomic) bool isAppTerminationCleanUpCalled;
+@property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
+@property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @end
 
 @implementation AppSceneViewController
@@ -211,32 +213,8 @@
 }
 
 - (void)viewWillLayoutSubviews {
-    [self updateFrameWithSettingsBlock:self.nextUpdateSettingsBlock];
+    [self startLiveResizeWithSettingsBlock:self.nextUpdateSettingsBlock];
     self.nextUpdateSettingsBlock = nil;
-}
-- (void)updateFrameWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block {
-    __block int currentDebounceToken = self.resizeDebounceToken + 1;
-    _resizeDebounceToken = currentDebounceToken;
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC));
-    dispatch_after(delay, dispatch_get_main_queue(), ^{
-        if(currentDebounceToken != self.resizeDebounceToken) {
-            return;
-        }
-        CGRect frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width / self.scaleRatio, self.view.frame.size.height / self.scaleRatio);
-        [self.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
-            settings.deviceOrientation = UIDevice.currentDevice.orientation;
-            settings.interfaceOrientation = self.view.window.windowScene.interfaceOrientation;
-            if(UIInterfaceOrientationIsLandscape(settings.interfaceOrientation)) {
-                CGRect frame2 = CGRectMake(frame.origin.x, frame.origin.y, frame.size.height, frame.size.width);
-                settings.frame = frame2;
-            } else {
-                settings.frame = frame;
-            }
-            if(block) {
-                block(settings);
-            }
-        }];
-    });
 }
 
 - (BOOL)isAppRunning {
@@ -285,6 +263,46 @@
         }
         self.delegate = nil;
     }
+}
+
+- (void)startLiveResizeWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block {
+    self.pendingSettingsBlock = block;
+    
+    if (!self.resizeDisplayLink) {
+        self.resizeDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateSceneFrame)];
+        [self.resizeDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    }
+}
+
+- (void)updateSceneFrame {
+    if (!self.presenter || !self.presenter.scene) return;
+
+    CGRect frame = CGRectMake(
+        self.view.frame.origin.x,
+        self.view.frame.origin.y,
+        self.view.frame.size.width / self.scaleRatio,
+        self.view.frame.size.height / self.scaleRatio
+    );
+
+    [self.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+        settings.deviceOrientation = UIDevice.currentDevice.orientation;
+        settings.interfaceOrientation = self.view.window.windowScene.interfaceOrientation;
+
+        if (UIInterfaceOrientationIsLandscape(settings.interfaceOrientation)) {
+            settings.frame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.height, frame.size.width);
+        } else {
+            settings.frame = frame;
+        }
+        if (self.pendingSettingsBlock) {
+            self.pendingSettingsBlock(settings);
+        }
+    }];
+}
+
+- (void)endLiveResize {
+    [self.resizeDisplayLink invalidate];
+    self.resizeDisplayLink = nil;
+    self.pendingSettingsBlock = nil;
 }
 
 @end

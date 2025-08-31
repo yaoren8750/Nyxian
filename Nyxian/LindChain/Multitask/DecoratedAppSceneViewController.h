@@ -9,10 +9,12 @@ API_AVAILABLE(ios(16.0))
 @property(nonatomic) UINavigationBar *navigationBar;
 @property(nonatomic) UINavigationItem *navigationItem;
 @property(nonatomic) UIView *resizeHandle;
-@property(nonatomic) UIView* contentView;
+@property(nonatomic) UIView *contentView;
+@property(nonatomic) UILabel *label;
 
 @property(nonatomic) BOOL isMaximized;
 @property(nonatomic) CGFloat scaleRatio;
+
 - (instancetype)initWithProject:(NXProject*)project;
 - (void)minimizeWindowPiP;
 - (void)unminimizeWindowPiP;
