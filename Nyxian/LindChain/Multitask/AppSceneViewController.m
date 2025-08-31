@@ -49,6 +49,8 @@
     if(error) {
         [delegate appSceneVC:self didInitializeWithError:error];
         return nil;
+    } else {
+        [[NSUserDefaults standardUserDefaults] setValue:project.packagePath forKey:@"LDEPayloadPath"];
     }
     _extension.preferredLanguages = @[];
     

@@ -45,6 +45,7 @@ void UIKitFixesInit(void) {
 @implementation DecoratedAppSceneViewController
 - (instancetype)initWithProject:(NXProject*)project {
     self = [super initWithNibName:nil bundle:nil];
+    self.project = project;
     _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:self];
     [self setupDecoratedView];
     
@@ -56,8 +57,6 @@ void UIKitFixesInit(void) {
     self.originalFrame = CGRectZero;
     self.windowName = project.projectConfig.displayName;
     self.navigationItem.title = project.projectConfig.displayName;
-    
-    
     
     NSArray *menuItems = @[
         [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {

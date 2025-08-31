@@ -51,9 +51,36 @@
 ///
 - (BOOL)openApplicationWithProject:(NXProject *)project
 {
+    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
+    DecoratedAppSceneViewController *existingWindow = nil;
+    for(DecoratedAppSceneViewController *window in self.windows)
+    {
+        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
+        if([window.project.projectConfig.plistPath isEqual:project.projectConfig.plistPath])
+        {
+            existingWindow = window;
+            break;
+        }
+    }
+    
+    // If it found a existing window we call closeWindow remotely
+    if(existingWindow)
+    {
+        // Executing it on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // Closing window
+            [existingWindow closeWindow];
+        });
+        [self.windows removeObject:existingWindow];
+    }
+    
+    // Storing the result inside of a block
     __block BOOL result = NO;
     void (^workBlock)(void) = ^{
-        static UIWindow *targetWindow = nil;
+        // Holder for targetView. To avoid mixing window and targetView up i called it targetView.
+        static UIWindow *targetView = nil;
+        
+        // Looking once for the keyWindow which is our targetView
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
             for (UIScene *scene in UIApplication.sharedApplication.connectedScenes)
@@ -65,21 +92,24 @@
                     {
                         if (w.isKeyWindow)
                         {
-                            targetWindow = w;
+                            targetView = w;
                             break;
                         }
                     }
                 }
             }
         });
-        if (!targetWindow)
+        
+        // If looking for it failed, return
+        if (!targetView)
         {
             result = NO;
             return;
         }
-        [[NSUserDefaults standardUserDefaults] setValue:project.packagePath forKey:@"LDEPayloadPath"];
+        
+        // Go!
         DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWithProject:project];
-        [targetWindow addSubview:decoratedAppSceneViewController.view];
+        [targetView addSubview:decoratedAppSceneViewController.view];
         [self.windows addObject:decoratedAppSceneViewController];
         result = YES;
     };
