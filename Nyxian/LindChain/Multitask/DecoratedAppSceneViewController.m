@@ -284,6 +284,7 @@ void UIKitFixesInit(void) {
 }
 
 - (void)maximizeWindow {
+    [self.appSceneVC resizeActionStart];
     if (self.isMaximized) {
         CGRect maxFrame = UIEdgeInsetsInsetRect(self.view.window.frame, self.view.window.safeAreaInsets);
         CGRect newFrame = CGRectMake(self.originalFrame.origin.x * maxFrame.size.width, self.originalFrame.origin.y * maxFrame.size.height, self.originalFrame.size.width, self.originalFrame.size.height);
@@ -299,6 +300,7 @@ void UIKitFixesInit(void) {
             UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
             UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [maximizeImage imageWithConfiguration:maximizeConfig];
+            [self.appSceneVC resizeActionEnd];
         }];
     } else {
         [self updateOriginalFrame];
@@ -315,6 +317,7 @@ void UIKitFixesInit(void) {
             UIImage *restoreImage = [UIImage systemImageNamed:@"arrow.down.right.and.arrow.up.left.circle.fill"];
             UIImageConfiguration *restoreConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [restoreImage imageWithConfiguration:restoreConfig];
+            [self.appSceneVC resizeActionEnd];
         }];
     }
 }
