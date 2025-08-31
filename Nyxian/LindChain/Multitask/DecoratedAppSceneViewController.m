@@ -45,7 +45,7 @@ void UIKitFixesInit(void) {
 @implementation DecoratedAppSceneViewController
 - (instancetype)initWithProject:(NXProject*)project {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:nil];
+    _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:self];
     [self setupDecoratedView];
     
     //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
