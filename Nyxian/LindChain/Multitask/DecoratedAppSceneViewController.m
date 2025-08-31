@@ -74,19 +74,19 @@ void UIKitFixesInit(void) {
         }]
     ];
     
-    UIImage *minimizeImage = [UIImage systemImageNamed:@"minus.circle"];
+    UIImage *minimizeImage = [UIImage systemImageNamed:@"minus.circle.fill"];
     UIImageConfiguration *minimizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     minimizeImage = [minimizeImage imageWithConfiguration:minimizeConfig];
     UIBarButtonItem *minimizeButton = [[UIBarButtonItem alloc] initWithImage:minimizeImage style:UIBarButtonItemStylePlain target:self action:@selector(minimizeWindow)];
     minimizeButton.tintColor = [UIColor systemYellowColor];
     
-    UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle"];
+    UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
     UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     maximizeImage = [maximizeImage imageWithConfiguration:maximizeConfig];
     self.maximizeButton = [[UIBarButtonItem alloc] initWithImage:maximizeImage style:UIBarButtonItemStylePlain target:self action:@selector(maximizeWindow)];
     self.maximizeButton.tintColor = [UIColor systemGreenColor];
     
-    UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle"];
+    UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
     UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     closeImage = [closeImage imageWithConfiguration:closeConfig];
     UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
@@ -296,7 +296,7 @@ void UIKitFixesInit(void) {
             }];
         } completion:^(BOOL finished) {
             self.isMaximized = NO;
-            UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle"];
+            UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
             UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [maximizeImage imageWithConfiguration:maximizeConfig];
         }];
@@ -312,7 +312,7 @@ void UIKitFixesInit(void) {
                 [self updateMaximizedFrameWithSettings:settings];
             }];
         } completion:^(BOOL finished) {
-            UIImage *restoreImage = [UIImage systemImageNamed:@"arrow.down.right.and.arrow.up.left.circle"];
+            UIImage *restoreImage = [UIImage systemImageNamed:@"arrow.down.right.and.arrow.up.left.circle.fill"];
             UIImageConfiguration *restoreConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [restoreImage imageWithConfiguration:restoreConfig];
         }];
