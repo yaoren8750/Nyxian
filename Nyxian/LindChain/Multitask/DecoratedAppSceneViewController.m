@@ -326,11 +326,12 @@ void UIKitFixesInit(void) {
         //[dock removeRunningApp:self.dataUUID];
         
         self.view.layer.masksToBounds = NO;
-        [UIView transitionWithView:self.view duration:0.4 options:UIViewAnimationOptionTransitionCurlUp animations:^{
+        [UIView transitionWithView:self.view.window
+                          duration:0.4
+                           options:UIViewAnimationOptionTransitionCrossDissolve
+                        animations:^{
             self.view.hidden = YES;
-        } completion:^(BOOL b){
-            [self.view removeFromSuperview];
-        }];
+        } completion:nil];
     } else {
         UILabel *label = [[UILabel alloc] initWithFrame:self.view.bounds];
         label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
