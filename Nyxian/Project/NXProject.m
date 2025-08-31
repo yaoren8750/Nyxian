@@ -112,7 +112,7 @@
             @"LDEBundleShortVersion": @"1.0",
             @"LDEProjectType": @(type),
             @"LDEMinimumVersion": [[UIDevice currentDevice] systemVersion],
-            @"LDECompilerFlags": @[],
+            @"LDECompilerFlags": @[@"-fobjc-arc"],
             @"LDELinkerFlags": @[@"-ObjC", @"-lc", @"-lc++", @"-framework", @"Foundation", @"-framework", @"UIKit"] },
         @"/Config/Editor.plist": @{
             @"LDEShowLines": @(YES),
