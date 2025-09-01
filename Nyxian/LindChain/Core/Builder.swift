@@ -223,22 +223,26 @@ class Builder {
     }
     
     func install() throws {
-        /*let appInfo = LCAppInfo(bundlePath: project.bundlePath)
+        let appInfo = LCAppInfo(bundlePath: project.bundlePath)
         LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
-                UserDefaults.standard.set(self.project.projectConfig.type, forKey: "LDEProjectType")
-                UserDefaults.standard.set(self.project.bundlePath, forKey: "LDEAppPath")
-                UserDefaults.standard.set(self.project.homePath, forKey: "LDEHomePath")
-                restartProcess()
+                //UserDefaults.standard.set(self.project.projectConfig.type, forKey: "LDEProjectType")
+                //UserDefaults.standard.set(self.project.bundlePath, forKey: "LDEAppPath")
+                //UserDefaults.standard.set(self.project.homePath, forKey: "LDEHomePath")
+                //restartProcess()
+                
+                LDEMultitaskManager.shared().openApplication(with: self.project)
+                
+                try? self.package()
             } else {
                 print(meow ?? "Unk")
             }
-        }, progressHandler: { progress in }, forceSign: false)*/
+        }, progressHandler: { progress in }, forceSign: false)
         
         //proc_spawn_ios(self.project.projectConfig.displayName)
         
-        LDEMultitaskManager.shared().openApplication(with: self.project)
+        //LDEMultitaskManager.shared().openApplication(with: self.project)
     }
     
     func package() throws {
@@ -297,17 +301,13 @@ class Builder {
             
             do {
                 // prepare
-                var flow: [(String?,Double?,() throws -> Void)] = [
+                let flow: [(String?,Double?,() throws -> Void)] = [
                     (nil,nil,{ try builder.clean() }),
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
                     ("link",0.3,{ try builder.link() }),
-                    ("",nil,{try builder.package()})
+                    ("arrow.down.app.fill",nil,{try builder.install() })
                 ];
-                
-                if buildType == .RunningApp {
-                    flow.append(("arrow.down.app.fill",nil,{try builder.install() }))
-                }
                 
                 // doit
                 try progressFlowBuilder(flow: flow)

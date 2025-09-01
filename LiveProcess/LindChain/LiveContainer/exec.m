@@ -128,44 +128,12 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
-    
-    // Move it
-    
-    
     NXLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
-
-    // Sign iOS app
-    // TODO: Only synchronise the certificate with the server
-    NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
-    if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
-    [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
-    [appGroupUserDefault setObject:certificatePassword forKey:@"LCCertificatePassword"];
-    [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
-    [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
     
-    NXLog(@"Set certificate successfully");
-    
+    // Creating LCAppInfo and relocate bundle to a stable path
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
     [proxy sendMessage:@"Created LCAppInfo" withReply:^(NSString *msg){}];
-    [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL result, NSString *meow){
-        if(result)
-        {
-            NXLog(@"Successfully signed iOS application payload");
-            [appInfo save];
-        }
-        else
-        {
-            NXLog(@"Failed signing iOS application payload");
-        }
-        CFRunLoopStop(CFRunLoopGetMain());
-    } progressHandler:^(NSProgress *prog){
-    } forceSign:NO];
-    CFRunLoopRun();
-    
-    NXLog(@"Lets go executing");
-    
-    char *argv[1] = { NULL };
-    int argc = 0;
+    NXLog(@"Lets go executing %@", appInfo.bundlePath);
     
     NSString *homePath = homePathForLCAppInfo(appInfo);
     
@@ -177,10 +145,11 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     [fileManager moveItemAtPath:bundlePath toPath:newBundlePath error:nil];
     bundlePath = newBundlePath;
     
+    // Executing
+    char *argv[1] = { NULL };
+    int argc = 0;
     NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
     [proxy sendMessage:error withReply:^(NSString *msg){}];
     
     NXLog(@"Shutting down!");
-    
-    //NSString *documentDirectory = [NSString stringWithFormat:@"%@/Documents", NSHomeDirectory()];
 }
