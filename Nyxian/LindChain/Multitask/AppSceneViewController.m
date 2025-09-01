@@ -222,13 +222,10 @@
 }
 
 - (void)appTerminationCleanUp {
-    if (_isAppTerminationCleanUpCalled) {
-        return;
-    }
-    _isAppTerminationCleanUpCalled = true;
+    if (_isAppTerminationCleanUpCalled) return;
+    _isAppTerminationCleanUpCalled = YES;
 
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    dispatch_async(dispatch_get_main_queue(), ^{
+    void (^cleanupBlock)(void) = ^{
         if (self.sceneID) {
             [[PrivClass(FBSceneManager) sharedInstance] destroyScene:self.sceneID withTransitionContext:nil];
         }
@@ -239,10 +236,13 @@
         }
 
         [self.delegate appSceneVCAppDidExit:self];
+    };
 
-        dispatch_semaphore_signal(sema);
-    });
-    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    if ([NSThread isMainThread]) {
+        cleanupBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), cleanupBlock);
+    }
 }
 
 - (void)setBackgroundNotificationEnabled:(bool)enabled {
