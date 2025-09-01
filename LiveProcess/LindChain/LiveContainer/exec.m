@@ -101,7 +101,6 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     
     // Creating LCAppInfo and relocate bundle to a stable path
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
-    [proxy sendMessage:@"Created LCAppInfo"];
     NSLog(@"Lets go executing %@", appInfo.bundlePath);
     
     NSString *homePath = homePathForLCAppInfo(appInfo);
@@ -118,7 +117,5 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     char *argv[1] = { NULL };
     int argc = 0;
     NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
-    [proxy sendMessage:error];
-    
-    NSLog(@"Shutting down!");
+    NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
 }

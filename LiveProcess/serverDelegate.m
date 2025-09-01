@@ -22,10 +22,6 @@
 
 @implementation TestService
 
-- (void)sendMessage:(NSString *)message {
-    printf("[Guest App] %s\n",[message UTF8String]);
-}
-
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
 {
     printf("[Host App] Guest app requested file handle for %s\n", [path UTF8String]);
