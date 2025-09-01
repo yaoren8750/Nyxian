@@ -390,10 +390,10 @@ void UIKitFixesInit(void) {
 
 - (void)adjustNavigationBarButtonSpacingWithNegativeSpacing:(CGFloat)spacing rightMargin:(CGFloat)margin {
     if (!self.navigationBar) return;
-    [self findAndAdjustButtonBarStackView:self.navigationBar withSpacing:spacing rightMargin:margin];
+    [self findAndAdjustButtonBarStackView:self.navigationBar withSpacing:spacing sideMargin:margin];
 }
 
-- (void)findAndAdjustButtonBarStackView:(UIView *)view withSpacing:(CGFloat)spacing rightMargin:(CGFloat)margin {
+- (void)findAndAdjustButtonBarStackView:(UIView *)view withSpacing:(CGFloat)spacing sideMargin:(CGFloat)margin {
     for (UIView *subview in view.subviews) {
         if ([subview isKindOfClass:NSClassFromString(@"_UIButtonBarStackView")]) {
             if ([subview respondsToSelector:@selector(setSpacing:)]) {
@@ -409,6 +409,14 @@ void UIKitFixesInit(void) {
                     }
                 }
                 
+                for (NSLayoutConstraint *constraint in subview.superview.constraints) {
+                    if ((constraint.firstItem == subview && constraint.firstAttribute == NSLayoutAttributeLeading) ||
+                        (constraint.secondItem == subview && constraint.secondAttribute == NSLayoutAttributeLeading)) {
+                        constraint.constant = (constraint.firstItem == subview) ? -margin : margin;
+                        break;
+                    }
+                }
+                
                 [subview setNeedsLayout];
                 [subview.superview setNeedsLayout];
             }
@@ -416,7 +424,7 @@ void UIKitFixesInit(void) {
             return;
         }
         
-        [self findAndAdjustButtonBarStackView:subview withSpacing:spacing rightMargin:margin];
+        [self findAndAdjustButtonBarStackView:subview withSpacing:spacing sideMargin:margin];
     }
 }
 
