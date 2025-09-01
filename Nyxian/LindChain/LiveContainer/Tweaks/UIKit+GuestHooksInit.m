@@ -13,7 +13,7 @@ void UIKitGuestHooksInit(void)
 {
     
     [ObjCSwizzler replaceClassAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
-    [ObjCSwizzler replaceClassAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
+    [ObjCSwizzler replaceClassAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__connectUISceneFromFBSScene:transitionContext:)];
     [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIApplication.class withAction:@selector(hook_openURL:options:completionHandler:)];
     [ObjCSwizzler replaceClassAction:@selector(canOpenURL:) ofClass:UIApplication.class withAction:@selector(hook_canOpenURL:)];
     [ObjCSwizzler replaceClassAction:@selector(setDelegate:) ofClass:UIApplication.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
