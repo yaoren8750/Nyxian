@@ -1,9 +1,21 @@
-//
-//  exec.m
-//  Nyxian
-//
-//  Created by SeanIsTethered on 30.08.25.
-//
+/*
+ Copyright (C) 2025 cr4zyengineer
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #import "exec.h"
 #import "zip.h"
@@ -90,24 +102,13 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
     staticProxy = proxy;
-    clearTemporaryDirectory(nil);
+    if(!clearTemporaryDirectory(nil))
+        exit(1);
     
     // First write out payload
-    /*NSString *payloadPath = [NSString stringWithFormat:@"%@/payload.ipa", NSTemporaryDirectory()];
     NSString *unzippedPath = [NSString stringWithFormat:@"%@Payload", NSTemporaryDirectory()];
-    BOOL success = [ipaPayload writeToFile:payloadPath atomically:YES];
-    
-    if(success)
-        NXLog(@"Wrote payload.ipa to tmp");
-    else
-        NXLog(@"Failed to write payload.ipa to tmp");
-    
-    NXLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);*/
-    
-    // Unzip Payload
-    NSString *unzippedPath = [NSString stringWithFormat:@"%@Payload", NSTemporaryDirectory()];
-    unzipArchiveFromFileHandle(payloadHandle, NSTemporaryDirectory());
-    //unzipArchiveAtPath(payloadPath, NSTemporaryDirectory());
+    if(!unzipArchiveFromFileHandle(payloadHandle, NSTemporaryDirectory()))
+        exit(1);
     
     NXLog(@"Unzipped payload.ipa to tmp");
     

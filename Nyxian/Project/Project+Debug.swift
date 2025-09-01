@@ -1,6 +1,5 @@
 /*
  Copyright (C) 2025 cr4zyengineer
- Copyright (C) 2025 expo
 
  This file is part of Nyxian.
 
