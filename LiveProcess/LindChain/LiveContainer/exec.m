@@ -35,7 +35,8 @@ void NXLog(NSString *format, ...)
     va_end(args);
 
     // Send message via your proxy
-    [staticProxy sendMessage:msg];
+    //[staticProxy sendMessage:msg];
+    NSLog(@"%@", msg);
 }
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);

@@ -26,6 +26,7 @@
 
 - (void)sendMessage:(NSString *)message;
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply;
+- (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 
 @end
 

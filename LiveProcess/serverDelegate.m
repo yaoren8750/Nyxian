@@ -32,6 +32,11 @@
     reply([NSFileHandle fileHandleForReadingAtPath:path]);
 }
 
+- (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply
+{
+    reply([[NSFileHandle alloc] initWithFileDescriptor:STDOUT_FILENO]);
+}
+
 @end
 
 @implementation ServerDelegate
