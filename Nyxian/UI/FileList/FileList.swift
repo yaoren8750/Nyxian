@@ -432,26 +432,26 @@ import UniformTypeIdentifiers
                 label.textColor = .systemGray
                 iconView.addSubview(label)
             case "cpp":
-                addStackedLabel(to: iconView, base: "c", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+                FileListViewController.addStackedLabel(to: iconView, base: "c", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
             case "hpp":
-                addStackedLabel(to: iconView, base: "h", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+                FileListViewController.addStackedLabel(to: iconView, base: "h", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
             case "m":
                 label.text = "m"
                 label.textColor = .systemPurple
                 iconView.addSubview(label)
             case "mm":
-                addStackedLabel(to: iconView, base: "m", offset: CGPoint(x: 9, y: -6), color: .systemBlue)
+                FileListViewController.addStackedLabel(to: iconView, base: "m", offset: CGPoint(x: 9, y: -6), color: .systemBlue)
             case "plist":
-                addSystemImage(to: iconView, name: "tablecells.fill")
+                FileListViewController.addSystemImage(to: iconView, name: "tablecells.fill")
             case "zip","tar","zst":
-                addSystemImage(to: iconView, name: "doc.fill")
+                FileListViewController.addSystemImage(to: iconView, name: "doc.fill")
             case "ipa":
-                addSystemImage(to: iconView, name: "app.gift.fill")
+                FileListViewController.addSystemImage(to: iconView, name: "app.gift.fill")
             default:
-                addSystemImage(to: iconView, name: "text.page.fill")
+                FileListViewController.addSystemImage(to: iconView, name: "text.page.fill")
             }
         } else {
-            addSystemImage(to: iconView, name: "folder.fill")
+            FileListViewController.addSystemImage(to: iconView, name: "folder.fill")
         }
         
         cell.contentView.addSubview(iconView)
@@ -481,7 +481,7 @@ import UniformTypeIdentifiers
         return cell
     }
     
-    private func addStackedLabel(to view: UIView, base: String, offset: CGPoint, color: UIColor) {
+    static func addStackedLabel(to view: UIView, base: String, offset: CGPoint, color: UIColor) {
         let baseLabel = UILabel()
         baseLabel.text = base
         baseLabel.font = .systemFont(ofSize: 20, weight: .light)
@@ -505,7 +505,7 @@ import UniformTypeIdentifiers
         ])
     }
     
-    private func addSystemImage(to view: UIView, name: String, tintColor: UIColor? = nil) {
+    static func addSystemImage(to view: UIView, name: String, tintColor: UIColor? = nil, height: CGFloat = 20) {
         let imageView = UIImageView(image: UIImage(systemName: name))
         imageView.contentMode = .scaleAspectFit
         if let tintColor = tintColor {
@@ -517,7 +517,7 @@ import UniformTypeIdentifiers
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            imageView.heightAnchor.constraint(equalToConstant: 20)
+            imageView.heightAnchor.constraint(equalToConstant: height)
         ])
     }
     

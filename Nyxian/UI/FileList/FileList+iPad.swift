@@ -326,7 +326,7 @@ class UIButtonTab: UIButton {
         leftBorderView.backgroundColor = currentTheme?.gutterHairlineColor
         leftBorderView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(leftBorderView)
-
+        
         NSLayoutConstraint.activate([
             leftBorderView.leftAnchor.constraint(equalTo: self.leftAnchor),
             leftBorderView.topAnchor.constraint(equalTo: self.topAnchor),
@@ -338,7 +338,7 @@ class UIButtonTab: UIButton {
         rightBorderView.backgroundColor = currentTheme?.gutterHairlineColor
         rightBorderView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(rightBorderView)
-
+        
         NSLayoutConstraint.activate([
             rightBorderView.rightAnchor.constraint(equalTo: self.rightAnchor),
             rightBorderView.topAnchor.constraint(equalTo: self.topAnchor),
@@ -364,6 +364,65 @@ class UIButtonTab: UIButton {
         ])
         
         self.closeButton.showsMenuAsPrimaryAction = true
+        
+        // Adding icon
+        let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
+        
+        let iconImageView: UIImageView = UIImageView()
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.contentMode = .center
+        iconImageView.clipsToBounds = true
+        self.addSubview(iconImageView)
+        
+        NSLayoutConstraint.activate([
+            iconImageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            iconImageView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 5),
+            iconImageView.heightAnchor.constraint(equalTo: self.heightAnchor, constant: -10),
+            iconImageView.widthAnchor.constraint(equalTo: iconImageView.heightAnchor)
+        ])
+        
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15, weight: .light)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        
+        switch ext {
+        case "c":
+            label.text = "c"
+            label.textColor = .systemBlue
+            iconImageView.addSubview(label)
+        case "h":
+            label.text = "h"
+            label.textColor = .systemGray
+            iconImageView.addSubview(label)
+        case "cpp":
+            FileListViewController.addStackedLabel(to: iconImageView, base: "c", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+        case "hpp":
+            FileListViewController.addStackedLabel(to: iconImageView, base: "h", offset: CGPoint(x: 8, y: -5), color: .systemBlue)
+        case "m":
+            label.text = "m"
+            label.textColor = .systemPurple
+            iconImageView.addSubview(label)
+        case "mm":
+            FileListViewController.addStackedLabel(to: iconImageView, base: "m", offset: CGPoint(x: 9, y: -6), color: .systemBlue)
+        case "plist":
+            FileListViewController.addSystemImage(to: iconImageView, name: "tablecells.fill", height: 13)
+        case "zip","tar","zst":
+            FileListViewController.addSystemImage(to: iconImageView, name: "doc.fill", height: 13)
+        case "ipa":
+            FileListViewController.addSystemImage(to: iconImageView, name: "app.gift.fill", height: 13)
+        default:
+            FileListViewController.addSystemImage(to: iconImageView, name: "text.page.fill", height: 13)
+        }
+        
+        if label.superview != nil {
+            NSLayoutConstraint.activate([
+                label.centerXAnchor.constraint(equalTo: iconImageView.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: iconImageView.centerYAnchor),
+                label.heightAnchor.constraint(equalTo: iconImageView.heightAnchor),
+                label.widthAnchor.constraint(equalTo: iconImageView.heightAnchor)
+            ])
+        }
         
         // Open before making the menu
         openAction(self)
