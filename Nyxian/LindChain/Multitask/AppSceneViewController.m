@@ -65,6 +65,7 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"payload": self.project.packagePath,
     };
     
     __weak typeof(self) weakSelf = self;

@@ -33,13 +33,19 @@
     reply([NSData dataWithContentsOfFile:payloadPath]);
 }
 
-#pragma clang diagnostic pop
-
 - (void)getPayloadHandleWithServerReply:(void (^)(NSFileHandle*))reply
 {
     printf("[Host App] Guest app requested payload\n");
     NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
     reply([NSFileHandle fileHandleForReadingAtPath:payloadPath]);
+}
+
+#pragma clang diagnostic pop
+
+- (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
+{
+    printf("[Host App] Guest app requested file handle for %s\n", [path UTF8String]);
+    reply([NSFileHandle fileHandleForReadingAtPath:path]);
 }
 
 @end

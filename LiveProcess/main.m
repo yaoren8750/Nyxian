@@ -45,6 +45,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     // MARK: Tested it, the endpoint is definetly transmitted
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
+    NSString *payloadPath = appInfo[@"payload"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
@@ -66,7 +67,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     __block NSString *certificatePassword;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    [proxy getPayloadHandleWithServerReply:^(NSFileHandle *fileHandle){
+    [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
         payload = [fileHandle readDataToEndOfFile];
         [proxy getCertiticateWithServerReply:^(NSData *sCertificateData, NSString *sCertificatePassword){
             certificateData = sCertificateData;

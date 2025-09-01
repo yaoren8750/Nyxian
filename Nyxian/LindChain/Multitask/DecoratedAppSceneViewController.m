@@ -259,12 +259,14 @@ void UIKitFixesInit(void) {
 }
 
 - (void)minimizeWindow {
+    [self.appSceneVC resizeActionStart];
     [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         self.view.alpha = 0;
         self.view.transform = CGAffineTransformMakeScale(0.1, 0.1);
     } completion:^(BOOL finished) {
         self.view.hidden = YES;
         self.view.transform = CGAffineTransformIdentity;
+        [self.appSceneVC resizeActionEnd];
     }];
 }
 
