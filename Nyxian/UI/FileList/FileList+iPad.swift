@@ -205,10 +205,10 @@ class SplitScreenDetailViewController: UIViewController {
         self.view.addSubview(self.scrollView)
         
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            scrollView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 30),
+            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
         ])
         
         // Adding the stack
@@ -233,8 +233,8 @@ class SplitScreenDetailViewController: UIViewController {
 
         NSLayoutConstraint.activate([
             bottomBorderView.bottomAnchor.constraint(equalTo: self.scrollView.bottomAnchor),
-            bottomBorderView.leftAnchor.constraint(equalTo: self.scrollView.leftAnchor),
-            bottomBorderView.rightAnchor.constraint(equalTo: self.scrollView.rightAnchor),
+            bottomBorderView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            bottomBorderView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
             bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
         ])
         
