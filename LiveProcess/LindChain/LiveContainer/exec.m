@@ -14,20 +14,6 @@
 #import <LindChain/litehook/src/litehook.h>
 
 static NSObject<TestServiceProtocol> *staticProxy;
-DEFINE_HOOK(NSLog, void, (NSString *format, ...))
-{
-    va_list args;
-    va_start(args, format);
-
-    NSString *msg = [[NSString alloc] initWithFormat:format arguments:args];
-    va_end(args);
-
-    // Send message via your proxy
-    [staticProxy sendMessage:msg withReply:^(NSString *reply){
-        // Optional: handle reply
-    }];
-}
-
 void NXLog(NSString *format, ...)
 {
     va_list args;
@@ -37,9 +23,7 @@ void NXLog(NSString *format, ...)
     va_end(args);
 
     // Send message via your proxy
-    [staticProxy sendMessage:msg withReply:^(NSString *reply){
-        // Optional: handle reply
-    }];
+    [staticProxy sendMessage:msg];
 }
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
@@ -99,11 +83,9 @@ BOOL clearTemporaryDirectory(NSError **error) {
 }
 
 void exec(NSObject<TestServiceProtocol> *proxy,
-          NSData *ipaPayload,
-          NSData *certificateData,
-          NSString *certificatePassword)
+          NSData *ipaPayload)
 {
-    DO_HOOK_GLOBAL(NSLog);
+    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSLog, NXLog, nil);
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
@@ -132,7 +114,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     
     // Creating LCAppInfo and relocate bundle to a stable path
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
-    [proxy sendMessage:@"Created LCAppInfo" withReply:^(NSString *msg){}];
+    [proxy sendMessage:@"Created LCAppInfo"];
     NXLog(@"Lets go executing %@", appInfo.bundlePath);
     
     NSString *homePath = homePathForLCAppInfo(appInfo);
@@ -149,7 +131,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     char *argv[1] = { NULL };
     int argc = 0;
     NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
-    [proxy sendMessage:error withReply:^(NSString *msg){}];
+    [proxy sendMessage:error];
     
     NXLog(@"Shutting down!");
 }

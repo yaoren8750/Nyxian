@@ -158,8 +158,10 @@
 
 - (void)reload
 {
-    self.textLabel.text = self.project.projectConfig.displayName;
-    self.detailTextLabel.text = self.project.projectConfig.bundleid;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.textLabel.text = self.project.projectConfig.displayName;
+        self.detailTextLabel.text = self.project.projectConfig.bundleid;
+    });
 }
 
 @end

@@ -10,37 +10,9 @@
 
 @implementation TestService
 
-- (void)sendMessage:(NSString *)message withReply:(void (^)(NSString *))reply {
+- (void)sendMessage:(NSString *)message {
     printf("[Guest App] %s\n",[message UTF8String]);
-    reply(@"Extension I received ur message!\n");
 }
-
-- (void)getCertiticateWithServerReply:(void (^)(NSData *, NSString *))reply
-{
-    printf("[Host App] Guest app requested certificate data\n");
-    // Literally sending certificate over to service
-    reply(LCUtils.certificateData, LCUtils.certificatePassword);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-
-- (void)getPayloadWithServerReply:(void (^)(NSData *))reply
-{
-    // Literally sending over Builder specified payload path mfckers!
-    printf("[Host App] Guest app requested payload\n");
-    NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
-    reply([NSData dataWithContentsOfFile:payloadPath]);
-}
-
-- (void)getPayloadHandleWithServerReply:(void (^)(NSFileHandle*))reply
-{
-    printf("[Host App] Guest app requested payload\n");
-    NSString *payloadPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEPayloadPath"];
-    reply([NSFileHandle fileHandleForReadingAtPath:payloadPath]);
-}
-
-#pragma clang diagnostic pop
 
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
 {

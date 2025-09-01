@@ -12,11 +12,8 @@
  */
 @protocol TestServiceProtocol
 
-- (void)sendMessage:(NSString*)message withReply:(void(^)(NSString*))reply;
-- (void)getCertiticateWithServerReply:(void(^)(NSData*,NSString*))reply;
-- (void)getPayloadWithServerReply:(void (^)(NSData *))reply __attribute__((deprecated("Using getFileHandleOfServerAtPath: is generally safer and faster for large payloads")));
-- (void)getPayloadHandleWithServerReply:(void (^)(NSFileHandle*))reply __attribute__((deprecated("Using getFileHandleOfServerAtPath: is generally safer")));
-- (void)getFileHandleOfServerAtPath:(NSString*)path withServerReply:(void (^)(NSFileHandle*))reply;
+- (void)sendMessage:(NSString *)message;
+- (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply;
 
 @end
 

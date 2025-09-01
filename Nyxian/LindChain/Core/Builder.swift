@@ -227,27 +227,16 @@ class Builder {
         LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
-                //UserDefaults.standard.set(self.project.projectConfig.type, forKey: "LDEProjectType")
-                //UserDefaults.standard.set(self.project.bundlePath, forKey: "LDEAppPath")
-                //UserDefaults.standard.set(self.project.homePath, forKey: "LDEHomePath")
-                //restartProcess()
-                
                 LDEMultitaskManager.shared().openApplication(with: self.project)
-                
                 try? self.package()
             } else {
                 print(meow ?? "Unk")
             }
         }, progressHandler: { progress in }, forceSign: false)
-        
-        //proc_spawn_ios(self.project.projectConfig.displayName)
-        
-        //LDEMultitaskManager.shared().openApplication(with: self.project)
     }
     
     func package() throws {
         try FileManager.default.zipItem(at: URL(fileURLWithPath: project.payloadPath), to: URL(fileURLWithPath: project.packagePath))
-        UserDefaults.standard.set(self.project.packagePath, forKey: "LDEPayloadPath")
     }
     
     ///
@@ -263,12 +252,28 @@ class Builder {
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
         
-        // TODO: Fix this
-        /*if project.projectConfig.minimum_version > UIDevice.current.systemVersion {
-            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.minimum_version) is needed to build the app!")
+        
+        func operatingSystemVersion(from string: String) -> OperatingSystemVersion? {
+            let components = string.split(separator: ".").map { Int($0) ?? 0 }
+            guard components.count >= 2 else { return nil }
+            
+            let major = components[0]
+            let minor = components[1]
+            let patch = components.count > 2 ? components[2] : 0
+            
+            return OperatingSystemVersion(majorVersion: major, minorVersion: minor, patchVersion: patch)
+        }
+
+        guard let neededMinimumOSVersion = operatingSystemVersion(from: project.projectConfig.platformMinimumVersion) else {
+            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host version cannot be compared. Version \(project.projectConfig.platformMinimumVersion!) is not valid!")
             completion(true)
             return
-        }*/
+        }
+        if !ProcessInfo.processInfo.isOperatingSystemAtLeast(neededMinimumOSVersion) {
+            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.platformMinimumVersion!) is needed to build the app!")
+            completion(true)
+            return
+        }
         
         XCodeButton.resetProgress()
         
