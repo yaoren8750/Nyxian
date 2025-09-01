@@ -27,6 +27,7 @@
 @property(nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
+@property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
 @end
 
 @implementation AppSceneViewController
@@ -306,14 +307,19 @@
     self.pendingSettingsBlock = nil;
 }
 
-- (void)resizeActionStart
-{
+- (void)resizeActionStart {
+    [self.resizeEndDebounceTimer invalidate];
+    self.resizeEndDebounceTimer = nil;
     self.resizeDisplayLink.paused = NO;
 }
 
-- (void)resizeActionEnd
-{
-    self.resizeDisplayLink.paused = YES;
+- (void)resizeActionEnd {
+    [self.resizeEndDebounceTimer invalidate];
+    __weak typeof(self) weakSelf = self;
+    self.resizeEndDebounceTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:NO block:^(NSTimer * _Nonnull timer) {
+        weakSelf.resizeDisplayLink.paused = YES;
+        weakSelf.resizeEndDebounceTimer = nil;
+    }];
 }
 
 @end
