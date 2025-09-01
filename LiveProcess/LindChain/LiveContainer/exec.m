@@ -83,7 +83,7 @@ BOOL clearTemporaryDirectory(NSError **error) {
 }
 
 void exec(NSObject<TestServiceProtocol> *proxy,
-          NSData *ipaPayload)
+          NSFileHandle *payloadHandle)
 {
     litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSLog, NXLog, nil);
     
@@ -93,7 +93,7 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     clearTemporaryDirectory(nil);
     
     // First write out payload
-    NSString *payloadPath = [NSString stringWithFormat:@"%@/payload.ipa", NSTemporaryDirectory()];
+    /*NSString *payloadPath = [NSString stringWithFormat:@"%@/payload.ipa", NSTemporaryDirectory()];
     NSString *unzippedPath = [NSString stringWithFormat:@"%@Payload", NSTemporaryDirectory()];
     BOOL success = [ipaPayload writeToFile:payloadPath atomically:YES];
     
@@ -102,10 +102,13 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     else
         NXLog(@"Failed to write payload.ipa to tmp");
     
-    NXLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);
+    NXLog(@"%@: %@",NSTemporaryDirectory(),[[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil]);*/
     
     // Unzip Payload
-    unzipArchiveAtPath(payloadPath, NSTemporaryDirectory());
+    NSString *unzippedPath = [NSString stringWithFormat:@"%@Payload", NSTemporaryDirectory()];
+    unzipArchiveFromFileHandle(payloadHandle, NSTemporaryDirectory());
+    //unzipArchiveAtPath(payloadPath, NSTemporaryDirectory());
+    
     NXLog(@"Unzipped payload.ipa to tmp");
     
     // Get BundlePath

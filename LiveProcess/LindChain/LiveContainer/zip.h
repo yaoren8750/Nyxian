@@ -8,3 +8,4 @@
 #import <Foundation/Foundation.h>
 
 BOOL unzipArchiveAtPath(NSString *zipPath, NSString *destinationPath);
+BOOL unzipArchiveFromFileHandle(NSFileHandle *zipFileHandle, NSString *destinationPath);

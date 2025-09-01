@@ -62,17 +62,17 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    __block NSData *payload;
+    __block NSFileHandle *payloadHandle;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
-        payload = [fileHandle readDataToEndOfFile];
+        payloadHandle = fileHandle;
         dispatch_semaphore_signal(semaphore);
     }];
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     
     // MARK: Keep it alive
-    exec(proxy, payload);
+    exec(proxy, payloadHandle);
     
     return 0;
 }

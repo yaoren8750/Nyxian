@@ -9,4 +9,4 @@
 #import "../../serverDelegate.h"
 
 void exec(NSObject<TestServiceProtocol> *proxy,
-          NSData *ipaPayload);
+          NSFileHandle *payloadHandle);
