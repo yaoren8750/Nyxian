@@ -243,9 +243,9 @@ void UIKitFixesInit(void) {
     self.scaleRatio = slider.value;
     self.appSceneVC.scaleRatio = _scaleRatio;
     self.appSceneVC.contentView.layer.sublayerTransform = CATransform3DMakeScale(_scaleRatio, _scaleRatio, 1.0);
-    [self.appSceneVC updateFrameWithSettingsBlock:^(UIMutableApplicationSceneSettings *settings) {
-        [self updateMaximizedSafeAreaWithSettings:settings];
-    }];
+    [self.appSceneVC resizeActionStart];
+    [self updateMaximizedSafeAreaWithSettings:self.appSceneVC.settings];
+    [self.appSceneVC resizeActionEnd];
 }
 
 - (void)closeWindow {

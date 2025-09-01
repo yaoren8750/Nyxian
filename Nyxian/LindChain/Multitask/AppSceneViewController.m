@@ -21,12 +21,10 @@
 
 @interface AppSceneViewController()
 @property(nonatomic) UIWindowScene *hostScene;
-@property(nonatomic) UIMutableApplicationSceneSettings *settings;
 @property(nonatomic) NSString *sceneID;
 @property(nonatomic) NSExtension* extension;
 @property(nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
-@property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
 @end
 
