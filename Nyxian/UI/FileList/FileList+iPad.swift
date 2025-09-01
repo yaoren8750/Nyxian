@@ -87,7 +87,7 @@ class SplitScreenDetailViewController: UIViewController {
                 self.view.addSubview(vc.view)
                 vc.view.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
-                    vc.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
+                    vc.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 31),
                     vc.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
                     vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                     vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -226,19 +226,17 @@ class SplitScreenDetailViewController: UIViewController {
             self.stack.bottomAnchor.constraint(equalTo: self.scrollView.bottomAnchor)
         ])
         
-        /*
-        
         let bottomBorderView = UIView()
         bottomBorderView.backgroundColor = currentTheme?.gutterHairlineColor
         bottomBorderView.translatesAutoresizingMaskIntoConstraints = false
-        tabBarView.addSubview(bottomBorderView)
+        self.scrollView.addSubview(bottomBorderView)
 
         NSLayoutConstraint.activate([
-            bottomBorderView.bottomAnchor.constraint(equalTo: self.tabBarView.bottomAnchor),
-            bottomBorderView.leftAnchor.constraint(equalTo: self.tabBarView.leftAnchor),
-            bottomBorderView.rightAnchor.constraint(equalTo: self.tabBarView.rightAnchor),
+            bottomBorderView.bottomAnchor.constraint(equalTo: self.scrollView.bottomAnchor),
+            bottomBorderView.leftAnchor.constraint(equalTo: self.scrollView.leftAnchor),
+            bottomBorderView.rightAnchor.constraint(equalTo: self.scrollView.rightAnchor),
             bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
-        ])*/
+        ])
         
         let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
             buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
