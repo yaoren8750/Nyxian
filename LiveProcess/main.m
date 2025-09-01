@@ -76,16 +76,15 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
+    // Handoff stdout and stderr to host app
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
         stdoutStaticStrongReferencedHandle = stdoutHandle;
         dup2(stdoutStaticStrongReferencedHandle.fileDescriptor, STDOUT_FILENO);
         dup2(stdoutStaticStrongReferencedHandle.fileDescriptor, STDERR_FILENO);
-        printf("MEOW MEOW MEOW!\n");
         dispatch_semaphore_signal(semaphore);
     }];
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    printf("MEOW MEOW MEOW!\n");
     
     __block NSFileHandle *payloadHandle;
     [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){

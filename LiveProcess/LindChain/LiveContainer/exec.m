@@ -23,21 +23,6 @@
 
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
-#import <LindChain/litehook/src/litehook.h>
-
-static NSObject<TestServiceProtocol> *staticProxy;
-void NXLog(NSString *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-
-    NSString *msg = [[NSString alloc] initWithFormat:format arguments:args];
-    va_end(args);
-
-    // Send message via your proxy
-    //[staticProxy sendMessage:msg];
-    NSLog(@"%@", msg);
-}
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 
@@ -98,11 +83,8 @@ BOOL clearTemporaryDirectory(NSError **error) {
 void exec(NSObject<TestServiceProtocol> *proxy,
           NSFileHandle *payloadHandle)
 {
-    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, NSLog, NXLog, nil);
-    
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
-    staticProxy = proxy;
     if(!clearTemporaryDirectory(nil))
         exit(1);
     
@@ -111,16 +93,16 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     if(!unzipArchiveFromFileHandle(payloadHandle, NSTemporaryDirectory()))
         exit(1);
     
-    NXLog(@"Unzipped payload.ipa to tmp");
+    NSLog(@"Unzipped payload.ipa to tmp");
     
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
-    NXLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
+    NSLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
     
     // Creating LCAppInfo and relocate bundle to a stable path
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
     [proxy sendMessage:@"Created LCAppInfo"];
-    NXLog(@"Lets go executing %@", appInfo.bundlePath);
+    NSLog(@"Lets go executing %@", appInfo.bundlePath);
     
     NSString *homePath = homePathForLCAppInfo(appInfo);
     
@@ -138,5 +120,5 @@ void exec(NSObject<TestServiceProtocol> *proxy,
     NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
     [proxy sendMessage:error];
     
-    NXLog(@"Shutting down!");
+    NSLog(@"Shutting down!");
 }
