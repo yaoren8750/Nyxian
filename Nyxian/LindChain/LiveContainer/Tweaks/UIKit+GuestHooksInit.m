@@ -4,31 +4,22 @@
 #import "utils.h"
 #import <LocalAuthentication/LocalAuthentication.h>
 #import "Localization.h"
-#import <objc/runtime.h>
+#import <LindChain/ObjC/Swizzle.h>
 
 UIInterfaceOrientation LCOrientationLock = UIInterfaceOrientationUnknown;
 NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 
-void swizzle(Class class, SEL originalAction, SEL swizzledAction) {
-    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, swizzledAction));
-}
-
-void swizzle2(Class class, SEL originalAction, Class class2, SEL swizzledAction) {
-    Method m1 = class_getInstanceMethod(class2, swizzledAction);
-    class_addMethod(class, swizzledAction, method_getImplementation(m1), method_getTypeEncoding(m1));
-    method_exchangeImplementations(class_getInstanceMethod(class, originalAction), class_getInstanceMethod(class, swizzledAction));
-}
-
 void UIKitGuestHooksInit(void)
 {
     
-    swizzle(UIApplication.class, @selector(_applicationOpenURLAction:payload:origin:), @selector(hook__applicationOpenURLAction:payload:origin:));
-    swizzle(UIApplication.class, @selector(_connectUISceneFromFBSScene:transitionContext:), @selector(hook__connectUISceneFromFBSScene:transitionContext:));
-    swizzle(UIApplication.class, @selector(openURL:options:completionHandler:), @selector(hook_openURL:options:completionHandler:));
-    swizzle(UIApplication.class, @selector(canOpenURL:), @selector(hook_canOpenURL:));
-    swizzle(UIApplication.class, @selector(setDelegate:), @selector(hook_setDelegate:));
-    swizzle(UIScene.class, @selector(scene:didReceiveActions:fromTransitionContext:), @selector(hook_scene:didReceiveActions:fromTransitionContext:));
-    swizzle(UIScene.class, @selector(openURL:options:completionHandler:), @selector(hook_openURL:options:completionHandler:));
+    [ObjCSwizzler replaceClassAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
+    [ObjCSwizzler replaceClassAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
+    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIApplication.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceClassAction:@selector(canOpenURL:) ofClass:UIApplication.class withAction:@selector(hook_canOpenURL:)];
+    [ObjCSwizzler replaceClassAction:@selector(setDelegate:) ofClass:UIApplication.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
+    [ObjCSwizzler replaceClassAction:@selector(scene:didReceiveActions:fromTransitionContext:) ofClass:UIScene.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
+    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
     /*NSInteger LCOrientationLockDirection = [NSUserDefaults.guestAppInfo[@"LCOrientationLock"] integerValue];
     if([UIDevice.currentDevice userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
         switch (LCOrientationLockDirection) {
@@ -43,10 +34,10 @@ void UIKitGuestHooksInit(void)
         }*/
         //if(!NSUserDefaults.isLiveProcess && LCOrientationLock != UIInterfaceOrientationUnknown) {
 //            swizzle(UIApplication.class, @selector(_handleDelegateCallbacksWithOptions:isSuspended:restoreState:), @selector(hook__handleDelegateCallbacksWithOptions:isSuspended:restoreState:));
-            swizzle(FBSSceneParameters.class, @selector(initWithXPCDictionary:), @selector(hook_initWithXPCDictionary:));
-            swizzle(UIViewController.class, @selector(__supportedInterfaceOrientations), @selector(hook___supportedInterfaceOrientations));
-            swizzle(UIViewController.class, @selector(shouldAutorotateToInterfaceOrientation:), @selector(hook_shouldAutorotateToInterfaceOrientation:));
-            swizzle(UIWindow.class, @selector(setAutorotates:forceUpdateInterfaceOrientation:), @selector(hook_setAutorotates:forceUpdateInterfaceOrientation:));
+    [ObjCSwizzler replaceClassAction:@selector(initWithXPCDictionary:) ofClass:FBSSceneParameters.class withAction:@selector(hook_initWithXPCDictionary:)];
+    [ObjCSwizzler replaceClassAction:@selector(__supportedInterfaceOrientations) ofClass:UIViewController.class withAction:@selector(hook___supportedInterfaceOrientations)];
+    [ObjCSwizzler replaceClassAction:@selector(shouldAutorotateToInterfaceOrientation:) ofClass:UIViewController.class withAction:@selector(hook_shouldAutorotateToInterfaceOrientation:)];
+    [ObjCSwizzler replaceClassAction:@selector(setAutorotates:forceUpdateInterfaceOrientation:) ofClass:UIWindow.class withAction:@selector(hook_setAutorotates:forceUpdateInterfaceOrientation:)];
         //}
 
     //}
@@ -348,9 +339,9 @@ BOOL canAppOpenItself(NSURL* url) {
 - (void)hook_setDelegate:(id<UIApplicationDelegate>)delegate {
     if(![delegate respondsToSelector:@selector(application:configurationForConnectingSceneSession:options:)]) {
         // Fix old apps black screen when UIApplicationSupportsMultipleScenes is YES
-        swizzle(UIWindow.class, @selector(makeKeyAndVisible), @selector(hook_makeKeyAndVisible));
-        swizzle(UIWindow.class, @selector(makeKeyWindow), @selector(hook_makeKeyWindow));
-        swizzle(UIWindow.class, @selector(setHidden:), @selector(hook_setHidden:));
+        [ObjCSwizzler replaceClassAction:@selector(makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(hook_makeKeyAndVisible)];
+        [ObjCSwizzler replaceClassAction:@selector(makeKeyWindow) ofClass:UIWindow.class withAction:@selector(hook_makeKeyWindow)];
+        [ObjCSwizzler replaceClassAction:@selector(setHidden:) ofClass:UIWindow.class withAction:@selector(hook_setHidden:)];
     }
     [self hook_setDelegate:delegate];
 }
