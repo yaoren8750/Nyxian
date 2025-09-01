@@ -33,7 +33,9 @@ void UIKitFixesInit(void) {
     }
 }
 
-@interface DecoratedAppSceneViewController()
+@interface DecoratedAppSceneViewController ()
+
+@property(nonatomic) UILabel *processCrashLabel;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
 //@property(nonatomic) NSString* dataUUID;
 @property(nonatomic) NSString* windowName;
@@ -41,13 +43,24 @@ void UIKitFixesInit(void) {
 @property(nonatomic) CGRect originalFrame;
 @property(nonatomic) UIBarButtonItem *maximizeButton;
 @property(nonatomic) bool isAppTerminationRequested;
+
 @end
 
 @implementation DecoratedAppSceneViewController
+
 - (instancetype)initWithProject:(NXProject*)project {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:self];
     [self setupDecoratedView];
+    
+    self.processCrashLabel = [[UILabel alloc] initWithFrame:self.view.bounds];
+    self.processCrashLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    self.processCrashLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    self.processCrashLabel.numberOfLines = 0;
+    self.processCrashLabel.text = @"Process crashed";
+    self.processCrashLabel.textAlignment = NSTextAlignmentCenter;
+    self.processCrashLabel.alpha = 0.0;
+    [self.view insertSubview:self.processCrashLabel atIndex:0];
     
     //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
     
@@ -338,13 +351,12 @@ void UIKitFixesInit(void) {
             self.view.hidden = YES;
         } completion:nil];
     } else {
-        UILabel *label = [[UILabel alloc] initWithFrame:self.view.bounds];
-        label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        label.lineBreakMode = NSLineBreakByWordWrapping;
-        label.numberOfLines = 0;
-        label.text = @"Process crashed";
-        label.textAlignment = NSTextAlignmentCenter;
-        [self.view insertSubview:label atIndex:0];
+        self.processCrashLabel.alpha = 0.0;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIView animateWithDuration:0.25 animations:^{
+                self.processCrashLabel.alpha = 1.0;
+            }];
+        });
     }
 }
 
