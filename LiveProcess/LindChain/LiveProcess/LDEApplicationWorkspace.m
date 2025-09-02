@@ -152,11 +152,11 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 
 @implementation LDEApplicationWorkspaceProxy
 
-- (void)applicationInstalledWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply { 
+- (void)applicationInstalledWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply {
     reply([[LDEApplicationWorkspace shared] applicationInstalledWithBundleID:bundleID]);
 }
 
-- (void)deleteApplicationWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply { 
+- (void)deleteApplicationWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply {
     reply([[LDEApplicationWorkspace shared] deleteApplicationWithBundleID:bundleID]);
 }
 
@@ -165,6 +165,22 @@ BOOL clearTemporaryDirectory(NSError **error);
     clearTemporaryDirectory(nil);
     unzipArchiveFromFileHandle(bundleHandle, NSTemporaryDirectory());
     reply([[LDEApplicationWorkspace shared] installApplicationAtBundlePath:NSTemporaryDirectory()]);
+}
+
+- (void)applicationObjectForBundleID:(NSString *)bundleID withReply:(void (^)(LDEApplicationObject *))reply
+{
+    NSBundle *bundle = [[LDEApplicationWorkspace shared] applicationBundleForBundleID:bundleID];
+    
+    if(!bundle)
+    {
+        reply(nil);
+        return;
+    }
+    
+    LDEApplicationObject *appObj = [[LDEApplicationObject alloc] init];
+    appObj.bundleIdentifier = bundle.bundleIdentifier;
+    
+    reply(appObj);
 }
 
 @end

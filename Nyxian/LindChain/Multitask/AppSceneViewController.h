@@ -7,6 +7,7 @@
 #import <LindChain/LiveContainer/UIKitPrivate.h>
 #import <Project/NXProject.h>
 #import "FoundationPrivate.h"
+#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
 @import UIKit;
 @import Foundation;
 
@@ -24,7 +25,7 @@ API_AVAILABLE(ios(16.0))
 API_AVAILABLE(ios(16.0))
 @interface AppSceneViewController : UIViewController<_UISceneSettingsDiffAction>
 
-@property(nonatomic) NXProject *project;
+@property(nonatomic) LDEApplicationObject *appObj;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) int pid;
 @property(nonatomic) id<AppSceneViewControllerDelegate> delegate;
@@ -35,7 +36,8 @@ API_AVAILABLE(ios(16.0))
 @property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) UIMutableApplicationSceneSettings *settings;
 
-- (instancetype)initWithProject:(NXProject*)project withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
+- (instancetype)initWithBundleID:(NSString*)bundleID
+                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)appTerminationCleanUp;
 - (void)terminate;

@@ -11,7 +11,6 @@
 #import "PiPManager.h"
 #import "Localization.h"
 #import "../../../LiveProcess/serverDelegate.h"
-#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
 
 @interface AppSceneViewController()
 @property int resizeDebounceToken;
@@ -31,7 +30,8 @@
 
 @implementation AppSceneViewController
 
-- (instancetype)initWithProject:(NXProject*)project withDelegate:(id<AppSceneViewControllerDelegate>)delegate {
+- (instancetype)initWithBundleID:(NSString*)bundleID
+                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate {
     self = [super initWithNibName:nil bundle:nil];
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];
@@ -39,8 +39,8 @@
     self.delegate = delegate;
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
-    self.project = project;
-
+    self.appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleID];
+    if(!self.appObj) return nil;
     return [self execute] ? self : nil;
 }
 
@@ -58,17 +58,14 @@
     if(error) {
         [self.delegate appSceneVC:self didInitializeWithError:error];
         return NO;
-    } else {
-        [[NSUserDefaults standardUserDefaults] setValue:self.project.packagePath forKey:@"LDEPayloadPath"];
     }
     _extension.preferredLanguages = @[];
     
     NSExtensionItem *item = [NSExtensionItem new];
-    NSLog(@"App install test: %d", [[LDEApplicationWorkspace shared] installApplicationAtBundlePath:self.project.bundlePath]);
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"application",
-        @"bundleid": self.project.projectConfig.bundleid,
+        @"bundleid": self.appObj.bundleIdentifier,
     };
     
     __weak typeof(self) weakSelf = self;

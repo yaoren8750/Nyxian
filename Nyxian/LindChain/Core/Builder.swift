@@ -226,8 +226,9 @@ class Builder {
         LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
-                LDEMultitaskManager.shared().openApplication(with: self.project)
-                try? self.package()
+                if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
+                    LDEMultitaskManager.shared().openApplication(withBundleID: self.project.projectConfig.bundleid)
+                }
             } else {
                 print(meow ?? "Unk")
             }

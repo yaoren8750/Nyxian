@@ -17,24 +17,15 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef LDEAPPLICATIONOBJECT_H
+#define LDEAPPLICATIONOBJECT_H
+
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <Project/NXProject.h>
-#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
 
-@interface LDEMultitaskManager : NSObject
+@interface LDEApplicationObject : NSObject <NSSecureCoding>
 
-@property (nonatomic,strong) UIWindow *targetView;
-@property (nonatomic,strong,readonly) NSMutableArray<DecoratedAppSceneViewController*> *windows;
-
-- (instancetype)init;
-+ (LDEMultitaskManager*)shared;
-
-- (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
-- (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
-
-- (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
+@property (nonatomic) NSString *bundleIdentifier;
 
 @end
 
-pid_t proc_spawn_ios(NSString *windowTitle);
+#endif /* LDEAPPLICATIONOBJECT_H */

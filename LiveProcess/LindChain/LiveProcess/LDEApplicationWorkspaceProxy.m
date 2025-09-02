@@ -141,6 +141,17 @@
     return result;
 }
 
+- (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID
+{
+    __block LDEApplicationObject *result = nil;
+    [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
 @end
 
 __attribute__((constructor))

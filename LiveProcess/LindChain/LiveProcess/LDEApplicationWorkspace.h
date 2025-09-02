@@ -21,6 +21,7 @@
 #define LDEAPPLICATIONWORKSPACE_H
 
 #import <Foundation/Foundation.h>
+#import "LDEApplicationObject.h"
 
 @interface LDEApplicationWorkspace : NSObject
 
@@ -40,6 +41,7 @@
 - (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply;
 - (void)deleteApplicationWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
 - (void)applicationInstalledWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
+- (void)applicationObjectForBundleID:(NSString*)bundleID withReply:(void (^)(LDEApplicationObject*))reply;
 
 @end
 

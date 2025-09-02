@@ -17,24 +17,23 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <Project/NXProject.h>
-#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
+#import "LDEApplicationObject.h"
 
-@interface LDEMultitaskManager : NSObject
+@implementation LDEApplicationObject
 
-@property (nonatomic,strong) UIWindow *targetView;
-@property (nonatomic,strong,readonly) NSMutableArray<DecoratedAppSceneViewController*> *windows;
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
 
-- (instancetype)init;
-+ (LDEMultitaskManager*)shared;
+- (void)encodeWithCoder:(nonnull NSCoder *)coder {
+    [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
+}
 
-- (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
-- (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
-
-- (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    if (self = [super init]) {
+        _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
+    }
+    return self;
+}
 
 @end
-
-pid_t proc_spawn_ios(NSString *windowTitle);

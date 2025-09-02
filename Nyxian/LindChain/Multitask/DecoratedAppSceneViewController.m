@@ -48,9 +48,9 @@ void UIKitFixesInit(void) {
 
 @implementation DecoratedAppSceneViewController
 
-- (instancetype)initWithProject:(NXProject*)project {
+- (instancetype)initWithBundleID:(NSString*)bundleID {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithProject:project withDelegate:self];
+    _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDelegate:self];
     [self setupDecoratedView];
     
     self.processCrashLabel = [[UILabel alloc] initWithFrame:self.view.bounds];
@@ -68,8 +68,8 @@ void UIKitFixesInit(void) {
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
-    self.windowName = project.projectConfig.displayName;
-    self.navigationItem.title = project.projectConfig.displayName;
+    self.windowName = self.appSceneVC.appObj.bundleIdentifier;
+    self.navigationItem.title = self.appSceneVC.appObj.bundleIdentifier;
     
     NSArray *menuItems = @[
         [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
