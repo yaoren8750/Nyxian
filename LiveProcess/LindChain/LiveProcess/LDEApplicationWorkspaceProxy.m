@@ -18,4 +18,114 @@
 */
 
 #import "LDEApplicationWorkspaceProxy.h"
+#import <LindChain/LiveContainer/FoundationPrivate.h>
 
+@interface LDEApplicationWorkspace ()
+
+@property (nonatomic,strong,readonly) NSExtension *extension;
+@property (nonatomic,strong,readwrite) NSObject<LDEApplicationWorkspaceProxyProtocol> *proxy;
+@property (nonatomic,strong,readonly) dispatch_semaphore_t sema;
+
+@end
+
+@implementation LDEApplicationWorkspace
+
+- (instancetype)init
+{
+    self = [super init];
+    
+    _sema = dispatch_semaphore_create(0);
+    
+    NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
+    if(!liveProcessBundle) {
+        return nil;
+    }
+    
+    NSError* error = nil;
+    _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
+    if(error) {
+        return nil;
+    }
+    _extension.preferredLanguages = @[];
+    
+    NSExtensionItem *item = [NSExtensionItem new];
+    /*item.userInfo = @{
+        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"payload": self.project.packagePath,
+    };
+    
+    __weak typeof(self) weakSelf = self;
+    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
+        NSLog(@"Extension down!");
+        [weakSelf appTerminationCleanUp];
+        [weakSelf.delegate appSceneVC:weakSelf didInitializeWithError:error];
+    }];
+    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+        NSLog(@"Extension down!");
+        [weakSelf appTerminationCleanUp];
+    }];
+    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
+        if(identifier) {
+            //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
+            self.identifier = identifier;
+            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            
+            NSLog(@"child process spawned with %u\n", self.pid);
+            [self.delegate appSceneVC:self didInitializeWithError:nil];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self setUpAppPresenter];
+            });
+        } else {
+            NSError* error = [NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"Failed to start app. Child process has unexpectedly crashed"}];
+            NSLog(@"%@", [error localizedDescription]);
+            [self.delegate appSceneVC:self didInitializeWithError:error];
+        }
+    }];*/
+    
+    return self;
+}
+
++ (LDEApplicationWorkspace*)shared
+{
+    static LDEApplicationWorkspace *applicationWorkspaceSingleton = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        applicationWorkspaceSingleton = [[LDEApplicationWorkspace alloc] init];
+    });
+    return applicationWorkspaceSingleton;
+}
+
+- (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
+{
+    __block BOOL result = NO;
+    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:bundlePath] withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
+- (BOOL)deleteApplicationWithBundleID:(NSString *)bundleID
+{
+    __block BOOL result = NO;
+    [_proxy deleteApplicationWithBundleID:bundleID withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
+- (BOOL)applicationInstalledWithBundleID:(NSString *)bundleID
+{
+    __block BOOL result = NO;
+    [_proxy applicationInstalledWithBundleID:bundleID withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
+@end
