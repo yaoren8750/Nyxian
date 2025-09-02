@@ -160,11 +160,13 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     reply([[LDEApplicationWorkspace shared] deleteApplicationWithBundleID:bundleID]);
 }
 
-BOOL clearTemporaryDirectory(NSError **error);
 - (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply {
-    clearTemporaryDirectory(nil);
-    unzipArchiveFromFileHandle(bundleHandle, NSTemporaryDirectory());
-    reply([[LDEApplicationWorkspace shared] installApplicationAtBundlePath:NSTemporaryDirectory()]);
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *tempBundle = [NSString stringWithFormat:@"%@%@.app", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
+    unzipArchiveFromFileHandle(bundleHandle, tempBundle);
+    BOOL didInstall = [[LDEApplicationWorkspace shared] installApplicationAtBundlePath:tempBundle];
+    [fileManager removeItemAtPath:tempBundle error:nil];
+    reply(didInstall);
 }
 
 - (void)applicationObjectForBundleID:(NSString *)bundleID withReply:(void (^)(LDEApplicationObject *))reply

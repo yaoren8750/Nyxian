@@ -23,7 +23,6 @@
 #import <objc/runtime.h>
 #import "serverDelegate.h"
 #import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
-#import "LindChain/LiveContainer/exec.h"
 #import <LindChain/litehook/src/litehook.h>
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
