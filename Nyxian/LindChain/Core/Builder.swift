@@ -221,13 +221,15 @@ class Builder {
         }
     }
     
-    func install() throws {
+    func install(buildType: Builder.BuildType) throws {
         let appInfo = LCAppInfo(bundlePath: project.bundlePath)
         LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { result, meow in
             if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                 appInfo?.save()
-                if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
-                    LDEMultitaskManager.shared().openApplication(withBundleID: self.project.projectConfig.bundleid)
+                if(buildType == .RunningApp) {
+                    if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
+                        LDEMultitaskManager.shared().openApplication(withBundleID: self.project.projectConfig.bundleid)
+                    }
                 }
             } else {
                 print(meow ?? "Unk")
@@ -311,7 +313,7 @@ class Builder {
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
                     ("link",0.3,{ try builder.link() }),
-                    ("arrow.down.app.fill",nil,{try builder.install() })
+                    ("arrow.down.app.fill",nil,{try builder.install(buildType: buildType) })
                 ];
                 
                 // doit
