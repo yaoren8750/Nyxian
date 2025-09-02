@@ -16,3 +16,17 @@
  You should have received a copy of the GNU General Public License
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
+
+#ifndef LDEAPPLICATIONWORKSPACE_H
+#define LDEAPPLICATIONWORKSPACE_H
+
+#import <Foundation/Foundation.h>
+
+@interface LDEApplicationWorkspace : NSObject
+
+- (instancetype)init;
++ (LDEApplicationWorkspace*)shared;
+
+@end
+
+#endif

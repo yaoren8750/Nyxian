@@ -92,6 +92,7 @@
 				LindChain/LiveContainer/exec.m,
 				LindChain/LiveContainer/path.m,
 				LindChain/LiveContainer/zip.m,
+				LindChain/LiveProcess/LDEApplicationWorkspace.m,
 				main.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
