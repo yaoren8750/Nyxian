@@ -1,9 +1,21 @@
-//
-//  ApplicationManagement.swift
-//  Nyxian
-//
-//  Created by SeanIsTethered on 02.09.25.
-//
+/*
+ Copyright (C) 2025 cr4zyengineer
+
+ This file is part of Nyxian.
+
+ Nyxian is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Nyxian is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
+*/
 
 class ApplicationManagementViewController: UIThemedTableViewController, UITextFieldDelegate {
     var applications: [LDEApplicationObject] = []
@@ -49,5 +61,11 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
             
             return UIMenu(title: "", children: [openAction, deleteAction])
         }
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let application = applications[indexPath.row]
+        LDEMultitaskManager.shared().openApplication(withBundleID: application.bundleIdentifier)
     }
 }
