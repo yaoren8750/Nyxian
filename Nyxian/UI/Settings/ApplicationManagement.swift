@@ -23,8 +23,12 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Application Management"
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         self.applications = LDEApplicationWorkspace.shared().allApplicationObjects()
+        self.tableView.reloadData()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
