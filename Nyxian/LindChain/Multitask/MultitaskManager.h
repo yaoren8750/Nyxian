@@ -32,7 +32,7 @@
 
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
 - (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
-
+- (void)terminateApplicationWithBundleID:(NSString*)bundleID;
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
 
 @end

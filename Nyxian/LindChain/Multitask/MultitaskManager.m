@@ -139,6 +139,20 @@
     }
 }
 
+- (void)terminateApplicationWithBundleID:(NSString*)bundleID
+{
+    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
+    for(DecoratedAppSceneViewController *window in self.windows)
+    {
+        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
+        if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID])
+        {
+            [window closeWindow];
+            break;
+        }
+    }
+}
+
 ///
 /// Removes a window object from instance windows (meant to be exclusively for the windows to call back)
 ///

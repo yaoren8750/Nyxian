@@ -37,6 +37,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
             
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] _ in
                 guard let self = self else { return }
+                LDEMultitaskManager.shared().terminateApplication(withBundleID: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
                     if let index = self.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
                         self.applications.remove(at: index)
