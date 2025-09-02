@@ -105,6 +105,7 @@
         dispatch_semaphore_signal(self.sema);
     }];
     dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[NSFileManager defaultManager] removeItemAtPath:temporaryPackage error:nil];
     return result;
 }
 
