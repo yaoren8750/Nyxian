@@ -28,13 +28,6 @@
  */
 int main(int argc, char * argv[]) {
     @autoreleasepool {
-        NSString *appPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEAppPath"];
-        if(appPath) {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"LDEAppPath"];
-            [NyxianDebugger shared];
-            invokeAppMain(appPath, [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHomePath"], 0, nil);
-        } else {
-            return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-        }
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }
 }
