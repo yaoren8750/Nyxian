@@ -181,6 +181,18 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     
     LDEApplicationObject *appObj = [[LDEApplicationObject alloc] init];
     appObj.bundleIdentifier = bundle.bundleIdentifier;
+    appObj.bundlePath = bundle.bundlePath;
+    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    if (!displayName) {
+        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
+    }
+    if (!displayName) {
+        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleExecutable"];
+    }
+    if (!displayName) {
+        displayName = @"Unknown App";
+    }
+    appObj.displayName = displayName;
     
     reply(appObj);
 }

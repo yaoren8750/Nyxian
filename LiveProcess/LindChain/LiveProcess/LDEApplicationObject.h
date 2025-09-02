@@ -25,6 +25,8 @@
 @interface LDEApplicationObject : NSObject <NSSecureCoding>
 
 @property (nonatomic) NSString *bundleIdentifier;
+@property (nonatomic) NSString *bundlePath;
+@property (nonatomic) NSString *displayName;
 
 @end
 

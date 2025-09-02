@@ -20,9 +20,10 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
         
-        cell.textLabel?.text = applications[indexPath.row].bundleIdentifier
+        cell.textLabel?.text = applications[indexPath.row].displayName
+        cell.detailTextLabel?.text = applications[indexPath.row].bundleIdentifier
         
         return cell
     }
@@ -31,11 +32,11 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         let application = applications[indexPath.row]
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
-            let openAction = UIAction(title: "Open", image: UIImage(systemName: "arrow.up.right.square")) { _ in
+            let openAction = UIAction(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill")) { _ in
                 LDEMultitaskManager.shared().openApplication(withBundleID: application.bundleIdentifier)
             }
             
-            let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] _ in
+            let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
                 guard let self = self else { return }
                 LDEMultitaskManager.shared().terminateApplication(withBundleID: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {

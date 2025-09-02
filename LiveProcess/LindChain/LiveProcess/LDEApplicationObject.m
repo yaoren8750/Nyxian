@@ -27,11 +27,15 @@
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
     [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
+    [coder encodeObject:self.bundlePath forKey:@"bundlePath"];
+    [coder encodeObject:self.displayName forKey:@"displayName"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     if (self = [super init]) {
         _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
+        _bundlePath = [coder decodeObjectOfClass:[NSString class] forKey:@"bundlePath"];
+        _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
     }
     return self;
 }
