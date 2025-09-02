@@ -32,6 +32,8 @@
 
 @interface LDEApplicationWorkspace : NSObject
 
+@property (nonatomic,strong,readwrite) NSObject<LDEApplicationWorkspaceProxyProtocol> *proxy;
+
 - (instancetype)init;
 + (LDEApplicationWorkspace*)shared;
 

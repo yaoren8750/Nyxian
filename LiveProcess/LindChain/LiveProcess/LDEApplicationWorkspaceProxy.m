@@ -23,7 +23,6 @@
 @interface LDEApplicationWorkspace ()
 
 @property (nonatomic,strong,readonly) NSExtension *extension;
-@property (nonatomic,strong,readwrite) NSObject<LDEApplicationWorkspaceProxyProtocol> *proxy;
 @property (nonatomic,strong,readonly) dispatch_semaphore_t sema;
 
 @end
@@ -49,12 +48,12 @@
     _extension.preferredLanguages = @[];
     
     NSExtensionItem *item = [NSExtensionItem new];
-    /*item.userInfo = @{
+    item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"payload": self.project.packagePath,
     };
     
-    __weak typeof(self) weakSelf = self;
+    /*__weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
         NSLog(@"Extension down!");
         [weakSelf appTerminationCleanUp];

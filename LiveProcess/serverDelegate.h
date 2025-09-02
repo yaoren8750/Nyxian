@@ -26,6 +26,7 @@
 
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply;
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
+- (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
 
 @end
 

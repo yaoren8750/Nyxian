@@ -19,6 +19,7 @@
 
 #import "serverDelegate.h"
 #import <LindChain/LiveContainer/LCUtils.h>
+#import "LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
 
 @implementation TestService
 
@@ -31,6 +32,24 @@
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply
 {
     reply([[NSFileHandle alloc] initWithFileDescriptor:STDOUT_FILENO]);
+}
+
+- (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
+{
+    NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
+    connection.interruptionHandler = ^{
+        NSLog(@"Connection to app interrupted");
+        exit(0);
+    };
+    connection.invalidationHandler = ^{
+        NSLog(@"Connection to app invalidated");
+        exit(0);
+    };
+    
+    [connection activate];
+    
+    [[LDEApplicationWorkspace shared] setProxy:[connection remoteObjectProxy]];
 }
 
 @end
