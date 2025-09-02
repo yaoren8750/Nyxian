@@ -72,7 +72,7 @@ import UniformTypeIdentifiers
     
     @objc func performRefresh() {
         guard let visibleRows = tableView.indexPathsForVisibleRows else { return }
-
+        
         UIView.animate(withDuration: 0.3, animations: {
             for indexPath in visibleRows {
                 if let cell = self.tableView.cellForRow(at: indexPath) {
@@ -84,7 +84,7 @@ import UniformTypeIdentifiers
             self.entries = FileListEntry.getEntries(ofPath: self.path)
             self.tableView.reloadData()
             self.tableView.layoutIfNeeded()
-
+            
             let newVisibleRows = self.tableView.indexPathsForVisibleRows ?? []
             for indexPath in newVisibleRows {
                 if let cell = self.tableView.cellForRow(at: indexPath) {
@@ -92,7 +92,7 @@ import UniformTypeIdentifiers
                     cell.transform = CGAffineTransform(translationX: 0, y: 20)
                 }
             }
-
+            
             UIView.animate(withDuration: 0.4, delay: 0, options: [.curveEaseOut], animations: {
                 for indexPath in newVisibleRows {
                     if let cell = self.tableView.cellForRow(at: indexPath) {
@@ -101,7 +101,7 @@ import UniformTypeIdentifiers
                     }
                 }
             }, completion: nil)
-
+            
             self.refreshControl?.endRefreshing()
         })
     }
@@ -126,7 +126,8 @@ import UniformTypeIdentifiers
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
         if UIDevice.current.userInterfaceIdiom == .pad, !self.isSublink {
-            self.navigationItem.setLeftBarButton(UIBarButtonItem(primaryAction: UIAction(title: "Close") { _ in
+            self.navigationItem.setLeftBarButton(UIBarButtonItem(primaryAction: UIAction(title: "Close") { [weak self] _ in
+                guard let self = self else { return }
                 UserDefaults.standard.set(nil, forKey: "LDELastProjectSelected")
                 self.dismiss(animated: true)
             }), animated: false)
@@ -144,19 +145,69 @@ import UniformTypeIdentifiers
         }
     }
     
+    enum CreateEntryMode {
+        case file
+        case folder
+    }
+    
+    func createEntry(mode: CreateEntryMode) {
+        let alert: UIAlertController = UIAlertController(
+            title: "Create \((mode == .file) ? "File" : "Folder")",
+            message: nil,
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.placeholder = "Name"
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Submit", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
+            
+            var isDirectory: ObjCBool = ObjCBool(false)
+            if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
+                self.presentConfirmationAlert(
+                    title: mode == .folder ? "Error" : "Warning",
+                    message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(!isDirectory.boolValue ? "" : "Folders cannot be removed!")",
+                    confirmTitle: "Overwrite",
+                    confirmStyle: .destructive,
+                    confirmHandler: {
+                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                        self.replaceFile(destination: destination)
+                    },
+                    addHandler: mode == .file && !isDirectory.boolValue
+                )
+            } else {
+                if mode == .file {
+                    try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
+                } else {
+                    try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+                }
+                self.addFile(destination: destination)
+            }
+        })
+        
+        self.present(alert, animated: true)
+    }
+    
     func generateMenu() -> UIMenu {
         var rootMenuChildren: [UIMenu] = []
         
         // Project Roots Menu in case its the root of the project obviously
         if !self.isSublink, UIDevice.current.userInterfaceIdiom != .pad, let project = self.project {
             var projectMenuElements: [UIMenuElement] = []
-            projectMenuElements.append(UIAction(title: "Run", image: UIImage(systemName: "play.fill"), handler: { _ in
+            projectMenuElements.append(UIAction(title: "Run", image: UIImage(systemName: "play.fill"), handler: { [weak self] _ in
+                guard let self = self else { return }
                 buildProjectWithArgumentUI(targetViewController: self, project: project, buildType: .RunningApp)
             }))
-            projectMenuElements.append(UIAction(title: "Export", image: UIImage(systemName: "archivebox.fill"), handler: { _ in
+            projectMenuElements.append(UIAction(title: "Export", image: UIImage(systemName: "archivebox.fill"), handler: { [weak self] _ in
+                guard let self = self else { return }
                 buildProjectWithArgumentUI(targetViewController: self, project: project, buildType: .InstallPackagedApp)
             }))
-            projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { _ in
+            projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { [weak self] _ in
+                guard let self = self else { return }
                 let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
@@ -167,7 +218,8 @@ import UniformTypeIdentifiers
                 } else {
                     return "waveform.path.ecg.rectangle.fill"
                 }
-            }()), handler: { _ in
+            }()), handler: { [weak self] _ in
+                guard let self = self else { return }
                 let loggerView = UINavigationController(rootViewController: LoggerViewController())
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
@@ -183,59 +235,15 @@ import UniformTypeIdentifiers
         }
         
         // The generic file system menu
-        enum CreateEntryMode {
-            case file
-            case folder
-        }
-        
-        func createEntry(mode: CreateEntryMode) {
-            let alert: UIAlertController = UIAlertController(
-                title: "Create \((mode == .file) ? "File" : "Folder")",
-                message: nil,
-                preferredStyle: .alert
-            )
-            
-            alert.addTextField { textField in
-                textField.placeholder = "Name"
-            }
-            
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Submit", style: .default) { _ in
-                let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(alert.textFields![0].text ?? "")
-                
-                var isDirectory: ObjCBool = ObjCBool(false)
-                if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory) {
-                    self.presentConfirmationAlert(
-                        title: mode == .folder ? "Error" : "Warning",
-                        message: "\(isDirectory.boolValue ? "Folder" : "File") with the name \"\(destination.lastPathComponent)\" already exists. \(!isDirectory.boolValue ? "" : "Folders cannot be removed!")",
-                        confirmTitle: "Overwrite",
-                        confirmStyle: .destructive,
-                        confirmHandler: {
-                            try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                            self.replaceFile(destination: destination)
-                        },
-                        addHandler: mode == .file && !isDirectory.boolValue
-                    )
-                } else {
-                    if mode == .file {
-                        try? String(getFileContentForName(filename: destination.lastPathComponent)).write(to: destination, atomically: true, encoding: .utf8)
-                    } else {
-                        try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
-                    }
-                    self.addFile(destination: destination)
-                }
-            })
-            
-            self.present(alert, animated: true)
-        }
-        
         var fileMenuElements: [UIMenuElement] = []
         var createMenuElements: [UIMenuElement] = []
-        createMenuElements.append(UIAction(title: "File", image: UIImage(systemName: "doc.fill"), handler: { _ in
-            createEntry(mode: .file)
+        createMenuElements.append(UIAction(title: "File", image: UIImage(systemName: "doc.fill"), handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.createEntry(mode: .file)
         }))
-        createMenuElements.append(UIAction(title: "Folder", image: UIImage(systemName: "folder.fill"), handler: { _ in
-            createEntry(mode: .folder)
+        createMenuElements.append(UIAction(title: "Folder", image: UIImage(systemName: "folder.fill"), handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.createEntry(mode: .folder)
         }))
         fileMenuElements.append(UIMenu(title: "New", image: UIImage(systemName: "plus.circle.fill"), children: createMenuElements))
         fileMenuElements.append(UIAction(title: "Paste", image: UIImage(systemName: {
@@ -244,7 +252,9 @@ import UniformTypeIdentifiers
             } else {
                 return "doc.on.doc.fill"
             }
-        }()), handler: { _ in
+        }()), handler: { [weak self] _ in
+            guard let self = self else { return }
+            
             let destination: URL = URL(fileURLWithPath: self.path).appendingPathComponent(URL(fileURLWithPath: PasteBoardServices.path).lastPathComponent)
             
             var isDirectory: ObjCBool = ObjCBool(false)
@@ -265,7 +275,8 @@ import UniformTypeIdentifiers
                 self.addFile(destination: destination)
             }
         }))
-        fileMenuElements.append(UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
+        fileMenuElements.append(UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { [weak self] _ in
+            guard let self = self else { return }
             let documentPicker: UIDocumentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
             documentPicker.allowsMultipleSelection = true
             documentPicker.modalPresentationStyle = .pageSheet
@@ -294,7 +305,8 @@ import UniformTypeIdentifiers
     }
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] suggestedActions in
+            guard let self = self else { return UIMenu() }
             
             let copyAction = UIAction(title: "Copy", image: UIImage(systemName: {
                 if #available(iOS 17.0, *) {
@@ -305,14 +317,16 @@ import UniformTypeIdentifiers
             }())) { action in
                 PasteBoardServices.copy(mode: .copy, path: self.entries[indexPath.row].path)
             }
-            let moveAction = UIAction(title: "Move", image: UIImage(systemName: "arrow.right")) { action in
+            let moveAction = UIAction(title: "Move", image: UIImage(systemName: "arrow.right")) { [weak self] action in
+                guard let self = self else { return }
                 PasteBoardServices.onMove = {
                     self.entries.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
                 PasteBoardServices.copy(mode: .move, path: self.entries[indexPath.row].path)
             }
-            let renameAction = UIAction(title: "Rename", image: UIImage(systemName: "rectangle.and.pencil.and.ellipsis")) { action in
+            let renameAction = UIAction(title: "Rename", image: UIImage(systemName: "rectangle.and.pencil.and.ellipsis")) { [weak self] action in
+                guard let self = self else { return }
                 let entry: FileListEntry = self.entries[indexPath.row]
                 
                 let alert: UIAlertController = UIAlertController(
@@ -327,7 +341,8 @@ import UniformTypeIdentifiers
                 }
                 
                 alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                alert.addAction(UIAlertAction(title: "Rename", style: .default, handler: { _ in
+                alert.addAction(UIAlertAction(title: "Rename", style: .default, handler: { [weak self] _ in
+                    guard let self = self else { return }
                     try? FileManager.default.moveItem(atPath: "\(self.path)/\(entry.name)", toPath: "\(self.path)/\(alert.textFields![0].text ?? "0")")
                     
                     self.entries.remove(at: indexPath.row)
@@ -337,11 +352,13 @@ import UniformTypeIdentifiers
                 
                 self.present(alert, animated: true)
             }
-            let shareAction = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up.fill")) { action in
+            let shareAction = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up.fill")) { [weak self] action in
+                guard let self = self else { return }
                 let entry: FileListEntry = self.entries[indexPath.row]
                 share(url: URL(fileURLWithPath: "\(self.path)/\(entry.name)"), remove: false)
             }
-            let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { action in
+            let deleteAction = UIAction(title: "Remove", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] action in
+                guard let self = self else { return }
                 let entry = self.entries[indexPath.row]
                 let fileUrl: URL = URL(fileURLWithPath: "\(self.path)/\(entry.name)")
                 if ((try? FileManager.default.removeItem(at: fileUrl)) != nil), let project = self.project {
@@ -411,7 +428,7 @@ import UniformTypeIdentifiers
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .light)
         label.translatesAutoresizingMaskIntoConstraints = false
-
+        
         if entry.type == .file {
             switch ext {
             case "c":
@@ -446,21 +463,21 @@ import UniformTypeIdentifiers
         }
         
         cell.contentView.addSubview(iconView)
-
+        
         var constraints: [NSLayoutConstraint] = [
             iconView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 15),
             iconView.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 25),
             iconView.heightAnchor.constraint(equalToConstant: 25)
         ]
-
+        
         if label.superview != nil {
             constraints.append(contentsOf: [
                 label.centerXAnchor.constraint(equalTo: iconView.centerXAnchor),
                 label.centerYAnchor.constraint(equalTo: iconView.centerYAnchor)
             ])
         }
-
+        
         NSLayoutConstraint.activate(constraints)
         
         cell.textLabel?.translatesAutoresizingMaskIntoConstraints = false
@@ -484,10 +501,10 @@ import UniformTypeIdentifiers
         plusLabel.font = .systemFont(ofSize: 10, weight: .light)
         plusLabel.textColor = color
         plusLabel.translatesAutoresizingMaskIntoConstraints = false
-
+        
         view.addSubview(baseLabel)
         view.addSubview(plusLabel)
-
+        
         NSLayoutConstraint.activate([
             baseLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             baseLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -540,10 +557,6 @@ import UniformTypeIdentifiers
         } else {
             addFile(destination: destination)
         }
-    }
-    
-    deinit {
-        print("FileListViewController deinit")
     }
 }
 
