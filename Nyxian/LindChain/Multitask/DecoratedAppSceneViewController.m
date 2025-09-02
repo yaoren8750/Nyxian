@@ -190,8 +190,9 @@ void UIKitFixesInit(void) {
     [self.resizeHandle addGestureRecognizer:resizeGesture];
     [self.view addSubview:self.resizeHandle];
     
-    self.view.layer.borderWidth = 1.0;
-    self.view.layer.borderColor = UIColor.secondarySystemBackgroundColor.CGColor;
+    self.view.layer.borderWidth = 0.5;
+    self.view.layer.borderColor = UIColor.systemGray3Color.CGColor;
+    //self.view.layer.borderColor = UIColor.secondarySystemBackgroundColor.CGColor;
     
     [self addChildViewController:_appSceneVC];
     [self.view insertSubview:_appSceneVC.view atIndex:0];

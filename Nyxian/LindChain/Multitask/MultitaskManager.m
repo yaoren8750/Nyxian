@@ -23,8 +23,9 @@
 
 - (instancetype)init
 {
+    self = [super init];
     _windows = [[NSMutableArray alloc] init];
-    return [super init];
+    return self;
 }
 
 + (LDEMultitaskManager*)shared
@@ -35,12 +36,6 @@
         multitaskManagerSingleton = [[LDEMultitaskManager alloc] init];
     });
     return multitaskManagerSingleton;
-}
-
-- (DecoratedAppSceneViewController*)windowForBundleID:(NSString*)bundleID
-{
-    for(DecoratedAppSceneViewController *window in self.windows) if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID]) return window;
-    return nil;
 }
 
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID
@@ -104,6 +99,19 @@
     return result;
 }
 
+- (void)closeApplicationWithBundleID:(NSString*)bundleID
+{
+    DecoratedAppSceneViewController *window = [self windowForBundleID:bundleID];;
+    if(window) [window closeWindow];
+}
+
+- (DecoratedAppSceneViewController*)windowForBundleID:(NSString*)bundleID
+{
+    for(DecoratedAppSceneViewController *window in self.windows) if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID]) return window;
+    return nil;
+}
+
+
 - (void)bringWindowToFrontWithBundleID:(NSString*)bundleID
 {
     DecoratedAppSceneViewController *existingWindow = [self windowForBundleID:bundleID];
@@ -112,12 +120,6 @@
         [self.targetView bringSubviewToFront:existingWindow.view];
         return;
     }
-}
-
-- (void)terminateApplicationWithBundleID:(NSString*)bundleID
-{
-    DecoratedAppSceneViewController *window = [self windowForBundleID:bundleID];;
-    if(window) [window closeWindow];
 }
 
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window

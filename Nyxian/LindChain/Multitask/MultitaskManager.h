@@ -33,10 +33,10 @@
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID
                  terminateIfRunning:(BOOL)terminate;
+- (void)closeApplicationWithBundleID:(NSString*)bundleID;
+
+- (DecoratedAppSceneViewController*)windowForBundleID:(NSString*)bundleID;
 - (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
-- (void)terminateApplicationWithBundleID:(NSString*)bundleID;
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
 
 @end
-
-pid_t proc_spawn_ios(NSString *windowTitle);
