@@ -21,3 +21,4 @@
 
 BOOL unzipArchiveAtPath(NSString *zipPath, NSString *destinationPath);
 BOOL unzipArchiveFromFileHandle(NSFileHandle *zipFileHandle, NSString *destinationPath);
+BOOL zipDirectoryAtPath(NSString *directoryPath, NSString *zipPath);

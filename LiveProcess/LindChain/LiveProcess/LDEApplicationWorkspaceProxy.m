@@ -20,6 +20,7 @@
 #import "LDEApplicationWorkspaceProxy.h"
 #import <LindChain/LiveContainer/FoundationPrivate.h>
 #import "../../serverDelegate.h"
+#import "../LiveContainer/zip.h"
 
 @interface LDEApplicationWorkspace ()
 
@@ -97,7 +98,20 @@
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
 {
     __block BOOL result = NO;
-    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:bundlePath] withReply:^(BOOL replyResult){
+    NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
+    zipDirectoryAtPath(bundlePath, temporaryPackage);
+    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
+- (BOOL)installApplicationAtPackagePath:(NSString *)packagePath
+{
+    __block BOOL result = NO;
+    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:packagePath] withReply:^(BOOL replyResult){
         result = replyResult;
         dispatch_semaphore_signal(self.sema);
     }];

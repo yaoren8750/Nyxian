@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		793FCD242E6730740011B3F5 /* libarchive.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BF9A8E2E62BA7D00C60D4C /* libarchive.tbd */; };
 		7944B5642DEC712700834134 /* PrivateConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7944B5632DEC712700834134 /* PrivateConfig.xcconfig */; };
 		7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
 		79BF97F82E6291EE00C60D4C /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79281CBF2E3A44CA00E983C9 /* UniformTypeIdentifiers.framework */; };
@@ -100,6 +101,7 @@
 		79BF98402E62931E00C60D4C /* Exceptions for "LiveProcess" folder in "Nyxian" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				LindChain/LiveContainer/zip.m,
 				LindChain/LiveProcess/LDEApplicationWorkspaceProxy.m,
 				serverDelegate.m,
 			);
@@ -223,6 +225,7 @@
 				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
 				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
 				7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */,
+				793FCD242E6730740011B3F5 /* libarchive.tbd in Frameworks */,
 				AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */,
 				AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */,
 				AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */,

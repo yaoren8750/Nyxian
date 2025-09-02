@@ -11,6 +11,7 @@
 #import "PiPManager.h"
 #import "Localization.h"
 #import "../../../LiveProcess/serverDelegate.h"
+#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
 
 @interface AppSceneViewController()
 @property int resizeDebounceToken;
@@ -48,7 +49,7 @@
     // init extension
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
-        [self.delegate appSceneVC:self didInitializeWithError:[NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"LiveProcess extension not found. Please reinstall LiveContainer and select Keep Extensions"}]];
+        [self.delegate appSceneVC:self didInitializeWithError:[NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"LiveProcess extension not found. Please reinstall Nyxian and select Keep Extensions"}]];
         return NO;
     }
     
@@ -63,10 +64,11 @@
     _extension.preferredLanguages = @[];
     
     NSExtensionItem *item = [NSExtensionItem new];
+    NSLog(@"App install test: %d", [[LDEApplicationWorkspace shared] installApplicationAtBundlePath:self.project.bundlePath]);
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"application",
-        @"payload": self.project.packagePath,
+        @"bundleid": self.project.projectConfig.bundleid,
     };
     
     __weak typeof(self) weakSelf = self;

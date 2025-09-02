@@ -22,6 +22,7 @@
 #ifndef MY_LIBARCHIVE_H
 #define MY_LIBARCHIVE_H
 
+#include <unistd.h>
 #include <stddef.h>
 
 typedef int64_t la_int64_t;
@@ -52,18 +53,34 @@ int archive_read_free(archive *a);
 
 // Writer functions
 archive* archive_write_disk_new(void);
+int archive_write_open_filename(struct archive *a, const char *filename);
+ssize_t archive_write_data(struct archive *a, const void *buff, size_t size);
 int archive_write_disk_set_options(archive *a, int flags);
 int archive_write_header(archive *a, archive_entry *entry);
 int archive_write_data_block(archive *a, const void *buff, size_t size, long long offset);
 int archive_write_close(archive *a);
 int archive_write_free(archive *a);
+archive* archive_write_new(void);
+int archive_write_set_format_zip(struct archive *a);
 
 // Entry functions
 const char* archive_entry_pathname(archive_entry *entry);
 void archive_entry_set_pathname(archive_entry *entry, const char *pathname);
+void archive_entry_set_size(struct archive_entry *entry, la_int64_t size);
+void archive_entry_set_filetype(struct archive_entry *entry, unsigned int filetype);
+void archive_entry_set_perm(struct archive_entry *entry, int perm);
+void archive_entry_free(struct archive_entry *entry);
+struct archive_entry *archive_entry_new(void);
 
 // Error functions
 const char* archive_error_string(archive *a);
+
+#ifndef AE_IFREG
+#define AE_IFREG 0100000  // regular file
+#endif
+#ifndef AE_IFDIR
+#define AE_IFDIR 0040000  // directory
+#endif
 
 #endif // MY_LIBARCHIVE_H
 
@@ -152,5 +169,52 @@ BOOL unzipArchiveFromFileHandle(NSFileHandle *zipFileHandle, NSString *destinati
     archive_read_free(a);
     archive_write_close(ext);
     archive_write_free(ext);
+    return YES;
+}
+
+BOOL zipDirectoryAtPath(NSString *directoryPath, NSString *zipPath) {
+    struct archive *a;
+    struct archive_entry *entry;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSDirectoryEnumerator *enumerator;
+    NSString *filePath;
+
+    // Create new archive for writing
+    a = archive_write_new();
+    archive_write_set_format_zip(a); // Set format to ZIP
+
+    // Open archive for writing to filename
+    if (archive_write_open_filename(a, [zipPath fileSystemRepresentation]) != ARCHIVE_OK) {
+        NSLog(@"Failed to create archive: %s", archive_error_string(a));
+        archive_write_free(a);
+        return NO;
+    }
+
+    // Enumerate all files
+    enumerator = [fileManager enumeratorAtPath:directoryPath];
+    while ((filePath = [enumerator nextObject])) {
+        NSString *fullPath = [directoryPath stringByAppendingPathComponent:filePath];
+        BOOL isDir;
+        if ([fileManager fileExistsAtPath:fullPath isDirectory:&isDir]) {
+            entry = archive_entry_new();
+            archive_entry_set_pathname(entry, [filePath UTF8String]);
+
+            NSDictionary *attributes = [fileManager attributesOfItemAtPath:fullPath error:nil];
+            archive_entry_set_size(entry, isDir ? 0 : [attributes[NSFileSize] longLongValue]);
+            archive_entry_set_filetype(entry, isDir ? AE_IFDIR : AE_IFREG);
+            archive_entry_set_perm(entry, [attributes[NSFilePosixPermissions] intValue]);
+
+            // Write header
+            if (archive_write_header(a, entry) == ARCHIVE_OK && !isDir) {
+                NSData *data = [NSData dataWithContentsOfFile:fullPath];
+                archive_write_data(a, [data bytes], [data length]);
+            }
+
+            archive_entry_free(entry);
+        }
+    }
+
+    archive_write_close(a);
+    archive_write_free(a);
     return YES;
 }

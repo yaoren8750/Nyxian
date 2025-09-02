@@ -38,6 +38,7 @@
 + (LDEApplicationWorkspace*)shared;
 
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath;
+- (BOOL)installApplicationAtPackagePath:(NSString*)packagePath;
 - (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
 

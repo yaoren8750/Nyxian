@@ -163,10 +163,8 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 BOOL clearTemporaryDirectory(NSError **error);
 - (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply {
     clearTemporaryDirectory(nil);
-    NSString *unzippedPath = [NSString stringWithFormat:@"%@/payload.ipa", NSTemporaryDirectory()];
-    unzipArchiveFromFileHandle(bundleHandle, unzippedPath);
-    NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
-    reply([[LDEApplicationWorkspace shared] installApplicationAtBundlePath:bundlePath]);
+    unzipArchiveFromFileHandle(bundleHandle, NSTemporaryDirectory());
+    reply([[LDEApplicationWorkspace shared] installApplicationAtBundlePath:NSTemporaryDirectory()]);
 }
 
 @end

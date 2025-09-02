@@ -26,6 +26,7 @@
 #import "LindChain/LiveContainer/exec.h"
 #import <LindChain/litehook/src/litehook.h>
 
+NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
 @interface LiveProcessHandler : NSObject<NSExtensionRequestHandling>
@@ -59,7 +60,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     // MARK: Tested it, the endpoint is definetly transmitted
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
-    NSString *payloadPath = appInfo[@"payload"];
+    NSString *bundleid = appInfo[@"bundleid"];
     NSString *mode = appInfo[@"mode"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
@@ -98,18 +99,12 @@ int LiveProcessMain(int argc, char *argv[]) {
     }
     else
     {
-        // Application
-        dispatch_group_enter(group);
-        __block NSFileHandle *payloadHandle;
-        [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
-            payloadHandle = fileHandle;
-            dispatch_group_leave(group);
-        }];
-        
-        dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-        
         // MARK: Keep it alive
-        exec(payloadHandle);
+        char *argv[1] = { NULL };
+        int argc = 0;
+        NSBundle *bundle = [[LDEApplicationWorkspace shared] applicationBundleForBundleID:bundleid];
+        NSString *error = invokeAppMain(bundle.bundlePath, [[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundle.bundleIdentifier], argc, argv);
+        NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     
     return 0;
