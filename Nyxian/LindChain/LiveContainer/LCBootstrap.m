@@ -184,7 +184,10 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
-    UIWindowHooksInit();
+    
+    // TODO: No Debugger like that anymore, in the future use Mach debug server directly on the extensions task port
+    //UIWindowHooksInit();
+    
     UIKitGuestHooksInit();
     initDead10ccFix();
     DyldHooksInit();
