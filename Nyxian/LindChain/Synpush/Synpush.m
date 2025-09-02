@@ -180,7 +180,7 @@ uint8_t mapSeverity(enum CXDiagnosticSeverity severity) {
 ///
 /// Call this function when deinitilizing the useing view
 ///
-- (void)deinit
+- (void)dealloc
 {
     pthread_mutex_lock(&_mutex);
     

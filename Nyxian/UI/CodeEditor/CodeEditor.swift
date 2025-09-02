@@ -25,17 +25,6 @@ import TreeSitterObjc
 import TreeSitterXML
 
 // MARK: - OnDissapear Container
-class OnDisappearUIView: UIView {
-    var onDisappear: () -> Void = {}
-
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window == nil {
-            onDisappear()
-        }
-    }
-}
-
 class CodeEditorViewController: UIViewController {
     private(set) var path: String
     private(set) var textView: TextView
@@ -100,13 +89,11 @@ class CodeEditorViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view = OnDisappearUIView()
-        
         do {
             self.textView.text = try String(contentsOf: URL(fileURLWithPath: self.path), encoding: .utf8)
         } catch {
             if UIDevice.current.userInterfaceIdiom == .pad {
-                // Handle it
+                // FIXME: Handle file closes
             } else {
                 self.dismiss(animated: true)
             }
@@ -208,14 +195,6 @@ class CodeEditorViewController: UIViewController {
         
         self.coordinator = Coordinator(parent: self)
         self.textView.editorDelegate = self.coordinator
-        
-        // TODO: ReImplement that for iPadOS
-        if UIDevice.current.userInterfaceIdiom != .pad {
-            (self.view as! OnDisappearUIView).onDisappear = { [weak self] in
-                guard let synpushServer = self?.synpushServer else { return }
-                synpushServer.deinit()
-            }
-        }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             guard var line = self.line else { return }
@@ -336,6 +315,11 @@ class CodeEditorViewController: UIViewController {
                                                selector: #selector(keyboardWillHide),
                                                name: UIResponder.keyboardWillHideNotification,
                                                object: nil)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
     }
     
     @objc func keyboardWillShow(notification: NSNotification) {

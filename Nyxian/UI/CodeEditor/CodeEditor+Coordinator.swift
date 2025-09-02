@@ -32,15 +32,12 @@ import Runestone
 
 // MARK: - COORDINATOR
 class Coordinator: NSObject, TextViewDelegate {
-    private let parent: CodeEditorViewController
+    private weak var parent: CodeEditorViewController?
     private var entries: [UInt64:(NeoButton?,UIView?)] = [:]
     
     private(set) var isProcessing: Bool = false
     private(set) var isInvalidated: Bool = false
     private(set) var needsAnotherProcess: Bool = false
-    
-    private let textInputView: TextInputView?
-    private let textView: TextView
 
     private var debounce: Debouncer?
     private(set) var diag: [Synitem] = []
@@ -52,23 +49,25 @@ class Coordinator: NSObject, TextViewDelegate {
     
     init(parent: CodeEditorViewController) {
         self.parent = parent
-        self.textView = parent.textView
-        self.textInputView = parent.textView.getTextInputView()
         super.init()
-        guard self.parent.synpushServer != nil else { return }
-        self.debounce = Debouncer(delay: 1.5) {
+        guard self.parent?.synpushServer != nil else { return }
+        self.debounce = Debouncer(delay: 1.5) { [weak self] in
+            guard let self = self else { return }
             self.isProcessing = true
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.parent.synpushServer!.reparseFile(self.textView.text)
-                self.diag = self.parent.synpushServer!.getDiagnostics()
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self = self else { return }
+                self.parent?.synpushServer?.reparseFile(self.parent?.textView.text)
+                self.diag = self.parent?.synpushServer?.getDiagnostics() ?? []
                 self.updateDiag()
             }
         }
-        self.textViewDidChange(self.parent.textView)
+        if let textView = self.parent?.textView {
+            self.textViewDidChange(textView)
+        }
     }
     
     func textViewDidChange(_ textView: TextView) {
-        guard self.parent.synpushServer != nil else { return }
+        guard self.parent?.synpushServer != nil else { return }
         if !self.isInvalidated {
             self.isInvalidated = true
             for item in self.entries {
@@ -105,7 +104,7 @@ class Coordinator: NSObject, TextViewDelegate {
         if !self.entries.isEmpty {
             for item in self.entries {
                 DispatchQueue.main.async {
-                    guard let rect = self.textView.rectForLine(Int(item.key)) else {
+                    guard let rect = self.parent?.textView.rectForLine(Int(item.key)) else {
                         UIView.animate(withDuration: 0.3, animations: {
                             item.value.0!.alpha = 0
                             item.value.1!.alpha = 0
@@ -116,8 +115,8 @@ class Coordinator: NSObject, TextViewDelegate {
                         })
                         return
                     }
-                    item.value.0!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height)
-                    item.value.1!.frame = CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height)
+                    item.value.0!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.gutterWidth ?? 0.0, height: rect.height)
+                    item.value.1!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.bounds.size.width ?? 0.0, height: rect.height)
                 }
             }
         }
@@ -150,34 +149,35 @@ class Coordinator: NSObject, TextViewDelegate {
             
             var rect: CGRect?
             DispatchQueue.main.sync {
-                rect = textView.rectForLine(Int(item.line))
+                rect = self.parent?.textView.rectForLine(Int(item.line))
             }
             guard let rect = rect else { continue }
             
             let properties: (String,UIColor) = self.vtkey[Int(item.type)]
             
             DispatchQueue.main.async {
-                let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: self.textView.bounds.size.width, height: rect.height))
+                let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.bounds.size.width ?? 0.0, height: rect.height))
                 view.backgroundColor = properties.1
                 view.isUserInteractionEnabled = false
                 
-                let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent.textView.gutterWidth, height: rect.height))
+                let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.gutterWidth ?? 0.0, height: rect.height))
                 
                 button.backgroundColor = properties.1.withAlphaComponent(1.0)
-                let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent.textView.theme.lineNumberFont.pointSize)
+                let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent?.textView.theme.lineNumberFont.pointSize ?? 0.0)
                 let image = UIImage(systemName: properties.0, withConfiguration: configuration)
                 button.setImage(image, for: .normal)
                 button.imageView?.tintColor = UIColor.systemBackground
                 
                 var widthConstraint: NSLayoutConstraint?
                 
-                button.setAction {
+                button.setAction { [weak self, weak button] in
+                    guard let self = self, let button = button else { return }
                     button.stateview = !button.stateview
                     
                     if button.stateview {
                         DispatchQueue.main.async {
-                            let shift: CGFloat = self.parent.textView.gutterWidth
-                            let finalWidth = self.textView.bounds.width / 1.5
+                            guard let shift: CGFloat = self.parent?.textView.gutterWidth else { return }
+                            let finalWidth = (self.parent?.textView.bounds.width ?? 0.0) / 1.5
                             
                             let modHeight = rect.height + 10
                             
@@ -192,30 +192,33 @@ class Coordinator: NSObject, TextViewDelegate {
                             button.errorview = preview
                             
                             preview.alpha = 0
-                            self.textView.addSubview(preview)
                             
-                            widthConstraint = preview.widthAnchor.constraint(equalToConstant: 0)
-                            NSLayoutConstraint.activate([
-                                preview.leadingAnchor.constraint(equalTo: self.textView.leadingAnchor, constant: shift),
-                                preview.topAnchor.constraint(equalTo: self.textView.topAnchor, constant: rect.origin.y),
-                                widthConstraint!
-                            ])
-                            
-                            self.textView.layoutIfNeeded()
-                            
-                            UIView.animate(
-                                withDuration: 0.5,
-                                delay: 0,
-                                usingSpringWithDamping: 0.8,
-                                initialSpringVelocity: 0.5,
-                                options: [.curveEaseOut],
-                                animations: {
-                                    preview.alpha = 1
-                                    widthConstraint!.constant = finalWidth
-                                    self.textView.layoutIfNeeded()
-                                },
-                                completion: nil
-                            )
+                            if let textView = self.parent?.textView {
+                                textView.addSubview(preview)
+                                
+                                widthConstraint = preview.widthAnchor.constraint(equalToConstant: 0)
+                                NSLayoutConstraint.activate([
+                                    preview.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: shift),
+                                    preview.topAnchor.constraint(equalTo: textView.topAnchor, constant: rect.origin.y),
+                                    widthConstraint!
+                                ])
+                                
+                                textView.layoutIfNeeded()
+                                
+                                UIView.animate(
+                                    withDuration: 0.5,
+                                    delay: 0,
+                                    usingSpringWithDamping: 0.8,
+                                    initialSpringVelocity: 0.5,
+                                    options: [.curveEaseOut],
+                                    animations: {
+                                        preview.alpha = 1
+                                        widthConstraint!.constant = finalWidth
+                                        textView.layoutIfNeeded()
+                                    },
+                                    completion: nil
+                                )
+                            }
                         }
                     } else {
                         if let preview = button.errorview {
@@ -242,10 +245,13 @@ class Coordinator: NSObject, TextViewDelegate {
                 button.alpha = 0
                 self.entries[item.line] = (button,view)
                 
-                self.textInputView?.addSubview(view)
-                self.textInputView?.sendSubviewToBack(view)
-                self.textInputView?.gutterContainerView.isUserInteractionEnabled = true
-                self.textInputView?.gutterContainerView.addSubview(button)
+                if let textView = self.parent?.textView,
+                   let textInputView = textView.getTextInputView() {
+                    textInputView.addSubview(view)
+                    textInputView.sendSubviewToBack(view)
+                    textInputView.gutterContainerView.isUserInteractionEnabled = true
+                    textInputView.gutterContainerView.addSubview(button)
+                }
                 
                 UIView.animate(withDuration: 0.3, animations: {
                     view.alpha = 1
@@ -261,9 +267,10 @@ class Coordinator: NSObject, TextViewDelegate {
             self.isProcessing = false
             self.isInvalidated = false
             
-            if self.needsAnotherProcess {
+            if self.needsAnotherProcess,
+               let textView = self.parent?.textView {
                 self.needsAnotherProcess = false
-                self.textViewDidChange(self.parent.textView)
+                self.textViewDidChange(textView)
             }
         }
     }
@@ -276,7 +283,7 @@ class Coordinator: NSObject, TextViewDelegate {
             textView = UITextView()
             super.init(frame: .zero)
 
-            self.backgroundColor = parent.parent.textView.theme.gutterBackgroundColor
+            self.backgroundColor = parent.parent?.textView.theme.gutterBackgroundColor
             self.layer.borderColor = color.withAlphaComponent(1.0).cgColor
             self.layer.borderWidth = 1
             self.layer.cornerRadius = 10
@@ -288,7 +295,7 @@ class Coordinator: NSObject, TextViewDelegate {
 
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.text = message
-            textView.font = parent.parent.textView.theme.font
+            textView.font = parent.parent?.textView.theme.font
             textView.font = textView.font?.withSize((textView.font?.pointSize ?? 10) / 1.25)
             textView.textColor = UIColor.label
             textView.backgroundColor = .clear

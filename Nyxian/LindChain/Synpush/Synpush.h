@@ -62,6 +62,4 @@
 - (void)reparseFile:(NSString*) content;
 - (NSArray<Synitem *> *)getDiagnostics;
 
-- (void)deinit;
-
 @end

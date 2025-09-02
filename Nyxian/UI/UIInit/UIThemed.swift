@@ -22,8 +22,16 @@ import UIKit
 @objc class UIThemedTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         NotificationCenter.default.addObserver(self, selector: #selector(handleMyNotification(_:)), name: Notification.Name("uiColorChangeNotif"), object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
     }
     
     @objc func handleMyNotification(_ notification: Notification) {
@@ -32,10 +40,6 @@ import UIKit
         for cell in tableView.visibleCells {
             cell.backgroundColor = currentTheme?.backgroundColor
         }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 }
 

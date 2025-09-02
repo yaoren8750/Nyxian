@@ -141,15 +141,6 @@ import UniformTypeIdentifiers
             if project.reload() {
                 self.title = project.projectConfig.displayName
             }
-            
-            /*if project.projectConfig.restartApp {
-                if self.openTheLogSheet {
-                    let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
-                    loggerView.modalPresentationStyle = .formSheet
-                    self.present(loggerView, animated: true)
-                    self.openTheLogSheet = false
-                }
-            }*/
         }
     }
     
@@ -549,6 +540,10 @@ import UniformTypeIdentifiers
         } else {
             addFile(destination: destination)
         }
+    }
+    
+    deinit {
+        print("FileListViewController deinit")
     }
 }
 

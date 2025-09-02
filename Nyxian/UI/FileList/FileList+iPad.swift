@@ -53,8 +53,6 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 
 class SplitScreenDetailViewController: UIViewController {
     let project: NXProject
-    let label = UILabel()
-    var titleView: UIView?
     
     var lock: NSLock = NSLock()
     var childVCMaster: UIViewController?
@@ -80,8 +78,8 @@ class SplitScreenDetailViewController: UIViewController {
                 })
             }
 
+            childVCMaster = newValue
             if let vc = newValue {
-                childVCMaster = vc
                 self.addChild(vc)
                 vc.view.alpha = 0 // Start invisible
                 self.view.addSubview(vc.view)
@@ -120,26 +118,28 @@ class SplitScreenDetailViewController: UIViewController {
             return
         }
 
-        let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100),
-                                 project: self.project,
-                                 path: path) { button in
+        // capture self weakly in the open/close actions
+        let open: (UIButtonTab) -> Void = { [weak self] button in
+            guard let self = self else { return }
             self.childButton = button
             self.childVC = button.vc
             self.updateTabSelection(selectedTab: button)
-        } closeAction: { button in
+        }
+        let close: (UIButtonTab) -> Void = { [weak self] button in
+            guard let self = self else { return }
             if self.childVC == button.vc {
                 self.childVC = nil
             }
-            if let synpushServer = button.vc.synpushServer {
-                synpushServer.deinit()
-            }
-            
             guard let index = self.tabs.firstIndex(of: button) else { return }
-            
+
+            // cleanup to break possible residual references
+            button.closeButton.menu = nil
+            button.removeTarget(nil, action: nil, for: .allEvents)
+
             self.stack.removeArrangedSubview(button)
             button.removeFromSuperview()
             self.tabs.remove(at: index)
-            
+
             var newSelectedTab: UIButtonTab? = nil
             if self.tabs.count > 0 {
                 if index < self.tabs.count {
@@ -148,7 +148,7 @@ class SplitScreenDetailViewController: UIViewController {
                     newSelectedTab = self.tabs[index - 1]
                 }
             }
-            
+
             if let tabToSelect = newSelectedTab {
                 self.childButton = tabToSelect
                 self.childVC = tabToSelect.vc
@@ -160,9 +160,15 @@ class SplitScreenDetailViewController: UIViewController {
             }
         }
 
+        let button = UIButtonTab(frame: CGRect(x: 0, y: 0, width: 100, height: 100),
+                                 project: self.project,
+                                 path: path,
+                                 openAction: open,
+                                 closeAction: close)
+
         self.stack.addArrangedSubview(button)
         self.tabs.append(button)
-        
+
         self.updateTabSelection(selectedTab: button)
     }
     
@@ -172,7 +178,6 @@ class SplitScreenDetailViewController: UIViewController {
     init(project: NXProject) {
         self.project = project
         super.init(nibName: nil, bundle: nil)
-        self.titleView = self.navigationItem.titleView
     }
     
     required init?(coder: NSCoder) {
@@ -183,17 +188,19 @@ class SplitScreenDetailViewController: UIViewController {
         super.viewDidLoad()
         self.title = "Workspace"
         self.view.backgroundColor = currentTheme?.gutterBackgroundColor
+        
+        let label: UILabel = UILabel()
         self.view.addSubview(label)
         
         // Adding the indicator of the empty editor
-        self.label.textAlignment = .center
-        self.label.text = "No Editor"
-        self.label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.text = "No Editor"
+        label.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            self.label.topAnchor.constraint(equalTo: self.view.topAnchor),
-            self.label.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            self.label.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.label.leftAnchor.constraint(equalTo: self.view.leftAnchor)
+            label.topAnchor.constraint(equalTo: self.view.topAnchor),
+            label.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
+            label.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            label.leftAnchor.constraint(equalTo: self.view.leftAnchor)
         ])
         
         // Adding the scrollview used for the file stack
@@ -238,25 +245,37 @@ class SplitScreenDetailViewController: UIViewController {
             bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
         ])
         
-        let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
+        let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { [weak self] _ in
+            guard let self = self else { return }
             buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
         })
-        let packageButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "archivebox.fill"), primaryAction: UIAction { _ in
+        let packageButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "archivebox.fill"), primaryAction: UIAction { [weak self] _ in
+            guard let self = self else { return }
             buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .InstallPackagedApp)
         })
-        let issueNavigator: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "exclamationmark.triangle.fill"), primaryAction: UIAction { _ in
+        let issueNavigator: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "exclamationmark.triangle.fill"), primaryAction: UIAction { [weak self] _ in
+            guard let self = self else { return }
             let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: self.project))
             loggerView.modalPresentationStyle = .formSheet
             self.present(loggerView, animated: true)
         })
-        let console: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "apple.terminal.fill"), primaryAction: UIAction { _ in
+        let console: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "apple.terminal.fill"), primaryAction: UIAction { [weak self] _ in
+            guard let self = self else { return }
             let loggerView = UINavigationController(rootViewController: LoggerViewController())
             loggerView.modalPresentationStyle = .formSheet
             self.present(loggerView, animated: true)
         })
         self.navigationItem.rightBarButtonItems = [buildButton,packageButton,issueNavigator,console]
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         NotificationCenter.default.addObserver(self, selector: #selector(handleMyNotification(_:)), name: Notification.Name("FileListAct"), object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
     }
     
     @objc func handleMyNotification(_ notification: Notification) {
@@ -284,10 +303,6 @@ class SplitScreenDetailViewController: UIViewController {
                 tab.closeButton.alpha = targetAlpha
             }
         }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -346,8 +361,9 @@ class UIButtonTab: UIButton {
             rightBorderView.widthAnchor.constraint(equalToConstant: 0.5)
         ])
         
-        self.addAction(UIAction { _ in
-            openAction(self)
+        self.addAction(UIAction { [weak self] _ in
+            guard let s = self else { return }
+            openAction(s)
         }, for: .touchUpInside)
         
         // Close button
@@ -432,8 +448,9 @@ class UIButtonTab: UIButton {
         var buttons: [UIBarButtonItem] = []
         for item in vc.navigationItem.rightBarButtonItems ?? [] {
             if let title = item.title {
-                items.append(UIAction(title: title, image: item.image, handler: { _ in
-                    self.vc.perform(item.action)
+                items.append(UIAction(title: title, image: item.image, handler: { [weak self] _ in
+                    guard let s = self else { return }
+                    s.vc.perform(item.action)
                 }))
             } else {
                 buttons.append(item)
@@ -443,8 +460,9 @@ class UIButtonTab: UIButton {
         closeButton.menu = UIMenu(options: .displayInline, children: [
             UIMenu(options: .displayInline, children: items),
             UIMenu(options: .displayInline, children: [
-                UIAction(title: "Close", handler: { _ in
-                    closeAction(self)
+                UIAction(title: "Close", handler: { [weak self] _ in
+                    guard let s = self else { return }
+                    closeAction(s)
                 })
             ])
         ])
