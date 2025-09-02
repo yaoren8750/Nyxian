@@ -20,25 +20,9 @@
 import UIKit
 
 class SettingsViewController: UIThemedTableViewController {
-    private var hasRestoredLastSelection = false
-
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Settings"
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-        if !hasRestoredLastSelection,
-           let savedIndex = UserDefaults.standard.value(forKey: "LastSelectedSettingsIndex") as? Int,
-           navigationController?.topViewController === self {
-
-            hasRestoredLastSelection = true
-            navigateToController(for: savedIndex, animated: false)
-        } else {
-            UserDefaults.standard.set(nil, forKey: "LastSelectedSettingsIndex")
-        }
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -79,27 +63,26 @@ class SettingsViewController: UIThemedTableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        UserDefaults.standard.set(indexPath.row, forKey: "LastSelectedSettingsIndex")
         navigateToController(for: indexPath.row, animated: true)
     }
 
     private func navigateToController(for index: Int, animated: Bool) {
-        let viewController: UIViewController
-
-        switch index {
-        case 0:
-            viewController = ToolChainController(style: .insetGrouped)
-        case 1:
-            viewController = CustomizationViewController(style: .insetGrouped)
-        case 2:
-            viewController = MiscellaneousController(style: .insetGrouped)
-        case 3:
-            viewController = AppInfoViewController(style: .insetGrouped)
-        case 4:
-            viewController = ApplicationManagementViewController(style: .insetGrouped)
-        default:
-            return
-        }
+        guard let viewController: UIViewController = {
+            switch index {
+            case 0:
+                return ToolChainController(style: .insetGrouped)
+            case 1:
+                return CustomizationViewController(style: .insetGrouped)
+            case 2:
+                return MiscellaneousController(style: .insetGrouped)
+            case 3:
+                return AppInfoViewController(style: .insetGrouped)
+            case 4:
+                return ApplicationManagementViewController(style: .insetGrouped)
+            default:
+                return nil
+            }
+        }() else { return }
 
         navigationController?.pushViewController(viewController, animated: animated)
     }

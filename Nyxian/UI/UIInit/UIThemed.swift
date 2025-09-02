@@ -53,15 +53,6 @@ import UIKit
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        let savedIndex = UserDefaults.standard.integer(forKey: "SelectedTabIndex")
-        if savedIndex < (viewControllers?.count ?? 0) {
-            selectedIndex = savedIndex
-        }
-    }
-    
-    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
-        UserDefaults.standard.set(selectedIndex, forKey: "SelectedTabIndex")
     }
     
     @objc func handleMyNotification(_ notification: Notification) {
