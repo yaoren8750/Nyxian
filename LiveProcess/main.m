@@ -25,8 +25,6 @@
 #import "LindChain/LiveContainer/exec.h"
 #import <LindChain/litehook/src/litehook.h>
 
-__strong NSFileHandle *stdoutStaticStrongReferencedHandle;
-
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
 @interface LiveProcessHandler : NSObject<NSExtensionRequestHandling>
@@ -77,25 +75,26 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    // Handoff stdout and stderr to host app
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    // Handoff stdout and stderr output to host app
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_enter(group);
     [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-        stdoutStaticStrongReferencedHandle = stdoutHandle;
-        dup2(stdoutStaticStrongReferencedHandle.fileDescriptor, STDOUT_FILENO);
-        dup2(stdoutStaticStrongReferencedHandle.fileDescriptor, STDERR_FILENO);
-        dispatch_semaphore_signal(semaphore);
+        dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
+        dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+        dispatch_group_leave(group);
     }];
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     
+    dispatch_group_enter(group);
     __block NSFileHandle *payloadHandle;
     [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
         payloadHandle = fileHandle;
-        dispatch_semaphore_signal(semaphore);
+        dispatch_group_leave(group);
     }];
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
     
     // MARK: Keep it alive
-    exec(proxy, payloadHandle);
+    exec(payloadHandle);
     
     return 0;
 }

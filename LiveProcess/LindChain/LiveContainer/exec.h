@@ -20,5 +20,4 @@
 #import <Foundation/Foundation.h>
 #import "../../serverDelegate.h"
 
-void exec(NSObject<TestServiceProtocol> *proxy,
-          NSFileHandle *payloadHandle);
+void exec(NSFileHandle *payloadHandle);

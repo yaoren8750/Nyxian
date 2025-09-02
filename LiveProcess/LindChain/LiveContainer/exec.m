@@ -80,8 +80,7 @@ BOOL clearTemporaryDirectory(NSError **error) {
     return success;
 }
 
-void exec(NSObject<TestServiceProtocol> *proxy,
-          NSFileHandle *payloadHandle)
+void exec(NSFileHandle *payloadHandle)
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
