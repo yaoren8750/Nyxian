@@ -18,6 +18,7 @@
 */
 
 #import "LDEApplicationWorkspace.h"
+#import "../LiveContainer/zip.h"
 
 @interface LDEApplicationWorkspace ()
 
@@ -88,22 +89,18 @@
 NSString *fileTreeAtPathWithArrows(NSString *path);
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
 {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
     // Getting bundle at bundlePath
     NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
     if(!bundle) return NO;
     
-    // Is bundleID installed? If yes remove previous bundle
-    NSBundle *previousApplication = nil;
-    if([self applicationInstalledWithBundleID:bundle.bundleIdentifier])
-    {
-        previousApplication = [self applicationBundleForBundleID:bundle.bundleIdentifier];
-        [[NSFileManager defaultManager] removeItemAtPath:previousApplication.bundlePath error:nil];
-    }
-    
     // Now generating new path or using old path
     NSString *installPath = nil;
+    NSBundle *previousApplication = [self applicationBundleForBundleID:bundle.bundleIdentifier];
     if(previousApplication) {
         // It existed before, using old path
+        [fileManager removeItemAtPath:previousApplication.bundlePath error:nil];
         installPath = previousApplication.bundlePath;
         previousApplication = nil;
     } else {
@@ -112,7 +109,7 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     }
     
     // Now installing at install location
-    [[NSFileManager defaultManager] moveItemAtPath:bundle.bundlePath toPath:installPath error:nil];
+    [fileManager moveItemAtPath:bundle.bundlePath toPath:installPath error:nil];
     
     return YES;
 }
@@ -122,7 +119,9 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     NSBundle *previousApplication = [self applicationBundleForBundleID:bundleID];
     if(previousApplication)
     {
+        NSString *container = [self applicationContainerForBundleID:bundleID];
         [[NSFileManager defaultManager] removeItemAtPath:previousApplication.bundlePath error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:container error:nil];
         return YES;
     }
     return NO;
@@ -147,6 +146,27 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     NSBundle *bundle = [self applicationBundleForBundleID:bundleID];
     NSString *uuid = [bundle.bundleURL lastPathComponent];
     return [NSString stringWithFormat:@"%@/%@", self.containersPath, uuid];
+}
+
+@end
+
+@implementation LDEApplicationWorkspaceProxy
+
+- (void)applicationInstalledWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply { 
+    reply([[LDEApplicationWorkspace shared] applicationInstalledWithBundleID:bundleID]);
+}
+
+- (void)deleteApplicationWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply { 
+    reply([[LDEApplicationWorkspace shared] deleteApplicationWithBundleID:bundleID]);
+}
+
+BOOL clearTemporaryDirectory(NSError **error);
+- (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply {
+    clearTemporaryDirectory(nil);
+    NSString *unzippedPath = [NSString stringWithFormat:@"%@/payload.ipa", NSTemporaryDirectory()];
+    unzipArchiveFromFileHandle(bundleHandle, unzippedPath);
+    NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
+    reply([[LDEApplicationWorkspace shared] installApplicationAtBundlePath:bundlePath]);
 }
 
 @end

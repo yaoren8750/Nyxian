@@ -17,8 +17,8 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LDEAPPLICATIONWORKSPACE_H
-#define LDEAPPLICATIONWORKSPACE_H
+#ifndef LDEAPPLICATIONWORKSPACEPROXY_H
+#define LDEAPPLICATIONWORKSPACEPROXY_H
 
 #import <Foundation/Foundation.h>
 
@@ -35,15 +35,4 @@
 
 @end
 
-@protocol LDEApplicationWorkspaceProxyProtocol
-
-- (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply;
-- (void)deleteApplicationWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
-- (void)applicationInstalledWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
-
-@end
-
-@interface LDEApplicationWorkspaceProxy : NSObject <LDEApplicationWorkspaceProxyProtocol>
-@end
-
-#endif
+#endif /* LDEAPPLICATIONWORKSPACEPROXY_H */

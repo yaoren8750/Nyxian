@@ -100,6 +100,7 @@
 		79BF98402E62931E00C60D4C /* Exceptions for "LiveProcess" folder in "Nyxian" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				LindChain/LiveProcess/LDEApplicationWorkspaceProxy.m,
 				serverDelegate.m,
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;
