@@ -65,6 +65,7 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"mode": @"application",
         @"payload": self.project.packagePath,
     };
     

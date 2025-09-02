@@ -19,6 +19,7 @@
 
 #import "LDEApplicationWorkspaceProxy.h"
 #import <LindChain/LiveContainer/FoundationPrivate.h>
+#import "../../serverDelegate.h"
 
 @interface LDEApplicationWorkspace ()
 
@@ -50,26 +51,25 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
-        @"payload": self.project.packagePath,
+        @"mode": @"management",
     };
     
-    /*__weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
         NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp];
-        [weakSelf.delegate appSceneVC:weakSelf didInitializeWithError:error];
     }];
+    
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp];
     }];
-    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
+    
+    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
+    /*[_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
             //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
-            self.identifier = identifier;
-            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            //self.identifier = identifier;
+            //self.pid = [self.extension pidForRequestIdentifier:self.identifier];
             
-            NSLog(@"child process spawned with %u\n", self.pid);
+            //NSLog(@"child process spawned with %u\n", self.pid);
             [self.delegate appSceneVC:self didInitializeWithError:nil];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self setUpAppPresenter];
@@ -128,3 +128,10 @@
 }
 
 @end
+
+__attribute__((constructor))
+void ldeApplicationWorkspaceProxyInit(void)
+{
+    [LDEApplicationWorkspace shared];
+}
+

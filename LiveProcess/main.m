@@ -22,6 +22,7 @@
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
 #import "serverDelegate.h"
+#import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
 #import "LindChain/LiveContainer/exec.h"
 #import <LindChain/litehook/src/litehook.h>
 
@@ -59,6 +60,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     // MARK: Tested it, the endpoint is definetly transmitted
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
     NSString *payloadPath = appInfo[@"payload"];
+    NSString *mode = appInfo[@"mode"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
@@ -84,17 +86,31 @@ int LiveProcessMain(int argc, char *argv[]) {
         dispatch_group_leave(group);
     }];
     
-    dispatch_group_enter(group);
-    __block NSFileHandle *payloadHandle;
-    [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
-        payloadHandle = fileHandle;
-        dispatch_group_leave(group);
-    }];
-    
-    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-    
-    // MARK: Keep it alive
-    exec(payloadHandle);
+    if([mode isEqualToString:@"management"])
+    {
+        // Application management daemon
+        NSLog(@"Hello Management!");
+        
+        [proxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
+        
+        // Keep server alive
+        CFRunLoopRun();
+    }
+    else
+    {
+        // Application
+        dispatch_group_enter(group);
+        __block NSFileHandle *payloadHandle;
+        [proxy getFileHandleOfServerAtPath:payloadPath withServerReply:^(NSFileHandle *fileHandle){
+            payloadHandle = fileHandle;
+            dispatch_group_leave(group);
+        }];
+        
+        dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+        
+        // MARK: Keep it alive
+        exec(payloadHandle);
+    }
     
     return 0;
 }

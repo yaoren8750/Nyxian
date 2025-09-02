@@ -46,4 +46,6 @@
 @interface LDEApplicationWorkspaceProxy : NSObject <LDEApplicationWorkspaceProxyProtocol>
 @end
 
+NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void);
+
 #endif

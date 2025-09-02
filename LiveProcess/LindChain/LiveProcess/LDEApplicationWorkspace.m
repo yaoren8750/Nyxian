@@ -170,3 +170,76 @@ BOOL clearTemporaryDirectory(NSError **error);
 }
 
 @end
+
+/*
+ Server mgmt
+ */
+/*
+ Server + Client Side
+ */
+@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+@end
+
+@interface ServerManager : NSObject
+@property (nonatomic, strong) ServerDelegate *serverDelegate;
+@property (nonatomic, strong) NSXPCListener *listener;
++ (instancetype)sharedManager;
+- (NSXPCListenerEndpoint*)getEndpointForNewConnections;
+@end
+
+
+@implementation ServerDelegate
+
+- (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
+{
+    newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
+    
+    LDEApplicationWorkspaceProxy *exportedObject = [LDEApplicationWorkspaceProxy alloc];
+    newConnection.exportedObject = exportedObject;
+    
+    [newConnection resume];
+    
+    printf("[Host App] Guest app connected\n");
+    
+    return YES;
+}
+
+- (NSXPCListener*)createAnonymousListener
+{
+    printf("creating new listener\n");
+    NSXPCListener *listener = [NSXPCListener anonymousListener];
+    listener.delegate = self;
+    [listener resume];
+    return listener;
+}
+
+@end
+
+@implementation ServerManager
+
++ (instancetype)sharedManager {
+    static ServerManager *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] init];
+
+        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
+            sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
+        //});
+    });
+    return sharedInstance;
+}
+
+- (NSXPCListenerEndpoint*)getEndpointForNewConnections
+{
+    NSXPCListenerEndpoint *endpoint = self.listener.endpoint;
+    return endpoint;
+}
+
+@end
+
+NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void)
+{
+    return [[ServerManager sharedManager] getEndpointForNewConnections];
+}
