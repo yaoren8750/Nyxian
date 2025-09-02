@@ -27,6 +27,12 @@
 - (instancetype)init;
 + (LDEApplicationWorkspace*)shared;
 
+- (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath;
+- (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
+- (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
+- (NSBundle*)applicationBundleForBundleID:(NSString*)bundleID;
+- (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
+
 @end
 
 #endif

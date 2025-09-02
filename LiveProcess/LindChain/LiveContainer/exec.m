@@ -23,6 +23,7 @@
 
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
+#import "../LiveProcess/LDEApplicationWorkspace.h"
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 
@@ -92,11 +93,22 @@ void exec(NSFileHandle *payloadHandle)
     if(!unzipArchiveFromFileHandle(payloadHandle, NSTemporaryDirectory()))
         exit(1);
     
-    NSLog(@"Unzipped payload.ipa to tmp");
-    
     // Get BundlePath
     NSString *bundlePath = [NSString stringWithFormat:@"%@/%@",unzippedPath,[[[NSFileManager defaultManager] contentsOfDirectoryAtPath:unzippedPath error:nil] firstObject]];
-    NSLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
+    
+    // Now use LDEApplicationWorkspace to install app
+    NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
+    LDEApplicationWorkspace *workspace = [LDEApplicationWorkspace shared];
+    [workspace installApplicationAtBundlePath:bundlePath];
+    bundle = [workspace applicationBundleForBundleID:bundle.bundleIdentifier];
+    NSString *containerPath = [workspace applicationContainerForBundleID:bundle.bundleIdentifier];
+    
+    char *argv[1] = { NULL };
+    int argc = 0;
+    NSString *error = invokeAppMain(bundle.bundlePath, containerPath, argc, argv);
+    NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
+    
+    /*NSLog(@"%@:\n%@",bundlePath,fileTreeAtPathWithArrows(bundlePath));
     
     // Creating LCAppInfo and relocate bundle to a stable path
     LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
@@ -116,5 +128,5 @@ void exec(NSFileHandle *payloadHandle)
     char *argv[1] = { NULL };
     int argc = 0;
     NSString *error = invokeAppMain(bundlePath, homePath, argc, argv);
-    NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
+    NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);*/
 }
