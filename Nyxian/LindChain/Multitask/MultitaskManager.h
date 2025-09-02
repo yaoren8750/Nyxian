@@ -31,6 +31,8 @@
 + (LDEMultitaskManager*)shared;
 
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
+- (BOOL)openApplicationWithBundleID:(NSString*)bundleID
+                 terminateIfRunning:(BOOL)terminate;
 - (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
 - (void)terminateApplicationWithBundleID:(NSString*)bundleID;
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window;

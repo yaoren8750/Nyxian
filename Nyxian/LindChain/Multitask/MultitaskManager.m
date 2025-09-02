@@ -19,9 +19,6 @@
 
 #import <LindChain/Multitask/MultitaskManager.h>
 
-///
-/// Class to make it easier,cleaner and more reliable to multitask
-///
 @implementation LDEMultitaskManager
 
 - (instancetype)init
@@ -30,9 +27,6 @@
     return [super init];
 }
 
-///
-/// Shared singleton to make all happen on the same thing
-///
 + (LDEMultitaskManager*)shared
 {
     static LDEMultitaskManager *multitaskManagerSingleton = nil;
@@ -43,36 +37,32 @@
     return multitaskManagerSingleton;
 }
 
-///
-/// Open the target application in a window with the project referencing the application
-///
-/// `project` is the project referencing the application
-///
+- (DecoratedAppSceneViewController*)windowForBundleID:(NSString*)bundleID
+{
+    for(DecoratedAppSceneViewController *window in self.windows) if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID]) return window;
+    return nil;
+}
+
 - (BOOL)openApplicationWithBundleID:(NSString*)bundleID
 {
-    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
-    DecoratedAppSceneViewController *existingWindow = nil;
-    for(DecoratedAppSceneViewController *window in self.windows)
-    {
-        // Comparing using the most reliable way... using its bundleid because the current logic of LiveProcess will run two apps on the same bundle specifications
-        if([window.appSceneVC.appObj.bundleIdentifier isEqualToString:bundleID])
-        {
-            existingWindow = window;
-            break;
-        }
-    }
-    
-    // If it found a existing window we call closeWindow remotely
+    return [self openApplicationWithBundleID:bundleID terminateIfRunning:NO];
+}
+
+- (BOOL)openApplicationWithBundleID:(NSString*)bundleID
+                 terminateIfRunning:(BOOL)terminate
+{
+    DecoratedAppSceneViewController *existingWindow = [self windowForBundleID:bundleID];
     if(existingWindow)
     {
-        [existingWindow.appSceneVC restart];
+        if(terminate)
+            [existingWindow.appSceneVC restart];
+        else
+            [self.targetView bringSubviewToFront:existingWindow.view];
         return YES;
     }
-    
-    // Storing the result inside of a block
+
     __block BOOL result = NO;
     void (^workBlock)(void) = ^{
-        // Looking once for the keyWindow which is our targetView
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
             for (UIScene *scene in UIApplication.sharedApplication.connectedScenes)
@@ -114,24 +104,9 @@
     return result;
 }
 
-///
-/// Pulls the view of an speciific project up in the view hirrachie
-///
 - (void)bringWindowToFrontWithBundleID:(NSString*)bundleID
 {
-    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
-    DecoratedAppSceneViewController *existingWindow = nil;
-    for(DecoratedAppSceneViewController *window in self.windows)
-    {
-        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
-        if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID])
-        {
-            existingWindow = window;
-            break;
-        }
-    }
-    
-    // If it found a existing window we call closeWindow remotely
+    DecoratedAppSceneViewController *existingWindow = [self windowForBundleID:bundleID];
     if(existingWindow)
     {
         [self.targetView bringSubviewToFront:existingWindow.view];
@@ -141,23 +116,10 @@
 
 - (void)terminateApplicationWithBundleID:(NSString*)bundleID
 {
-    // If the application is already running we gonna have to close it before running it again, to acomplish that I gonna itterate for it
-    for(DecoratedAppSceneViewController *window in self.windows)
-    {
-        // Comparing using the most reliable way... the project config of each project is NXPlistHelper, they point to a plist path, if it matches their the same projects
-        if([window.appSceneVC.appObj.bundleIdentifier isEqual:bundleID])
-        {
-            [window closeWindow];
-            break;
-        }
-    }
+    DecoratedAppSceneViewController *window = [self windowForBundleID:bundleID];;
+    if(window) [window closeWindow];
 }
 
-///
-/// Removes a window object from instance windows (meant to be exclusively for the windows to call back)
-///
-/// `window` is the window that is meant to be removed
-///
 - (void)removeWindowObject:(DecoratedAppSceneViewController*)window
 {
     [self.windows removeObject:window];
