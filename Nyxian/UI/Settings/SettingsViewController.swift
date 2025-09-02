@@ -42,7 +42,7 @@ class SettingsViewController: UIThemedTableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 4
+        return 5
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -68,6 +68,8 @@ class SettingsViewController: UIThemedTableViewController {
         case 3:
             cell.imageView?.image = UIImage(systemName: "info")
             cell.textLabel?.text = "Info"
+        case 4:
+            cell.textLabel?.text = "Application Management"
         default:
             break
         }
@@ -93,6 +95,8 @@ class SettingsViewController: UIThemedTableViewController {
             viewController = MiscellaneousController(style: .insetGrouped)
         case 3:
             viewController = AppInfoViewController(style: .insetGrouped)
+        case 4:
+            viewController = ApplicationManagementViewController(style: .insetGrouped)
         default:
             return
         }

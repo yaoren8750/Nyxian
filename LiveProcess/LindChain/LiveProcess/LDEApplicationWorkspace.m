@@ -185,6 +185,17 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     reply(appObj);
 }
 
+- (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply
+{
+    NSMutableArray<NSString*> *allBundleIDs = [[NSMutableArray alloc] init];
+    NSArray<NSBundle*> *bundle = [[LDEApplicationWorkspace shared] applicationBundleList];
+    for(NSBundle *item in bundle)
+    {
+        [allBundleIDs addObject:item.bundleIdentifier];
+    }
+    reply(allBundleIDs);
+}
+
 @end
 
 /*
