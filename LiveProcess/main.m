@@ -23,6 +23,7 @@
 #import <objc/runtime.h>
 #import "serverDelegate.h"
 #import "LindChain/LiveContainer/exec.h"
+#import <LindChain/litehook/src/litehook.h>
 
 __strong NSFileHandle *stdoutStaticStrongReferencedHandle;
 
@@ -106,10 +107,8 @@ int UIApplicationMain(int argc, char * argv[], NSString * principalClassName, NS
 }
 
 // NSExtensionMain will load UIKit and call UIApplicationMain, so we need to redirect it to our fake one
-static void* (*orig_dlopen)(void* dyldApiInstancePtr, const char* path, int mode);
-static void* hook_dlopen(void* dyldApiInstancePtr, const char* path, int mode) {
-    const char *UIKitFrameworkPath = "/System/Library/Frameworks/UIKit.framework/UIKit";
-    if(path && !strncmp(path, UIKitFrameworkPath, strlen(UIKitFrameworkPath))) {
+DEFINE_HOOK(dlopen, void*, (void* dyldApiInstancePtr, const char* path, int mode)) {
+    if(path && !strcmp(path, "/System/Library/Frameworks/UIKit.framework/UIKit")) {
         // switch back to original dlopen
         performHookDyldApi("dlopen", 2, (void**)&orig_dlopen, orig_dlopen);
         // FIXME: may be incompatible with jailbreak tweaks?
