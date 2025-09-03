@@ -65,7 +65,7 @@
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"application",
-        @"bundleid": self.appObj.bundleIdentifier,
+        @"appObject": self.appObj
     };
     
     __weak typeof(self) weakSelf = self;

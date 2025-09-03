@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import "LDEApplicationObject.h"
+#import "LDEApplicationWorkspaceProxyProtocol.h"
 
 @interface LDEApplicationWorkspace : NSObject
 
@@ -34,16 +35,6 @@
 - (NSBundle*)applicationBundleForBundleID:(NSString*)bundleID;
 - (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
 - (NSArray<NSBundle*>*)applicationBundleList;
-
-@end
-
-@protocol LDEApplicationWorkspaceProxyProtocol
-
-- (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply;
-- (void)deleteApplicationWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
-- (void)applicationInstalledWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
-- (void)applicationObjectForBundleID:(NSString*)bundleID withReply:(void (^)(LDEApplicationObject*))reply;
-- (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply;
 
 @end
 

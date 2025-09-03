@@ -64,23 +64,6 @@
     }];
     
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
-    /*[_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
-        if(identifier) {
-            //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
-            //self.identifier = identifier;
-            //self.pid = [self.extension pidForRequestIdentifier:self.identifier];
-            
-            //NSLog(@"child process spawned with %u\n", self.pid);
-            [self.delegate appSceneVC:self didInitializeWithError:nil];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self setUpAppPresenter];
-            });
-        } else {
-            NSError* error = [NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"Failed to start app. Child process has unexpectedly crashed"}];
-            NSLog(@"%@", [error localizedDescription]);
-            [self.delegate appSceneVC:self didInitializeWithError:error];
-        }
-    }];*/
     
     return self;
 }
@@ -153,6 +136,17 @@
     return result;
 }
 
+- (NSString*)applicationContainerForBundleID:(NSString *)bundleID
+{
+    __block NSString *result = nil;
+    [_proxy applicationContainerForBundleID:bundleID withReply:^(NSString *replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects
 {
     __block NSMutableArray<LDEApplicationObject*> *allApplicationObjects = [[NSMutableArray alloc] init];
@@ -182,4 +176,3 @@ void ldeApplicationWorkspaceProxyInit(void)
 {
     [LDEApplicationWorkspace shared];
 }
-

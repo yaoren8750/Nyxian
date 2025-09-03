@@ -59,8 +59,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     // MARK: Tested it, the endpoint is definetly transmitted
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
-    NSString *bundleid = appInfo[@"bundleid"];
     NSString *mode = appInfo[@"mode"];
+    LDEApplicationObject *appObj = appInfo[@"appObject"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
@@ -101,8 +101,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         // MARK: Keep it alive
         char *argv[1] = { NULL };
         int argc = 0;
-        NSBundle *bundle = [[LDEApplicationWorkspace shared] applicationBundleForBundleID:bundleid];
-        NSString *error = invokeAppMain(bundle.bundlePath, [[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundle.bundleIdentifier], argc, argv);
+        NSString *error = invokeAppMain(appObj.bundlePath, appObj.containerPath, argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     

@@ -29,6 +29,7 @@
     [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
     [coder encodeObject:self.bundlePath forKey:@"bundlePath"];
     [coder encodeObject:self.displayName forKey:@"displayName"];
+    [coder encodeObject:self.containerPath forKey:@"containerPath"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -36,6 +37,7 @@
         _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
         _bundlePath = [coder decodeObjectOfClass:[NSString class] forKey:@"bundlePath"];
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
+        _containerPath = [coder decodeObjectOfClass:[NSString class] forKey:@"containerPath"];
     }
     return self;
 }

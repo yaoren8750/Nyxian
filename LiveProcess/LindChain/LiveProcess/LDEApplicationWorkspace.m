@@ -193,8 +193,14 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
         displayName = @"Unknown App";
     }
     appObj.displayName = displayName;
+    appObj.containerPath = [[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundle.bundleIdentifier];
     
     reply(appObj);
+}
+
+- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSString*))reply
+{
+    reply([[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundleID]);
 }
 
 - (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply
