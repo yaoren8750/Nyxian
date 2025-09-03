@@ -82,7 +82,8 @@ class Coordinator: NSObject, TextViewDelegate {
             }
         }
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
             self.redrawDiag()
         }
         
@@ -101,13 +102,15 @@ class Coordinator: NSObject, TextViewDelegate {
     }
     
     func redrawDiag() {
+        guard let parent = self.parent else { return }
         if !self.entries.isEmpty {
             for item in self.entries {
-                DispatchQueue.main.async {
-                    guard let rect = self.parent?.textView.rectForLine(Int(item.key)) else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    guard let rect = parent.textView.rectForLine(Int(item.key)) else {
                         UIView.animate(withDuration: 0.3, animations: {
-                            item.value.0!.alpha = 0
-                            item.value.1!.alpha = 0
+                            item.value.0?.alpha = 0
+                            item.value.1?.alpha = 0
                         }, completion: { _ in
                             item.value.0?.removeFromSuperview()
                             item.value.1?.removeFromSuperview()
@@ -115,26 +118,27 @@ class Coordinator: NSObject, TextViewDelegate {
                         })
                         return
                     }
-                    item.value.0!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.gutterWidth ?? 0.0, height: rect.height)
-                    item.value.1!.frame = CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.bounds.size.width ?? 0.0, height: rect.height)
+                    item.value.0?.frame = CGRect(x: 0, y: rect.origin.y, width: parent.textView.gutterWidth, height: rect.height)
+                    item.value.1?.frame = CGRect(x: 0, y: rect.origin.y, width: parent.textView.bounds.size.width, height: rect.height)
                 }
             }
         }
     }
     
     func updateDiag() {
+        guard let parent = self.parent else { return }
         if !self.entries.isEmpty {
             let waitonmebaby: DispatchSemaphore = DispatchSemaphore(value: 0)
             DispatchQueue.main.async {
                 UIView.animate(withDuration: 0.3, animations: {
                     for item in self.entries {
-                        item.value.0!.alpha = 0
-                        item.value.1!.alpha = 0
+                        item.value.0?.alpha = 0
+                        item.value.1?.alpha = 0
                     }
                 }, completion: { _ in
                     for item in self.entries {
-                        item.value.0!.removeFromSuperview()
-                        item.value.1!.removeFromSuperview()
+                        item.value.0?.removeFromSuperview()
+                        item.value.1?.removeFromSuperview()
                     }
                     self.entries.removeAll()
                     waitonmebaby.signal()
@@ -149,35 +153,35 @@ class Coordinator: NSObject, TextViewDelegate {
             
             var rect: CGRect?
             DispatchQueue.main.sync {
-                rect = self.parent?.textView.rectForLine(Int(item.line))
+                rect = parent.textView.rectForLine(Int(item.line))
             }
             guard let rect = rect else { continue }
             
             let properties: (String,UIColor) = self.vtkey[Int(item.type)]
             
             DispatchQueue.main.async {
-                let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.bounds.size.width ?? 0.0, height: rect.height))
+                let view: UIView = UIView(frame: CGRect(x: 0, y: rect.origin.y, width: parent.textView.bounds.size.width, height: rect.height))
                 view.backgroundColor = properties.1
                 view.isUserInteractionEnabled = false
                 
-                let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: self.parent?.textView.gutterWidth ?? 0.0, height: rect.height))
+                let button = NeoButton(frame: CGRect(x: 0, y: rect.origin.y, width: parent.textView.gutterWidth, height: rect.height))
                 
                 button.backgroundColor = properties.1.withAlphaComponent(1.0)
-                let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: self.parent?.textView.theme.lineNumberFont.pointSize ?? 0.0)
+                let configuration: UIImage.SymbolConfiguration = UIImage.SymbolConfiguration(pointSize: parent.textView.theme.lineNumberFont.pointSize)
                 let image = UIImage(systemName: properties.0, withConfiguration: configuration)
                 button.setImage(image, for: .normal)
                 button.imageView?.tintColor = UIColor.systemBackground
                 
                 var widthConstraint: NSLayoutConstraint?
                 
-                button.setAction { [weak self, weak button] in
-                    guard let self = self, let button = button else { return }
+                button.setAction { [weak self, weak button, weak parent] in
+                    guard let self = self, let button = button, let parent = parent else{ return }
                     button.stateview = !button.stateview
                     
                     if button.stateview {
                         DispatchQueue.main.async {
-                            guard let shift: CGFloat = self.parent?.textView.gutterWidth else { return }
-                            let finalWidth = (self.parent?.textView.bounds.width ?? 0.0) / 1.5
+                            let shift: CGFloat = parent.textView.gutterWidth
+                            let finalWidth = (parent.textView.bounds.width) / 1.5
                             
                             let modHeight = rect.height + 10
                             
@@ -245,8 +249,7 @@ class Coordinator: NSObject, TextViewDelegate {
                 button.alpha = 0
                 self.entries[item.line] = (button,view)
                 
-                if let textView = self.parent?.textView,
-                   let textInputView = textView.getTextInputView() {
+                if let textInputView = parent.textView.getTextInputView() {
                     textInputView.addSubview(view)
                     textInputView.sendSubviewToBack(view)
                     textInputView.gutterContainerView.isUserInteractionEnabled = true
@@ -329,7 +332,10 @@ class Coordinator: NSObject, TextViewDelegate {
         override init(frame: CGRect) {
             self.actionTap = {}
             super.init(frame: frame)
-            self.addAction(UIAction { _ in self.actionTap() }, for: UIControl.Event.touchDown)
+            self.addAction(UIAction { [weak self] _ in
+                guard let self = self else { return }
+                self.actionTap()
+            }, for: UIControl.Event.touchDown)
         }
         
         override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
