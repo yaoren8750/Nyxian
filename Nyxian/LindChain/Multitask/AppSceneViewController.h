@@ -37,6 +37,7 @@ API_AVAILABLE(ios(16.0))
 @property(nonatomic) UIMutableApplicationSceneSettings *settings;
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
+            withDebuggingEnabled:(BOOL)enableDebugging
                     withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)appTerminationCleanUp;

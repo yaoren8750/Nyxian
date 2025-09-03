@@ -20,6 +20,7 @@
 @end
 
 @interface AppSceneViewController()
+@property(nonatomic) BOOL debuggingEnabled;
 @property(nonatomic) UIWindowScene *hostScene;
 @property(nonatomic) NSString *sceneID;
 @property(nonatomic) NSExtension* extension;
@@ -31,8 +32,11 @@
 @implementation AppSceneViewController
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
-                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate {
+            withDebuggingEnabled:(BOOL)enableDebugging
+                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate
+{
     self = [super initWithNibName:nil bundle:nil];
+    self.debuggingEnabled = enableDebugging;
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];
     [self.view addSubview:_contentView];
@@ -65,7 +69,8 @@
     item.userInfo = @{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"application",
-        @"appObject": self.appObj
+        @"appObject": self.appObj,
+        @"debugEnabled": @(self.debuggingEnabled)
     };
     
     __weak typeof(self) weakSelf = self;

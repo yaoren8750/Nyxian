@@ -40,11 +40,14 @@
 
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
 {
-    return [self openApplicationWithBundleIdentifier:bundleIdentifier terminateIfRunning:NO];
+    return [self openApplicationWithBundleIdentifier:bundleIdentifier
+                                  terminateIfRunning:NO
+                                     enableDebugging:NO];
 }
 
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
                          terminateIfRunning:(BOOL)terminate
+                            enableDebugging:(BOOL)enableDebug
 {
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
     if(windowGroup)
@@ -99,7 +102,7 @@
         }
         
         // Go!
-        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier];
+        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier enableDebugging:enableDebug];
         [self.targetView addSubview:decoratedAppSceneViewController.view];
         NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];
         [windowGroup addObject:decoratedAppSceneViewController];
@@ -152,12 +155,13 @@
     if(windowGroup) for(LDEWindow *window in windowGroup) [self.targetView bringSubviewToFront:window.view];
 }
 
-- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier
+- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier withTitle:(NSString*)title
 {
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
+    LDEWindow *mainWindow = [windowGroup firstObject];
     if(windowGroup)
     {
-        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view withTitle:@"ProofOfConcept"];
+        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view withTitle:[NSString stringWithFormat:@"%@ - %@", mainWindow.appSceneVC.appObj.displayName, title]];
         [self.targetView addSubview:window.view];
         [windowGroup addObject:window];
     }

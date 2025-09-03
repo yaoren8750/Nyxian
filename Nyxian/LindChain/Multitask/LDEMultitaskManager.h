@@ -32,7 +32,8 @@
 
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
-                         terminateIfRunning:(BOOL)terminate;
+                         terminateIfRunning:(BOOL)terminate
+                            enableDebugging:(BOOL)enableDebug;
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 
 - (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier;
@@ -40,6 +41,6 @@
 - (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
 - (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier;
 
-- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier;
+- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier withTitle:(NSString*)title;
 
 @end

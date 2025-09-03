@@ -61,6 +61,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
     NSString *mode = appInfo[@"mode"];
     LDEApplicationObject *appObj = appInfo[@"appObject"];
+    NSNumber *debugEnabled = appInfo[@"debugEnabled"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
@@ -78,13 +79,16 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
     // Handoff stdout and stderr output to host app
-    dispatch_group_t group = dispatch_group_create();
-    dispatch_group_enter(group);
-    [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
-        dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-        dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
-        dispatch_group_leave(group);
-    }];
+    if(debugEnabled.boolValue)
+    {
+        dispatch_group_t group = dispatch_group_create();
+        dispatch_group_enter(group);
+        [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
+            dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
+            dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+            dispatch_group_leave(group);
+        }];
+    }
     
     if([mode isEqualToString:@"management"])
     {

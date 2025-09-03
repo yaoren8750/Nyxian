@@ -56,7 +56,7 @@
             {
                 textLog = [[LogTextView alloc] init];
                 //[self.textLogs setObject:textLog forKey:@(pid)];
-                [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier];
+                [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier withTitle:@"Log"];
             }
             int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
             reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);

@@ -49,9 +49,11 @@ void UIKitFixesInit(void) {
 
 @implementation LDEWindow
 
-- (instancetype)initWithBundleID:(NSString*)bundleID {
+- (instancetype)initWithBundleID:(NSString*)bundleID
+                 enableDebugging:(BOOL)enableDebugging
+{
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDelegate:self];
+    _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
     
     [self setupDecoratedView];
     self.scaleRatio = 1.0;
@@ -364,15 +366,21 @@ void UIKitFixesInit(void) {
             self.view.frame = newFrame;
             self.view.layer.borderWidth = 1;
             self.resizeHandle.alpha = 1;
-            [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
-                [self updateWindowedFrameWithSettings:settings];
-            }];
+            if(self.appSceneVC)
+            {
+                [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+                    [self updateWindowedFrameWithSettings:settings];
+                }];
+            }
         } completion:^(BOOL finished) {
             self.isMaximized = NO;
             UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
             UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [maximizeImage imageWithConfiguration:maximizeConfig];
-            [self.appSceneVC resizeActionEnd];
+            if(self.appSceneVC)
+            {
+                [self.appSceneVC resizeActionEnd];
+            }
         }];
     } else {
         [self updateOriginalFrame];
@@ -382,14 +390,21 @@ void UIKitFixesInit(void) {
             
             self.view.layer.borderWidth = 0;
             self.resizeHandle.alpha = 0;
-            [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
-                [self updateMaximizedFrameWithSettings:settings];
-            }];
+            if(self.appSceneVC)
+            {
+                [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+                    [self updateMaximizedFrameWithSettings:settings];
+                }];
+            }
         } completion:^(BOOL finished) {
             UIImage *restoreImage = [UIImage systemImageNamed:@"arrow.down.right.and.arrow.up.left.circle.fill"];
             UIImageConfiguration *restoreConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
             self.maximizeButton.image = [restoreImage imageWithConfiguration:restoreConfig];
-            [self.appSceneVC resizeActionEnd];
+            
+            if(self.appSceneVC)
+            {
+                [self.appSceneVC resizeActionEnd];
+            }
         }];
     }
 }
