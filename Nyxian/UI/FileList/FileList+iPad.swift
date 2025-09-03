@@ -47,7 +47,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        LDEMultitaskManager.shared().bringWindowToFront(withBundleID: self.project.projectConfig.bundleid)
+        LDEMultitaskManager.shared().bringWindowGroupToFront(withBundleIdentifier: self.project.projectConfig.bundleid)
     }
 }
 

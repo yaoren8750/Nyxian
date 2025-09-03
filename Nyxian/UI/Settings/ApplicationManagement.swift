@@ -49,12 +49,12 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
             let openAction = UIAction(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill")) { _ in
-                LDEMultitaskManager.shared().openApplication(withBundleID: application.bundleIdentifier)
+                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
             }
             
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
                 guard let self = self else { return }
-                LDEMultitaskManager.shared().closeApplication(withBundleID: application.bundleIdentifier)
+                LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
                     if let index = self.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
                         self.applications.remove(at: index)
@@ -70,6 +70,6 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let application = applications[indexPath.row]
-        LDEMultitaskManager.shared().openApplication(withBundleID: application.bundleIdentifier)
+        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
     }
 }

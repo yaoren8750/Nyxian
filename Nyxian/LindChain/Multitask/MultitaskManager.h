@@ -25,18 +25,18 @@
 @interface LDEMultitaskManager : NSObject
 
 @property (nonatomic,strong) UIWindow *targetView;
-@property (nonatomic,strong,readonly) NSMutableArray<DecoratedAppSceneViewController*> *windows;
+@property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<DecoratedAppSceneViewController*>*> *windowGroups;
 
 - (instancetype)init;
 + (LDEMultitaskManager*)shared;
 
-- (BOOL)openApplicationWithBundleID:(NSString*)bundleID;
-- (BOOL)openApplicationWithBundleID:(NSString*)bundleID
-                 terminateIfRunning:(BOOL)terminate;
-- (void)closeApplicationWithBundleID:(NSString*)bundleID;
+- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
+- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
+                         terminateIfRunning:(BOOL)terminate;
+- (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 
-- (DecoratedAppSceneViewController*)windowForBundleID:(NSString*)bundleID;
-- (void)bringWindowToFrontWithBundleID:(NSString*)bundleID;
-- (void)removeWindowObject:(DecoratedAppSceneViewController*)window;
+- (NSMutableArray<DecoratedAppSceneViewController*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier;
+- (DecoratedAppSceneViewController*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
+- (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier;
 
 @end

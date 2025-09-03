@@ -109,7 +109,7 @@ void UIKitFixesInit(void) {
     UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
     UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     closeImage = [closeImage imageWithConfiguration:closeConfig];
-    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindowButton)];
     closeButton.tintColor = [UIColor systemRedColor];
 
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
@@ -282,7 +282,11 @@ void UIKitFixesInit(void) {
     } else {
         [self appSceneVCAppDidExit:self.appSceneVC];
     }
-    [[LDEMultitaskManager shared] removeWindowObject:self];
+}
+
+- (void)closeWindowButton
+{
+    [[LDEMultitaskManager shared] closeApplicationWithBundleIdentifier:self.appSceneVC.appObj.bundleIdentifier];
 }
 
 - (void)minimizeWindow {

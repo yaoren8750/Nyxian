@@ -230,7 +230,7 @@ class Builder {
                 appInfo?.save()
                 if(buildType == .RunningApp) {
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
-                        LDEMultitaskManager.shared().openApplication(withBundleID: self.project.projectConfig.bundleid, terminateIfRunning: true)
+                        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid, terminateIfRunning: true)
                     }
                 } else {
                     try? self.package()
