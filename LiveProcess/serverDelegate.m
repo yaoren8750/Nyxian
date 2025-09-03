@@ -19,7 +19,7 @@
 
 #import "serverDelegate.h"
 #import <LindChain/LiveContainer/LCUtils.h>
-#import "LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
+#import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
 
 @implementation TestService
 

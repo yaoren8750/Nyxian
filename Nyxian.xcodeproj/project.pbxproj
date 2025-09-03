@@ -92,7 +92,7 @@
 			membershipExceptions = (
 				LindChain/LiveContainer/zip.m,
 				LindChain/LiveProcess/LDEApplicationObject.m,
-				LindChain/LiveProcess/LDEApplicationWorkspace.m,
+				LindChain/LiveProcess/LDEApplicationWorkspaceInternal.m,
 				main.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
@@ -102,7 +102,7 @@
 			membershipExceptions = (
 				LindChain/LiveContainer/zip.m,
 				LindChain/LiveProcess/LDEApplicationObject.m,
-				LindChain/LiveProcess/LDEApplicationWorkspaceProxy.m,
+				LindChain/LiveProcess/LDEApplicationWorkspace.m,
 				serverDelegate.m,
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;

@@ -7,7 +7,7 @@
 #import <LindChain/LiveContainer/UIKitPrivate.h>
 #import <Project/NXProject.h>
 #import "FoundationPrivate.h"
-#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspaceProxy.h"
+#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
 @import UIKit;
 @import Foundation;
 

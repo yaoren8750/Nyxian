@@ -17,28 +17,30 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LDEAPPLICATIONWORKSPACEPROXY_H
-#define LDEAPPLICATIONWORKSPACEPROXY_H
+#ifndef LDEAPPLICATIONWORKSPACE_H
+#define LDEAPPLICATIONWORKSPACE_H
 
 #import <Foundation/Foundation.h>
 #import "LDEApplicationObject.h"
 #import "LDEApplicationWorkspaceProxyProtocol.h"
 
-@interface LDEApplicationWorkspace : NSObject
-
-@property (nonatomic,strong,readwrite) NSObject<LDEApplicationWorkspaceProxyProtocol> *proxy;
+@interface LDEApplicationWorkspaceInternal : NSObject
 
 - (instancetype)init;
-+ (LDEApplicationWorkspace*)shared;
++ (LDEApplicationWorkspaceInternal*)shared;
 
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath;
-- (BOOL)installApplicationAtPackagePath:(NSString*)packagePath;
 - (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
+- (NSBundle*)applicationBundleForBundleID:(NSString*)bundleID;
 - (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
-- (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID;
-- (NSArray<LDEApplicationObject*>*)allApplicationObjects;
+- (NSArray<NSBundle*>*)applicationBundleList;
 
 @end
 
-#endif /* LDEAPPLICATIONWORKSPACEPROXY_H */
+@interface LDEApplicationWorkspaceProxy : NSObject <LDEApplicationWorkspaceProxyProtocol>
+@end
+
+NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void);
+
+#endif

@@ -18,41 +18,52 @@
 */
 
 #import "LDEApplicationWorkspace.h"
+#import <LindChain/LiveContainer/FoundationPrivate.h>
+#import "../../serverDelegate.h"
 #import "../LiveContainer/zip.h"
 
 @interface LDEApplicationWorkspace ()
 
-@property (nonatomic,strong) NSString *applicationsPath;
-@property (nonatomic,strong) NSString *containersPath;
+@property (nonatomic,strong,readonly) NSExtension *extension;
+@property (nonatomic,strong,readonly) dispatch_semaphore_t sema;
 
 @end
 
 @implementation LDEApplicationWorkspace
 
-/*
- Init
- */
 - (instancetype)init
 {
     self = [super init];
     
-    // Setting up paths
-    self.applicationsPath = [NSString stringWithFormat:@"%@/Documents/Applications", NSHomeDirectory()];
-    self.containersPath = [NSString stringWithFormat:@"%@/Documents/Containers", NSHomeDirectory()];
+    _sema = dispatch_semaphore_create(0);
     
-    // Creating paths if they dont exist
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if(![fileManager fileExistsAtPath:self.applicationsPath])
-        [fileManager createDirectoryAtPath:self.applicationsPath
-               withIntermediateDirectories:YES
-                                attributes:nil
-                                     error:nil];
+    NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
+    if(!liveProcessBundle) {
+        return nil;
+    }
     
-    if(![fileManager fileExistsAtPath:self.containersPath])
-        [fileManager createDirectoryAtPath:self.containersPath
-               withIntermediateDirectories:YES
-                                attributes:nil
-                                     error:nil];
+    NSError* error = nil;
+    _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
+    if(error) {
+        return nil;
+    }
+    _extension.preferredLanguages = @[];
+    
+    NSExtensionItem *item = [NSExtensionItem new];
+    item.userInfo = @{
+        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"mode": @"management",
+    };
+    
+    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
+        NSLog(@"Extension down!");
+    }];
+    
+    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+        NSLog(@"Extension down!");
+    }];
+    
+    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
     
     return self;
 }
@@ -67,224 +78,101 @@
     return applicationWorkspaceSingleton;
 }
 
-/*
- Helper
- */
-- (NSArray<NSBundle*>*)applicationBundleList
-{
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray *uuidPaths = [fileManager contentsOfDirectoryAtPath:self.applicationsPath error:nil];
-    NSMutableArray<NSBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
-    for(NSString *uuidPath in uuidPaths)
-    {
-        NSString *bundlePath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
-        [applicationBundleList addObject:[NSBundle bundleWithPath:bundlePath]];
-    }
-    return applicationBundleList;
-}
-
-/*
- Action
- */
-NSString *fileTreeAtPathWithArrows(NSString *path);
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
 {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    // Getting bundle at bundlePath
-    NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
-    if(!bundle) return NO;
-    
-    // Now generating new path or using old path
-    NSString *installPath = nil;
-    NSBundle *previousApplication = [self applicationBundleForBundleID:bundle.bundleIdentifier];
-    if(previousApplication) {
-        // It existed before, using old path
-        [fileManager removeItemAtPath:previousApplication.bundlePath error:nil];
-        installPath = previousApplication.bundlePath;
-        previousApplication = nil;
-    } else {
-        // It didnt existed before, using new path
-        installPath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath,[[NSUUID UUID] UUIDString]];
-    }
-    
-    // Now installing at install location
-    [fileManager moveItemAtPath:bundle.bundlePath toPath:installPath error:nil];
-    
-    return YES;
+    __block BOOL result = NO;
+    NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
+    zipDirectoryAtPath(bundlePath, temporaryPackage);
+    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[NSFileManager defaultManager] removeItemAtPath:temporaryPackage error:nil];
+    return result;
+}
+
+- (BOOL)installApplicationAtPackagePath:(NSString *)packagePath
+{
+    __block BOOL result = NO;
+    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:packagePath] withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
 - (BOOL)deleteApplicationWithBundleID:(NSString *)bundleID
 {
-    NSBundle *previousApplication = [self applicationBundleForBundleID:bundleID];
-    if(previousApplication)
-    {
-        NSString *container = [self applicationContainerForBundleID:bundleID];
-        [[NSFileManager defaultManager] removeItemAtPath:previousApplication.bundlePath error:nil];
-        [[NSFileManager defaultManager] removeItemAtPath:container error:nil];
-        return YES;
-    }
-    return NO;
+    __block BOOL result = NO;
+    [_proxy deleteApplicationWithBundleID:bundleID withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
-- (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID
+- (BOOL)applicationInstalledWithBundleID:(NSString *)bundleID
 {
-    NSArray<NSBundle*> *bundleList = [self applicationBundleList];
-    for(NSBundle *bundle in bundleList) if([bundle.bundleIdentifier isEqualToString:bundleID]) return YES;
-    return NO;
+    __block BOOL result = NO;
+    [_proxy applicationInstalledWithBundleID:bundleID withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
-- (NSBundle*)applicationBundleForBundleID:(NSString *)bundleID
+- (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID
 {
-    NSArray<NSBundle*> *bundleList = [self applicationBundleList];
-    for(NSBundle *bundle in bundleList) if([bundle.bundleIdentifier isEqualToString:bundleID]) return bundle;
-    return NULL;
+    __block LDEApplicationObject *result = nil;
+    [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
 - (NSString*)applicationContainerForBundleID:(NSString *)bundleID
 {
-    NSBundle *bundle = [self applicationBundleForBundleID:bundleID];
-    NSString *uuid = [bundle.bundleURL lastPathComponent];
-    return [NSString stringWithFormat:@"%@/%@", self.containersPath, uuid];
+    __block NSString *result = nil;
+    [_proxy applicationContainerForBundleID:bundleID withReply:^(NSString *replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
-@end
-
-@implementation LDEApplicationWorkspaceProxy
-
-- (void)applicationInstalledWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply {
-    reply([[LDEApplicationWorkspace shared] applicationInstalledWithBundleID:bundleID]);
-}
-
-- (void)deleteApplicationWithBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply {
-    reply([[LDEApplicationWorkspace shared] deleteApplicationWithBundleID:bundleID]);
-}
-
-- (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *tempBundle = [NSString stringWithFormat:@"%@%@.app", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
-    unzipArchiveFromFileHandle(bundleHandle, tempBundle);
-    BOOL didInstall = [[LDEApplicationWorkspace shared] installApplicationAtBundlePath:tempBundle];
-    [fileManager removeItemAtPath:tempBundle error:nil];
-    reply(didInstall);
-}
-
-- (void)applicationObjectForBundleID:(NSString *)bundleID withReply:(void (^)(LDEApplicationObject *))reply
+- (NSArray<LDEApplicationObject*>*)allApplicationObjects
 {
-    NSBundle *bundle = [[LDEApplicationWorkspace shared] applicationBundleForBundleID:bundleID];
+    __block NSMutableArray<LDEApplicationObject*> *allApplicationObjects = [[NSMutableArray alloc] init];
+    __block NSArray<NSString*> *result = nil;
+    [_proxy allApplicationBundleIDWithReply:^(NSArray<NSString*> *replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
     
-    if(!bundle)
+    for(NSString *bundleID in result)
     {
-        reply(nil);
-        return;
+        [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
+            [allApplicationObjects addObject:replyResult];
+            dispatch_semaphore_signal(self.sema);
+        }];
+        dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
     }
     
-    LDEApplicationObject *appObj = [[LDEApplicationObject alloc] init];
-    appObj.bundleIdentifier = bundle.bundleIdentifier;
-    appObj.bundlePath = bundle.bundlePath;
-    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
-    }
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleExecutable"];
-    }
-    if (!displayName) {
-        displayName = @"Unknown App";
-    }
-    appObj.displayName = displayName;
-    appObj.containerPath = [[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundle.bundleIdentifier];
-    
-    reply(appObj);
-}
-
-- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSString*))reply
-{
-    reply([[LDEApplicationWorkspace shared] applicationContainerForBundleID:bundleID]);
-}
-
-- (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply
-{
-    NSMutableArray<NSString*> *allBundleIDs = [[NSMutableArray alloc] init];
-    NSArray<NSBundle*> *bundle = [[LDEApplicationWorkspace shared] applicationBundleList];
-    for(NSBundle *item in bundle)
-    {
-        [allBundleIDs addObject:item.bundleIdentifier];
-    }
-    reply(allBundleIDs);
+    return allApplicationObjects;
 }
 
 @end
 
-/*
- Server mgmt
- */
-/*
- Server + Client Side
- */
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
-@end
-
-@interface ServerManager : NSObject
-@property (nonatomic, strong) ServerDelegate *serverDelegate;
-@property (nonatomic, strong) NSXPCListener *listener;
-+ (instancetype)sharedManager;
-- (NSXPCListenerEndpoint*)getEndpointForNewConnections;
-@end
-
-
-@implementation ServerDelegate
-
-- (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
+__attribute__((constructor))
+void ldeApplicationWorkspaceProxyInit(void)
 {
-    newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
-    
-    LDEApplicationWorkspaceProxy *exportedObject = [LDEApplicationWorkspaceProxy alloc];
-    newConnection.exportedObject = exportedObject;
-    
-    [newConnection resume];
-    
-    printf("[Host App] Guest app connected\n");
-    
-    return YES;
-}
-
-- (NSXPCListener*)createAnonymousListener
-{
-    printf("creating new listener\n");
-    NSXPCListener *listener = [NSXPCListener anonymousListener];
-    listener.delegate = self;
-    [listener resume];
-    return listener;
-}
-
-@end
-
-@implementation ServerManager
-
-+ (instancetype)sharedManager {
-    static ServerManager *sharedInstance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sharedInstance = [[self alloc] init];
-
-        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
-            sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
-        //});
-    });
-    return sharedInstance;
-}
-
-- (NSXPCListenerEndpoint*)getEndpointForNewConnections
-{
-    NSXPCListenerEndpoint *endpoint = self.listener.endpoint;
-    return endpoint;
-}
-
-@end
-
-NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void)
-{
-    return [[ServerManager sharedManager] getEndpointForNewConnections];
+    [LDEApplicationWorkspace shared];
 }
