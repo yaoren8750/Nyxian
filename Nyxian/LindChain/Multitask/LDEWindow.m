@@ -7,7 +7,7 @@
 #import "../LiveContainer/Localization.h"
 #import "utils.h"
 #import <objc/runtime.h>
-#import <LindChain/Multitask/MultitaskManager.h>
+#import <LindChain/Multitask/LDEMultitaskManager.h>
 #import "../../../LiveProcess/serverDelegate.h"
 #import <LindChain/Debugger/Logger.h>
 
@@ -39,7 +39,6 @@ void UIKitFixesInit(void) {
 
 @property(nonatomic) UITextView *processLog;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
-//@property(nonatomic) NSString* dataUUID;
 @property(nonatomic) NSString* windowName;
 @property(nonatomic) int pid;
 @property(nonatomic) CGRect originalFrame;
@@ -53,25 +52,8 @@ void UIKitFixesInit(void) {
 - (instancetype)initWithBundleID:(NSString*)bundleID {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDelegate:self];
+    
     [self setupDecoratedView];
-    
-    /*self.processCrashLabel = [[UITextView alloc] initWithFrame:self.view.bounds];
-    self.processCrashLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.processCrashLabel.text = @"Process crashed";
-    self.processCrashLabel.textAlignment = NSTextAlignmentLeft;
-    self.processCrashLabel.alpha = 0.0;
-    self.processCrashLabel.font = [UIFont monospacedSystemFontOfSize:12.0 weight:UIFontWeightSemibold];
-    self.processCrashLabel.backgroundColor = UIColor.systemGray6Color;
-    self.processCrashLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    self.processCrashLabel.editable = NO;
-    self.processCrashLabel.selectable = YES;
-    self.processCrashLabel.scrollEnabled = YES;
-    self.processCrashLabel.autocorrectionType = UITextAutocorrectionTypeNo;
-    [self.view insertSubview:self.processCrashLabel atIndex:0];*/
-    
-    //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
-    
-    //self.dataUUID = dataUUID;
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
@@ -93,12 +75,6 @@ void UIKitFixesInit(void) {
             return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
         }]
     ];
-    
-    UIImage *minimizeImage = [UIImage systemImageNamed:@"minus.circle.fill"];
-    UIImageConfiguration *minimizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
-    minimizeImage = [minimizeImage imageWithConfiguration:minimizeConfig];
-    UIBarButtonItem *minimizeButton = [[UIBarButtonItem alloc] initWithImage:minimizeImage style:UIBarButtonItemStylePlain target:self action:@selector(minimizeWindow)];
-    minimizeButton.tintColor = [UIColor systemYellowColor];
     
     UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
     UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
@@ -137,12 +113,72 @@ void UIKitFixesInit(void) {
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
-        /*[NSLayoutConstraint activateConstraints:@[
-            [self.processCrashLabel.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
-            [self.processCrashLabel.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-            [self.processCrashLabel.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [self.processCrashLabel.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
-        ]];*/
+    });
+    
+    return self;
+}
+
+- (instancetype)initWithAttachment:(UIView*)attachment
+                         withTitle:(NSString*)title
+{
+    [self setupDecoratedView];
+    self.scaleRatio = 1.0;
+    self.isMaximized = NO;
+    self.originalFrame = CGRectZero;
+    self.windowName = title;
+    self.navigationItem.title = title;
+    
+    NSArray *menuItems = @[
+        [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
+            if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
+                [PiPManager.shared stopPiP];
+            } else {
+                [PiPManager.shared startPiPWithVC:self.appSceneVC];
+            }
+        }],
+        [UICustomViewMenuElement elementWithViewProvider:^UIView *(UICustomViewMenuElement *element) {
+            return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
+        }]
+    ];
+    
+    UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
+    UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
+    maximizeImage = [maximizeImage imageWithConfiguration:maximizeConfig];
+    self.maximizeButton = [[UIBarButtonItem alloc] initWithImage:maximizeImage style:UIBarButtonItemStylePlain target:self action:@selector(maximizeWindow)];
+    self.maximizeButton.tintColor = [UIColor systemGreenColor];
+    
+    if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+        NSArray *barButtonItems = @[];
+        self.navigationItem.rightBarButtonItems = barButtonItems;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            [self maximizeWindow];
+        });
+    } else {
+        NSArray *barButtonItems = @[self.maximizeButton];
+        self.navigationItem.rightBarButtonItems = barButtonItems;
+    }
+    
+    __weak typeof(self) weakSelf = self;
+    [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
+        if(!weakSelf.appSceneVC.isAppRunning) {
+            return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
+        } else {
+            NSString *pidText = [NSString stringWithFormat:@"Attachment"];
+            return [UIMenu menuWithTitle:pidText children:menuItems];
+        }
+    }];
+    
+    [self.view insertSubview:attachment atIndex:2];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
+        [NSLayoutConstraint activateConstraints:@[
+            [attachment.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
+            [attachment.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+            [attachment.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [attachment.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        ]];
     });
     
     return self;
@@ -207,15 +243,18 @@ void UIKitFixesInit(void) {
     self.view.layer.borderColor = UIColor.systemGray3Color.CGColor;
     //self.view.layer.borderColor = UIColor.secondarySystemBackgroundColor.CGColor;
     
-    [self addChildViewController:_appSceneVC];
-    [self.view insertSubview:_appSceneVC.view atIndex:0];
-    _appSceneVC.view.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    [self updateVerticalConstraints];
-    [NSLayoutConstraint activateConstraints:@[
-        [_appSceneVC.view.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-        [_appSceneVC.view.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
-    ]];
+    if(_appSceneVC)
+    {
+        [self addChildViewController:_appSceneVC];
+        [self.view insertSubview:_appSceneVC.view atIndex:0];
+        _appSceneVC.view.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        [self updateVerticalConstraints];
+        [NSLayoutConstraint activateConstraints:@[
+            [_appSceneVC.view.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [_appSceneVC.view.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
+        ]];
+    }
     
     
     //NSUserDefaults *defaults = NSUserDefaults.lcSharedDefaults;
@@ -357,8 +396,8 @@ void UIKitFixesInit(void) {
 
 - (void)appSceneVCAppDidExit:(AppSceneViewController*)vc {
     // "Moving" the textLog off of that dictionary to our VC to stop retaining it
-    LogTextView *textLog = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] objectForKey:@(self.pid)];
-    [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] removeObjectForKey:@(self.pid)];
+    //LogTextView *textLog = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] objectForKey:@(self.pid)];
+    //[[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] removeObjectForKey:@(self.pid)];
     if(_isAppTerminationRequested) {
         self.view.layer.masksToBounds = NO;
         [UIView transitionWithView:self.view.window
@@ -369,14 +408,14 @@ void UIKitFixesInit(void) {
         } completion:nil];
     } else {
         
-        self.processLog = textLog;
+        /*self.processLog = textLog;
         [self.view insertSubview:self.processLog atIndex:2];
         [NSLayoutConstraint activateConstraints:@[
             [self.processLog.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
             [self.processLog.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
             [self.processLog.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
             [self.processLog.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
-        ]];
+        ]];*/
     }
 }
 

@@ -17,7 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/Multitask/MultitaskManager.h>
+#import <LindChain/Multitask/LDEMultitaskManager.h>
 
 @implementation LDEMultitaskManager
 
@@ -46,13 +46,27 @@
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
                          terminateIfRunning:(BOOL)terminate
 {
-    LDEWindow *existingWindow = [self mainWindowForBundleIdentifier:bundleIdentifier];
-    if(existingWindow)
+    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
+    if(windowGroup)
     {
+        LDEWindow *mainWindow = [windowGroup firstObject];
         if(terminate)
-            [existingWindow restart];
+        {
+            [windowGroup removeObjectAtIndex:0];
+            for(LDEWindow *window in windowGroup)
+            {
+                [window closeWindow];
+            }
+            
+            NSMutableArray<LDEWindow*> *newWindowGroup = [[NSMutableArray alloc] init];
+            [newWindowGroup addObject:mainWindow];
+            [self.windowGroups setObject:newWindowGroup forKey:bundleIdentifier];
+            [mainWindow restart];
+        }
         else
-            [self.targetView bringSubviewToFront:existingWindow.view];
+        {
+            [self.targetView bringSubviewToFront:mainWindow.view];
+        }
         return YES;
     }
 
@@ -108,6 +122,19 @@
     [self.windowGroups removeObjectForKey:bundleIdentifier];
 }
 
+- (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier
+{
+    for(NSString *key in self.windowGroups) {
+        NSMutableArray<LDEWindow*> *windowGroup = self.windowGroups[key];
+        LDEWindow *mainWindow = [windowGroup firstObject];
+        if(mainWindow.appSceneVC.pid == processIdentifier)
+        {
+            return mainWindow.appSceneVC.appObj.bundleIdentifier;
+        }
+    }
+    return nil;
+}
+
 - (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier
 {
     for(NSString *key in self.windowGroups) if([key isEqualToString:bundleIdentifier]) return self.windowGroups[key];
@@ -123,6 +150,17 @@
 {
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
     if(windowGroup) for(LDEWindow *window in windowGroup) [self.targetView bringSubviewToFront:window.view];
+}
+
+- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier
+{
+    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
+    if(windowGroup)
+    {
+        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view withTitle:@"ProofOfConcept"];
+        [self.targetView addSubview:window.view];
+        [windowGroup addObject:window];
+    }
 }
 
 @end

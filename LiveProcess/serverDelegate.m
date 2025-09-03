@@ -20,6 +20,7 @@
 #import "serverDelegate.h"
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
+#import <LindChain/Multitask/LDEMultitaskManager.h>
 
 /*
  Server
@@ -46,16 +47,23 @@
 
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        LogTextView *textLog =  [self.textLogs objectForKey:@(pid)];
-        if(!textLog)
-        {
-            textLog = [[LogTextView alloc] init];
-            [self.textLogs setObject:textLog forKey:@(pid)];
-        }
-        int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
-        reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);
-    });
+    NSString *bundleIdentifier = [[LDEMultitaskManager shared] bundleIdentifierForProcessIdentifier:pid];
+    if(bundleIdentifier)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            LogTextView *textLog =  [self.textLogs objectForKey:@(pid)];
+            if(!textLog)
+            {
+                textLog = [[LogTextView alloc] init];
+                //[self.textLogs setObject:textLog forKey:@(pid)];
+                [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier];
+            }
+            int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
+            reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);
+        });
+    } else {
+        reply(nil);
+    }
 }
 
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint

@@ -16,6 +16,8 @@ API_AVAILABLE(ios(16.0))
 @property(nonatomic) CGFloat scaleRatio;
 
 - (instancetype)initWithBundleID:(NSString*)bundleID;
+- (instancetype)initWithAttachment:(UIView*)attachment
+                         withTitle:(NSString*)title;
 - (void)minimizeWindowPiP;
 - (void)unminimizeWindowPiP;
 - (void)updateVerticalConstraints;

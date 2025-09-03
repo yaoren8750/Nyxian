@@ -35,8 +35,11 @@
                          terminateIfRunning:(BOOL)terminate;
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 
+- (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier;
 - (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier;
 - (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
 - (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier;
+
+- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier;
 
 @end
