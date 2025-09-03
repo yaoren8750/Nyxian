@@ -16,6 +16,7 @@
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
 #import <LindChain/LogService/LogService.h>
+#import <LindChain/Debugger/MachServer.h>
 
 NSUserDefaults *lcUserDefaults;
 NSBundle *lcMainBundle;
@@ -187,6 +188,7 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     
     // TODO: No Debugger like that anymore, in the future use Mach debug server directly on the extensions task port
     //UIWindowHooksInit();
+    machServerInit();
     
     UIKitGuestHooksInit();
     initDead10ccFix();

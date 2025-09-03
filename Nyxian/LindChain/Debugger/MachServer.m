@@ -62,7 +62,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
     thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
     
-    log_putf("Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
+    printf("Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
              "PC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
              exceptionName(exception),
              get_thread_index_from_port(thread),
@@ -76,14 +76,15 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
              state.__pad);
     
     for (uint8_t i = 0; i < 29; i++)
-        log_putf("\nX%d: 0x%llx",
-                 i,
-                 state.__x[i]);
+        printf("\nX%d: 0x%llx",
+                i,
+                state.__x[i]);
     
     stack_trace_from_thread_state(state);
     log_deinitCrash(state.__pc);
     
-    //state.__pc = (uint64_t)restartProcess;
+    state.__pc = (uint64_t)exit;
+    state.__x[0] = 1;
     
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     

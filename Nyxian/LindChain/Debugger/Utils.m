@@ -39,7 +39,7 @@ typedef struct stack_frame {
 
 void stack_trace_from_thread_state(arm_thread_state64_t state)
 {
-    log_puts("\n\nFault Trace\n");
+    printf("\n\nFault Trace\n");
     
     stack_frame_t start_frame;
     start_frame.lr = (void*)state.__pc;
@@ -52,7 +52,7 @@ void stack_trace_from_thread_state(arm_thread_state64_t state)
     {
         const char *name = symbol_for_address(frame->lr);
         if(strcmp(name, "<unknown>") != 0)
-            log_putf("%s\n%s\n", name, [[Decompiler getDecompiledCodeBuffer:((UInt64)(depth == 0 ? frame->lr : frame->lr - 4))] UTF8String]);
+            printf("%s\n%s\n", name, [[Decompiler getDecompiledCodeBuffer:((UInt64)(depth == 0 ? frame->lr : frame->lr - 4))] UTF8String]);
         if(strcmp(name, "main") == 0)
             break;
             

@@ -24,7 +24,7 @@
 extern "C"  int ls_getfd(void);
 
 void NyxLLVMErrorHandler(void *userData, const char *reason, bool genCrashDiag) {
-    dprintf(ls_getfd(), "LLVM trapped fatal error: %s\n", reason);
+    //dprintf(ls_getfd(), "LLVM trapped fatal error: %s\n", reason);
 }
 
 __attribute__((constructor))

@@ -118,6 +118,7 @@
 				LindChain/Debugger/Utils.m,
 				LindChain/Decompiler/CodeBufferDecompiler.cpp,
 				LindChain/Decompiler/Decompiler.mm,
+				LindChain/Init.mm,
 				LindChain/litehook/src/litehook.c,
 				LindChain/LiveContainer/dyld_bypass_validation.m,
 				LindChain/LiveContainer/LCAppInfo.m,
