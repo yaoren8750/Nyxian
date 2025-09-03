@@ -198,7 +198,7 @@ void machServerInit(void)
     sigset_t set;
     sigemptyset(&set);
     for (int sig = 1; sig < NSIG; sig++)
-        if (sig != SIGKILL && sig != SIGSTOP && sig != SIGABRT)
+        if (sig != SIGKILL && sig != SIGSTOP && sig != SIGABRT && sig != SIGTERM)
             sigaddset(&set, sig);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
     
