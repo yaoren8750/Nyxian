@@ -146,8 +146,13 @@ static void *getAppEntryPoint(void *handle) {
     return (void *)header + entryoff;
 }
 
-NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]) {
-    machServerInit();
+NSString* invokeAppMain(BOOL attachMachServer,
+                        NSString *bundlePath,
+                        NSString *homePath,
+                        int argc,
+                        char *argv[])
+{
+    if(attachMachServer) machServerInit();
     
     // Getting guestMainBundle
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];

@@ -25,7 +25,11 @@
 #import "LindChain/LiveProcess/LDEApplicationWorkspaceInternal.h"
 #import <LindChain/litehook/src/litehook.h>
 
-NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
+NSString* invokeAppMain(BOOL attachMachServer,
+                        NSString *bundlePath,
+                        NSString *homePath,
+                        int argc,
+                        char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
 @interface LiveProcessHandler : NSObject<NSExtensionRequestHandling>
@@ -78,18 +82,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    // Handoff stdout and stderr output to host app
-    if(debugEnabled.boolValue)
-    {
-        dispatch_group_t group = dispatch_group_create();
-        dispatch_group_enter(group);
-        [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
-            dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-            dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
-            dispatch_group_leave(group);
-        }];
-    }
-    
     if([mode isEqualToString:@"management"])
     {
         // Application management daemon
@@ -102,10 +94,23 @@ int LiveProcessMain(int argc, char *argv[]) {
     }
     else
     {
+        // Handoff stdout and stderr output to host app
+        // Debugging is only for applications
+        if(debugEnabled.boolValue)
+        {
+            dispatch_group_t group = dispatch_group_create();
+            dispatch_group_enter(group);
+            [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
+                dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
+                dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+                dispatch_group_leave(group);
+            }];
+        }
+        
         // MARK: Keep it alive
         char *argv[1] = { NULL };
         int argc = 0;
-        NSString *error = invokeAppMain(appObj.bundlePath, appObj.containerPath, argc, argv);
+        NSString *error = invokeAppMain(debugEnabled.boolValue ,appObj.bundlePath, appObj.containerPath, argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     
