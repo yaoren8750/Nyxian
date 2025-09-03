@@ -110,9 +110,7 @@
 		79BF9A972E62BB6900C60D4C /* Exceptions for "Nyxian" folder in "LiveProcess" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				LindChain/Debugger/Debugger.m,
 				LindChain/Debugger/Dwarf.cpp,
-				LindChain/Debugger/Log.m,
 				LindChain/Debugger/Logger.m,
 				LindChain/Debugger/MachServer.m,
 				LindChain/Debugger/Utils.m,
@@ -134,7 +132,6 @@
 				LindChain/LiveContainer/Tweaks/NSUserDefaults.m,
 				LindChain/LiveContainer/Tweaks/SecItem.m,
 				"LindChain/LiveContainer/Tweaks/UIKit+GuestHooksInit.m",
-				LindChain/LiveContainer/Tweaks/UIWindowHooks.m,
 				LindChain/LiveContainer/utils.m,
 				LindChain/LiveContainer/ZSign/archo.cpp,
 				LindChain/LiveContainer/ZSign/bundle.cpp,

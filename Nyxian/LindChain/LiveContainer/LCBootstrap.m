@@ -147,6 +147,8 @@ static void *getAppEntryPoint(void *handle) {
 }
 
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]) {
+    machServerInit();
+    
     // Getting guestMainBundle
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:bundlePath];
     if(!guestMainBundle)
@@ -185,11 +187,6 @@ NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
-    
-    // TODO: No Debugger like that anymore, in the future use Mach debug server directly on the extensions task port
-    //UIWindowHooksInit();
-    machServerInit();
-    
     UIKitGuestHooksInit();
     initDead10ccFix();
     DyldHooksInit();

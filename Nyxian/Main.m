@@ -20,7 +20,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Nyxian-Swift.h>
-#import <LindChain/Debugger/Debugger.h>
 #import "bridge.h"
 
 /*

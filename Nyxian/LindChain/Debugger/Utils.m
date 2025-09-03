@@ -18,7 +18,6 @@
 */
 
 #include "Utils.h"
-#include "Log.h"
 
 const char *symbol_for_address(void *addr)
 {

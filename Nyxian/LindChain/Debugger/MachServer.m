@@ -18,7 +18,6 @@
 */
 
 #import <Foundation/Foundation.h>
-//#import <LindChain/Private/Restart.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +28,6 @@
 #include <mach/thread_state.h>
 #include "litehook.h"
 #include "Utils.h"
-#include "Log.h"
 
 const char *exceptionName(exception_type_t exception)
 {
@@ -81,7 +79,6 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
                 state.__x[i]);
     
     stack_trace_from_thread_state(state);
-    log_deinitCrash(state.__pc);
     
     state.__pc = (uint64_t)exit;
     state.__x[0] = 1;
@@ -194,9 +191,6 @@ DEFINE_HOOK(exit, void, (int code))
 
 void machServerInit(void)
 {
-    // Init log
-    log_init();
-    
     // Hooking exit to avoid exiting the process
     DO_HOOK_GLOBAL(exit);
     
