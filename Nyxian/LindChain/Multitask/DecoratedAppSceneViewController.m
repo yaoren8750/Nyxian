@@ -8,6 +8,8 @@
 #import "utils.h"
 #import <objc/runtime.h>
 #import <LindChain/Multitask/MultitaskManager.h>
+#import "../../../LiveProcess/serverDelegate.h"
+#import <LindChain/Debugger/Logger.h>
 
 @implementation RBSTarget(hook)
 + (instancetype)hook_targetWithPid:(pid_t)pid environmentIdentifier:(NSString *)environmentIdentifier {
@@ -35,7 +37,7 @@ void UIKitFixesInit(void) {
 
 @interface DecoratedAppSceneViewController ()
 
-@property(nonatomic) UILabel *processCrashLabel;
+@property(nonatomic) UITextView *processLog;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
 //@property(nonatomic) NSString* dataUUID;
 @property(nonatomic) NSString* windowName;
@@ -53,14 +55,19 @@ void UIKitFixesInit(void) {
     _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDelegate:self];
     [self setupDecoratedView];
     
-    self.processCrashLabel = [[UILabel alloc] initWithFrame:self.view.bounds];
+    /*self.processCrashLabel = [[UITextView alloc] initWithFrame:self.view.bounds];
     self.processCrashLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.processCrashLabel.lineBreakMode = NSLineBreakByWordWrapping;
-    self.processCrashLabel.numberOfLines = 0;
     self.processCrashLabel.text = @"Process crashed";
-    self.processCrashLabel.textAlignment = NSTextAlignmentCenter;
+    self.processCrashLabel.textAlignment = NSTextAlignmentLeft;
     self.processCrashLabel.alpha = 0.0;
-    [self.view insertSubview:self.processCrashLabel atIndex:0];
+    self.processCrashLabel.font = [UIFont monospacedSystemFontOfSize:12.0 weight:UIFontWeightSemibold];
+    self.processCrashLabel.backgroundColor = UIColor.systemGray6Color;
+    self.processCrashLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.processCrashLabel.editable = NO;
+    self.processCrashLabel.selectable = YES;
+    self.processCrashLabel.scrollEnabled = YES;
+    self.processCrashLabel.autocorrectionType = UITextAutocorrectionTypeNo;
+    [self.view insertSubview:self.processCrashLabel atIndex:0];*/
     
     //[MultitaskDockManager.shared addRunningApp:windowName appUUID:dataUUID view:self.view];
     
@@ -130,6 +137,12 @@ void UIKitFixesInit(void) {
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
+        /*[NSLayoutConstraint activateConstraints:@[
+            [self.processCrashLabel.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
+            [self.processCrashLabel.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+            [self.processCrashLabel.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [self.processCrashLabel.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
+        ]];*/
     });
     
     return self;
@@ -339,11 +352,10 @@ void UIKitFixesInit(void) {
 }
 
 - (void)appSceneVCAppDidExit:(AppSceneViewController*)vc {
+    // "Moving" the textLog off of that dictionary to our VC to stop retaining it
+    LogTextView *textLog = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] objectForKey:@(self.pid)];
+    [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] removeObjectForKey:@(self.pid)];
     if(_isAppTerminationRequested) {
-        
-        //MultitaskDockManager *dock = [MultitaskDockManager shared];
-        //[dock removeRunningApp:self.dataUUID];
-        
         self.view.layer.masksToBounds = NO;
         [UIView transitionWithView:self.view.window
                           duration:0.4
@@ -352,13 +364,23 @@ void UIKitFixesInit(void) {
             self.view.hidden = YES;
         } completion:nil];
     } else {
-        self.processCrashLabel.alpha = 0.0;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [UIView animateWithDuration:0.25 animations:^{
-                self.processCrashLabel.alpha = 1.0;
-            }];
-        });
+        
+        self.processLog = textLog;
+        [self.view insertSubview:self.processLog atIndex:2];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.processLog.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
+            [self.processLog.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+            [self.processLog.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [self.processLog.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
+        ]];
     }
+}
+
+- (void)restart
+{
+    [self.processLog removeFromSuperview];
+    self.processLog = nil;
+    [self.appSceneVC restart];
 }
 
 - (void)appSceneVC:(AppSceneViewController*)vc didInitializeWithError:(NSError *)error {

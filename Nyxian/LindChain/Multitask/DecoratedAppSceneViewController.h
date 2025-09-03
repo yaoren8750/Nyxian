@@ -20,5 +20,6 @@ API_AVAILABLE(ios(16.0))
 - (void)unminimizeWindowPiP;
 - (void)updateVerticalConstraints;
 - (void)closeWindow;
+- (void)restart;
 
 @end

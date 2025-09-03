@@ -50,7 +50,7 @@
     if(existingWindow)
     {
         if(terminate)
-            [existingWindow.appSceneVC restart];
+            [existingWindow restart];
         else
             [self.targetView bringSubviewToFront:existingWindow.view];
         return YES;

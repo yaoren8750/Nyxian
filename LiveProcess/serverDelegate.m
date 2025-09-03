@@ -21,7 +21,17 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
 
+/*
+ Server
+ */
 @implementation TestService
+
+- (instancetype)init
+{
+    self = [super init];
+    self.textLogs = [[NSMutableDictionary alloc] init];
+    return self;
+}
 
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
 {
@@ -32,6 +42,20 @@
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply
 {
     reply([[NSFileHandle alloc] initWithFileDescriptor:STDOUT_FILENO]);
+}
+
+- (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        LogTextView *textLog =  [self.textLogs objectForKey:@(pid)];
+        if(!textLog)
+        {
+            textLog = [[LogTextView alloc] init];
+            [self.textLogs setObject:textLog forKey:@(pid)];
+        }
+        int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
+        reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);
+    });
 }
 
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
@@ -56,11 +80,18 @@
 
 @implementation ServerDelegate
 
+- (instancetype)init
+{
+    self = [super init];
+    _globalProxy = [[TestService alloc] init];
+    return self;
+}
+
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
     
-    TestService *exportedObject = [TestService alloc];
+    TestService *exportedObject = _globalProxy;
     newConnection.exportedObject = exportedObject;
     
     [newConnection resume];
@@ -88,11 +119,8 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedInstance = [[self alloc] init];
-
-        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
-            sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
-        //});
+        sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
+        sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
     });
     return sharedInstance;
 }

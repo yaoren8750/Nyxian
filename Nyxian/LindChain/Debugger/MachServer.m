@@ -60,7 +60,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     mach_msg_type_number_t count = ARM_THREAD_STATE64_COUNT;
     thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &count);
     
-    printf("Exception\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
+    printf("\nException\n[%s] thread %d faulting at 0x%llx(%s)\n\nRegister\n"
              "PC: 0x%llx\nSP: 0x%llx\nFP: 0x%llx\nLR: 0x%llx\nCPSR: 0x%x\nPAD: 0x%x",
              exceptionName(exception),
              get_thread_index_from_port(thread),

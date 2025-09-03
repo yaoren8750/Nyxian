@@ -80,7 +80,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     // Handoff stdout and stderr output to host app
     dispatch_group_t group = dispatch_group_create();
     dispatch_group_enter(group);
-    [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
+    [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
         dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
         dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
         dispatch_group_leave(group);
