@@ -46,7 +46,7 @@
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
                          terminateIfRunning:(BOOL)terminate
 {
-    DecoratedAppSceneViewController *existingWindow = [self mainWindowForBundleIdentifier:bundleIdentifier];
+    LDEWindow *existingWindow = [self mainWindowForBundleIdentifier:bundleIdentifier];
     if(existingWindow)
     {
         if(terminate)
@@ -85,9 +85,9 @@
         }
         
         // Go!
-        DecoratedAppSceneViewController *decoratedAppSceneViewController = [[DecoratedAppSceneViewController alloc] initWithBundleID:bundleIdentifier];
+        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier];
         [self.targetView addSubview:decoratedAppSceneViewController.view];
-        NSMutableArray<DecoratedAppSceneViewController*> *windowGroup = [[NSMutableArray alloc] init];
+        NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];
         [windowGroup addObject:decoratedAppSceneViewController];
         [self.windowGroups setObject:windowGroup forKey:bundleIdentifier];
         result = YES;
@@ -103,26 +103,26 @@
 
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
 {
-    NSMutableArray<DecoratedAppSceneViewController*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];;
-    if(windowGroup) for(DecoratedAppSceneViewController *window in windowGroup) [window closeWindow];
+    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];;
+    if(windowGroup) for(LDEWindow *window in windowGroup) [window closeWindow];
     [self.windowGroups removeObjectForKey:bundleIdentifier];
 }
 
-- (NSMutableArray<DecoratedAppSceneViewController*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier
+- (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier
 {
     for(NSString *key in self.windowGroups) if([key isEqualToString:bundleIdentifier]) return self.windowGroups[key];
     return nil;
 }
 
-- (DecoratedAppSceneViewController*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier
+- (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier
 {
     return [[self windowGroupForBundleIdentifier:bundleIdentifier] firstObject];
 }
 
 - (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier
 {
-    NSMutableArray<DecoratedAppSceneViewController*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    if(windowGroup) for(DecoratedAppSceneViewController *window in windowGroup) [self.targetView bringSubviewToFront:window.view];
+    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
+    if(windowGroup) for(LDEWindow *window in windowGroup) [self.targetView bringSubviewToFront:window.view];
 }
 
 @end

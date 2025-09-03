@@ -6,7 +6,7 @@
 //
 #include "PiPManager.h"
 #include "AppSceneViewController.h"
-#include "DecoratedAppSceneViewController.h"
+#include "LDEWindow.h"
 #include "../LiveContainer/utils.h"
 
 API_AVAILABLE(ios(16.0))
@@ -27,7 +27,7 @@ static PiPManager* sharedInstance = nil;
     return sharedInstance;
 }
 
-- (DecoratedAppSceneViewController *)displayingDecoratedVC {
+- (LDEWindow *)displayingDecoratedVC {
     return (id)self.displayingVC.delegate;
 }
 

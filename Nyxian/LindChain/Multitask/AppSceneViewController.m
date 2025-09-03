@@ -5,7 +5,7 @@
 //  Created by s s on 2025/5/17.
 //
 #import "AppSceneViewController.h"
-#import "DecoratedAppSceneViewController.h"
+#import "LDEWindow.h"
 //#import "LiveContainerSwiftUI-Swift.h"
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "PiPManager.h"

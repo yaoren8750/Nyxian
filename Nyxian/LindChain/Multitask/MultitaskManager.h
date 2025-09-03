@@ -20,12 +20,12 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Project/NXProject.h>
-#import <LindChain/Multitask/DecoratedAppSceneViewController.h>
+#import <LindChain/Multitask/LDEWindow.h>
 
 @interface LDEMultitaskManager : NSObject
 
 @property (nonatomic,strong) UIWindow *targetView;
-@property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<DecoratedAppSceneViewController*>*> *windowGroups;
+@property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<LDEWindow*>*> *windowGroups;
 
 - (instancetype)init;
 + (LDEMultitaskManager*)shared;
@@ -35,8 +35,8 @@
                          terminateIfRunning:(BOOL)terminate;
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 
-- (NSMutableArray<DecoratedAppSceneViewController*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier;
-- (DecoratedAppSceneViewController*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
+- (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier;
+- (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
 - (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier;
 
 @end

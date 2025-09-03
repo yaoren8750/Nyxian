@@ -1,4 +1,4 @@
-#import "DecoratedAppSceneViewController.h"
+#import "LDEWindow.h"
 #import "ResizeHandleView.h"
 //#import "LiveContainerSwiftUI-Swift.h"
 #import "AppSceneViewController.h"
@@ -35,7 +35,7 @@ void UIKitFixesInit(void) {
     }
 }
 
-@interface DecoratedAppSceneViewController ()
+@interface LDEWindow ()
 
 @property(nonatomic) UITextView *processLog;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
@@ -48,7 +48,7 @@ void UIKitFixesInit(void) {
 
 @end
 
-@implementation DecoratedAppSceneViewController
+@implementation LDEWindow
 
 - (instancetype)initWithBundleID:(NSString*)bundleID {
     self = [super initWithNibName:nil bundle:nil];
