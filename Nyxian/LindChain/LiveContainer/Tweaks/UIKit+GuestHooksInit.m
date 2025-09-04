@@ -12,14 +12,14 @@ NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 void UIKitGuestHooksInit(void)
 {
     
-    [ObjCSwizzler replaceClassAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
-    [ObjCSwizzler replaceClassAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__connectUISceneFromFBSScene:transitionContext:)];
-    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIApplication.class withAction:@selector(hook_openURL:options:completionHandler:)];
-    [ObjCSwizzler replaceClassAction:@selector(canOpenURL:) ofClass:UIApplication.class withAction:@selector(hook_canOpenURL:)];
-    [ObjCSwizzler replaceClassAction:@selector(setDelegate:) ofClass:UIApplication.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
-    [ObjCSwizzler replaceClassAction:@selector(scene:didReceiveActions:fromTransitionContext:) ofClass:UIScene.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
-    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
-    [ObjCSwizzler replaceClassAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__connectUISceneFromFBSScene:transitionContext:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIApplication.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(canOpenURL:) ofClass:UIApplication.class withAction:@selector(hook_canOpenURL:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(setDelegate:) ofClass:UIApplication.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(scene:didReceiveActions:fromTransitionContext:) ofClass:UIScene.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
     /*NSInteger LCOrientationLockDirection = [NSUserDefaults.guestAppInfo[@"LCOrientationLock"] integerValue];
     if([UIDevice.currentDevice userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
         switch (LCOrientationLockDirection) {
@@ -34,10 +34,12 @@ void UIKitGuestHooksInit(void)
         }*/
         //if(!NSUserDefaults.isLiveProcess && LCOrientationLock != UIInterfaceOrientationUnknown) {
 //            swizzle(UIApplication.class, @selector(_handleDelegateCallbacksWithOptions:isSuspended:restoreState:), @selector(hook__handleDelegateCallbacksWithOptions:isSuspended:restoreState:));
-    [ObjCSwizzler replaceClassAction:@selector(initWithXPCDictionary:) ofClass:FBSSceneParameters.class withAction:@selector(hook_initWithXPCDictionary:)];
-    [ObjCSwizzler replaceClassAction:@selector(__supportedInterfaceOrientations) ofClass:UIViewController.class withAction:@selector(hook___supportedInterfaceOrientations)];
-    [ObjCSwizzler replaceClassAction:@selector(shouldAutorotateToInterfaceOrientation:) ofClass:UIViewController.class withAction:@selector(hook_shouldAutorotateToInterfaceOrientation:)];
-    [ObjCSwizzler replaceClassAction:@selector(setAutorotates:forceUpdateInterfaceOrientation:) ofClass:UIWindow.class withAction:@selector(hook_setAutorotates:forceUpdateInterfaceOrientation:)];
+    
+    // FIXME: Causes sizing issues
+    //[ObjCSwizzler replaceInstanceAction:@selector(initWithXPCDictionary:) ofClass:FBSSceneParameters.class withAction:@selector(hook_initWithXPCDictionary:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(__supportedInterfaceOrientations) ofClass:UIViewController.class withAction:@selector(hook___supportedInterfaceOrientations)];
+    [ObjCSwizzler replaceInstanceAction:@selector(shouldAutorotateToInterfaceOrientation:) ofClass:UIViewController.class withAction:@selector(hook_shouldAutorotateToInterfaceOrientation:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(setAutorotates:forceUpdateInterfaceOrientation:) ofClass:UIWindow.class withAction:@selector(hook_setAutorotates:forceUpdateInterfaceOrientation:)];
         //}
 
     //}
