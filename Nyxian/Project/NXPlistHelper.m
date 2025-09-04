@@ -49,7 +49,7 @@
 - (BOOL)reloadIfNeeded
 {
     NSDate *modDate = [self lastFileModificationDate];
-    BOOL needsReload = _savedModificationDate < modDate;
+    BOOL needsReload = [_savedModificationDate compare:modDate] == NSOrderedAscending;
     if(needsReload)
     {
         _dictionary = [[NSMutableDictionary alloc] initWithContentsOfFile:_plistPath];
