@@ -12,14 +12,14 @@ NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 void UIKitGuestHooksInit(void)
 {
     
-    [ObjCSwizzler replaceInstanceAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
+    /*[ObjCSwizzler replaceInstanceAction:@selector(_applicationOpenURLAction:payload:origin:) ofClass:UIApplication.class withAction:@selector(hook__applicationOpenURLAction:payload:origin:)];
     [ObjCSwizzler replaceInstanceAction:@selector(_connectUISceneFromFBSScene:transitionContext:) ofClass:UIApplication.class withAction:@selector(hook__connectUISceneFromFBSScene:transitionContext:)];
     [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIApplication.class withAction:@selector(hook_openURL:options:completionHandler:)];
     [ObjCSwizzler replaceInstanceAction:@selector(canOpenURL:) ofClass:UIApplication.class withAction:@selector(hook_canOpenURL:)];
     [ObjCSwizzler replaceInstanceAction:@selector(setDelegate:) ofClass:UIApplication.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
     [ObjCSwizzler replaceInstanceAction:@selector(scene:didReceiveActions:fromTransitionContext:) ofClass:UIScene.class withAction:@selector(hook_scene:didReceiveActions:fromTransitionContext:)];
     [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
-    [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];
+    [ObjCSwizzler replaceInstanceAction:@selector(openURL:options:completionHandler:) ofClass:UIScene.class withAction:@selector(hook_openURL:options:completionHandler:)];*/
     /*NSInteger LCOrientationLockDirection = [NSUserDefaults.guestAppInfo[@"LCOrientationLock"] integerValue];
     if([UIDevice.currentDevice userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
         switch (LCOrientationLockDirection) {
@@ -60,10 +60,10 @@ void UIKitGuestHooksInit(void)
     }
     
     return infoDict[@"LCDataUUID"];
-}
+}*/
 
 
-void LCShowSwitchAppConfirmation(NSURL *url, NSString* bundleId, bool isSharedApp) {
+/*void LCShowSwitchAppConfirmation(NSURL *url, NSString* bundleId, bool isSharedApp) {
     NSURLComponents* newUrlComp = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
     newUrlComp.scheme = @"livecontainer2";
     
@@ -356,8 +356,9 @@ BOOL canAppOpenItself(NSURL* url) {
 @end
 
 // Handler for SceneDelegate
-@implementation UIScene(LiveContainerHook)
-/*- (void)hook_scene:(id)scene didReceiveActions:(NSSet *)actions fromTransitionContext:(id)context {
+/*@implementation UIScene (LiveContainerHook)
+
+- (void)hook_scene:(id)scene didReceiveActions:(NSSet *)actions fromTransitionContext:(id)context {
     UIOpenURLAction *urlAction = nil;
     for (id obj in actions.allObjects) {
         if ([obj isKindOfClass:UIOpenURLAction.class]) {
@@ -435,8 +436,9 @@ BOOL canAppOpenItself(NSURL* url) {
     } else {
         [self hook_openURL:url options:options completionHandler:completion];
     }
-}*/
-@end
+}
+
+@end*/
 
 @implementation FBSSceneParameters(LiveContainerHook)
 - (instancetype)hook_initWithXPCDictionary:(NSDictionary*)dict {
@@ -444,8 +446,19 @@ BOOL canAppOpenItself(NSURL* url) {
     FBSSceneParameters* ans = [self hook_initWithXPCDictionary:dict];
     UIMutableApplicationSceneSettings* settings = [ans.settings mutableCopy];
     UIMutableApplicationSceneClientSettings* clientSettings = [ans.clientSettings mutableCopy];
-    [settings setInterfaceOrientation:LCOrientationLock];
-    [clientSettings setInterfaceOrientation:LCOrientationLock];
+    
+    /*NSLog(@"Before set");
+    NSLog(@"%d", settings.interfaceOrientation);
+    NSLog(@"%d", clientSettings.interfaceOrientation);
+    
+    //[settings setInterfaceOrientation:UIInterfaceOrientationUnknown];
+    [clientSettings setInterfaceOrientation:UIInterfaceOrientationUnknown];
+    
+    
+    NSLog(@"After set");
+    NSLog(@"%d", settings.interfaceOrientation);
+    NSLog(@"%d", clientSettings.interfaceOrientation);*/
+    
     ans.settings = settings;
     ans.clientSettings = clientSettings;
     return ans;
