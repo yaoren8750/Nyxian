@@ -22,7 +22,7 @@
 
 @interface NXProjectTableCell ()
 
-@property (nonatomic,strong,readonly) NXProject *project;
+//@property (nonatomic,strong,readonly) NXProject *project;
 
 @end
 
@@ -31,16 +31,16 @@
 - (instancetype)initWithProject:(NXProject *)project
 {
     self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    _project = project;
-    [self setupViews];
+    //_project = project;
+    [self setupViews:project];
     return self;
 }
 
-- (void)setupViews
+- (void)setupViews:(NXProject*)project
 {
-    self.textLabel.text = self.project.projectConfig.displayName;
+    self.textLabel.text = project.projectConfig.displayName;
     self.textLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightBold];
-    self.detailTextLabel.text = self.project.projectConfig.bundleid;
+    self.detailTextLabel.text = project.projectConfig.bundleid;
     self.detailTextLabel.font = [UIFont systemFontOfSize:10];
     
     self.textLabel.numberOfLines = 1;
@@ -81,12 +81,12 @@
         self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 }
 
-- (void)reload
+/*- (void)reload
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         self.textLabel.text = self.project.projectConfig.displayName;
         self.detailTextLabel.text = self.project.projectConfig.bundleid;
     });
-}
+}*/
 
 @end

@@ -27,7 +27,6 @@
 @interface NXProjectTableCell : UITableViewCell
 
 - (instancetype)initWithProject:(id)project;
-- (void)reload;
 
 @end
 

@@ -21,17 +21,9 @@ import Foundation
 import UIKit
 
 @objc class ContentViewController: UITableViewController, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
+    var sessionIndex: IndexPath? = nil
     var projects: [NXProject] = []
     var path: String
-    
-    var lastProjectSelected: String? {
-        get {
-            return UserDefaults.standard.string(forKey: "LDELastProjectSelected")
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "LDELastProjectSelected")
-        }
-    }
     
     @objc init(path: String) {
         RevertUI()
@@ -80,10 +72,6 @@ import UIKit
         self.projects = NXProject.listProjects(atPath: self.path) as! [NXProject]
         
         self.tableView.reloadData()
-        
-        if let lastProjectSelected = lastProjectSelected {
-            openProject(project: NXProject(path: "\(self.path)/\(lastProjectSelected)"), animated: false, saveProject: false)
-        }
     }
     
     func createProject(mode: NXProjectType) {
@@ -101,7 +89,8 @@ import UIKit
         
         let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .cancel)
         
-        let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { action -> Void in
+        let createAction: UIAlertAction = UIAlertAction(title: "Create", style: .default) { [weak self] action -> Void in
+            guard let self = self else { return }
             let name = (alert.textFields![0]).text!
             let bundleid = (alert.textFields![1]).text!
             
@@ -123,10 +112,11 @@ import UIKit
         self.present(alert, animated: true)
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        if UIDevice.current.userInterfaceIdiom != .pad {
-            lastProjectSelected = nil
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if let indexPath = sessionIndex {
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
         }
     }
     
@@ -135,33 +125,25 @@ import UIKit
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        self.projects[indexPath.row].reload()
-        return self.projects[indexPath.row].tableCell
+        let selectedProject: NXProject = self.projects[indexPath.row]
+        if sessionIndex != nil { selectedProject.reload() }
+        return NXProjectTableCell(project: selectedProject)
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-
-        openProject(index: indexPath.row)
-    }
-    
-    func openProject(index: Int = 0, project: NXProject? = nil, animated: Bool = true, saveProject: Bool = true) {
-        let selectedProject: NXProject = {
-            guard let project = project else { return projects[index] }
-            return project
-        }()
+        
+        sessionIndex = indexPath
+        
+        let selectedProject: NXProject = self.projects[indexPath.row]
         
         if UIDevice.current.userInterfaceIdiom == .pad {
             let padFileVC: MainSplitViewController = MainSplitViewController(project: selectedProject)
             padFileVC.modalPresentationStyle = .fullScreen
-            self.present(padFileVC, animated: animated)
+            self.present(padFileVC, animated: true)
         } else {
             let fileVC = FileListViewController(project: selectedProject)
-            self.navigationController?.pushViewController(fileVC, animated: animated)
-        }
-        
-        if saveProject {
-            lastProjectSelected = selectedProject.uuid
+            self.navigationController?.pushViewController(fileVC, animated: true)
         }
     }
     

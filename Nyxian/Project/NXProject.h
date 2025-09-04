@@ -62,7 +62,7 @@ static NXProjectType const NXProjectTypeBinary = 2;
 
 @interface NXProject : NSObject
 
-@property (nonatomic,strong,readonly) UITableViewCell *tableCell;
+//@property (nonatomic,strong,readonly) UITableViewCell *tableCell;
 @property (nonatomic,strong,readonly) NXProjectConfig *projectConfig;
 @property (nonatomic,strong,readonly) NXCodeEditorConfig *codeEditorConfig;
 

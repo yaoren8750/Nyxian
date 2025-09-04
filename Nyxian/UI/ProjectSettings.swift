@@ -80,7 +80,7 @@ class ProjectSettingsViewController: UITableViewController {
             let cell: TextFieldTableCellHandler = TextFieldTableCellHandler(title: self.vtkey[indexPath.section - 1][indexPath.row].1, value: self.vtkey[indexPath.section - 1][indexPath.row].0)
             cell.writeHandler = { value in
                 self.project.projectConfig.writeKey(self.vtkey[indexPath.section - 1][indexPath.row].2, withValue: value)
-                (self.project.tableCell as! NXProjectTableCell).reload()
+                //(self.project.tableCell as! NXProjectTableCell).reload()
             }
             return cell
         } else {

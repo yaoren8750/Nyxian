@@ -82,7 +82,7 @@
     _cachePath = [[Bootstrap shared] bootstrapPath:[NSString stringWithFormat:@"/Cache/%@", [self uuid]]];
     _projectConfig = [[NXProjectConfig alloc] initWithPlistPath:[NSString stringWithFormat:@"%@/Config/Project.plist", self.path]];
     _codeEditorConfig = [[NXCodeEditorConfig alloc] initWithPlistPath:[NSString stringWithFormat:@"%@/Config/Editor.plist", self.path]];
-    _tableCell = [[NXProjectTableCell alloc] initWithProject:self];
+    //_tableCell = [[NXProjectTableCell alloc] initWithProject:self];
     return self;
 }
 
@@ -162,9 +162,9 @@
 - (BOOL)reload
 {
     BOOL needsUIReload = [[self projectConfig] reloadIfNeeded];
-    NXProjectTableCell *tableCell = (NXProjectTableCell*)[self tableCell];
-    if(needsUIReload)
-        [tableCell reload];
+    //NXProjectTableCell *tableCell = (NXProjectTableCell*)[self tableCell];
+    //if(needsUIReload)
+        //[tableCell reload];
     return needsUIReload;
 }
 
