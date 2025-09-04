@@ -222,27 +222,27 @@ class Builder {
     }
     
     func install(buildType: Builder.BuildType) throws {
-        let semaphore = DispatchSemaphore(value: 0)
-        let appInfo = LCAppInfo(bundlePath: project.bundlePath)
-        LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, meow in
-            guard let self = self else { return }
-            if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
-                appInfo?.save()
-                if(buildType == .RunningApp) {
+        if(buildType == .RunningApp) {
+            let semaphore = DispatchSemaphore(value: 0)
+            let appInfo = LCAppInfo(bundlePath: project.bundlePath)
+            LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, meow in
+                guard let self = self else { return }
+                if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
+                    appInfo?.save()
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
                         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
                                                                      enableDebugging: project.projectConfig.forceDebugging)
                     }
                 } else {
-                    try? self.package()
+                    print(meow ?? "Unk")
                 }
-            } else {
-                print(meow ?? "Unk")
-            }
-            semaphore.signal()
-        }, progressHandler: { progress in }, forceSign: false)
-        semaphore.wait()
+                semaphore.signal()
+            }, progressHandler: { progress in }, forceSign: false)
+            semaphore.wait()
+        } else {
+            try? self.package()
+        }
     }
     
     func package() throws {
