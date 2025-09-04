@@ -21,6 +21,9 @@ import UIKit
 
 class MainSplitViewController: UISplitViewController, UISplitViewControllerDelegate {
     let project: NXProject
+    var masterVC: FileListViewController?
+    var detailVC: SplitScreenDetailViewController?
+    var lock: NSLock = NSLock()
     
     init(project: NXProject) {
         self.project = project
@@ -33,13 +36,16 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let masterVC = FileListViewController(project: project)
-        let detailVC = SplitScreenDetailViewController(project: project)
+        masterVC = FileListViewController(project: project)
+        detailVC = SplitScreenDetailViewController(project: project)
 
-        let masterNav = UINavigationController(rootViewController: masterVC)
-        let detailNav = UINavigationController(rootViewController: detailVC)
-        
-        self.viewControllers = [masterNav,detailNav]
+        if let masterVC = masterVC,
+           let detailVC = detailVC {
+            let masterNav = UINavigationController(rootViewController: masterVC)
+            let detailNav = UINavigationController(rootViewController: detailVC)
+            
+            self.viewControllers = [masterNav,detailNav]
+        }
 
         self.delegate = self
     }
@@ -48,6 +54,12 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
         super.viewDidAppear(animated)
         
         LDEMultitaskManager.shared().bringWindowGroupToFront(withBundleIdentifier: self.project.projectConfig.bundleid)
+        NotificationCenter.default.addObserver(self, selector: #selector(invokeBuild), name: Notification.Name("RunAct"), object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
     }
     
     override var keyCommands: [UIKeyCommand]? {
@@ -64,7 +76,16 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
     }
     
     @objc func invokeBuild() {
-        NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["run"])
+        if let masterVC = masterVC,
+           let detailVC = detailVC {
+            guard lock.try() else { return }
+            masterVC.navigationItem.leftBarButtonItem?.isHidden = true
+            buildProjectWithArgumentUI(targetViewController: detailVC, project: detailVC.project, buildType: .RunningApp) { [weak self] in
+                guard let self = self else { return }
+                masterVC.navigationItem.leftBarButtonItem?.isHidden = false
+                self.lock.unlock()
+            }
+        }
     }
 }
 
@@ -262,9 +283,8 @@ class SplitScreenDetailViewController: UIViewController {
             bottomBorderView.heightAnchor.constraint(equalToConstant: 1)
         ])
         
-        let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { [weak self] _ in
-            guard let self = self else { return }
-            buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
+        let buildButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "play.fill"), primaryAction: UIAction { _ in
+            NotificationCenter.default.post(name: NSNotification.Name("RunAct"), object: nil)
         })
         let packageButton: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "archivebox.fill"), primaryAction: UIAction { [weak self] _ in
             guard let self = self else { return }

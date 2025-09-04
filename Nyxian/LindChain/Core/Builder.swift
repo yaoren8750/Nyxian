@@ -341,7 +341,8 @@ class Builder {
 
 func buildProjectWithArgumentUI(targetViewController: UIViewController,
                                 project: NXProject,
-                                buildType: Builder.BuildType) {
+                                buildType: Builder.BuildType,
+                                completion: @escaping () -> Void = {}) {
     targetViewController.navigationItem.titleView?.isUserInteractionEnabled = false
     XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
     LDELogger.clear()
@@ -364,6 +365,8 @@ func buildProjectWithArgumentUI(targetViewController: UIViewController,
             } else if buildType == .InstallPackagedApp {
                 share(url: URL(fileURLWithPath: project.packagePath), remove: true)
             }
+            
+            completion()
         }
     }
 }
