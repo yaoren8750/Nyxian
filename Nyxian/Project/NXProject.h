@@ -45,6 +45,7 @@ static NXProjectType const NXProjectTypeBinary = 2;
 @property (nonatomic,readonly) int type;
 @property (nonatomic,readonly) int threads;
 @property (nonatomic,readonly) BOOL increment;
+@property (nonatomic,readonly) BOOL forceDebugging;
 
 - (NSMutableArray*)generateCompilerFlags;
 

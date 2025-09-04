@@ -47,7 +47,7 @@
 - (BOOL)increment {
     NSNumber *value = [self readKey:@"LDEOverwriteIncrementalBuild"];
     NSNumber *userSetValue = [[NSUserDefaults standardUserDefaults] objectForKey:@"LDEIncrementalBuild"];
-    return userSetValue ? userSetValue.boolValue : YES;
+    return value ? value.boolValue : userSetValue ? userSetValue.boolValue : YES;
 }
 
 - (NSMutableArray*)generateCompilerFlags
@@ -56,6 +56,12 @@
     [flags addObject:@"-target"];
     [flags addObject:[self platformTriple]];
     return flags;
+}
+
+- (BOOL)forceDebugging
+{
+    NSNumber *value = [self readKey:@"LDEForceDebugging"];
+    return value ? value.boolValue : NO;
 }
 
 @end

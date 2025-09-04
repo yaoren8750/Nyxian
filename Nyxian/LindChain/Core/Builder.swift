@@ -232,7 +232,7 @@ class Builder {
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
                         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
-                                                                     enableDebugging: false)
+                                                                     enableDebugging: project.projectConfig.forceDebugging)
                     }
                 } else {
                     try? self.package()
