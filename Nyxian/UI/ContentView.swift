@@ -116,7 +116,9 @@ import UIKit
         super.viewDidAppear(animated)
         
         if let indexPath = sessionIndex {
-            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            let selectedProject: NXProject = self.projects[indexPath.row]
+            selectedProject.reload()
+            self.tableView.reloadRows(at: [indexPath], with: .none)
             sessionIndex = nil
         }
     }
@@ -127,7 +129,6 @@ import UIKit
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let selectedProject: NXProject = self.projects[indexPath.row]
-        if sessionIndex != nil { selectedProject.reload() }
         return NXProjectTableCell(project: selectedProject)
     }
     

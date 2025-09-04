@@ -18,10 +18,11 @@
 */
 
 #import <Project/NXPlistHelper.h>
+#import <CommonCrypto/CommonDigest.h>
 
 @interface NXPlistHelper ()
 
-@property (nonatomic,strong,readwrite) NSDate *savedModificationDate;
+@property (nonatomic,strong,readwrite) NSString *savedHash;
 
 @end
 
@@ -31,29 +32,34 @@
 {
     self = [super init];
     _plistPath = plistPath;
-    _savedModificationDate = [self lastFileModificationDate];
+    _savedHash = [self currentHash];
     [self reloadData];
     return self;
 }
 
-- (NSDate*)lastFileModificationDate
+- (NSString *)currentHash
 {
-    NSError *error = NULL;
-    NSDictionary<NSFileAttributeKey, id> *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:_plistPath error:&error];
-    if(error)
-        return [NSDate date];
-    NSDate *modDate = [attributes objectForKey:NSURLAttributeModificationDateKey];
-    return modDate ? modDate : [NSDate date];
+    NSData *fileData = [NSData dataWithContentsOfFile:_plistPath];
+    if (!fileData) return nil;
+
+    unsigned char hash[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(fileData.bytes, (CC_LONG)fileData.length, hash);
+
+    NSMutableString *hashString = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
+        [hashString appendFormat:@"%02x", hash[i]];
+    }
+    return hashString;
 }
 
 - (BOOL)reloadIfNeeded
 {
-    NSDate *modDate = [self lastFileModificationDate];
-    BOOL needsReload = [_savedModificationDate compare:modDate] == NSOrderedAscending;
+    NSString *hash = [self currentHash];
+    BOOL needsReload = ![hash isEqualToString:_savedHash];
     if(needsReload)
     {
         _dictionary = [[NSMutableDictionary alloc] initWithContentsOfFile:_plistPath];
-        _savedModificationDate = modDate;
+        _savedHash = hash;
     }
     return needsReload;
 }
@@ -61,7 +67,7 @@
 - (void)reloadData
 {
     _dictionary = [[NSMutableDictionary alloc] initWithContentsOfFile:_plistPath];
-    _savedModificationDate = [self lastFileModificationDate];
+    _savedHash = [self currentHash];
 }
 
 - (void)writeKey:(NSString*)key
@@ -69,7 +75,7 @@
 {
     [_dictionary setObject:value forKey:key];
     [_dictionary writeToFile:_plistPath atomically:YES];
-    _savedModificationDate = [self lastFileModificationDate];
+    _savedHash = [self currentHash];
 }
 
 - (id)readKey:(NSString*)key
