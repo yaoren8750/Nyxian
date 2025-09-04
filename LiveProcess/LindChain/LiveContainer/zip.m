@@ -172,12 +172,15 @@ BOOL unzipArchiveFromFileHandle(NSFileHandle *zipFileHandle, NSString *destinati
     return YES;
 }
 
-BOOL zipDirectoryAtPath(NSString *directoryPath, NSString *zipPath) {
+BOOL zipDirectoryAtPath(NSString *directoryPath, NSString *zipPath, BOOL keepParent) {
     struct archive *a;
     struct archive_entry *entry;
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSDirectoryEnumerator *enumerator;
     NSString *filePath;
+
+    // Determine base path for archive entries
+    NSString *basePath = keepParent ? [directoryPath stringByDeletingLastPathComponent] : directoryPath;
 
     // Create new archive for writing
     a = archive_write_new();
@@ -197,7 +200,16 @@ BOOL zipDirectoryAtPath(NSString *directoryPath, NSString *zipPath) {
         BOOL isDir;
         if ([fileManager fileExistsAtPath:fullPath isDirectory:&isDir]) {
             entry = archive_entry_new();
-            archive_entry_set_pathname(entry, [filePath UTF8String]);
+
+            // Determine the path inside the archive
+            NSString *relativePath = [fullPath stringByReplacingOccurrencesOfString:basePath
+                                                                       withString:@""];
+            // Remove leading slash if any
+            if ([relativePath hasPrefix:@"/"] || [relativePath hasPrefix:@"."]) {
+                relativePath = [relativePath substringFromIndex:1];
+            }
+
+            archive_entry_set_pathname(entry, [relativePath UTF8String]);
 
             NSDictionary *attributes = [fileManager attributesOfItemAtPath:fullPath error:nil];
             archive_entry_set_size(entry, isDir ? 0 : [attributes[NSFileSize] longLongValue]);

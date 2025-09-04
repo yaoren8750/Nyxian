@@ -9,16 +9,12 @@
 /* Begin PBXBuildFile section */
 		793FCD242E6730740011B3F5 /* libarchive.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BF9A8E2E62BA7D00C60D4C /* libarchive.tbd */; };
 		7944B5642DEC712700834134 /* PrivateConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7944B5632DEC712700834134 /* PrivateConfig.xcconfig */; };
-		7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
-		79BF97F82E6291EE00C60D4C /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79281CBF2E3A44CA00E983C9 /* UniformTypeIdentifiers.framework */; };
 		79BF98042E6291EE00C60D4C /* LiveProcess.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 79BF97F72E6291EE00C60D4C /* LiveProcess.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		79BF9A8F2E62BA8700C60D4C /* libarchive.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BF9A8E2E62BA7D00C60D4C /* libarchive.tbd */; };
-		79BF9AE02E62BCEF00C60D4C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7944B5672DEC74FC00834134 /* MobileCoreServices.framework */; };
 		AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */ = {isa = PBXBuildFile; productRef = AF9919572DC9175A00DDF895 /* TreeSitterObjc */; };
 		AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */ = {isa = PBXBuildFile; productRef = AF99195A2DC9176900DDF895 /* TreeSitterC */; };
 		AF9FD5892DC935F400411E1A /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = AF9FD5882DC935F400411E1A /* Runestone */; settings = {ATTRIBUTES = (Required, ); }; };
 		AFF4D5D92DC9390B00B1B5F9 /* Shared in Resources */ = {isa = PBXBuildFile; fileRef = AF99171F2DC8EA3C00DDF895 /* Shared */; };
-		AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */; };
 		AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */ = {isa = PBXBuildFile; productRef = AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */; };
 /* End PBXBuildFile section */
 
@@ -110,7 +106,6 @@
 		79BF9A972E62BB6900C60D4C /* Exceptions for "Nyxian" folder in "LiveProcess" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				LindChain/Debugger/Dwarf.cpp,
 				LindChain/Debugger/Logger.m,
 				LindChain/Debugger/MachServer.m,
 				LindChain/Debugger/Utils.m,
@@ -119,7 +114,6 @@
 				LindChain/Init.mm,
 				LindChain/litehook/src/litehook.c,
 				LindChain/LiveContainer/dyld_bypass_validation.m,
-				LindChain/LiveContainer/LCAppInfo.m,
 				LindChain/LiveContainer/LCBootstrap.m,
 				LindChain/LiveContainer/LCMachOUtils.m,
 				LindChain/LiveContainer/LCUtils.m,
@@ -133,24 +127,8 @@
 				LindChain/LiveContainer/Tweaks/SecItem.m,
 				"LindChain/LiveContainer/Tweaks/UIKit+GuestHooksInit.m",
 				LindChain/LiveContainer/utils.m,
-				LindChain/LiveContainer/ZSign/archo.cpp,
-				LindChain/LiveContainer/ZSign/bundle.cpp,
-				LindChain/LiveContainer/ZSign/common/base64.cpp,
-				LindChain/LiveContainer/ZSign/common/fs.cpp,
-				LindChain/LiveContainer/ZSign/common/json.cpp,
-				LindChain/LiveContainer/ZSign/common/log.cpp,
-				LindChain/LiveContainer/ZSign/common/sha.cpp,
-				LindChain/LiveContainer/ZSign/common/timer.cpp,
-				LindChain/LiveContainer/ZSign/common/util.cpp,
-				LindChain/LiveContainer/ZSign/macho.cpp,
-				LindChain/LiveContainer/ZSign/openssl.cpp,
-				LindChain/LiveContainer/ZSign/signing.cpp,
-				LindChain/LiveContainer/ZSign/Utils.mm,
-				LindChain/LiveContainer/ZSign/zsign.mm,
-				LindChain/LiveContainer/ZSign/zsigner.m,
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
-				LindChain/OpenSSL.xcframework,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
 		};
@@ -161,12 +139,10 @@
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
 				LindChain/LLVM.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				LindChain/OpenSSL.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = 79BF9AC92E62BC2200C60D4C /* Embed Frameworks */;
 			membershipExceptions = (
 				LindChain/LLVM.xcframework,
-				LindChain/OpenSSL.xcframework,
 			);
 		};
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {
@@ -210,8 +186,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				79BF97F82E6291EE00C60D4C /* UniformTypeIdentifiers.framework in Frameworks */,
-				79BF9AE02E62BCEF00C60D4C /* MobileCoreServices.framework in Frameworks */,
 				79BF9A8F2E62BA8700C60D4C /* libarchive.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -222,10 +196,8 @@
 			files = (
 				AF9FD5892DC935F400411E1A /* Runestone in Frameworks */,
 				AF9919582DC9175A00DDF895 /* TreeSitterObjc in Frameworks */,
-				7944B5682DEC74FC00834134 /* MobileCoreServices.framework in Frameworks */,
 				793FCD242E6730740011B3F5 /* libarchive.tbd in Frameworks */,
 				AF99195B2DC9176900DDF895 /* TreeSitterC in Frameworks */,
-				AFF4DBF62DCA708500B1B5F9 /* ZIPFoundation in Frameworks */,
 				AFF4E3492DCCCE0F00B1B5F9 /* TreeSitterXML in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -303,7 +275,6 @@
 				AF9919572DC9175A00DDF895 /* TreeSitterObjc */,
 				AF99195A2DC9176900DDF895 /* TreeSitterC */,
 				AF9FD5882DC935F400411E1A /* Runestone */,
-				AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */,
 				AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */,
 			);
 			productName = LindDE;
@@ -341,7 +312,6 @@
 				AF9919562DC9175A00DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-objc" */,
 				AF9919592DC9176900DDF895 /* XCRemoteSwiftPackageReference "tree-sitter-c" */,
 				AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */,
-				AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -826,14 +796,6 @@
 				minimumVersion = 0.5.1;
 			};
 		};
-		AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.19;
-			};
-		};
 		AFF4E3472DCCCE0F00B1B5F9 /* XCRemoteSwiftPackageReference "tree-sitter-xml" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tree-sitter-grammars/tree-sitter-xml.git";
@@ -859,11 +821,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AF9FD5872DC935F400411E1A /* XCRemoteSwiftPackageReference "Runestone" */;
 			productName = Runestone;
-		};
-		AFF4DBF52DCA708500B1B5F9 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AFF4DBF42DCA708500B1B5F9 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
 		};
 		AFF4E3482DCCCE0F00B1B5F9 /* TreeSitterXML */ = {
 			isa = XCSwiftPackageProductDependency;

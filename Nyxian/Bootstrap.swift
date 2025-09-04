@@ -18,7 +18,6 @@
 */
 
 import Foundation
-import ZIPFoundation
 
 /*
  Bootstrap structure
@@ -108,7 +107,7 @@ import ZIPFoundation
                         // Now extract Include and SDK
                         print("[*] Bootstrapping folder structures")
                         print("[*] Extracting include.zip")
-                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/include.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/Include")))
+                        unzipArchiveAtPath("\(NSTemporaryDirectory())/include.zip", self.bootstrapPath("/Include"))
                         self.bootstrapVersion = 1
                     }
                     
@@ -162,7 +161,7 @@ import ZIPFoundation
                         }
                         
                         print("[*] Extracting sdk.zip")
-                        try FileManager.default.unzipItem(at: URL(fileURLWithPath: "\(NSTemporaryDirectory())/sdk.zip"), to: URL(fileURLWithPath: self.bootstrapPath("/SDK")))
+                        unzipArchiveAtPath("\(NSTemporaryDirectory())/sdk.zip", self.bootstrapPath("/SDK"))
                         
                         self.bootstrapVersion = 7
                     }

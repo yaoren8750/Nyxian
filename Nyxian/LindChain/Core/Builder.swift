@@ -246,7 +246,7 @@ class Builder {
     }
     
     func package() throws {
-        try FileManager.default.zipItem(at: URL(fileURLWithPath: project.payloadPath), to: URL(fileURLWithPath: project.packagePath))
+        zipDirectoryAtPath(project.payloadPath, project.packagePath, true)
     }
     
     ///

@@ -171,7 +171,7 @@ import UIKit
                 DispatchQueue.global().async {
                     let project = self.projects[indexPath.row]
                     
-                    try? FileManager.default.zipItem(at: project.path.URLGet(), to: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"))
+                    zipDirectoryAtPath(project.path, "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip", true)
                     
                     share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"), remove: true)
                 }
@@ -209,7 +209,7 @@ import UIKit
             
             let extractFirst: URL = URL(fileURLWithPath: "\(NSTemporaryDirectory())Proj")
             try FileManager.default.createDirectory(at: extractFirst, withIntermediateDirectories: true)
-            try FileManager.default.unzipItem(at: selectedURL, to: extractFirst)
+            unzipArchiveAtPath(selectedURL.path, extractFirst.path)
             let items: [String] = try FileManager.default.contentsOfDirectory(atPath: "\(NSTemporaryDirectory())Proj")
             let projectPath: String = "\(Bootstrap.shared.bootstrapPath("/Projects"))/\(UUID().uuidString)"
             try FileManager.default.moveItem(atPath: extractFirst.appendingPathComponent(items.first ?? "").path, toPath: projectPath)

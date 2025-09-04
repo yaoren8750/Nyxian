@@ -30,6 +30,7 @@
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import "../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
+#import "../LiveProcess/LindChain/LiveContainer/zip.h"
 
 /*
  Project

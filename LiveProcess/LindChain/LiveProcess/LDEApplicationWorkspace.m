@@ -82,7 +82,7 @@
 {
     __block BOOL result = NO;
     NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
-    zipDirectoryAtPath(bundlePath, temporaryPackage);
+    zipDirectoryAtPath(bundlePath, temporaryPackage, NO);
     [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
         result = replyResult;
         dispatch_semaphore_signal(self.sema);
