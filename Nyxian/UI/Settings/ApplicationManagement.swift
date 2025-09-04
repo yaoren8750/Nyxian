@@ -36,12 +36,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = NXProjectTableCell(appObject: applications[indexPath.row])
-        
-        //cell.textLabel?.text = applications[indexPath.row].displayName
-        //cell.detailTextLabel?.text = applications[indexPath.row].bundleIdentifier
-        
-        return cell!
+        return NXProjectTableCell(appObject: applications[indexPath.row])
     }
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {

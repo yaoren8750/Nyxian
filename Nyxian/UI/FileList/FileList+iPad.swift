@@ -342,12 +342,32 @@ class SplitScreenDetailViewController: UIViewController {
             }
         }
     }
+    
+    @objc private func closeCurrentTab() {
+        if let childButton = self.childButton {
+            childButton.closeAction(childButton)
+        }
+    }
+    
+    override var keyCommands: [UIKeyCommand]? {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return [
+                UIKeyCommand(input: "W",
+                             modifierFlags: [.command],
+                             action: #selector(closeCurrentTab),
+                             discoverabilityTitle: "Build"),
+            ]
+        } else {
+            return []
+        }
+    }
 }
 
 class UIButtonTab: UIButton {
     let path: String
     let vc: CodeEditorViewController
     let closeButton: UIButton
+    let closeAction: (UIButtonTab) -> Void
     
     init(frame: CGRect,
          project: NXProject,
@@ -357,6 +377,7 @@ class UIButtonTab: UIButton {
         self.path = path
         self.vc = CodeEditorViewController(project: project, path: path)
         self.closeButton = UIButton()
+        self.closeAction = closeAction
         
         super.init(frame: frame)
         
