@@ -189,11 +189,11 @@ void UIKitFixesInit(void) {
 - (void)setupDecoratedView {
     CGFloat navBarHeight = 44;
     self.view = [UIStackView new];
-    if(UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation)) {
+    /*if(UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation)) {
         self.view.frame = CGRectMake(50, 150, 480, 320 + navBarHeight);
-    } else {
+    } else {*/
         self.view.frame = CGRectMake(50, 150, 320, 480 + navBarHeight);
-    }
+    //}
     
     // Navigation bar
     UINavigationBar *navigationBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, navBarHeight)];
