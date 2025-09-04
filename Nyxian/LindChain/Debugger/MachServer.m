@@ -79,11 +79,14 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
                 state.__x[i]);
     
     stack_trace_from_thread_state(state);
+    printf("\nRaised SIGSTOP!\n");
+    fflush(stdout);
+    raise(SIGSTOP);
     
-    state.__pc = (uint64_t)exit;
+    /*state.__pc = (uint64_t)exit;
     state.__x[0] = 1;
     
-    thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
+    thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);*/
     
     return KERN_SUCCESS;
 }
