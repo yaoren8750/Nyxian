@@ -117,6 +117,7 @@ import UIKit
         
         if let indexPath = sessionIndex {
             self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            sessionIndex = nil
         }
     }
     
