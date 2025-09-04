@@ -40,7 +40,7 @@ static inline int translateImageIndex(int origin)
 
 DEFINE_HOOK(_dyld_image_count, uint32_t, (void))
 {
-    return 0;
+    return ORIG_FUNC(_dyld_image_count)() - 1;
 }
 
 DEFINE_HOOK(_dyld_get_image_header, const struct mach_header*, (uint32_t image_index))
