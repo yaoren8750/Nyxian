@@ -45,6 +45,11 @@
  */
 #import <LindChain/Core/LDEThreadControl.h>
 
+/*
+ UI
+ */
+#import <UI/TableCells/NXProjectTableCell.h>
+
 NSString* invokeAppMain(NSString *bundlePath, NSString *homePath, int argc, char *argv[]);
 NSString* invokeBinaryMain(NSString *bundlePath, int argc, char *argv[]);
 const char *getExceptionFromObjectFile(const char *objectFilePath,

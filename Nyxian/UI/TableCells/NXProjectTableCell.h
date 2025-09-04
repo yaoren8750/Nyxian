@@ -22,11 +22,12 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <Project/NXProject.h>
+#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationObject.h"
 
 @interface NXProjectTableCell : UITableViewCell
 
 - (instancetype)initWithProject:(id)project;
+- (instancetype)initWithAppObject:(LDEApplicationObject*)applicationObject;
 
 @end
 

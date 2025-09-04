@@ -22,9 +22,6 @@
 
 #import <Foundation/Foundation.h>
 #import <Project/NXPlistHelper.h>
-#import <LindChain/Core/LDEThreadControl.h>
-#import <UI/TableCells/NXProjectTableCell.h>
-#import <Project/NXCodeTemplate.h>
 
 typedef int NXProjectType NS_TYPED_ENUM;
 static NXProjectType const NXProjectTypeApp = 1;

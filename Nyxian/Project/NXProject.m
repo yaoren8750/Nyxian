@@ -18,6 +18,8 @@
 */
 
 #import <Project/NXProject.h>
+#import <LindChain/Core/LDEThreadControl.h>
+#import <Project/NXCodeTemplate.h>
 #import <Nyxian-Swift.h>
 
 @implementation NXProjectConfig

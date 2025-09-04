@@ -31,22 +31,28 @@
 - (instancetype)initWithProject:(NXProject *)project
 {
     self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    //_project = project;
-    [self setupViews:project];
+    [self setupViewsWithDisplayName:project.projectConfig.displayName withBundleIdentifier:project.projectConfig.bundleid withAppIcon:nil];
     return self;
 }
 
-- (void)setupViews:(NXProject*)project
+- (instancetype)initWithAppObject:(LDEApplicationObject*)applicationObject
 {
-    self.textLabel.text = project.projectConfig.displayName;
+    self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
+    [self setupViewsWithDisplayName:applicationObject.displayName withBundleIdentifier:applicationObject.bundleIdentifier withAppIcon:applicationObject.icon];
+    return self;
+}
+
+- (void)setupViewsWithDisplayName:(NSString*)displayName withBundleIdentifier:(NSString*)bundleIdentifier withAppIcon:(UIImage*)image
+{
+    self.textLabel.text = displayName;
     self.textLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightBold];
-    self.detailTextLabel.text = project.projectConfig.bundleid;
+    self.detailTextLabel.text = bundleIdentifier;
     self.detailTextLabel.font = [UIFont systemFontOfSize:10];
     
     self.textLabel.numberOfLines = 1;
     self.detailTextLabel.numberOfLines = 1;
     
-    self.imageView.image = [UIImage imageNamed:@"DefaultIcon"];
+    self.imageView.image = image ? image : [UIImage imageNamed:@"DefaultIcon"];
     self.imageView.translatesAutoresizingMaskIntoConstraints = NO;
     self.textLabel.translatesAutoresizingMaskIntoConstraints = NO;
     self.detailTextLabel.translatesAutoresizingMaskIntoConstraints = NO;
@@ -80,13 +86,5 @@
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad)
         self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 }
-
-/*- (void)reload
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.textLabel.text = self.project.projectConfig.displayName;
-        self.detailTextLabel.text = self.project.projectConfig.bundleid;
-    });
-}*/
 
 @end

@@ -99,6 +99,7 @@
 				LindChain/LiveContainer/zip.m,
 				LindChain/LiveProcess/LDEApplicationObject.m,
 				LindChain/LiveProcess/LDEApplicationWorkspace.m,
+				LindChain/LiveProcess/LDEApplicationWorkspaceInternal.m,
 				serverDelegate.m,
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;

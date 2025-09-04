@@ -179,23 +179,7 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
         return;
     }
     
-    LDEApplicationObject *appObj = [[LDEApplicationObject alloc] init];
-    appObj.bundleIdentifier = bundle.bundleIdentifier;
-    appObj.bundlePath = bundle.bundlePath;
-    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
-    }
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleExecutable"];
-    }
-    if (!displayName) {
-        displayName = @"Unknown App";
-    }
-    appObj.displayName = displayName;
-    appObj.containerPath = [[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.bundleIdentifier];
-    
-    reply(appObj);
+    reply([[LDEApplicationObject alloc] initWithBundle:bundle]);
 }
 
 - (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSString*))reply
@@ -222,18 +206,18 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 /*
  Server + Client Side
  */
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+@interface LDEServerDelegate : NSObject <NSXPCListenerDelegate>
 @end
 
-@interface ServerManager : NSObject
-@property (nonatomic, strong) ServerDelegate *serverDelegate;
+@interface LDEServerManager : NSObject
+@property (nonatomic, strong) LDEServerDelegate *serverDelegate;
 @property (nonatomic, strong) NSXPCListener *listener;
 + (instancetype)sharedManager;
 - (NSXPCListenerEndpoint*)getEndpointForNewConnections;
 @end
 
 
-@implementation ServerDelegate
+@implementation LDEServerDelegate
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
@@ -260,18 +244,15 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 
 @end
 
-@implementation ServerManager
+@implementation LDEServerManager
 
 + (instancetype)sharedManager {
-    static ServerManager *sharedInstance = nil;
+    static LDEServerManager *sharedInstance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedInstance = [[self alloc] init];
-
-        //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
-            sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
-        //});
+        sharedInstance.serverDelegate = [[LDEServerDelegate alloc] init];
+        sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
     });
     return sharedInstance;
 }
@@ -286,5 +267,5 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 
 NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void)
 {
-    return [[ServerManager sharedManager] getEndpointForNewConnections];
+    return [[LDEServerManager sharedManager] getEndpointForNewConnections];
 }

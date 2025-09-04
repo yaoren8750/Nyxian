@@ -18,8 +18,36 @@
 */
 
 #import "LDEApplicationObject.h"
+#import "LDEApplicationWorkspaceInternal.h"
 
 @implementation LDEApplicationObject
+
+- (instancetype)initWithBundle:(NSBundle*)bundle
+{
+    self = [super init];
+    self.bundleIdentifier = bundle.bundleIdentifier;
+    self.bundlePath = bundle.bundlePath;
+    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    if (!displayName) {
+        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
+    }
+    if (!displayName) {
+        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleExecutable"];
+    }
+    if (!displayName) {
+        displayName = @"Unknown App";
+    }
+    self.displayName = displayName;
+    self.containerPath = [[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.bundleIdentifier];
+    
+    NSDictionary *iconsDict = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleIcons"];
+    NSDictionary *primaryIconsDict = [iconsDict objectForKey:@"CFBundlePrimaryIcon"];
+    NSArray *iconFiles = [primaryIconsDict objectForKey:@"CFBundleIconFiles"];
+    NSString *iconName = [iconFiles lastObject];
+    self.icon = [UIImage imageNamed:iconName];
+    
+    return self;
+}
 
 + (BOOL)supportsSecureCoding {
     return YES;
@@ -30,6 +58,7 @@
     [coder encodeObject:self.bundlePath forKey:@"bundlePath"];
     [coder encodeObject:self.displayName forKey:@"displayName"];
     [coder encodeObject:self.containerPath forKey:@"containerPath"];
+    [coder encodeObject:self.icon forKey:@"icon"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -38,6 +67,7 @@
         _bundlePath = [coder decodeObjectOfClass:[NSString class] forKey:@"bundlePath"];
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
         _containerPath = [coder decodeObjectOfClass:[NSString class] forKey:@"containerPath"];
+        _icon = [coder decodeObjectOfClass:[NSString class] forKey:@"icon"];
     }
     return self;
 }

@@ -21,6 +21,7 @@
 #define LDEAPPLICATIONOBJECT_H
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 @interface LDEApplicationObject : NSObject <NSSecureCoding>
 
@@ -29,6 +30,10 @@
 
 @property (nonatomic) NSString *bundlePath;
 @property (nonatomic) NSString *containerPath;
+
+@property (nonatomic) UIImage *icon;
+
+- (instancetype)initWithBundle:(NSBundle*)bundle;
 
 @end
 
