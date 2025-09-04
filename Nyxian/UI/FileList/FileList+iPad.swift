@@ -49,6 +49,23 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
         
         LDEMultitaskManager.shared().bringWindowGroupToFront(withBundleIdentifier: self.project.projectConfig.bundleid)
     }
+    
+    override var keyCommands: [UIKeyCommand]? {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return [
+                UIKeyCommand(input: "R",
+                             modifierFlags: [.command],
+                             action: #selector(invokeBuild),
+                             discoverabilityTitle: "Build"),
+            ]
+        } else {
+            return []
+        }
+    }
+    
+    @objc func invokeBuild() {
+        NotificationCenter.default.post(name: Notification.Name("FileListAct"), object: ["run"])
+    }
 }
 
 class SplitScreenDetailViewController: UIViewController {
@@ -283,8 +300,9 @@ class SplitScreenDetailViewController: UIViewController {
         if args.count > 1,
            args[0] == "open" {
             self.addTab(path: args[1])
-        } else {
-            return
+        } else if args.count > 0,
+        args[0] == "run" {
+            buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
         }
     }
     

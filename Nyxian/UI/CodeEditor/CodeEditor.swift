@@ -337,4 +337,17 @@ class CodeEditorViewController: UIViewController {
         textView.contentInset = .zero
         textView.scrollIndicatorInsets = .zero
     }
+    
+    override var keyCommands: [UIKeyCommand]? {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return [
+                UIKeyCommand(input: "S",
+                             modifierFlags: [.command],
+                             action: #selector(saveText),
+                             discoverabilityTitle: "Save File"),
+            ]
+        } else {
+            return []
+        }
+    }
 }
