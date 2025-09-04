@@ -140,8 +140,7 @@
 
 - (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier
 {
-    for(NSString *key in self.windowGroups) if([key isEqualToString:bundleIdentifier]) return self.windowGroups[key];
-    return nil;
+    return [self.windowGroups objectForKey:bundleIdentifier];
 }
 
 - (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier
