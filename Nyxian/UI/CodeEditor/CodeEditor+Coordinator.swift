@@ -374,31 +374,38 @@ class Coordinator: NSObject, TextViewDelegate, UITableViewDataSource, UITableVie
         }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let textView = parent?.textView else { return }
+        guard let textView = parent?.textView,
+              let sel = textView.selectedTextRange else { return }
+
         let completion = currentAutocompletes[indexPath.row]
 
-        if let selectedRange = textView.selectedTextRange {
-            let cursorPos = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
-            let utf16View = textView.text.utf16
-            let endIndex = utf16View.index(utf16View.startIndex, offsetBy: cursorPos)
-            var textUpToCursor = String(utf16View[..<endIndex]) ?? ""
-
-            var prefixRangeEnd = textUpToCursor.endIndex
-            while let last = textUpToCursor.last, last.isLetter || last.isNumber || last == "_" {
-                textUpToCursor.removeLast()
-            }
-
-            if let remainingText = String(utf16View[endIndex..<utf16View.endIndex]) {
-                textView.text = textUpToCursor + completion + remainingText
-                
-                if let newPosition = textView.position(from: textView.beginningOfDocument, offset: textUpToCursor.count + completion.count) {
-                    textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
-                }
-            }
+        let caret = sel.end
+        if textView.offset(from: sel.start, to: sel.end) != 0,
+           let collapsed = textView.textRange(from: caret, to: caret) {
+            textView.selectedTextRange = collapsed
         }
+
+        guard let cursorRange = textView.selectedTextRange else { return }
+
+        var start = cursorRange.start
+        let underscore = "_".unicodeScalars.first!
+        while let prev = textView.position(from: start, offset: -1),
+              let r = textView.textRange(from: prev, to: start),
+              let s = textView.text(in: r),
+              let scalar = s.unicodeScalars.first,
+              CharacterSet.alphanumerics.contains(scalar) || scalar == underscore {
+            start = prev
+        }
+
+        let prefixRange = textView.textRange(from: start, to: cursorRange.start)
+        let typed = prefixRange.flatMap { textView.text(in: $0) } ?? ""
+
+        let suffix = completion.hasPrefix(typed) ? String(completion.dropFirst(typed.count)) : completion
+        textView.replace(cursorRange, withText: suffix)
 
         tableView.removeFromSuperview()
     }
+
     
     class ErrorPreview: UIView {
         var textView: UITextView
