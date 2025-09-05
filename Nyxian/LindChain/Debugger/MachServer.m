@@ -29,6 +29,12 @@
 #include "litehook.h"
 #include "Utils.h"
 
+DEFINE_HOOK(exit, void, (int code))
+{
+    // Causes EXC_BREAKPOINT
+    __builtin_trap();
+}
+
 const char *exceptionName(exception_type_t exception)
 {
     switch(exception)
@@ -80,7 +86,7 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     
     stack_trace_from_thread_state(state);
     
-    state.__pc = (uint64_t)exit;
+    state.__pc = (uint64_t)ORIG_FUNC(exit);
     state.__x[0] = 1;
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     
@@ -184,12 +190,6 @@ void* mach_exception_self_server(void *arg)
         if(mr != KERN_SUCCESS)
             exit(-1);
     }
-}
-
-DEFINE_HOOK(exit, void, (int code))
-{
-    // Causes EXC_BREAKPOINT
-    __builtin_trap();
 }
 
 void machServerInit(void)

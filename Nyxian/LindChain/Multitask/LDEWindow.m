@@ -406,30 +406,14 @@ void UIKitFixesInit(void) {
 }
 
 - (void)appSceneVCAppDidExit:(AppSceneViewController*)vc {
-    // "Moving" the textLog off of that dictionary to our VC to stop retaining it
-    //LogTextView *textLog = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] objectForKey:@(self.pid)];
-    //[[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] removeObjectForKey:@(self.pid)];
-    //if(_isAppTerminationRequested) {
-        self.view.layer.masksToBounds = NO;
-        [UIView transitionWithView:self.view.window
-                          duration:0.4
-                           options:UIViewAnimationOptionTransitionCrossDissolve
-                        animations:^{
-            self.view.hidden = YES;
-        } completion:nil];
-    
+    self.view.layer.masksToBounds = NO;
+    [UIView transitionWithView:self.view.window
+                      duration:0.4
+                       options:UIViewAnimationOptionTransitionCrossDissolve
+                    animations:^{
+        self.view.hidden = YES;
+    } completion:nil];
     [self invokeMultitaskingTermination];
-    //} else {
-        
-        /*self.processLog = textLog;
-        [self.view insertSubview:self.processLog atIndex:2];
-        [NSLayoutConstraint activateConstraints:@[
-            [self.processLog.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
-            [self.processLog.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-            [self.processLog.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [self.processLog.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
-        ]];*/
-    //}
 }
 
 - (void)restart
