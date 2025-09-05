@@ -20,9 +20,7 @@
 #import <Foundation/Foundation.h>
 
 typedef NSString * NXCodeTemplateScheme NS_TYPED_ENUM;
-static NXCodeTemplateScheme const NXCodeTemplateSchemeObjCApp = @"ObjC";
-static NXCodeTemplateScheme const NXCodeTemplateSchemeObjCLive = @"ObjCTest";
-static NXCodeTemplateScheme const NXCodeTemplateSchemeObjCBinary = @"Binary";
+static NXCodeTemplateScheme const NXCodeTemplateSchemeObjCApp = @"Application/ObjC";
 
 @interface NXCodeTemplate : NSObject
 

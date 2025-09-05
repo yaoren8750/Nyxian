@@ -45,15 +45,13 @@ import UIKit
         
         self.title = "Projects"
         
-        // TODO: Create a menu
-        let createItem: UIMenu = UIMenu(title: "Create", image: UIImage(systemName: "plus.circle.fill"), children: [UIAction(title: "App") { _ in
+        let createItem: UIAction = UIAction(title: "App") { [weak self] _ in
+            guard let self = self else { return }
             self.createProject(mode: .app)
-        },
-                                                                                                                    UIAction(title: "Binary") { _ in
-            self.createProject(mode: .binary)
-        }])
+        }
         
-        let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { _ in
+        let importItem: UIAction = UIAction(title: "Import", image: UIImage(systemName: "square.and.arrow.down.fill")) { [weak self] _ in
+            guard let self = self else { return }
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.zip], asCopy: true)
             documentPicker.delegate = self
             documentPicker.modalPresentationStyle = .pageSheet
@@ -151,12 +149,11 @@ import UIKit
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-            let export: UIAction = UIAction(title: "Export", image: UIImage(systemName: "square.and.arrow.up.fill")) { _ in
+            let export: UIAction = UIAction(title: "Export", image: UIImage(systemName: "square.and.arrow.up.fill")) { [weak self] _ in
                 DispatchQueue.global().async {
+                    guard let self = self else { return }
                     let project = self.projects[indexPath.row]
-                    
                     zipDirectoryAtPath(project.path, "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip", true)
-                    
                     share(url: URL(fileURLWithPath: "\(NSTemporaryDirectory())/\(project.projectConfig.displayName!).zip"), remove: true)
                 }
             }
@@ -169,7 +166,8 @@ import UIKit
                     message: "Are you sure you want to remove \"\(project.projectConfig.displayName!)\"?",
                     confirmTitle: "Remove",
                     confirmStyle: .destructive)
-                {
+                { [weak self] in
+                    guard let self = self else { return }
                     NXProject.remove(project)
                     self.projects.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
