@@ -76,12 +76,12 @@
     __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
         NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp];
+        [weakSelf appTerminationCleanUp:NO];
         [weakSelf.delegate appSceneVC:weakSelf didInitializeWithError:error];
     }];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp];
+        [weakSelf appTerminationCleanUp:NO];
     }];
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
@@ -169,7 +169,7 @@
     
     __weak typeof(self) weakSelf = self;
     [self.extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [weakSelf appTerminationCleanUp];
+        [weakSelf appTerminationCleanUp:NO];
     }];
     
     [self.contentView addSubview:self.presenter.presentationView];
@@ -194,14 +194,14 @@
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {}];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {}];
     [self terminate];
-    [self appTerminationCleanUp];
+    [self appTerminationCleanUp:YES];
     _isAppTerminationCleanUpCalled = NO;
     [self execute];
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
     if(!self.isAppRunning) {
-        [self appTerminationCleanUp];
+        [self appTerminationCleanUp:NO];
     }
     if(!diff) return;
     
@@ -227,7 +227,7 @@
     return _pid > 0 && getpgid(_pid) > 0;
 }
 
-- (void)appTerminationCleanUp {
+- (void)appTerminationCleanUp:(BOOL)restarts {
     if (_isAppTerminationCleanUpCalled) return;
     _isAppTerminationCleanUpCalled = YES;
 
@@ -241,7 +241,7 @@
             self.presenter = nil;
         }
 
-        [self.delegate appSceneVCAppDidExit:self];
+        if(!restarts) [self.delegate appSceneVCAppDidExit:self];
     };
 
     if ([NSThread isMainThread]) {

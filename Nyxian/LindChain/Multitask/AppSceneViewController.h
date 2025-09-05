@@ -40,7 +40,7 @@ API_AVAILABLE(ios(16.0))
             withDebuggingEnabled:(BOOL)enableDebugging
                     withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
-- (void)appTerminationCleanUp;
+- (void)appTerminationCleanUp:(BOOL)restarts;
 - (void)terminate;
 - (void)restart;
 

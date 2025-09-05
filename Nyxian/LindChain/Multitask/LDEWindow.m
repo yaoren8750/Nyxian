@@ -442,7 +442,7 @@ void UIKitFixesInit(void) {
 - (void)appSceneVC:(AppSceneViewController*)vc didInitializeWithError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         if(error) {
-            [vc appTerminationCleanUp];
+            [vc appTerminationCleanUp:NO];
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"lc.common.error".loc message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"lc.common.ok".loc style:UIAlertActionStyleCancel handler:nil]];
             [alert addAction:[UIAlertAction actionWithTitle:@"lc.common.copy".loc style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
