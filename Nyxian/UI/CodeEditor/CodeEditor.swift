@@ -23,6 +23,7 @@ import TreeSitter
 import TreeSitterC
 import TreeSitterObjc
 import TreeSitterXML
+import GameController
 
 // MARK: - OnDissapear Container
 class CodeEditorViewController: UIViewController {
@@ -306,15 +307,10 @@ class CodeEditorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(keyboardWillShow),
-                                               name: UIResponder.keyboardWillShowNotification,
-                                               object: nil)
-        
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(keyboardWillHide),
-                                               name: UIResponder.keyboardWillHideNotification,
-                                               object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(hardwareKeyboardDidConnect), name: .GCKeyboardDidConnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(hardwareKeyboardDidDisconnect), name: .GCKeyboardDidDisconnect, object: nil)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -331,6 +327,16 @@ class CodeEditorViewController: UIViewController {
         let bottomInset = keyboardFrame.height - view.safeAreaInsets.bottom
         textView.contentInset.bottom = bottomInset
         textView.scrollIndicatorInsets.bottom = bottomInset
+    }
+    
+    @objc private func hardwareKeyboardDidConnect(_ notification: Notification) {
+        textView.inputAccessoryView = nil
+        textView.reloadInputViews()
+    }
+        
+    @objc private func hardwareKeyboardDidDisconnect(_ notification: Notification) {
+        setupToolbar(textView: textView)
+        textView.reloadInputViews()
     }
 
     @objc func keyboardWillHide(notification: NSNotification) {
