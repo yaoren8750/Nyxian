@@ -19,10 +19,10 @@
 @property (class, nonatomic, readonly) PiPManager *shared;
 @property (nonatomic, readonly) bool isPiP;
 
-- (BOOL)isPiPWithVC:(AppSceneViewController*)vc;
+- (BOOL)isPiPWithVC:(LDEAppScene*)vc;
 - (BOOL)isPiPWithDecoratedVC:(UIViewController*)vc;
 - (void)stopPiP;
-- (void)startPiPWithVC:(AppSceneViewController*)vc;
+- (void)startPiPWithVC:(LDEAppScene*)vc;
 
 @end
 

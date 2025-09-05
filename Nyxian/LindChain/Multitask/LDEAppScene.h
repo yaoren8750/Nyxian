@@ -15,25 +15,25 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
-@class AppSceneViewController;
+@class LDEAppScene;
 
-@protocol AppSceneViewControllerDelegate <NSObject>
+@protocol LDEAppSceneDelegate <NSObject>
 
-- (void)appSceneVCAppDidExit:(AppSceneViewController*)vc;
-- (void)appSceneVC:(AppSceneViewController*)vc didInitializeWithError:(NSError*)error;
+- (void)appSceneVCAppDidExit:(LDEAppScene*)vc;
+- (void)appSceneVC:(LDEAppScene*)vc didInitializeWithError:(NSError*)error;
 
 @optional
 
-- (void)appSceneVC:(AppSceneViewController*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)settings transitionContext:(id)context;
+- (void)appSceneVC:(LDEAppScene*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)settings transitionContext:(id)context;
 
 @end
 
-@interface AppSceneViewController : UIViewController<_UISceneSettingsDiffAction>
+@interface LDEAppScene : UIViewController<_UISceneSettingsDiffAction>
 
 @property(nonatomic) LDEApplicationObject *appObj;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) int pid;
-@property(nonatomic) id<AppSceneViewControllerDelegate> delegate;
+@property(nonatomic) id<LDEAppSceneDelegate> delegate;
 @property(nonatomic) BOOL isAppRunning;
 @property(nonatomic) CGFloat scaleRatio;
 @property(nonatomic) UIView* contentView;
@@ -43,7 +43,7 @@
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
             withDebuggingEnabled:(BOOL)enableDebugging
-                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate;
+                    withDelegate:(id<LDEAppSceneDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)appTerminationCleanUp:(BOOL)restarts;
 - (void)terminate;

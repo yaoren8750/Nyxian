@@ -55,7 +55,7 @@ void UIKitFixesInit(void) {
                   withDimensions:(CGRect)rect
 {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
+    _appSceneVC = [[LDEAppScene alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
     _childVC = _appSceneVC;
     _multitaskingTermination = NO;
     
@@ -405,7 +405,7 @@ void UIKitFixesInit(void) {
     }
 }
 
-- (void)appSceneVCAppDidExit:(AppSceneViewController*)vc {
+- (void)appSceneVCAppDidExit:(LDEAppScene*)vc {
     self.view.layer.masksToBounds = NO;
     [UIView transitionWithView:self.view.window
                       duration:0.4
@@ -423,7 +423,7 @@ void UIKitFixesInit(void) {
     [self.appSceneVC restart];
 }
 
-- (void)appSceneVC:(AppSceneViewController*)vc didInitializeWithError:(NSError *)error {
+- (void)appSceneVC:(LDEAppScene*)vc didInitializeWithError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         if(error) {
             [vc appTerminationCleanUp:NO];
@@ -440,7 +440,7 @@ void UIKitFixesInit(void) {
     });
 }
 
-- (void)appSceneVC:(AppSceneViewController*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)baseSettings transitionContext:(id)newContext {
+- (void)appSceneVC:(LDEAppScene*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)baseSettings transitionContext:(id)newContext {
     UIMutableApplicationSceneSettings *newSettings = [vc.presenter.scene.settings mutableCopy];
     newSettings.userInterfaceStyle = baseSettings.userInterfaceStyle;
     newSettings.interfaceOrientation = baseSettings.interfaceOrientation;

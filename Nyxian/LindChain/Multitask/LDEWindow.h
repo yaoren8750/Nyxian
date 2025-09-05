@@ -1,10 +1,10 @@
 #import "FoundationPrivate.h"
 #import "LDEAppScene.h"
 
-@interface LDEWindow : UIViewController<AppSceneViewControllerDelegate>
+@interface LDEWindow : UIViewController<LDEAppSceneDelegate>
 
 @property(nonatomic) NSString* windowName;
-@property(nonatomic) AppSceneViewController* appSceneVC;
+@property(nonatomic) LDEAppScene* appSceneVC;
 @property(nonatomic) UIStackView *view;
 @property(nonatomic) UINavigationBar *navigationBar;
 @property(nonatomic) UINavigationItem *navigationItem;

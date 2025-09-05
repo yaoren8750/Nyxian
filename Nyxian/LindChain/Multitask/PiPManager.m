@@ -13,7 +13,7 @@ API_AVAILABLE(ios(16.0))
 @interface PiPManager()
 @property(nonatomic, strong) AVPictureInPictureVideoCallViewController *pipVideoCallViewController;
 @property(nonatomic, strong) AVPictureInPictureController *pipController;
-@property(nonatomic) AppSceneViewController* displayingVC;
+@property(nonatomic) LDEAppScene* displayingVC;
 @end
 
 
@@ -35,7 +35,7 @@ static PiPManager* sharedInstance = nil;
     return self.pipController.isPictureInPictureActive;
 }
 
-- (BOOL)isPiPWithVC:(AppSceneViewController*)vc {
+- (BOOL)isPiPWithVC:(LDEAppScene*)vc {
     return self.pipController.isPictureInPictureActive && self.displayingVC == vc;
 }
 
@@ -50,7 +50,7 @@ static PiPManager* sharedInstance = nil;
     return self;
 }
 
-- (void)startPiPWithVC:(AppSceneViewController*)vc {
+- (void)startPiPWithVC:(LDEAppScene*)vc {
     [self.pipController stopPictureInPicture];
     if(self.displayingVC) {
         [self.displayingVC.view insertSubview:self.displayingVC.contentView atIndex:0];

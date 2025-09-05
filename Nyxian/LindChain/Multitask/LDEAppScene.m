@@ -11,13 +11,13 @@
 #import "Localization.h"
 #import "../../../LiveProcess/serverDelegate.h"
 
-@interface AppSceneViewController()
+@interface LDEAppScene()
 @property int resizeDebounceToken;
 @property CGPoint normalizedOrigin;
 @property NSUUID* identifier;
 @end
 
-@interface AppSceneViewController()
+@interface LDEAppScene()
 @property(nonatomic) BOOL debuggingEnabled;
 @property(nonatomic) UIWindowScene *hostScene;
 @property(nonatomic) NSString *sceneID;
@@ -27,11 +27,11 @@
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
 @end
 
-@implementation AppSceneViewController
+@implementation LDEAppScene
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
             withDebuggingEnabled:(BOOL)enableDebugging
-                    withDelegate:(id<AppSceneViewControllerDelegate>)delegate
+                    withDelegate:(id<LDEAppSceneDelegate>)delegate
 {
     self = [super initWithNibName:nil bundle:nil];
     self.debuggingEnabled = enableDebugging;
