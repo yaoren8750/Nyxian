@@ -41,7 +41,9 @@ static NXProjectType const NXProjectTypeApp = 1;
 @property (nonatomic,readonly) int type;
 @property (nonatomic,readonly) int threads;
 @property (nonatomic,readonly) BOOL increment;
-@property (nonatomic,readonly) BOOL forceDebugging;
+
+// NONE PUBLIC FEATURES - NOT READY FOR PUBLIC
+@property (nonatomic,readonly) BOOL debug;
 
 - (NSMutableArray*)generateCompilerFlags;
 
@@ -54,6 +56,9 @@ static NXProjectType const NXProjectTypeApp = 1;
 @property (nonatomic,readonly) BOOL showReturn;
 @property (nonatomic,readonly) BOOL wrapLine;
 @property (nonatomic,readonly) double fontSize;
+
+// NONE PUBLIC FEATURES - NOT READY FOR PUBLIC
+@property (nonatomic,readonly) BOOL autocompletion;
 
 @end
 

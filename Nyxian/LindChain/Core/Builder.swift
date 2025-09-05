@@ -223,7 +223,7 @@ class Builder {
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
                         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
-                                                                     enableDebugging: project.projectConfig.forceDebugging)
+                                                                     enableDebugging: project.projectConfig.debug)
                     }
                 } else {
                     print(meow ?? "Unk")

@@ -68,9 +68,10 @@
     return flags;
 }
 
-- (BOOL)forceDebugging
+// NONE PUBLIC FEATURES - NOT READY FOR PUBLIC
+- (BOOL)debug
 {
-    NSNumber *value = [self readKey:@"LDEForceDebugging"];
+    NSNumber *value = [self readKey:@"LDEDebug"];
     return value ? value.boolValue : NO;
 }
 
@@ -83,6 +84,13 @@
 - (BOOL)showReturn { return [self readBooleanForKey:@"LDEShowReturn" withDefaultValue:YES]; }
 - (BOOL)wrapLine { return [self readBooleanForKey:@"LDEWrapLine" withDefaultValue:YES]; }
 - (double)fontSize { return [self readDoubleForKey:@"LDEFontSize" withDefaultValue:YES]; }
+
+// NONE PUBLIC FEATURES - NOT READY FOR PUBLIC
+- (BOOL)autocompletion
+{
+    NSNumber *value = [self readKey:@"LDEAutocompletion"];
+    return value ? value.boolValue : NO;
+}
 
 @end
 

@@ -95,7 +95,10 @@ class Coordinator: NSObject, TextViewDelegate, UITableViewDataSource, UITableVie
             self.debounce?.debounce()
         }
         
-        updateAutocomplete()
+        
+        if(self.parent?.project?.codeEditorConfig.autocompletion ?? false) {
+            updateAutocomplete()
+        }
     }
     
     func redrawDiag() {
