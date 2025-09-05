@@ -37,6 +37,7 @@ void UIKitFixesInit(void) {
 
 @interface LDEWindow ()
 
+@property(nonatomic) UIViewController *childVC;
 @property(nonatomic) UITextView *processLog;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
 @property(nonatomic) NSString* windowName;
@@ -54,6 +55,7 @@ void UIKitFixesInit(void) {
 {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
+    _childVC = _appSceneVC;
     
     [self setupDecoratedView];
     self.scaleRatio = 1.0;
@@ -113,16 +115,15 @@ void UIKitFixesInit(void) {
         }
     }];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
-    });
-    
     return self;
 }
 
 - (instancetype)initWithAttachment:(UIView*)attachment
                          withTitle:(NSString*)title
 {
+    _childVC = [[UIViewController alloc] init];
+    _childVC.view = attachment;
+    
     [self setupDecoratedView];
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
@@ -143,12 +144,6 @@ void UIKitFixesInit(void) {
         }]
     ];
     
-    UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
-    UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
-    maximizeImage = [maximizeImage imageWithConfiguration:maximizeConfig];
-    self.maximizeButton = [[UIBarButtonItem alloc] initWithImage:maximizeImage style:UIBarButtonItemStylePlain target:self action:@selector(maximizeWindow)];
-    self.maximizeButton.tintColor = [UIColor systemGreenColor];
-    
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         NSArray *barButtonItems = @[];
         self.navigationItem.rightBarButtonItems = barButtonItems;
@@ -157,36 +152,26 @@ void UIKitFixesInit(void) {
                        dispatch_get_main_queue(), ^{
             [self maximizeWindow];
         });
-    } else {
-        NSArray *barButtonItems = @[self.maximizeButton];
-        self.navigationItem.rightBarButtonItems = barButtonItems;
     }
     
-    __weak typeof(self) weakSelf = self;
     [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
-        if(!weakSelf.appSceneVC.isAppRunning) {
-            return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
-        } else {
-            NSString *pidText = [NSString stringWithFormat:@"Attachment"];
-            return [UIMenu menuWithTitle:pidText children:menuItems];
-        }
+        NSString *pidText = [NSString stringWithFormat:@"Attachment"];
+        return [UIMenu menuWithTitle:pidText children:menuItems];
     }];
     
     [self.view insertSubview:attachment atIndex:2];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
-        [NSLayoutConstraint activateConstraints:@[
-            [attachment.topAnchor constraintEqualToAnchor:self.navigationBar.bottomAnchor],
-            [attachment.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-            [attachment.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [attachment.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
-        ]];
-    });
     
     return self;
 }
 
-- (void)setupDecoratedView {
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
+}
+
+- (void)setupDecoratedView
+{
     CGFloat navBarHeight = 44;
     self.view = [UIStackView new];
     /*if(UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation)) {
@@ -243,18 +228,17 @@ void UIKitFixesInit(void) {
     
     self.view.layer.borderWidth = 0.5;
     self.view.layer.borderColor = UIColor.systemGray3Color.CGColor;
-    //self.view.layer.borderColor = UIColor.secondarySystemBackgroundColor.CGColor;
     
-    if(_appSceneVC)
+    if(_childVC)
     {
-        [self addChildViewController:_appSceneVC];
-        [self.view insertSubview:_appSceneVC.view atIndex:0];
-        _appSceneVC.view.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addChildViewController:_childVC];
+        [self.view insertSubview:_childVC.view atIndex:0];
+        _childVC.view.translatesAutoresizingMaskIntoConstraints = NO;
         
         [self updateVerticalConstraints];
         [NSLayoutConstraint activateConstraints:@[
-            [_appSceneVC.view.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [_appSceneVC.view.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
+            [_childVC.view.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [_childVC.view.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
         ]];
     }
     
@@ -591,7 +575,7 @@ void UIKitFixesInit(void) {
 
 - (void)updateVerticalConstraints {
     // Update safe area insets
-    if(_isMaximized) {
+    if(_isMaximized && self.appSceneVC) {
         __weak typeof(self) weakSelf = self;
         self.appSceneVC.nextUpdateSettingsBlock = ^(UIMutableApplicationSceneSettings *settings) {
             [weakSelf updateMaximizedFrameWithSettings:settings];
@@ -606,14 +590,14 @@ void UIKitFixesInit(void) {
     [NSLayoutConstraint deactivateConstraints:self.activatedVerticalConstraints];
     if(bottomWindowBar) {
         self.activatedVerticalConstraints = @[
-            [self.appSceneVC.view.topAnchor constraintEqualToAnchor:self.view.topAnchor],
-            [self.appSceneVC.view.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-navBarHeight],
+            [self.childVC.view.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+            [self.childVC.view.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-navBarHeight],
             [self.navigationBar.heightAnchor constraintEqualToConstant:navBarHeight]
         ];
     } else {
         self.activatedVerticalConstraints = @[
-            [self.appSceneVC.view.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:navBarHeight],
-            [self.appSceneVC.view.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+            [self.childVC.view.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:navBarHeight],
+            [self.childVC.view.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
             [self.navigationBar.heightAnchor constraintEqualToConstant:navBarHeight]
         ];
     }
