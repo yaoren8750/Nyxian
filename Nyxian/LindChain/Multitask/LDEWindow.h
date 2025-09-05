@@ -1,7 +1,6 @@
 #import "FoundationPrivate.h"
-#import "AppSceneViewController.h"
+#import "LDEAppScene.h"
 
-API_AVAILABLE(ios(16.0))
 @interface LDEWindow : UIViewController<AppSceneViewControllerDelegate>
 
 @property(nonatomic) NSString* windowName;

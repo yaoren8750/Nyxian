@@ -5,7 +5,7 @@
 //  Created by s s on 2025/6/3.
 //
 #include "PiPManager.h"
-#include "AppSceneViewController.h"
+#include "LDEAppScene.h"
 #include "LDEWindow.h"
 #include "../LiveContainer/utils.h"
 

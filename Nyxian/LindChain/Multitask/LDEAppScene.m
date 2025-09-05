@@ -4,9 +4,8 @@
 //
 //  Created by s s on 2025/5/17.
 //
-#import "AppSceneViewController.h"
+#import "LDEAppScene.h"
 #import "LDEWindow.h"
-//#import "LiveContainerSwiftUI-Swift.h"
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "PiPManager.h"
 #import "Localization.h"
@@ -15,7 +14,6 @@
 @interface AppSceneViewController()
 @property int resizeDebounceToken;
 @property CGPoint normalizedOrigin;
-@property bool isNativeWindow;
 @property NSUUID* identifier;
 @end
 
@@ -101,8 +99,6 @@
         }
     }];
     
-    _isNativeWindow = [[[NSUserDefaults alloc] initWithSuiteName:[LCUtils appGroupID]] integerForKey:@"LCMultitaskMode" ] == 1;
-    
     return YES;
 }
 
@@ -138,17 +134,12 @@
     //settings.interruptionPolicy = 2; // reconnect
     settings.level = 1;
     settings.persistenceIdentifier = NSUUID.UUID.UUIDString;
-    if(self.isNativeWindow) {
-        UIEdgeInsets defaultInsets = self.view.window.safeAreaInsets;
-        settings.peripheryInsets = defaultInsets;
-        settings.safeAreaInsetsPortrait = defaultInsets;
-    } else {
-        // it seems some apps don't honor these settings so we don't cover the top of the app
-        settings.peripheryInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-        settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(0, 0, 0, 0);
-    }
     
-    settings.statusBarDisabled = !self.isNativeWindow;
+    // it seems some apps don't honor these settings so we don't cover the top of the app
+    settings.peripheryInsets = UIEdgeInsetsMake(0, 0, 0, 0);
+    settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(0, 0, 0, 0);
+    
+    settings.statusBarDisabled = NO; //!self.isNativeWindow;
     //settings.previewMaximumSize =
     //settings.deviceOrientationEventsEnabled = YES;
     self.settings = settings;
@@ -208,14 +199,7 @@
     UIMutableApplicationSceneSettings *baseSettings = [diff settingsByApplyingToMutableCopyOfSettings:settings];
     UIApplicationSceneTransitionContext *newContext = [context copy];
     newContext.actions = nil;
-    if(self.isNativeWindow) {
-        // directly update the settings
-        baseSettings.interruptionPolicy = 0;
-        baseSettings.peripheryInsets = self.view.window.safeAreaInsets;
-        [self.presenter.scene updateSettings:baseSettings withTransitionContext:newContext completion:nil];
-    } else {
-        [self.delegate appSceneVC:self didUpdateFromSettings:baseSettings transitionContext:newContext];
-    }
+    [self.delegate appSceneVC:self didUpdateFromSettings:baseSettings transitionContext:newContext];
 }
 
 - (void)viewWillLayoutSubviews {

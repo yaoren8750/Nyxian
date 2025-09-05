@@ -4,25 +4,30 @@
 //
 //  Created by s s on 2025/5/17.
 //
+
+#ifndef APPSCENE_H
+#define APPSCENE_H
+
 #import <LindChain/LiveContainer/UIKitPrivate.h>
 #import <Project/NXProject.h>
 #import "FoundationPrivate.h"
 #import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
-@import UIKit;
-@import Foundation;
-
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 @class AppSceneViewController;
 
-API_AVAILABLE(ios(16.0))
 @protocol AppSceneViewControllerDelegate <NSObject>
+
 - (void)appSceneVCAppDidExit:(AppSceneViewController*)vc;
 - (void)appSceneVC:(AppSceneViewController*)vc didInitializeWithError:(NSError*)error;
+
 @optional
+
 - (void)appSceneVC:(AppSceneViewController*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)settings transitionContext:(id)context;
+
 @end
 
-API_AVAILABLE(ios(16.0))
 @interface AppSceneViewController : UIViewController<_UISceneSettingsDiffAction>
 
 @property(nonatomic) LDEApplicationObject *appObj;
@@ -48,3 +53,5 @@ API_AVAILABLE(ios(16.0))
 - (void)resizeActionEnd;
 
 @end
+
+#endif /* APPSCENE_H */

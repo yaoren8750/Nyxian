@@ -1,7 +1,7 @@
 #import "LDEWindow.h"
 #import "ResizeHandleView.h"
 //#import "LiveContainerSwiftUI-Swift.h"
-#import "AppSceneViewController.h"
+#import "LDEAppScene.h"
 #import <LindChain/LiveContainer/UIKitPrivate.h>
 #import "PiPManager.h"
 #import "../LiveContainer/Localization.h"
