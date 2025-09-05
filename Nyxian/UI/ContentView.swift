@@ -45,7 +45,7 @@ import UIKit
         
         self.title = "Projects"
         
-        let createItem: UIAction = UIAction(title: "App") { [weak self] _ in
+        let createItem: UIAction = UIAction(title: "Create Project", image: UIImage(systemName: "plus")) { [weak self] _ in
             guard let self = self else { return }
             self.createProject(mode: .app)
         }
