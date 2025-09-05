@@ -33,15 +33,13 @@
 
 Dead10ccFix* fix = nil;
 
-void initDead10ccFix(void) {
-
-    //if(NSUserDefaults.isLiveProcess) {
+void initDead10ccFix(void)
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         fix = [[Dead10ccFix alloc] init];
         [NSNotificationCenter.defaultCenter addObserver:fix selector:@selector(handleAppDidEnterBackground:) name:NSExtensionHostDidEnterBackgroundNotification object:nil];
-    //} else if (NSUserDefaults.isSharedApp){
-        //fix = [[Dead10ccFix alloc] init];
-        //[NSNotificationCenter.defaultCenter addObserver:fix selector:@selector(handleAppDidEnterBackground:) name:@"UIApplicationDidEnterBackgroundNotification" object:nil];
-    //}
+    });
 }
 
 
