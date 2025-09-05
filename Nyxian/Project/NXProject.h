@@ -25,7 +25,6 @@
 
 typedef int NXProjectType NS_TYPED_ENUM;
 static NXProjectType const NXProjectTypeApp = 1;
-static NXProjectType const NXProjectTypeBinary = 2;
 
 @interface NXProjectConfig : NXPlistHelper
 

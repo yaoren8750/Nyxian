@@ -55,8 +55,16 @@
 - (NSMutableArray*)generateCompilerFlags
 {
     NSMutableArray *flags = [[NSMutableArray alloc] initWithArray:[self compilerFlags]];
-    [flags addObject:@"-target"];
-    [flags addObject:[self platformTriple]];
+    
+    [flags addObjectsFromArray:@[
+        @"-g",
+        @"-target",
+        [self platformTriple],
+        @"-isysroot",
+        [[Bootstrap shared] bootstrapPath:@"/SDK/iPhoneOS16.5.sdk"],
+        [NSString stringWithFormat:@"-I%@", [[Bootstrap shared] bootstrapPath:@"/Include/include"]]
+    ]];
+    
     return flags;
 }
 
@@ -90,7 +98,6 @@
     _cachePath = [[Bootstrap shared] bootstrapPath:[NSString stringWithFormat:@"/Cache/%@", [self uuid]]];
     _projectConfig = [[NXProjectConfig alloc] initWithPlistPath:[NSString stringWithFormat:@"%@/Config/Project.plist", self.path]];
     _codeEditorConfig = [[NXCodeEditorConfig alloc] initWithPlistPath:[NSString stringWithFormat:@"%@/Config/Editor.plist", self.path]];
-    //_tableCell = [[NXProjectTableCell alloc] initWithProject:self];
     return self;
 }
 
@@ -169,11 +176,7 @@
 
 - (BOOL)reload
 {
-    BOOL needsUIReload = [[self projectConfig] reloadIfNeeded];
-    //NXProjectTableCell *tableCell = (NXProjectTableCell*)[self tableCell];
-    //if(needsUIReload)
-        //[tableCell reload];
-    return needsUIReload;
+    return [[self projectConfig] reloadIfNeeded];
 }
 
 @end

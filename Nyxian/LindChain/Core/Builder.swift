@@ -38,15 +38,7 @@ class Builder {
         self.database = DebugDatabase.getDatabase(ofPath: "\(self.project.cachePath!)/debug.json")
         self.database.reuseDatabase()
         
-        var genericCompilerFlags: [String] = [
-            "-g",
-            "-isysroot",
-            Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
-            "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
-        ]
-        
-        let compilerFlags: [String] = self.project.projectConfig.generateCompilerFlags() as! [String]
-        genericCompilerFlags.append(contentsOf: compilerFlags)
+        let genericCompilerFlags: [String] = self.project.projectConfig.generateCompilerFlags() as! [String]
         
         self.compiler = Compiler(genericCompilerFlags)
         self.linker = Linker()
@@ -124,8 +116,7 @@ class Builder {
     }
     
     func prepare() throws {
-        if project.projectConfig.type == NXProjectType.app.rawValue ||
-            project.projectConfig.type == NXProjectType.binary.rawValue {
+        if project.projectConfig.type == NXProjectType.app.rawValue {
             let bundlePath: String = self.project.bundlePath
             let resourcesPath: String = self.project.resourcesPath
             
@@ -148,7 +139,7 @@ class Builder {
                     "UIInterfaceOrientationLandscapeRight"
                 ]
             ]
-
+            
             for (key, value) in self.project.projectConfig.infoDictionary {
                 infoPlistData[key as! String] = value
             }
