@@ -171,7 +171,7 @@ import UIKit
                     confirmStyle: .destructive)
                 {
                     NXProject.remove(project)
-                    self.projects = NXProject.listProjects(atPath: self.path) as! [NXProject]
+                    self.projects.remove(at: indexPath.row)
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
             }
