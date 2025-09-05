@@ -26,6 +26,7 @@
 
 @property (nonatomic,strong) UIWindow *targetView;
 @property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<LDEWindow*>*> *windowGroups;
+@property (nonatomic, strong) NSMutableDictionary<NSString*, NSValue*> *windowDimensions;
 
 - (instancetype)init;
 + (LDEMultitaskManager*)shared;

@@ -40,7 +40,6 @@ void UIKitFixesInit(void) {
 @property(nonatomic) UIViewController *childVC;
 @property(nonatomic) UITextView *processLog;
 @property(nonatomic) NSArray* activatedVerticalConstraints;
-@property(nonatomic) NSString* windowName;
 @property(nonatomic) int pid;
 @property(nonatomic) CGRect originalFrame;
 @property(nonatomic) UIBarButtonItem *maximizeButton;
@@ -52,12 +51,13 @@ void UIKitFixesInit(void) {
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
                  enableDebugging:(BOOL)enableDebugging
+                  withDimensions:(CGRect)rect
 {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
     _childVC = _appSceneVC;
     
-    [self setupDecoratedView];
+    [self setupDecoratedView:rect];
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
@@ -120,11 +120,12 @@ void UIKitFixesInit(void) {
 
 - (instancetype)initWithAttachment:(UIView*)attachment
                          withTitle:(NSString*)title
+                    withDimensions:(CGRect)rect
 {
     _childVC = [[UIViewController alloc] init];
     _childVC.view = attachment;
     
-    [self setupDecoratedView];
+    [self setupDecoratedView:rect];
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
@@ -170,15 +171,19 @@ void UIKitFixesInit(void) {
     [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
 }
 
-- (void)setupDecoratedView
+- (void)setupDecoratedView:(CGRect)dimensions
 {
     CGFloat navBarHeight = 44;
     self.view = [UIStackView new];
+    
     /*if(UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation)) {
         self.view.frame = CGRectMake(50, 150, 480, 320 + navBarHeight);
     } else {*/
-        self.view.frame = CGRectMake(50, 150, 320, 480 + navBarHeight);
+        //self.view.frame = CGRectMake(50, 150, 320, 480 + navBarHeight);
     //}
+    
+    dimensions.size.height += navBarHeight;
+    self.view.frame = dimensions;
     
     // Navigation bar
     UINavigationBar *navigationBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, navBarHeight)];

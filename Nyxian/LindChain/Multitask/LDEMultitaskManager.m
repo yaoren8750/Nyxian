@@ -25,6 +25,7 @@
 {
     self = [super init];
     _windowGroups = [[NSMutableDictionary alloc] init];
+    _windowDimensions = [[NSMutableDictionary alloc] init];
     return self;
 }
 
@@ -53,14 +54,21 @@
     if(windowGroup)
     {
         LDEWindow *mainWindow = [windowGroup firstObject];
-        if(terminate)
+        if (terminate)
         {
             [windowGroup removeObjectAtIndex:0];
-            for(LDEWindow *window in windowGroup)
+            for (LDEWindow *window in windowGroup)
             {
+                NSString *key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, window.windowName];
+
+                if (window.view) {
+                    [self.windowDimensions setObject:[NSValue valueWithCGRect:window.view.frame]
+                                              forKey:key];
+                }
+
                 [window closeWindow];
             }
-            
+
             NSMutableArray<LDEWindow*> *newWindowGroup = [[NSMutableArray alloc] init];
             [newWindowGroup addObject:mainWindow];
             [self.windowGroups setObject:newWindowGroup forKey:bundleIdentifier];
@@ -102,7 +110,15 @@
         }
         
         // Go!
-        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier enableDebugging:enableDebug];
+        NSString *mainKey = [NSString stringWithFormat:@"%@.main", bundleIdentifier];
+        CGRect frame = CGRectMake(50, 150, 320, 480);
+        NSValue *cachedFrame = [self.windowDimensions objectForKey:mainKey];
+        if (cachedFrame) frame = cachedFrame.CGRectValue;
+        
+        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier
+                                                                         enableDebugging:enableDebug
+                                                                          withDimensions:frame];
+        
         [self.targetView addSubview:decoratedAppSceneViewController.view];
         NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];
         [windowGroup addObject:decoratedAppSceneViewController];
@@ -120,10 +136,29 @@
 
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
 {
-    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];;
-    if(windowGroup) for(LDEWindow *window in windowGroup) [window closeWindow];
+    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
+    if(windowGroup) {
+        BOOL isFirst = YES;
+        for(LDEWindow *window in windowGroup) {
+            NSString *key;
+            if (isFirst) {
+                key = [NSString stringWithFormat:@"%@.main", bundleIdentifier];
+                isFirst = NO;
+            } else {
+                key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, window.windowName];
+            }
+
+            if (window.view) {
+                [self.windowDimensions setObject:[NSValue valueWithCGRect:window.view.frame]
+                                          forKey:key];
+            }
+
+            [window closeWindow];
+        }
+    }
     [self.windowGroups removeObjectForKey:bundleIdentifier];
 }
+
 
 - (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier
 {
@@ -158,9 +193,16 @@
 {
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
     LDEWindow *mainWindow = [windowGroup firstObject];
-    if(windowGroup)
-    {
-        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view withTitle:[NSString stringWithFormat:@"%@ - %@", mainWindow.appSceneVC.appObj.displayName, title]];
+    if(windowGroup) {
+        NSString *actualTitle = [NSString stringWithFormat:@"%@ - %@", mainWindow.appSceneVC.appObj.displayName, title];
+        NSString *key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, actualTitle];
+        CGRect frame = CGRectMake(50, 150, 320, 480);
+        NSValue *cachedFrame = [self.windowDimensions objectForKey:key];
+        if (cachedFrame) frame = cachedFrame.CGRectValue;
+        
+        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view
+                                                        withTitle:actualTitle
+                                                   withDimensions:frame];
         [self.targetView addSubview:window.view];
         [windowGroup addObject:window];
     }

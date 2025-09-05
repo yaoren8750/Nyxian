@@ -4,6 +4,7 @@
 API_AVAILABLE(ios(16.0))
 @interface LDEWindow : UIViewController<AppSceneViewControllerDelegate>
 
+@property(nonatomic) NSString* windowName;
 @property(nonatomic) AppSceneViewController* appSceneVC;
 @property(nonatomic) UIStackView *view;
 @property(nonatomic) UINavigationBar *navigationBar;
@@ -16,9 +17,11 @@ API_AVAILABLE(ios(16.0))
 @property(nonatomic) CGFloat scaleRatio;
 
 - (instancetype)initWithBundleID:(NSString*)bundleID
-                 enableDebugging:(BOOL)enableDebugging;
+                 enableDebugging:(BOOL)enableDebugging
+                  withDimensions:(CGRect)rect;
 - (instancetype)initWithAttachment:(UIView*)attachment
-                         withTitle:(NSString*)title;
+                         withTitle:(NSString*)title
+                    withDimensions:(CGRect)rect;
 - (void)minimizeWindowPiP;
 - (void)unminimizeWindowPiP;
 - (void)updateVerticalConstraints;
