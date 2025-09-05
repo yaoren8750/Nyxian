@@ -182,7 +182,7 @@ void UIKitFixesInit(void) {
         //self.view.frame = CGRectMake(50, 150, 320, 480 + navBarHeight);
     //}
     
-    dimensions.size.height += navBarHeight;
+    if(_appSceneVC) dimensions.size.height += navBarHeight;
     self.view.frame = dimensions;
     
     // Navigation bar
