@@ -19,54 +19,84 @@
 
 #import <LindChain/Debugger/Logger.h>
 
-@implementation LogTextView
+static const CGFloat kAutoScrollThreshold = 20.0;
 
-- (instancetype)init
-{
-    self = [self initWithPipe:[NSPipe pipe]];
-    return self;
+@implementation LogTextView {
+    BOOL _followTail;
 }
 
-- (instancetype)initWithPipe:(NSPipe*)pipe
-{
-    self = [super init];
-    
-    self.font = [UIFont monospacedSystemFontOfSize:12 weight:UIFontWeightBold];
-    self.backgroundColor = UIColor.systemGray6Color;
-    self.editable = NO;
-    self.selectable = YES;
-    self.text = @"";
-    self.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    _pipe = pipe;
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(handleNotification:)
-                                                 name:NSFileHandleReadCompletionNotification
-                                               object:_pipe.fileHandleForReading];
-    
-    [_pipe.fileHandleForReading readInBackgroundAndNotify];
-    
-    return self;
+- (instancetype)init {
+    return [self initWithPipe:[NSPipe pipe]];
 }
 
-- (void)handleNotification:(NSNotification*)notification
-{
-    NSData *data = notification.userInfo[NSFileHandleNotificationDataItem];
-    if(data.length > 0) {
-        NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSDictionary *attributes = @{
-                NSFontAttributeName: [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightBold],
-                NSForegroundColorAttributeName: UIColor.labelColor // Or any desired text color
-            };
-            
-            NSAttributedString *attr = [[NSAttributedString alloc] initWithString:output attributes:attributes];
-            [self.textStorage appendAttributedString:attr];
-            [self scrollRangeToVisible:NSMakeRange(self.text.length, 0)];
-        });
+- (instancetype)initWithPipe:(NSPipe*)pipe {
+    if ((self = [super init])) {
+        _pipe = pipe;
+        _followTail = YES;
+
+        self.font = [UIFont monospacedSystemFontOfSize:12 weight:UIFontWeightBold];
+        self.backgroundColor = [UIColor systemGray6Color];
+        self.editable = NO;
+        self.selectable = YES;
+        self.text = @"";
+        self.translatesAutoresizingMaskIntoConstraints = NO;
+        self.alwaysBounceVertical = YES;
+
+        self.delegate = (id<UITextViewDelegate>)self;
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleNotification:)
+                                                     name:NSFileHandleReadCompletionNotification
+                                                   object:_pipe.fileHandleForReading];
+
         [_pipe.fileHandleForReading readInBackgroundAndNotify];
     }
+    return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    @try {
+        [_pipe.fileHandleForReading closeFile];
+    } @catch (NSException *ex) { /* ignore */ }
+    _pipe = nil;
+}
+
+- (void)handleNotification:(NSNotification*)notification {
+    NSData *data = notification.userInfo[NSFileHandleNotificationDataItem];
+    if (!data || data.length == 0) {
+        [_pipe.fileHandleForReading readInBackgroundAndNotify];
+        return;
+    }
+
+    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    if (!output) {
+        [_pipe.fileHandleForReading readInBackgroundAndNotify];
+        return;
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSDictionary *attributes = @{
+            NSFontAttributeName: [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightBold],
+            NSForegroundColorAttributeName: [UIColor labelColor]
+        };
+        NSAttributedString *attr = [[NSAttributedString alloc] initWithString:output attributes:attributes];
+        [self.textStorage appendAttributedString:attr];
+
+        [self.layoutManager ensureLayoutForTextContainer:self.textContainer];
+
+        if (self->_followTail) {
+            CGPoint bottomOffset = CGPointMake(0, MAX(0, self.contentSize.height - self.bounds.size.height));
+            [self setContentOffset:bottomOffset animated:NO];
+        }
+    });
+
+    [_pipe.fileHandleForReading readInBackgroundAndNotify];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    CGFloat distanceFromBottom = scrollView.contentSize.height - scrollView.bounds.size.height - scrollView.contentOffset.y;
+    _followTail = (distanceFromBottom <= kAutoScrollThreshold);
 }
 
 @end
