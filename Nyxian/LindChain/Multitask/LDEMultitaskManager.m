@@ -136,6 +136,7 @@
 
 - (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
 {
+    if(!bundleIdentifier) return;
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
     if(windowGroup) {
         BOOL isFirst = YES;

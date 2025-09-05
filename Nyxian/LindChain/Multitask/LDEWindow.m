@@ -44,6 +44,7 @@ void UIKitFixesInit(void) {
 @property(nonatomic) CGRect originalFrame;
 @property(nonatomic) UIBarButtonItem *maximizeButton;
 @property(nonatomic) bool isAppTerminationRequested;
+@property(nonatomic) BOOL multitaskingTermination;
 
 @end
 
@@ -56,6 +57,7 @@ void UIKitFixesInit(void) {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[AppSceneViewController alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
     _childVC = _appSceneVC;
+    _multitaskingTermination = NO;
     
     [self setupDecoratedView:rect];
     self.scaleRatio = 1.0;
@@ -89,7 +91,7 @@ void UIKitFixesInit(void) {
     UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
     UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     closeImage = [closeImage imageWithConfiguration:closeConfig];
-    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindowButton)];
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(invokeMultitaskingTermination)];
     closeButton.tintColor = [UIColor systemRedColor];
 
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
@@ -124,6 +126,7 @@ void UIKitFixesInit(void) {
 {
     _childVC = [[UIViewController alloc] init];
     _childVC.view = attachment;
+    _multitaskingTermination = NO;
     
     [self setupDecoratedView:rect];
     self.scaleRatio = 1.0;
@@ -314,9 +317,13 @@ void UIKitFixesInit(void) {
     }
 }
 
-- (void)closeWindowButton
+- (void)invokeMultitaskingTermination
 {
-    [[LDEMultitaskManager shared] closeApplicationWithBundleIdentifier:self.appSceneVC.appObj.bundleIdentifier];
+    if(!_multitaskingTermination)
+    {
+        _multitaskingTermination = YES;
+        [[LDEMultitaskManager shared] closeApplicationWithBundleIdentifier:self.appSceneVC.appObj.bundleIdentifier];
+    }
 }
 
 - (void)minimizeWindow {
@@ -402,7 +409,7 @@ void UIKitFixesInit(void) {
     // "Moving" the textLog off of that dictionary to our VC to stop retaining it
     //LogTextView *textLog = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] objectForKey:@(self.pid)];
     //[[[[[ServerManager sharedManager] serverDelegate] globalProxy] textLogs] removeObjectForKey:@(self.pid)];
-    if(_isAppTerminationRequested) {
+    //if(_isAppTerminationRequested) {
         self.view.layer.masksToBounds = NO;
         [UIView transitionWithView:self.view.window
                           duration:0.4
@@ -410,7 +417,9 @@ void UIKitFixesInit(void) {
                         animations:^{
             self.view.hidden = YES;
         } completion:nil];
-    } else {
+    
+    [self invokeMultitaskingTermination];
+    //} else {
         
         /*self.processLog = textLog;
         [self.view insertSubview:self.processLog atIndex:2];
@@ -420,7 +429,7 @@ void UIKitFixesInit(void) {
             [self.processLog.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
             [self.processLog.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]
         ]];*/
-    }
+    //}
 }
 
 - (void)restart
