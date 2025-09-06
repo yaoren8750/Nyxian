@@ -92,6 +92,7 @@ class CreditsViewController: UITableViewController {
     private var credits: [Credit] = [
         Credit(name: "Frida", role: "Maintainer", githubURL: "https://github.com/cr4zyengineer"),
         Credit(name: "Duy Tran", role: "LiveContainer", githubURL: "https://github.com/khanhduytran0"),
+        Credit(name: "Huge_Black", role: "LiveContainer", githubURL: "https://github.com/hugeBlack"),
         Credit(name: "Lars Fröder", role: "litehook", githubURL: "https://github.com/opa334")
     ]
     
