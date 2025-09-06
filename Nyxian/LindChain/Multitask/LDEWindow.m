@@ -135,19 +135,6 @@ void UIKitFixesInit(void) {
     self.windowName = title;
     self.navigationItem.title = title;
     
-    NSArray *menuItems = @[
-        [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
-            if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
-                [PiPManager.shared stopPiP];
-            } else {
-                [PiPManager.shared startPiPWithVC:self.appSceneVC];
-            }
-        }],
-        [UICustomViewMenuElement elementWithViewProvider:^UIView *(UICustomViewMenuElement *element) {
-            return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
-        }]
-    ];
-    
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         NSArray *barButtonItems = @[];
         self.navigationItem.rightBarButtonItems = barButtonItems;
@@ -158,12 +145,7 @@ void UIKitFixesInit(void) {
         });
     }
     
-    [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
-        NSString *pidText = [NSString stringWithFormat:@"Attachment"];
-        return [UIMenu menuWithTitle:pidText children:menuItems];
-    }];
-    
-    [self.view insertSubview:attachment atIndex:2];
+    [self.view insertSubview:_childVC.view atIndex:2];
     
     return self;
 }
