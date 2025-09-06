@@ -28,7 +28,7 @@
 @property (nonatomic, strong) NSMutableDictionary<NSString*, NSValue*> *windowDimensions;
 
 - (instancetype)init;
-+ (LDEMultitaskManager*)shared;
++ (instancetype)shared;
 
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier

@@ -21,15 +21,23 @@
 
 @implementation LDEMultitaskManager
 
-- (instancetype)init
-{
-    self = [super init];
-    _windowGroups = [[NSMutableDictionary alloc] init];
-    _windowDimensions = [[NSMutableDictionary alloc] init];
+- (instancetype)init {
+    static BOOL hasInitialized = NO;
+    if (hasInitialized) {
+        @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                       reason:@"This class may only be initialized once."
+                                     userInfo:nil];
+    }
+    self = [super initWithFrame:UIScreen.mainScreen.bounds];
+    if (self) {
+        _windowGroups = [[NSMutableDictionary alloc] init];
+        _windowDimensions = [[NSMutableDictionary alloc] init];
+        hasInitialized = YES;
+    }
     return self;
 }
 
-+ (LDEMultitaskManager*)shared
++ (instancetype)shared
 {
     static LDEMultitaskManager *multitaskManagerSingleton = nil;
     static dispatch_once_t onceToken;
