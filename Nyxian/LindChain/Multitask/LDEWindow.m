@@ -379,6 +379,7 @@ void UIKitFixesInit(void) {
             }
         }];
     } else {
+        [self.view.superview bringSubviewToFront:self.view];
         [self updateOriginalFrame];
         [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
             self.isMaximized = YES;
