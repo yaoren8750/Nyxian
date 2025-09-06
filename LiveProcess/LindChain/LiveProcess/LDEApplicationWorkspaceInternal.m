@@ -22,8 +22,8 @@
 
 @interface LDEApplicationWorkspaceInternal ()
 
-@property (nonatomic,strong) NSString *applicationsPath;
-@property (nonatomic,strong) NSString *containersPath;
+@property (nonatomic,strong) NSURL *applicationsURL;
+@property (nonatomic,strong) NSURL *containersURL;
 
 @end
 
@@ -37,22 +37,23 @@
     self = [super init];
     
     // Setting up paths
-    self.applicationsPath = [NSString stringWithFormat:@"%@/Documents/Bundle/Application", NSHomeDirectory()];
-    self.containersPath = [NSString stringWithFormat:@"%@/Documents/Data/Application", NSHomeDirectory()];
+    NSString *documentsDir = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    self.applicationsURL = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Bundle/Application"]];
+    self.containersURL   = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Data/Application"]];
     
     // Creating paths if they dont exist
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if(![fileManager fileExistsAtPath:self.applicationsPath])
-        [fileManager createDirectoryAtPath:self.applicationsPath
-               withIntermediateDirectories:YES
-                                attributes:nil
-                                     error:nil];
+    if(![fileManager fileExistsAtPath:self.applicationsURL.path])
+        [fileManager createDirectoryAtURL:self.applicationsURL
+              withIntermediateDirectories:YES
+                               attributes:nil
+                                    error:nil];
     
-    if(![fileManager fileExistsAtPath:self.containersPath])
-        [fileManager createDirectoryAtPath:self.containersPath
-               withIntermediateDirectories:YES
-                                attributes:nil
-                                     error:nil];
+    if(![fileManager fileExistsAtPath:self.containersURL.path])
+        [fileManager createDirectoryAtURL:self.containersURL
+              withIntermediateDirectories:YES
+                               attributes:nil
+                                    error:nil];
     
     return self;
 }
@@ -73,12 +74,11 @@
 - (NSArray<MIBundle*>*)applicationBundleList
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray *uuidPaths = [fileManager contentsOfDirectoryAtPath:self.applicationsPath error:nil];
+    NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
     NSMutableArray<MIBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
-    for(NSString *uuidPath in uuidPaths)
+    for(NSURL *uuidURL in uuidURLs)
     {
-        NSString *fullUUIDPath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
-        MIBundle *bundle = [[PrivClass(MIBundle) alloc] initWithBundleInDirectory:[NSURL fileURLWithPath:fullUUIDPath] withExtension:@"app" error:nil];
+        MIBundle *bundle = [[PrivClass(MIBundle) alloc] initWithBundleInDirectory:uuidURL withExtension:@"app" error:nil];
         if(bundle) [applicationBundleList addObject:bundle];
     }
     return applicationBundleList;
@@ -118,21 +118,21 @@
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
     // Now generate installPath
-    NSString *installPath = nil;
+    NSURL *installURL = nil;
     MIBundle *previousApplication = [self applicationBundleForBundleID:[bundle identifier]];
     if(previousApplication) {
         // It existed before, using old path
-        installPath = [previousApplication.bundleURL path];
-        [fileManager removeItemAtPath:installPath error:nil];
+        installURL = previousApplication.bundleURL;
+        [fileManager removeItemAtURL:installURL error:nil];
         previousApplication = nil;
     } else {
         // It didnt existed before, using new path
-        installPath = [NSString stringWithFormat:@"%@/%@/%@", self.applicationsPath,[[NSUUID UUID] UUIDString],[bundle relativePath]];
+        installURL = [[self.applicationsURL URLByAppendingPathComponent:[[NSUUID UUID] UUIDString]] URLByAppendingPathComponent:[bundle relativePath]];
     }
     
     // Now installing at install location
-    if(![fileManager createDirectoryAtURL:[[NSURL fileURLWithPath:installPath] URLByDeletingLastPathComponent] withIntermediateDirectories:true attributes:nil error:nil]) return NO;
-    if(![fileManager moveItemAtPath:[bundle.bundleURL path] toPath:installPath error:nil]) return NO;
+    if(![fileManager createDirectoryAtURL:[installURL URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:nil]) return NO;
+    if(![fileManager moveItemAtURL:bundle.bundleURL toURL:installURL error:nil]) return NO;
     
     return YES;
 }
@@ -164,11 +164,11 @@
     return NULL;
 }
 
-- (NSString*)applicationContainerForBundleID:(NSString *)bundleID
+- (NSURL*)applicationContainerForBundleID:(NSString *)bundleID
 {
     MIBundle *bundle = [self applicationBundleForBundleID:bundleID];
     NSString *uuid = [[bundle.bundleURL URLByDeletingLastPathComponent] lastPathComponent];
-    return [NSString stringWithFormat:@"%@/%@", self.containersPath, uuid];
+    return [self.containersURL URLByAppendingPathComponent:uuid];
 }
 
 @end
@@ -205,7 +205,7 @@
     reply([[LDEApplicationObject alloc] initWithBundle:bundle]);
 }
 
-- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSString*))reply
+- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSURL*))reply
 {
     reply([[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundleID]);
 }

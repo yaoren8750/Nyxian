@@ -28,7 +28,7 @@
 - (void)deleteApplicationWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
 - (void)applicationInstalledWithBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
 - (void)applicationObjectForBundleID:(NSString*)bundleID withReply:(void (^)(LDEApplicationObject*))reply;
-- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSString*))reply;
+- (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSURL*))reply;
 - (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply;
 
 @end

@@ -34,7 +34,7 @@
 - (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
 - (MIBundle*)applicationBundleForBundleID:(NSString*)bundleID;
-- (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
+- (NSURL*)applicationContainerForBundleID:(NSString *)bundleID;
 - (NSArray<MIBundle*>*)applicationBundleList;
 
 @end

@@ -29,7 +29,7 @@
     self.bundleIdentifier = bundle.identifier;
     self.bundlePath = [[bundle bundleURL] path];
     self.displayName = bundle.displayName;
-    self.containerPath = [[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier];
+    self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
     
     NSString *infoPlistPath = [[[bundle bundleURL] path] stringByAppendingPathComponent:@"Info.plist"];
     NSDictionary *infoDict = [NSDictionary dictionaryWithContentsOfFile:infoPlistPath];

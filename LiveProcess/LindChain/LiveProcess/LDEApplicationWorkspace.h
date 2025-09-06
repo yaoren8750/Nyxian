@@ -35,7 +35,6 @@
 - (BOOL)installApplicationAtPackagePath:(NSString*)packagePath;
 - (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
-- (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
 - (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID;
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects;
 

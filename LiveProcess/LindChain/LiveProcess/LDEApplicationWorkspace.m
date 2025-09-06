@@ -144,18 +144,6 @@
     return result;
 }
 
-- (NSString*)applicationContainerForBundleID:(NSString *)bundleID
-{
-    if(!_proxy) return @"";
-    __block NSString *result = nil;
-    [_proxy applicationContainerForBundleID:bundleID withReply:^(NSString *replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    return result;
-}
-
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects
 {
     if(!_proxy) return @[];
