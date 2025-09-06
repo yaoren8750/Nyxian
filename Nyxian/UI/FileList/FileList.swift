@@ -114,10 +114,6 @@ import UniformTypeIdentifiers
         super.viewDidLoad()
         
         if let project = self.project {
-            if !self.isSublink {
-                LDELogger.log(forProject: project)
-            }
-            
             self.title = self.isSublink ? URL(fileURLWithPath: self.path).lastPathComponent : project.projectConfig.displayName
         } else {
             self.title = URL(fileURLWithPath: self.path).lastPathComponent
@@ -209,18 +205,6 @@ import UniformTypeIdentifiers
             projectMenuElements.append(UIAction(title: "Issue Navigator", image: UIImage(systemName: "exclamationmark.triangle.fill"), handler: { [weak self] _ in
                 guard let self = self else { return }
                 let loggerView = UINavigationController(rootViewController: UIDebugViewController(project: project))
-                loggerView.modalPresentationStyle = .formSheet
-                self.present(loggerView, animated: true)
-            }))
-            projectMenuElements.append(UIAction(title: "Log", image: UIImage(systemName: {
-                if #available(iOS 17.0, *) {
-                    return "apple.terminal.fill"
-                } else {
-                    return "waveform.path.ecg.rectangle.fill"
-                }
-            }()), handler: { [weak self] _ in
-                guard let self = self else { return }
-                let loggerView = UINavigationController(rootViewController: LoggerViewController())
                 loggerView.modalPresentationStyle = .formSheet
                 self.present(loggerView, animated: true)
             }))

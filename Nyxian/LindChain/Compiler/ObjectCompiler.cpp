@@ -35,7 +35,6 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Support/TargetSelect.h"
 #include <pthread.h>
-#include <LindChain/LogService/LogService.h>
 
 using namespace clang;
 using namespace clang::driver;
@@ -111,7 +110,6 @@ int CompileObject(int argc,
     Clang.ExecuteAction(*Act);
     
     *errorStringSet = strdup(errorString.c_str());
-    ls_printf("%s\n", *errorStringSet);
 
     return Clang.getDiagnostics().hasErrorOccurred();
 }

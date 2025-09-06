@@ -29,7 +29,6 @@ import UIKit
         RevertUI()
         
         Bootstrap.shared.bootstrap()
-        LDELogger.setup()
         
         self.path = path
         

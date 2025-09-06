@@ -246,7 +246,7 @@ class Builder {
         ] + objectFiles
         
         if self.linker.ld64((ldArgs as NSArray).mutableCopy() as? NSMutableArray) != 0 {
-            throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:"Linking object files together to a executable failed"])
+            throw NSError(domain: "com.cr4zy.nyxian.builder.link", code: 1, userInfo: [NSLocalizedDescriptionKey:self.linker.error ?? "Linking object files together to a executable failed"])
         }
     }
     
@@ -362,7 +362,6 @@ func buildProjectWithArgumentUI(targetViewController: UIViewController,
                                 completion: @escaping () -> Void = {}) {
     targetViewController.navigationItem.titleView?.isUserInteractionEnabled = false
     XCodeButton.switchImageSync(systemName: "hammer.fill", animated: false)
-    LDELogger.clear()
     guard let oldBarButtons: [UIBarButtonItem] = targetViewController.navigationItem.rightBarButtonItems else { return }
     
     let barButton: UIBarButtonItem = UIBarButtonItem(customView: XCodeButton.shared)

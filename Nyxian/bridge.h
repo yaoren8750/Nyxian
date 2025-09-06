@@ -20,7 +20,6 @@
 
 #import <LindChain/Compiler/Compiler.h>
 #import <LindChain/Synpush/Synpush.h>
-#import <LindChain/LogService/LogService.h>
 #import <LindChain/Downloader/fdownload.h>
 #import <LindChain/Linker/linker.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>

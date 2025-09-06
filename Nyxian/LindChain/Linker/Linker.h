@@ -24,6 +24,8 @@
 
 @interface Linker : NSObject
 
+@property (nonatomic,strong) NSString *error;
+
 - (instancetype)init;
 - (int)ld64:(NSMutableArray*)flags;
 

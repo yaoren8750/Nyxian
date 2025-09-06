@@ -68,7 +68,8 @@ bool link(llvm::ArrayRef<const char *> args, llvm::raw_ostream &stdoutOS,
     // Flusing the error stram and priting it
     errStream.flush();
     
-    ls_printf("%s", errBuffer.c_str());
+    const char *str = errBuffer.c_str();
+    if(str) _error = [NSString stringWithCString:errBuffer.c_str() encoding:NSUTF8StringEncoding];
     
     // Deallocating the entire C array
     for(int i = 0; i < argc; i++) free(argv[i]);

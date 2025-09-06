@@ -330,13 +330,7 @@ class SplitScreenDetailViewController: UIViewController {
             loggerView.modalPresentationStyle = .formSheet
             self.present(loggerView, animated: true)
         })
-        let console: UIBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "apple.terminal.fill"), primaryAction: UIAction { [weak self] _ in
-            guard let self = self else { return }
-            let loggerView = UINavigationController(rootViewController: LoggerViewController())
-            loggerView.modalPresentationStyle = .formSheet
-            self.present(loggerView, animated: true)
-        })
-        self.navigationItem.rightBarButtonItems = [buildButton,packageButton,issueNavigator,console]
+        self.navigationItem.rightBarButtonItems = [buildButton,packageButton,issueNavigator]
     }
     
     override func viewDidAppear(_ animated: Bool) {
