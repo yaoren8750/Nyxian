@@ -164,7 +164,7 @@ bool ZMachO::ReallocCodeSignSpace()
 		ZUtil::StringFormatV(strNewArchOFile, "%s.archo.%d", m_strFile.c_str(), i);
 		uint32_t uNewLength = m_arrArchOes[i]->ReallocCodeSignSpace(strNewArchOFile);
 		if (uNewLength <= 0) {
-			ZLog::Error(">>> Failed!\n");
+			ZLog::Error("Failed!");
 			return false;
 		}
 		arrMachOesSizes.push_back(uNewLength);
@@ -257,7 +257,7 @@ bool ZMachO::InjectDylib(bool bWeakInject, const char* szDylibFile)
 	vector<uint32_t> arrMachOesSizes;
 	for (size_t i = 0; i < m_arrArchOes.size(); i++) {
 		if (!m_arrArchOes[i]->InjectDylib(bWeakInject, szDylibFile)) {
-			ZLog::Error(">>> Failed!\n");
+			ZLog::Error("Failed!");
 			return false;
 		}
 	}

@@ -115,7 +115,7 @@ void* ZSignAsset::GenerateASN1Type(const string& value)
 	CONF* cnf = NCONF_new(NULL);
 
 	if (cnf == NULL) {
-		ZLog::Error(">>> NCONF_new failed\n");
+		ZLog::Error("NCONF_new failed");
 		BIO_free(ldapbio);
 	}
 	string a = "asn1=SEQUENCE:A\n[A]\nC=OBJECT:sha256\nB=FORMAT:HEX,OCT:" + value + "\n";
@@ -129,7 +129,7 @@ void* ZSignAsset::GenerateASN1Type(const string& value)
 	genstr = NCONF_get_string(cnf, "default", "asn1");
 
 	if (genstr == NULL) {
-		ZLog::Error(">>> NCONF_get_string failed\n");
+		ZLog::Error("NCONF_get_string failed");
 		NCONF_free(cnf);
 	}
 	ASN1_TYPE* ret = ASN1_generate_nconf(genstr, cnf);
@@ -153,7 +153,7 @@ bool ZSignAsset::GenerateCMS(void* pscert, void* pspkey, const string& strCDHash
 	} else if (0x9b16b75c == issuerHash) {
 		bother1 = BIO_new_mem_buf(s_szAppleDevCACertG3, (int)strlen(s_szAppleDevCACertG3));
 	} else {
-		ZLog::Error(">>> Unknown issuer hash!\n");
+		ZLog::Error("Unknown issuer hash!");
 		return false;
 	}
 
@@ -580,7 +580,7 @@ bool ZSignAsset::Init(
 	if (m_bAdhoc) {
 		if (!strEntitleFile.empty()) {
 			if (!ZFile::ReadFile(strEntitleFile.c_str(), m_strEntitleData)) {
-				ZLog::Error(">>> Can't read entitlements file!\n");
+				ZLog::Error("Can't read entitlements file!");
 				return false;
 			}
 		}
@@ -590,7 +590,7 @@ bool ZSignAsset::Init(
 	ZFile::ReadFile(strProvFile.c_str(), m_strProvData);
 	ZFile::ReadFile(strEntitleFile.c_str(), m_strEntitleData);
 	if (m_strProvData.empty()) {
-		ZLog::Error(">>> Can't find provision file!\n");
+		ZLog::Error("Can't find provision file!");
 		return false;
 	}
 
@@ -606,7 +606,7 @@ bool ZSignAsset::Init(
 	}
 
 	if (m_strTeamId.empty()) {
-		ZLog::Error(">>> Can't find TeamId!\n");
+		ZLog::Error("Can't find TeamId!");
 		return false;
 	}
 
@@ -636,7 +636,7 @@ bool ZSignAsset::Init(
 	}
 
 	if (NULL == evpPKey) {
-		ZLog::Error(">>> Can't load p12 or private key file. Please input the correct file and password!\n");
+		ZLog::Error("Can't load p12 or private key file. Please input the correct file and password!");
 		return false;
 	}
 
@@ -678,12 +678,12 @@ bool ZSignAsset::Init(
 	}
 
 	if (NULL == x509Cert) {
-		ZLog::Error(">>> Can't find paired certificate and private key!\n");
+		ZLog::Error("Can't find paired certificate and private key!");
 		return false;
 	}
 
 	if (!GetCertSubjectCN(x509Cert, m_strSubjectCN)) {
-		ZLog::Error(">>> Can't find paired certificate subject common name!\n");
+		ZLog::Error("Can't find paired certificate subject common name!");
 		return false;
 	}
 
@@ -749,7 +749,7 @@ bool ZSignAsset::InitSimple(const void* strSignerPKeyData, int strSignerPKeyData
 
     if (m_strTeamId.empty())
     {
-        ZLog::Error(">>> Can't Find TeamId!\n");
+        ZLog::Error("Can't Find TeamId!");
         return false;
     }
 
@@ -806,7 +806,7 @@ bool ZSignAsset::InitSimple(const void* strSignerPKeyData, int strSignerPKeyData
 
     if (NULL == evpPKey)
     {
-        ZLog::Error(">>> Can't Load P12 or PrivateKey File! Please Input The Correct File And Password!\n");
+        ZLog::Error("Can't Load P12 or PrivateKey File! Please Input The Correct File And Password!");
         return false;
     }
 
@@ -844,13 +844,13 @@ bool ZSignAsset::InitSimple(const void* strSignerPKeyData, int strSignerPKeyData
 
     if (NULL == x509Cert)
     {
-        ZLog::Error(">>> Can't Find Paired Certificate And PrivateKey!\n");
+        ZLog::Error("Can't Find Paired Certificate And PrivateKey!");
         return false;
     }
 
     if (!GetCertSubjectCN(x509Cert, m_strSubjectCN))
     {
-        ZLog::Error(">>> Can't Find Paired Certificate Subject Common Name!\n");
+        ZLog::Error("Can't Find Paired Certificate Subject Common Name!");
         return false;
     }
 

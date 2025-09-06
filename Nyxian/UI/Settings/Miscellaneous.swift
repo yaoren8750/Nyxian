@@ -85,8 +85,8 @@ class MiscellaneousController: UITableViewController {
                     
                     Bootstrap.shared.bootstrapVersion = 0
                     Bootstrap.shared.clearPath(path: "/")
+                    UIControl().sendAction(#selector(URLSessionTask.suspend), to: UIApplication.shared, for: nil)
                     exit(0)
-                    //restartProcess()
                 })
                 
                 self.present(alert, animated: true)

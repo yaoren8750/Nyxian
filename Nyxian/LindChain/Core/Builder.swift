@@ -255,6 +255,9 @@ class Builder {
             let semaphore = DispatchSemaphore(value: 0)
             let appInfo = LCAppInfo(bundlePath: project.bundlePath)
             var nsError: NSError? = nil
+            if LCUtils.certificateData() == nil {
+                throw NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"No code signature present to perform signing, import code signature in Settings > Miscellanous > Import Certificate. Note that the code signature must be the same code signature used to sign Nyxian."])
+            }
             LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, errorDescription in
                 guard let self = self else { return }
                 if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
