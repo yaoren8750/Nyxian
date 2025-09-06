@@ -25,7 +25,6 @@
 
 @interface LDEAppScene()
 
-@property(nonatomic) BOOL debuggingEnabled;
 @property(nonatomic) UIWindowScene *hostScene;
 @property(nonatomic) NSString *sceneID;
 @property(nonatomic) NSExtension* extension;

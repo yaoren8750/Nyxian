@@ -30,6 +30,7 @@
 
 @interface LDEAppScene : UIViewController<_UISceneSettingsDiffAction>
 
+@property(nonatomic) BOOL debuggingEnabled;
 @property(nonatomic) LDEApplicationObject *appObj;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) int pid;

@@ -319,7 +319,7 @@ void UIKitFixesInit(void) {
 
 - (void)invokeMultitaskingTermination
 {
-    if(!_multitaskingTermination)
+    if(self.appSceneVC && !_multitaskingTermination)
     {
         _multitaskingTermination = YES;
         [[LDEMultitaskManager shared] closeApplicationWithBundleIdentifier:self.appSceneVC.appObj.bundleIdentifier];

@@ -64,6 +64,7 @@
         LDEWindow *mainWindow = [windowGroup firstObject];
         if (terminate)
         {
+            mainWindow.appSceneVC.debuggingEnabled = enableDebug;
             [windowGroup removeObjectAtIndex:0];
             for (LDEWindow *window in windowGroup)
             {

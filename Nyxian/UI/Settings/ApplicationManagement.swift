@@ -43,9 +43,15 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         let application = applications[indexPath.row]
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
-            let openAction = UIAction(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill")) { _ in
-                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
+            let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
+                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
             }
+            
+            let openActionDebug = UIAction(title: "Debug", image: UIImage(systemName: "ant.fill")) { _ in
+                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
+            }
+
+            let openMenu: UIMenu = UIMenu(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill"), children: [openAction,openActionDebug])
             
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
                 guard let self = self else { return }
@@ -58,7 +64,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                 }
             }
             
-            return UIMenu(title: "", children: [openAction, deleteAction])
+            return UIMenu(title: "", children: [openMenu, deleteAction])
         }
     }
     
