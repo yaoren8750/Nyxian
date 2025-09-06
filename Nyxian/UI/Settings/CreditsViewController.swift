@@ -23,8 +23,7 @@ import UIKit
 struct Credit {
     let name: String
     let role: String
-    let imageURL: String
-    let linkURL: String
+    let githubURL: String
 }
 
 class CreditCell: UITableViewCell {
@@ -91,8 +90,9 @@ class CreditCell: UITableViewCell {
 class CreditsViewController: UITableViewController {
     
     private var credits: [Credit] = [
-        Credit(name: "Frida", role: "Maintainer", imageURL: "https://github.com/cr4zyengineer.png", linkURL: "https://github.com/cr4zyengineer"),
-        Credit(name: "Duy Tran", role: "LiveContainer", imageURL: "https://github.com/khanhduytran0.png", linkURL: "https://github.com/khanhduytran0")
+        Credit(name: "Frida", role: "Maintainer", githubURL: "https://github.com/cr4zyengineer"),
+        Credit(name: "Duy Tran", role: "LiveContainer", githubURL: "https://github.com/khanhduytran0"),
+        Credit(name: "Lars Fröder", role: "litehook", githubURL: "https://github.com/opa334")
     ]
     
     override func viewDidLoad() {
@@ -117,7 +117,7 @@ class CreditsViewController: UITableViewController {
         cell.nameLabel.text = credit.name
         cell.roleLabel.text = credit.role
         
-        downloadImage(from: credit.imageURL) { image in
+        downloadImage(from: "\(credit.githubURL).png") { image in
             cell.profileImageView.image = image ?? UIImage(systemName: "person.circle")
         }
         
@@ -141,7 +141,7 @@ class CreditsViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let credit = credits[indexPath.row]
-        if let url = URL(string: credit.linkURL) {
+        if let url = URL(string: credit.githubURL) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
         tableView.deselectRow(at: indexPath, animated: true)
