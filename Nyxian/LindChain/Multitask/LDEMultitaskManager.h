@@ -22,9 +22,8 @@
 #import <Project/NXProject.h>
 #import <LindChain/Multitask/LDEWindow.h>
 
-@interface LDEMultitaskManager : NSObject
+@interface LDEMultitaskManager : UIWindow
 
-@property (nonatomic,strong) UIWindow *targetView;
 @property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<LDEWindow*>*> *windowGroups;
 @property (nonatomic, strong) NSMutableDictionary<NSString*, NSValue*> *windowDimensions;
 

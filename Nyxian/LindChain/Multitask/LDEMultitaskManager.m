@@ -76,39 +76,13 @@
         }
         else
         {
-            [self.targetView bringSubviewToFront:mainWindow.view];
+            [self bringSubviewToFront:mainWindow.view];
         }
         return YES;
     }
 
     __block BOOL result = NO;
     void (^workBlock)(void) = ^{
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes)
-            {
-                if ([scene isKindOfClass:[UIWindowScene class]])
-                {
-                    UIWindowScene *windowScene = (UIWindowScene *)scene;
-                    for (UIWindow *w in windowScene.windows)
-                    {
-                        if (w.isKeyWindow)
-                        {
-                            self.targetView = w;
-                            break;
-                        }
-                    }
-                }
-            }
-        });
-        
-        // If looking for it failed, return
-        if (!self.targetView)
-        {
-            result = NO;
-            return;
-        }
-        
         // Go!
         NSString *mainKey = [NSString stringWithFormat:@"%@.main", bundleIdentifier];
         CGRect frame = CGRectMake(50, 150, 320, 480);
@@ -119,7 +93,7 @@
                                                                          enableDebugging:enableDebug
                                                                           withDimensions:frame];
         
-        [self.targetView addSubview:decoratedAppSceneViewController.view];
+        [self addSubview:decoratedAppSceneViewController.view];
         NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];
         [windowGroup addObject:decoratedAppSceneViewController];
         [self.windowGroups setObject:windowGroup forKey:bundleIdentifier];
@@ -187,7 +161,7 @@
 - (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier
 {
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    if(windowGroup) for(LDEWindow *window in windowGroup) [self.targetView bringSubviewToFront:window.view];
+    if(windowGroup) for(LDEWindow *window in windowGroup) [self bringSubviewToFront:window.view];
 }
 
 - (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier withTitle:(NSString*)title
@@ -204,7 +178,7 @@
         LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view
                                                         withTitle:actualTitle
                                                    withDimensions:frame];
-        [self.targetView addSubview:window.view];
+        [self addSubview:window.view];
         [windowGroup addObject:window];
     }
 }

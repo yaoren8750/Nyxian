@@ -10,14 +10,30 @@
 #import "PiPManager.h"
 #import "Localization.h"
 #import "../../../LiveProcess/serverDelegate.h"
+#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <dlfcn.h>
+#import <objc/message.h>
+#import <CoreGraphics/CoreGraphics.h>
 
-@interface LDEAppScene()
-@property int resizeDebounceToken;
-@property CGPoint normalizedOrigin;
-@property NSUUID* identifier;
+@interface MyTouchSniffer : NSObject <BKSTouchEventClient_IPC>
+@end
+
+@implementation MyTouchSniffer
+- (void)touchEvent:(id)event {
+    NSLog(@"Got raw BKSHIDEvent: %@", event);
+}
 @end
 
 @interface LDEAppScene()
+
+@property int resizeDebounceToken;
+@property CGPoint normalizedOrigin;
+@property NSUUID* identifier;
+
+@end
+
+@interface LDEAppScene()
+
 @property(nonatomic) BOOL debuggingEnabled;
 @property(nonatomic) UIWindowScene *hostScene;
 @property(nonatomic) NSString *sceneID;
@@ -25,6 +41,9 @@
 @property(nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
+
+@property (nonatomic, strong) id hidObserver;
+
 @end
 
 @implementation LDEAppScene
@@ -139,7 +158,7 @@
     settings.peripheryInsets = UIEdgeInsetsMake(0, 0, 0, 0);
     settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(0, 0, 0, 0);
     
-    settings.statusBarDisabled = NO; //!self.isNativeWindow;
+    settings.statusBarDisabled = NO;
     //settings.previewMaximumSize =
     //settings.deviceOrientationEventsEnabled = YES;
     self.settings = settings;
@@ -168,6 +187,29 @@
     self.contentView.layer.position = CGPointMake(0, 0);
     
     [self.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        FBSceneLayerManager *layerManager = scene.layerManager;
+        NSLog(@"Successfully gotten layerManager: %@\n", layerManager);
+        
+        NSArray<FBSceneLayer*> *layers = layerManager.layers;
+        NSLog(@"Successfully gotten layers of scene: %@\n", layers);
+        
+        BKSSceneHostSettings *backbordSettings =
+            [[PrivClass(BKSSceneHostSettings) alloc] initWithIdentifier:@"SystemOverlay"
+                                               touchBehavior:2];
+        
+        for(FBSceneLayer *layer in layers)
+        {
+            BKSSceneHostRegistration *registration = [[PrivClass(BKSTouchEventService) sharedInstance] registerSceneHostSettings:backbordSettings forCAContextID:layer.contextID];
+            NSLog(@"%@", registration);
+            
+            BKSTouchStreamPolicy *policy = [PrivClass(BKSTouchStreamPolicy) new];
+            
+            BKSTouchStream *touchStream = [[PrivClass(BKSTouchStream) alloc] initWithContextID:layer.contextID displayUUID:nil identifier:nil policy:policy];
+            NSLog(@"%@", touchStream);
+        }
+    });
 }
 
 - (void)terminate {
