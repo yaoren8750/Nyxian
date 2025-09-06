@@ -88,6 +88,44 @@ class Builder {
         return false
     }
     
+    func headsup() throws {
+        func osBuildVersion() -> String? {
+            var size = 0
+            // First call to get the required size
+            sysctlbyname("kern.osversion", nil, &size, nil, 0)
+            var buffer = [CChar](repeating: 0, count: size)
+            // Second call to actually get the value
+            sysctlbyname("kern.osversion", &buffer, &size, nil, 0)
+            return String(cString: buffer)
+        }
+        
+        if(project.projectConfig.type != 1) {
+            throw NSError(domain: "com.cr4zy.nyxian.builder.headsup", code: 1, userInfo: [NSLocalizedDescriptionKey:"Project type \(project.projectConfig.type) is unknown"])
+        }
+        
+        func operatingSystemVersion(from string: String) -> OperatingSystemVersion? {
+            let components = string.split(separator: ".").map { Int($0) ?? 0 }
+            guard components.count >= 2 else { return nil }
+            
+            let major = components[0]
+            let minor = components[1]
+            let patch = components.count > 2 ? components[2] : 0
+            
+            return OperatingSystemVersion(majorVersion: major, minorVersion: minor, patchVersion: patch)
+        }
+
+        guard let neededMinimumOSVersion = operatingSystemVersion(from: project.projectConfig.platformMinimumVersion) else {
+            throw NSError(domain: "com.cr4zy.nyxian.builder.headsup", code: 1, userInfo: [NSLocalizedDescriptionKey:"App cannot be build, host version cannot be compared. Version \(project.projectConfig.platformMinimumVersion!) is not valid"])
+        }
+        if !ProcessInfo.processInfo.isOperatingSystemAtLeast(neededMinimumOSVersion) {
+            let version = ProcessInfo.processInfo.operatingSystemVersion
+            let versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+            let neededVersionString = "\(neededMinimumOSVersion.majorVersion).\(neededMinimumOSVersion.minorVersion).\(neededMinimumOSVersion.patchVersion)"
+            
+            throw NSError(domain: "com.cr4zy.nyxian.builder.headsup", code: 1, userInfo: [NSLocalizedDescriptionKey:"System version \(neededVersionString) is needed to build the app, but version \(versionString) (\(osBuildVersion() ?? "Custom")) is present"])
+        }
+    }
+    
     ///
     /// Function to cleanup the project from old build files
     ///
@@ -188,7 +226,7 @@ class Builder {
         do {
             try self.argsString.write(to: URL(fileURLWithPath: "\(project.cachePath!)/args.txt"), atomically: false, encoding: .utf8)
         } catch {
-            print(error.localizedDescription)
+            throw NSError(domain: "com.cr4zy.nyxian.builder.compile", code: 1, userInfo: [NSLocalizedDescriptionKey:error.localizedDescription])
         }
     }
     
@@ -260,28 +298,6 @@ class Builder {
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
         
-        func operatingSystemVersion(from string: String) -> OperatingSystemVersion? {
-            let components = string.split(separator: ".").map { Int($0) ?? 0 }
-            guard components.count >= 2 else { return nil }
-            
-            let major = components[0]
-            let minor = components[1]
-            let patch = components.count > 2 ? components[2] : 0
-            
-            return OperatingSystemVersion(majorVersion: major, minorVersion: minor, patchVersion: patch)
-        }
-
-        guard let neededMinimumOSVersion = operatingSystemVersion(from: project.projectConfig.platformMinimumVersion) else {
-            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host version cannot be compared. Version \(project.projectConfig.platformMinimumVersion!) is not valid!")
-            completion(true)
-            return
-        }
-        if !ProcessInfo.processInfo.isOperatingSystemAtLeast(neededMinimumOSVersion) {
-            NotificationServer.NotifyUser(level: .error, notification: "App cannot be build, host is too old. Version \(project.projectConfig.platformMinimumVersion!) is needed to build the app!")
-            completion(true)
-            return
-        }
-        
         XCodeButton.resetProgress()
         
         LDEThreadControl.pthreadDispatch {
@@ -314,6 +330,7 @@ class Builder {
             do {
                 // prepare
                 let flow: [(String?,Double?,() throws -> Void)] = [
+                    (nil,nil,{ try builder.headsup() }),
                     (nil,nil,{ try builder.clean() }),
                     (nil,nil,{ try builder.prepare() }),
                     (nil,nil,{ try builder.compile() }),
