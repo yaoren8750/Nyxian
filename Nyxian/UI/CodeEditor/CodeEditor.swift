@@ -192,7 +192,9 @@ class CodeEditorViewController: UIViewController {
             textView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        self.setupToolbar(textView: self.textView)
+        if GCKeyboard.coalesced == nil {
+            self.setupToolbar(textView: self.textView)
+        }
         
         self.coordinator = Coordinator(parent: self)
         self.textView.editorDelegate = self.coordinator
