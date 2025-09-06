@@ -148,7 +148,7 @@ class SplitScreenDetailViewController: UIViewController {
     private let stack = UIStackView()
     private var tabs: [UIButtonTab] = []
     
-    func addTab(path: String) {
+    func openPath(path: String) {
         if let existingTab = tabs.first(where: { $0.path == path }) {
             self.childButton = existingTab
             self.childVC = existingTab.vc
@@ -156,7 +156,6 @@ class SplitScreenDetailViewController: UIViewController {
             return
         }
 
-        // capture self weakly in the open/close actions
         let open: (UIButtonTab) -> Void = { [weak self] button in
             guard let self = self else { return }
             self.childButton = button
@@ -170,7 +169,6 @@ class SplitScreenDetailViewController: UIViewController {
             }
             guard let index = self.tabs.firstIndex(of: button) else { return }
 
-            // cleanup to break possible residual references
             button.closeButton.menu = nil
             button.removeTarget(nil, action: nil, for: .allEvents)
 
@@ -208,6 +206,42 @@ class SplitScreenDetailViewController: UIViewController {
         self.tabs.append(button)
 
         self.updateTabSelection(selectedTab: button)
+    }
+    
+    func closeTab(path: String) {
+        guard let button = tabs.first(where: { $0.path == path }) else { return }
+        guard let index = tabs.firstIndex(of: button) else { return }
+
+        button.closeButton.menu = nil
+        button.removeTarget(nil, action: nil, for: .allEvents)
+
+        stack.removeArrangedSubview(button)
+        button.removeFromSuperview()
+        tabs.remove(at: index)
+
+        if childButton == button {
+            childVC = nil
+            childButton = nil
+
+            var newSelectedTab: UIButtonTab? = nil
+            if tabs.count > 0 {
+                if index < tabs.count {
+                    newSelectedTab = tabs[index]
+                } else if index - 1 >= 0 {
+                    newSelectedTab = tabs[index - 1]
+                }
+            }
+
+            if let tabToSelect = newSelectedTab {
+                childButton = tabToSelect
+                childVC = tabToSelect.vc
+                updateTabSelection(selectedTab: tabToSelect)
+            } else {
+                updateTabSelection(selectedTab: nil)
+            }
+        } else {
+            updateTabSelection(selectedTab: childButton)
+        }
     }
     
     /*
@@ -317,12 +351,17 @@ class SplitScreenDetailViewController: UIViewController {
     
     @objc func handleMyNotification(_ notification: Notification) {
         guard let args = notification.object as? [String] else { return }
-        if args.count > 1,
-           args[0] == "open" {
-            self.addTab(path: args[1])
-        } else if args.count > 0,
-        args[0] == "run" {
-            buildProjectWithArgumentUI(targetViewController: self, project: self.project, buildType: .RunningApp)
+        if args.count > 1 {
+            switch(args[0]) {
+            case "open":
+                self.openPath(path: args[1])
+                break
+            case "close":
+                self.closeTab(path: args[1])
+                break
+            default:
+                break
+            }
         }
     }
     
