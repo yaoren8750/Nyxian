@@ -15,15 +15,6 @@
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
 
-@interface MyTouchSniffer : NSObject <BKSTouchEventClient_IPC>
-@end
-
-@implementation MyTouchSniffer
-- (void)touchEvent:(id)event {
-    NSLog(@"Got raw BKSHIDEvent: %@", event);
-}
-@end
-
 @interface LDEAppScene()
 
 @property int resizeDebounceToken;
@@ -188,7 +179,9 @@
     
     [self.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    // FIXME: Route touch events to us so we can intercept them and bring the window to the front when user taps on it
+    // MARK: It already partially works, I assume we miss the displayUUID or entitlements
+    /*dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         FBSceneLayerManager *layerManager = scene.layerManager;
         NSLog(@"Successfully gotten layerManager: %@\n", layerManager);
         
@@ -209,7 +202,7 @@
             BKSTouchStream *touchStream = [[PrivClass(BKSTouchStream) alloc] initWithContextID:layer.contextID displayUUID:nil identifier:nil policy:policy];
             NSLog(@"%@", touchStream);
         }
-    });
+    });*/
 }
 
 - (void)terminate {
