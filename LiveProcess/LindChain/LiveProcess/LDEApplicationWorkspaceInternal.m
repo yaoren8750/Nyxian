@@ -74,16 +74,14 @@
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *uuidPaths = [fileManager contentsOfDirectoryAtPath:self.applicationsPath error:nil];
+    NSLog(@"%@",uuidPaths);
     NSMutableArray<MIBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
-    NSLog(@"0");
     for(NSString *uuidPath in uuidPaths)
     {
-        NSLog(@"1");
-        NSString *bundlePath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
-        [applicationBundleList addObject:[[PrivClass(MIBundle) alloc] initWithBundleURL:[NSURL fileURLWithPath:bundlePath] error:nil]];
-        NSLog(@"2");
+        NSString *fullUUIDPath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
+        NSLog(@"%@", fullUUIDPath);
+        [applicationBundleList addObject:[[PrivClass(MIBundle) alloc] initWithBundleInDirectory:[NSURL fileURLWithPath:fullUUIDPath] withExtension:@"app" error:nil]];
     }
-    NSLog(@"3");
     return applicationBundleList;
 }
 
@@ -130,22 +128,24 @@
         previousApplication = nil;
     } else {
         // It didnt existed before, using new path
-        installPath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath,[[NSUUID UUID] UUIDString]];
+        installPath = [NSString stringWithFormat:@"%@/%@/%@", self.applicationsPath,[[NSUUID UUID] UUIDString],[bundle relativePath]];
+        NSLog(@"Installed app at %@", installPath);
     }
     
     // Now installing at install location
-    [fileManager moveItemAtPath:[bundle.bundleURL path] toPath:installPath error:nil];
+    if(![fileManager createDirectoryAtURL:[[NSURL fileURLWithPath:installPath] URLByDeletingLastPathComponent] withIntermediateDirectories:true attributes:nil error:nil]) return NO;
+    if(![fileManager moveItemAtPath:[bundle.bundleURL path] toPath:installPath error:nil]) return NO;
     
     return YES;
 }
 
 - (BOOL)deleteApplicationWithBundleID:(NSString *)bundleID
 {
-    NSBundle *previousApplication = [self applicationBundleForBundleID:bundleID];
+    MIBundle *previousApplication = [self applicationBundleForBundleID:bundleID];
     if(previousApplication)
     {
         NSString *container = [self applicationContainerForBundleID:bundleID];
-        [[NSFileManager defaultManager] removeItemAtPath:previousApplication.bundlePath error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:[[previousApplication bundleURL] path] error:nil];
         [[NSFileManager defaultManager] removeItemAtPath:container error:nil];
         return YES;
     }
@@ -169,7 +169,7 @@
 - (NSString*)applicationContainerForBundleID:(NSString *)bundleID
 {
     MIBundle *bundle = [self applicationBundleForBundleID:bundleID];
-    NSString *uuid = [bundle.bundleURL lastPathComponent];
+    NSString *uuid = [[bundle.bundleURL URLByDeletingLastPathComponent] lastPathComponent];
     return [NSString stringWithFormat:@"%@/%@", self.containersPath, uuid];
 }
 
