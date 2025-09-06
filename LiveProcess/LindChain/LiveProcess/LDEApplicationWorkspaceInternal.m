@@ -142,9 +142,9 @@
     MIBundle *previousApplication = [self applicationBundleForBundleID:bundleID];
     if(previousApplication)
     {
-        NSString *container = [self applicationContainerForBundleID:bundleID];
-        [[NSFileManager defaultManager] removeItemAtPath:[[previousApplication bundleURL] path] error:nil];
-        [[NSFileManager defaultManager] removeItemAtPath:container error:nil];
+        NSURL *container = [self applicationContainerForBundleID:bundleID];
+        [[NSFileManager defaultManager] removeItemAtURL:[previousApplication bundleURL] error:nil];
+        [[NSFileManager defaultManager] removeItemAtURL:container error:nil];
         return YES;
     }
     return NO;
