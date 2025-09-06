@@ -74,13 +74,12 @@
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *uuidPaths = [fileManager contentsOfDirectoryAtPath:self.applicationsPath error:nil];
-    NSLog(@"%@",uuidPaths);
     NSMutableArray<MIBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
     for(NSString *uuidPath in uuidPaths)
     {
         NSString *fullUUIDPath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
-        NSLog(@"%@", fullUUIDPath);
-        [applicationBundleList addObject:[[PrivClass(MIBundle) alloc] initWithBundleInDirectory:[NSURL fileURLWithPath:fullUUIDPath] withExtension:@"app" error:nil]];
+        MIBundle *bundle = [[PrivClass(MIBundle) alloc] initWithBundleInDirectory:[NSURL fileURLWithPath:fullUUIDPath] withExtension:@"app" error:nil];
+        if(bundle) [applicationBundleList addObject:bundle];
     }
     return applicationBundleList;
 }
@@ -129,7 +128,6 @@
     } else {
         // It didnt existed before, using new path
         installPath = [NSString stringWithFormat:@"%@/%@/%@", self.applicationsPath,[[NSUUID UUID] UUIDString],[bundle relativePath]];
-        NSLog(@"Installed app at %@", installPath);
     }
     
     // Now installing at install location
