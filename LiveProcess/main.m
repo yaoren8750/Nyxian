@@ -82,8 +82,18 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    
     if([mode isEqualToString:@"management"])
     {
+        // Handoff stdout and stderr output to host app
+        [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
+            dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
+            dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+        
         // Application management daemon
         [proxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         
@@ -92,8 +102,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     }
     else
     {
-        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-        
         // Handoff stdout and stderr output to host app
         // Debugging is only for applications
         if(debugEnabled.boolValue)

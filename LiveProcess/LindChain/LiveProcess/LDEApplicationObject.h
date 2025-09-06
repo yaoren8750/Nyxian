@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "MIBundle.h"
 
 @interface LDEApplicationObject : NSObject <NSSecureCoding>
 
@@ -33,7 +34,7 @@
 
 @property (nonatomic) UIImage *icon;
 
-- (instancetype)initWithBundle:(NSBundle*)bundle;
+- (instancetype)initWithBundle:(MIBundle*)bundle;
 
 @end
 

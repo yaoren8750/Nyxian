@@ -55,12 +55,15 @@
         @"mode": @"management",
     };
     
+    __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        NSLog(@"Extension down!");
+        dispatch_semaphore_signal(weakSelf.sema);
+        weakSelf.proxy = nil;
     }];
     
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        NSLog(@"Extension down!");
+        dispatch_semaphore_signal(weakSelf.sema);
+        weakSelf.proxy = nil;
     }];
     
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
@@ -80,9 +83,10 @@
 
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
 {
+    if(!_proxy) return NO;
     __block BOOL result = NO;
     NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
-    zipDirectoryAtPath(bundlePath, temporaryPackage, NO);
+    zipDirectoryAtPath(bundlePath, temporaryPackage, YES);
     [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
         result = replyResult;
         dispatch_semaphore_signal(self.sema);
@@ -94,6 +98,7 @@
 
 - (BOOL)installApplicationAtPackagePath:(NSString *)packagePath
 {
+    if(!_proxy) return NO;
     __block BOOL result = NO;
     [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:packagePath] withReply:^(BOOL replyResult){
         result = replyResult;
@@ -105,6 +110,7 @@
 
 - (BOOL)deleteApplicationWithBundleID:(NSString *)bundleID
 {
+    if(!_proxy) return NO;
     __block BOOL result = NO;
     [_proxy deleteApplicationWithBundleID:bundleID withReply:^(BOOL replyResult){
         result = replyResult;
@@ -116,6 +122,7 @@
 
 - (BOOL)applicationInstalledWithBundleID:(NSString *)bundleID
 {
+    if(!_proxy) return NO;
     __block BOOL result = NO;
     [_proxy applicationInstalledWithBundleID:bundleID withReply:^(BOOL replyResult){
         result = replyResult;
@@ -127,6 +134,7 @@
 
 - (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID
 {
+    if(!_proxy) return [[LDEApplicationObject alloc] init];
     __block LDEApplicationObject *result = nil;
     [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
         result = replyResult;
@@ -138,6 +146,7 @@
 
 - (NSString*)applicationContainerForBundleID:(NSString *)bundleID
 {
+    if(!_proxy) return @"";
     __block NSString *result = nil;
     [_proxy applicationContainerForBundleID:bundleID withReply:^(NSString *replyResult){
         result = replyResult;
@@ -149,6 +158,7 @@
 
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects
 {
+    if(!_proxy) return @[];
     __block NSMutableArray<LDEApplicationObject*> *allApplicationObjects = [[NSMutableArray alloc] init];
     __block NSArray<NSString*> *result = nil;
     [_proxy allApplicationBundleIDWithReply:^(NSArray<NSString*> *replyResult){

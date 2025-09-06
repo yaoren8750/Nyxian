@@ -37,8 +37,8 @@
     self = [super init];
     
     // Setting up paths
-    self.applicationsPath = [NSString stringWithFormat:@"%@/Documents/Applications", NSHomeDirectory()];
-    self.containersPath = [NSString stringWithFormat:@"%@/Documents/Containers", NSHomeDirectory()];
+    self.applicationsPath = [NSString stringWithFormat:@"%@/Documents/Bundle/Application", NSHomeDirectory()];
+    self.containersPath = [NSString stringWithFormat:@"%@/Documents/Data/Application", NSHomeDirectory()];
     
     // Creating paths if they dont exist
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -70,38 +70,63 @@
 /*
  Helper
  */
-- (NSArray<NSBundle*>*)applicationBundleList
+- (NSArray<MIBundle*>*)applicationBundleList
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *uuidPaths = [fileManager contentsOfDirectoryAtPath:self.applicationsPath error:nil];
-    NSMutableArray<NSBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
+    NSMutableArray<MIBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
+    NSLog(@"0");
     for(NSString *uuidPath in uuidPaths)
     {
+        NSLog(@"1");
         NSString *bundlePath = [NSString stringWithFormat:@"%@/%@", self.applicationsPath, uuidPath];
-        [applicationBundleList addObject:[NSBundle bundleWithPath:bundlePath]];
+        [applicationBundleList addObject:[[PrivClass(MIBundle) alloc] initWithBundleURL:[NSURL fileURLWithPath:bundlePath] error:nil]];
+        NSLog(@"2");
     }
+    NSLog(@"3");
     return applicationBundleList;
 }
 
 /*
  Action
  */
-NSString *fileTreeAtPathWithArrows(NSString *path);
-- (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
+- (BOOL)installApplicationWithPayloadPath:(NSString*)payloadPath
 {
+    // Creating MIBundle of payload
+    MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleInDirectory:payloadPath withExtension:@"app" error:nil];
+    
+    // Check if bundle is valid for LDEApplicationWorkspace
+    if(!bundle) return NO;
+    else if(![bundle validateBundleMetadataWithError:nil]) return NO;
+    else if(![bundle isAppTypeBundle]) return NO;
+    else if(![bundle validateAppMetadataWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentOSVersionWithError:nil]) return NO;
+    
+    // FIXME: Fix code signature validation
+    // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
+    /*NSError *error = nil;
+    id signInfo = [NSClassFromString(@"MICodeSigningVerifier")
+                      _validateSignatureAndCopyInfoForURL:[bundle executableURL]
+                      withOptions:nil
+                      error:&error];
+
+    if (signInfo) {
+        NSLog(@"✅ Has a signature: %@", signInfo);
+    } else {
+        NSLog(@"❌ No signature: %@", error);
+    }
+    NSLog(@"SIGNING RESULT %@", signInfo);*/
+    
+    // File manager
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
-    // Getting bundle at bundlePath
-    NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
-    if(!bundle) return NO;
-    
-    // Now generating new path or using old path
+    // Now generate installPath
     NSString *installPath = nil;
-    NSBundle *previousApplication = [self applicationBundleForBundleID:bundle.bundleIdentifier];
+    MIBundle *previousApplication = [self applicationBundleForBundleID:[bundle identifier]];
     if(previousApplication) {
         // It existed before, using old path
-        [fileManager removeItemAtPath:previousApplication.bundlePath error:nil];
-        installPath = previousApplication.bundlePath;
+        installPath = [previousApplication.bundleURL path];
+        [fileManager removeItemAtPath:installPath error:nil];
         previousApplication = nil;
     } else {
         // It didnt existed before, using new path
@@ -109,7 +134,7 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
     }
     
     // Now installing at install location
-    [fileManager moveItemAtPath:bundle.bundlePath toPath:installPath error:nil];
+    [fileManager moveItemAtPath:[bundle.bundleURL path] toPath:installPath error:nil];
     
     return YES;
 }
@@ -129,21 +154,21 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID
 {
-    NSArray<NSBundle*> *bundleList = [self applicationBundleList];
-    for(NSBundle *bundle in bundleList) if([bundle.bundleIdentifier isEqualToString:bundleID]) return YES;
+    NSArray<MIBundle*> *bundleList = [self applicationBundleList];
+    for(MIBundle *bundle in bundleList) if([bundle.identifier isEqualToString:bundleID]) return YES;
     return NO;
 }
 
-- (NSBundle*)applicationBundleForBundleID:(NSString *)bundleID
+- (MIBundle*)applicationBundleForBundleID:(NSString *)bundleID
 {
-    NSArray<NSBundle*> *bundleList = [self applicationBundleList];
-    for(NSBundle *bundle in bundleList) if([bundle.bundleIdentifier isEqualToString:bundleID]) return bundle;
+    NSArray<MIBundle*> *bundleList = [self applicationBundleList];
+    for(MIBundle *bundle in bundleList) if([bundle.identifier isEqualToString:bundleID]) return bundle;
     return NULL;
 }
 
 - (NSString*)applicationContainerForBundleID:(NSString *)bundleID
 {
-    NSBundle *bundle = [self applicationBundleForBundleID:bundleID];
+    MIBundle *bundle = [self applicationBundleForBundleID:bundleID];
     NSString *uuid = [bundle.bundleURL lastPathComponent];
     return [NSString stringWithFormat:@"%@/%@", self.containersPath, uuid];
 }
@@ -162,16 +187,16 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 
 - (void)installApplicationAtBundlePath:(NSFileHandle*)bundleHandle withReply:(void (^)(BOOL))reply {
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *tempBundle = [NSString stringWithFormat:@"%@%@.app", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
+    NSString *tempBundle = [NSString stringWithFormat:@"%@%@", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
     unzipArchiveFromFileHandle(bundleHandle, tempBundle);
-    BOOL didInstall = [[LDEApplicationWorkspaceInternal shared] installApplicationAtBundlePath:tempBundle];
+    BOOL didInstall = [[LDEApplicationWorkspaceInternal shared] installApplicationWithPayloadPath:tempBundle];
     [fileManager removeItemAtPath:tempBundle error:nil];
     reply(didInstall);
 }
 
 - (void)applicationObjectForBundleID:(NSString *)bundleID withReply:(void (^)(LDEApplicationObject *))reply
 {
-    NSBundle *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleForBundleID:bundleID];
+    MIBundle *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleForBundleID:bundleID];
     
     if(!bundle)
     {
@@ -190,11 +215,8 @@ NSString *fileTreeAtPathWithArrows(NSString *path);
 - (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply
 {
     NSMutableArray<NSString*> *allBundleIDs = [[NSMutableArray alloc] init];
-    NSArray<NSBundle*> *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleList];
-    for(NSBundle *item in bundle)
-    {
-        [allBundleIDs addObject:item.bundleIdentifier];
-    }
+    NSArray<MIBundle*> *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleList];
+    for(MIBundle *item in bundle) [allBundleIDs addObject:item.identifier];
     reply(allBundleIDs);
 }
 

@@ -216,7 +216,8 @@ class Builder {
         if(buildType == .RunningApp) {
             let semaphore = DispatchSemaphore(value: 0)
             let appInfo = LCAppInfo(bundlePath: project.bundlePath)
-            LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, meow in
+            var nsError: NSError? = nil
+            LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, errorDescription in
                 guard let self = self else { return }
                 if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                     appInfo?.save()
@@ -224,13 +225,19 @@ class Builder {
                         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
                                                                      enableDebugging: project.projectConfig.debug)
+                    } else {
+                        nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to install application"])
                     }
                 } else {
-                    print(meow ?? "Unk")
+                    nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:errorDescription ?? "Unknown error happened signing application"])
                 }
                 semaphore.signal()
             }, progressHandler: { progress in }, forceSign: false)
             semaphore.wait()
+            
+            if let nsError = nsError {
+                throw nsError
+            }
         } else {
             try? self.package()
         }
@@ -252,7 +259,6 @@ class Builder {
                              buildType: Builder.BuildType,
                              completion: @escaping (Bool) -> Void) {
         project.projectConfig.reloadData()
-        
         
         func operatingSystemVersion(from string: String) -> OperatingSystemVersion? {
             let components = string.split(separator: ".").map { Int($0) ?? 0 }

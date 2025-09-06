@@ -22,29 +22,25 @@
 
 @implementation LDEApplicationObject
 
-- (instancetype)initWithBundle:(NSBundle*)bundle
+- (instancetype)initWithBundle:(MIBundle*)bundle
 {
     self = [super init];
-    self.bundleIdentifier = bundle.bundleIdentifier;
-    self.bundlePath = bundle.bundlePath;
-    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
-    }
-    if (!displayName) {
-        displayName = [bundle objectForInfoDictionaryKey:@"CFBundleExecutable"];
-    }
-    if (!displayName) {
-        displayName = @"Unknown App";
-    }
-    self.displayName = displayName;
-    self.containerPath = [[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.bundleIdentifier];
     
-    NSDictionary *iconsDict = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleIcons"];
-    NSDictionary *primaryIconsDict = [iconsDict objectForKey:@"CFBundlePrimaryIcon"];
-    NSArray *iconFiles = [primaryIconsDict objectForKey:@"CFBundleIconFiles"];
+    self.bundleIdentifier = bundle.identifier;
+    self.bundlePath = [[bundle bundleURL] path];
+    self.displayName = bundle.displayName;
+    self.containerPath = [[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier];
+    
+    NSString *infoPlistPath = [[[bundle bundleURL] path] stringByAppendingPathComponent:@"Info.plist"];
+    NSDictionary *infoDict = [NSDictionary dictionaryWithContentsOfFile:infoPlistPath];
+    NSDictionary *iconsDict = infoDict[@"CFBundleIcons"];
+    NSDictionary *primaryIconDict = iconsDict[@"CFBundlePrimaryIcon"];
+    NSArray *iconFiles = primaryIconDict[@"CFBundleIconFiles"];
     NSString *iconName = [iconFiles lastObject];
-    self.icon = [UIImage imageNamed:iconName];
+    NSString *iconPath = [[[bundle bundleURL] path] stringByAppendingPathComponent:iconName];
+    if (![iconPath.pathExtension length]) iconPath = [iconPath stringByAppendingPathExtension:@"png"];
+    UIImage *iconImage = [UIImage imageWithContentsOfFile:iconPath];
+    self.icon = iconImage;
     
     return self;
 }

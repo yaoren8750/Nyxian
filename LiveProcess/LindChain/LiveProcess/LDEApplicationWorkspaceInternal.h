@@ -23,18 +23,19 @@
 #import <Foundation/Foundation.h>
 #import "LDEApplicationObject.h"
 #import "LDEApplicationWorkspaceProxyProtocol.h"
+#import "MIBundle.h"
 
 @interface LDEApplicationWorkspaceInternal : NSObject
 
 - (instancetype)init;
 + (LDEApplicationWorkspaceInternal*)shared;
 
-- (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath;
+- (BOOL)installApplicationWithPayloadPath:(NSString*)bundlePath;
 - (BOOL)deleteApplicationWithBundleID:(NSString*)bundleID;
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
-- (NSBundle*)applicationBundleForBundleID:(NSString*)bundleID;
+- (MIBundle*)applicationBundleForBundleID:(NSString*)bundleID;
 - (NSString*)applicationContainerForBundleID:(NSString*)bundleID;
-- (NSArray<NSBundle*>*)applicationBundleList;
+- (NSArray<MIBundle*>*)applicationBundleList;
 
 @end
 

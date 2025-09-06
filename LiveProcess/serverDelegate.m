@@ -71,12 +71,10 @@
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     connection.interruptionHandler = ^{
-        NSLog(@"Connection to app interrupted");
-        exit(0);
+        NSLog(@"Connection to LDEApplicationWorkspaceProxy interrupted");
     };
     connection.invalidationHandler = ^{
-        NSLog(@"Connection to app invalidated");
-        exit(0);
+        NSLog(@"Connection to LDEApplicationWorkspaceProxy invalidated");
     };
     
     [connection activate];
