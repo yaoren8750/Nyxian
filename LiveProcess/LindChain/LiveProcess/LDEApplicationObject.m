@@ -20,6 +20,8 @@
 #import "LDEApplicationObject.h"
 #import "LDEApplicationWorkspaceInternal.h"
 
+#import <UIKit/UIKit.h>
+
 @implementation LDEApplicationObject
 
 - (instancetype)initWithBundle:(MIBundle*)bundle
@@ -31,17 +33,81 @@
     self.displayName = bundle.displayName;
     self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
     
-    NSString *infoPlistPath = [[[bundle bundleURL] path] stringByAppendingPathComponent:@"Info.plist"];
-    NSDictionary *infoDict = [NSDictionary dictionaryWithContentsOfFile:infoPlistPath];
-    NSDictionary *iconsDict = infoDict[@"CFBundleIcons"];
-    NSDictionary *primaryIconDict = iconsDict[@"CFBundlePrimaryIcon"];
-    NSArray *iconFiles = primaryIconDict[@"CFBundleIconFiles"];
-    NSString *iconName = [iconFiles lastObject];
-    NSString *iconPath = [[[bundle bundleURL] path] stringByAppendingPathComponent:iconName];
-    if (![iconPath.pathExtension length]) iconPath = [iconPath stringByAppendingPathExtension:@"png"];
-    UIImage *iconImage = [UIImage imageWithContentsOfFile:iconPath];
-    self.icon = iconImage;
+    if (self.bundlePath.length == 0) return nil;
+
+    NSBundle *nsBundle = [NSBundle bundleWithPath:self.bundlePath];
+    if (!nsBundle) return self;
+
+    NSDictionary *info = nsBundle.infoDictionary ?: @{};
+    NSArray<NSDictionary *> *iconContainers = @[
+        info[@"CFBundleIcons~iphone"] ?: @{},
+        info[@"CFBundleIcons~ipad"]   ?: @{},
+        info[@"CFBundleIcons"]        ?: @{}
+    ];
+
+    UIUserInterfaceIdiom idiom = UIDevice.currentDevice.userInterfaceIdiom;
+    CGFloat scale = UIScreen.mainScreen.scale;
+    UITraitCollection *traits = [UITraitCollection traitCollectionWithTraitsFromCollections:@[
+        [UITraitCollection traitCollectionWithUserInterfaceIdiom:idiom],
+        [UITraitCollection traitCollectionWithDisplayScale:scale]
+    ]];
+
+    for (NSDictionary *iconsDict in iconContainers)
+    {
+        NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
+        NSString *assetName = primary[@"CFBundleIconName"];
+        if (assetName.length)
+        {
+            self.icon = [UIImage imageNamed:assetName inBundle:nsBundle compatibleWithTraitCollection:traits];
+            if(self.icon) return self;
+        }
+    }
+
+    for (NSDictionary *iconsDict in iconContainers)
+    {
+        NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
+        NSArray *files = primary[@"CFBundleIconFiles"];
+        for (NSString *base in [files reverseObjectEnumerator])
+        {
+            if(base.length == 0) continue;
+
+            self.icon = [UIImage imageNamed:base inBundle:nsBundle compatibleWithTraitCollection:traits];
+            if(self.icon) return self;
+
+            NSArray<NSString *> *exts = @[ @"png", @"jpg" ];
+            for (NSString *ext in exts)
+            {
+                NSString *path = [nsBundle pathForResource:base ofType:ext];
+                if (path.length)
+                {
+                    self.icon = [UIImage imageWithContentsOfFile:path];
+                    if(self.icon) return self;
+                }
+            }
+        }
+    }
+
+    NSArray<NSString *> *allPaths = [nsBundle pathsForResourcesOfType:@"png" inDirectory:nil];
+    UIImage *best = nil;
+    CGFloat bestArea = 0;
+    for (NSString *path in allPaths)
+    {
+        NSString *name = path.lastPathComponent.lowercaseString;
+        if ([name containsString:@"appicon"] || [name containsString:@"icon"])
+        {
+            UIImage *img = [UIImage imageWithContentsOfFile:path];
+            CGSize sz = img.size;
+            CGFloat area = sz.width * sz.height * img.scale * img.scale;
+            if (img && area > bestArea)
+            {
+                best = img;
+                bestArea = area;
+            }
+        }
+    }
     
+    self.icon = best;
+
     return self;
 }
 
@@ -58,12 +124,13 @@
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
-    if (self = [super init]) {
+    if(self = [super init])
+    {
         _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
         _bundlePath = [coder decodeObjectOfClass:[NSString class] forKey:@"bundlePath"];
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
         _containerPath = [coder decodeObjectOfClass:[NSString class] forKey:@"containerPath"];
-        _icon = [coder decodeObjectOfClass:[NSString class] forKey:@"icon"];
+        _icon = [coder decodeObjectOfClass:[UIImage class] forKey:@"icon"];
     }
     return self;
 }
