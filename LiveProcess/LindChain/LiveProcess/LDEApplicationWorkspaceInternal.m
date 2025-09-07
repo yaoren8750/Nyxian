@@ -156,6 +156,8 @@ BOOL BinariesHaveMatchingTeamID(NSString *pathA, NSString *pathB) {
     else if(![bundle isAppTypeBundle]) return NO;
     else if(![bundle validateAppMetadataWithError:nil]) return NO;
     else if(![bundle isApplicableToCurrentOSVersionWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentDeviceFamilyWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentDeviceCapabilitiesWithError:nil]) return NO;
     
     // FIXME: Fix code signature validation
     // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
