@@ -171,6 +171,12 @@ NSString* invokeAppMain(BOOL attachMachServer,
     setenv("HOME", homePath.UTF8String, 1);
     setenv("TMPDIR", [[NSString stringWithFormat:@"%@/Tmp", homePath] UTF8String], 1);
     
+    // Overwrite them better now?
+    // MARK: We need to first actually overwrite executable path so dyld doesnt complain about @rpath stuff logically
+    overwriteExecPath(guestMainBundle.executablePath.fileSystemRepresentation);
+    overwriteMainNSBundle(guestMainBundle);
+    overwriteMainCFBundle();
+    
     // Preload executable to bypass RT_NOLOAD
     appMainImageIndex = _dyld_image_count();
     void *appHandle = dlopenBypassingLock(guestMainBundle.executablePath.fileSystemRepresentation, RTLD_LAZY|RTLD_GLOBAL|RTLD_FIRST);
@@ -185,9 +191,6 @@ NSString* invokeAppMain(BOOL attachMachServer,
     
     // Before execution setup
     // TODO: Hook NSExecption handler thingy again
-    overwriteExecPath(guestMainBundle.executablePath.fileSystemRepresentation);
-    overwriteMainNSBundle(guestMainBundle);
-    overwriteMainCFBundle();
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
