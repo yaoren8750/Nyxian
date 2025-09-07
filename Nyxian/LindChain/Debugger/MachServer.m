@@ -169,12 +169,12 @@ void* mach_exception_self_server(void *arg)
         else if (mr != MACH_MSG_SUCCESS)
         {
             // If the message was send and the kernel and is not successful, which shall never happen exit
-            exit(-1);
+            ORIG_FUNC(exit)(-1);
         }
         
         // Sanity checks
         if (request->Head.msgh_size < sizeof(*request) || request_size - sizeof(*request) < (sizeof(mach_exception_data_type_t) * request->codeCnt))
-            exit(-1);
+            ORIG_FUNC(exit)(-1);
         
         mach_exception_data_type_t *code64 = (mach_exception_data_type_t *) request->code;
         
@@ -196,7 +196,7 @@ void* mach_exception_self_server(void *arg)
         reply.RetCode = kr;
         mr = mach_msg(&reply.Head, MACH_SEND_MSG, reply.Head.msgh_size, 0, MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
         if(mr != KERN_SUCCESS)
-            exit(-1);
+            ORIG_FUNC(exit)(-1);
     }
 }
 
