@@ -161,12 +161,13 @@
 {
     NSArray<MIBundle*> *bundleList = [self applicationBundleList];
     for(MIBundle *bundle in bundleList) if([bundle.identifier isEqualToString:bundleID]) return bundle;
-    return NULL;
+    return nil;
 }
 
 - (NSURL*)applicationContainerForBundleID:(NSString *)bundleID
 {
     MIBundle *bundle = [self applicationBundleForBundleID:bundleID];
+    if(!bundle) return nil;
     NSString *uuid = [[bundle.bundleURL URLByDeletingLastPathComponent] lastPathComponent];
     return [self.containersURL URLByAppendingPathComponent:uuid];
 }
@@ -243,7 +244,7 @@
 {
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     
-    LDEApplicationWorkspaceProxy *exportedObject = [LDEApplicationWorkspaceProxy alloc];
+    LDEApplicationWorkspaceProxy *exportedObject = [[LDEApplicationWorkspaceProxy alloc] init];
     newConnection.exportedObject = exportedObject;
     
     [newConnection resume];
@@ -255,7 +256,6 @@
 
 - (NSXPCListener*)createAnonymousListener
 {
-    printf("creating new listener\n");
     NSXPCListener *listener = [NSXPCListener anonymousListener];
     listener.delegate = self;
     [listener resume];
