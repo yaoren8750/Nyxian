@@ -32,6 +32,14 @@
 DEFINE_HOOK(exit, void, (int code))
 {
     // Causes EXC_BREAKPOINT
+    if(code != 0)
+        __builtin_trap();
+    else
+        ORIG_FUNC(exit)(code);
+}
+
+void signal_handler(int code)
+{
     __builtin_trap();
 }
 
@@ -206,7 +214,7 @@ void machServerInit(void)
     pthread_sigmask(SIG_BLOCK, &set, NULL);
     
     // Its raised by stuff like malloc API symbols but doesnt matter so much... we raise the mach exception manually in our abort handler. the thread wont continue running as its literally raised by the abort() function that calls based on libc source raise(SIGABRT) which mean it directly jump to our handler.
-    signal(SIGABRT, hook_exit);
+    signal(SIGABRT, signal_handler);
     
     // Executing finally out mach exception server
     pthread_t serverThread;
