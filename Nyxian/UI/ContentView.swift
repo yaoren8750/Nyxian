@@ -53,7 +53,7 @@ import UIKit
             guard let self = self else { return }
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.zip], asCopy: true)
             documentPicker.delegate = self
-            documentPicker.modalPresentationStyle = .pageSheet
+            documentPicker.modalPresentationStyle = .formSheet
             self.present(documentPicker, animated: true)
         }
         let menu: UIMenu = UIMenu(children: [createItem, importItem])
@@ -175,7 +175,7 @@ import UIKit
             
             let settings: UIAction = UIAction(title: "Settings", image: UIImage(systemName: "gear")) { _ in
                 let settingsViewController: UINavigationController = UINavigationController(rootViewController: ProjectSettingsViewController(style: .insetGrouped, project: self.projects[indexPath.row]))
-                settingsViewController.modalPresentationStyle = .pageSheet
+                settingsViewController.modalPresentationStyle = .formSheet
                 settingsViewController.presentationController?.delegate = self
                 self.present(settingsViewController, animated: true)
             }

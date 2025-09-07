@@ -48,7 +48,7 @@ class MiscellaneousController: UITableViewController {
             case 0:
                 let importPopup: CertificateImporter = CertificateImporter(style: .insetGrouped)
                 let importSettings: UINavigationController = UINavigationController(rootViewController: importPopup)
-                importSettings.modalPresentationStyle = .pageSheet
+                importSettings.modalPresentationStyle = .formSheet
                 
                 // dynamic size
                 if UIDevice.current.userInterfaceIdiom == .phone {

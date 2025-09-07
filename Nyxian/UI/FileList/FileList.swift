@@ -263,7 +263,7 @@ import UniformTypeIdentifiers
             guard let self = self else { return }
             let documentPicker: UIDocumentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
             documentPicker.allowsMultipleSelection = true
-            documentPicker.modalPresentationStyle = .pageSheet
+            documentPicker.modalPresentationStyle = .formSheet
             documentPicker.delegate = self
             self.present(documentPicker, animated: true)
         })

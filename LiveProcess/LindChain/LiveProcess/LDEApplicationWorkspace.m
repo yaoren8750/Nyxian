@@ -88,13 +88,14 @@
     if(!_proxy) return NO;
     __block BOOL result = NO;
     NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
-    zipDirectoryAtPath(bundlePath, temporaryPackage, YES);
-    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    [[NSFileManager defaultManager] removeItemAtPath:temporaryPackage error:nil];
+    if(zipDirectoryAtPath(bundlePath, temporaryPackage, YES)) {
+        [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(self.sema);
+        }];
+        dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+        [[NSFileManager defaultManager] removeItemAtPath:temporaryPackage error:nil];
+    } 
     return result;
 }
 

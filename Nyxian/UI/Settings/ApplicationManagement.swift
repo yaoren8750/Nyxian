@@ -17,12 +17,16 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-class ApplicationManagementViewController: UIThemedTableViewController, UITextFieldDelegate {
+import UIKit
+import UniformTypeIdentifiers
+
+class ApplicationManagementViewController: UIThemedTableViewController, UITextFieldDelegate, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
     var applications: [LDEApplicationObject] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Application Management"
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", image: UIImage(systemName: "plus"), target: self, action: #selector(plusButtonPressed))
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -72,5 +76,45 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         tableView.deselectRow(at: indexPath, animated: true)
         let application = applications[indexPath.row]
         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
+    }
+    
+    @objc func plusButtonPressed() {
+        let documentPicker: UIDocumentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
+        documentPicker.delegate = self
+        documentPicker.modalPresentationStyle = .formSheet
+        self.present(documentPicker, animated: true)
+    }
+
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        DispatchQueue.global().async {
+            guard let selectedURL = urls.first else { return }
+            
+            let fileManager = FileManager.default
+            let tempRoot = NSTemporaryDirectory()
+            let workRoot = (tempRoot as NSString).appendingPathComponent(UUID().uuidString)
+            let unzipRoot = (workRoot as NSString).appendingPathComponent("unzipped")
+            let payloadDir = (unzipRoot as NSString).appendingPathComponent("Payload")
+            
+            guard ((try? fileManager.createDirectory(atPath: unzipRoot, withIntermediateDirectories: true)) != nil) else { return }
+            guard unzipArchiveAtPath(selectedURL.path, unzipRoot) else { return }
+            var miError: AnyObject?
+            guard let miBundle = MIBundle(bundleInDirectory: URL(fileURLWithPath: payloadDir), withExtension: "app", error: &miError) else { return }
+            
+            let bundleURL = miBundle.bundleURL!
+            let lcapp = LCAppInfo(bundlePath: bundleURL.path)
+            lcapp!.patchExecAndSignIfNeed(completionHandler: { [weak self] result, error in
+                guard result, let self = self else { return }
+                lcapp!.save()
+                let bundlePath = lcapp!.bundlePath()
+                let bundleId = lcapp!.bundleIdentifier()
+                if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
+                    LDEMultitaskManager.shared().openApplication(withBundleIdentifier: bundleId)
+                    let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
+                    self.applications.append(appObject)
+                    self.tableView.reloadData()
+                }
+                try? fileManager.removeItem(atPath: workRoot)
+            }, progressHandler: { _ in }, forceSign: false)
+        }
     }
 }

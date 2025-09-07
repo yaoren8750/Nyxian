@@ -22,7 +22,7 @@ import UIKit
 import UniformTypeIdentifiers
 
 class ImportTableCell: UITableViewCell, UIDocumentPickerDelegate {
-    private let parent: UIViewController
+    private weak var parent: UIViewController?
     private var button: UIButton?
     private var label: UILabel?
     private(set) var url: URL?
@@ -30,9 +30,8 @@ class ImportTableCell: UITableViewCell, UIDocumentPickerDelegate {
     init(
         parent: UIViewController,
     ) {
-        self.parent = parent
         super.init(style: .default, reuseIdentifier: nil)
-        
+        self.parent = parent
         self.setupViews()
     }
     
@@ -48,11 +47,13 @@ class ImportTableCell: UITableViewCell, UIDocumentPickerDelegate {
         self.button?.setTitle("Import", for: .normal)
         self.button?.setTitleColor(UIColor.systemBlue, for: .normal)
         self.button?.translatesAutoresizingMaskIntoConstraints = false
-        self.button?.addAction(UIAction { _ in
+        self.button?.addAction(UIAction { [weak self] _ in
+            guard let self = self,
+            let parent = self.parent else { return }
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
             documentPicker.delegate = self
-            documentPicker.modalPresentationStyle = .pageSheet
-            self.parent.present(documentPicker, animated: true)
+            documentPicker.modalPresentationStyle = .formSheet
+            parent.present(documentPicker, animated: true)
         }, for: .touchUpInside)
         self.contentView.addSubview(self.button!)
 
@@ -84,8 +85,8 @@ class ImportTableCell: UITableViewCell, UIDocumentPickerDelegate {
         
         UIView.animate(withDuration: 0.25) {
             self.label!.alpha = 0.0
-        } completion: { _ in
-            
+        } completion: { [weak self ]_ in
+            guard let self = self else { return }
             self.label!.text = selectedURL.lastPathComponent
             
             UIView.animate(withDuration: 0.25) {

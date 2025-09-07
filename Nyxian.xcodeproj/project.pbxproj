@@ -642,6 +642,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_RBSTarget",
 					"-Wl,-U,_OBJC_CLASS_$_FBSSceneParameters",
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
+					"-Wl,-U,_OBJC_CLASS_$_MIBundle",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -730,6 +731,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_RBSTarget",
 					"-Wl,-U,_OBJC_CLASS_$_FBSSceneParameters",
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
+					"-Wl,-U,_OBJC_CLASS_$_MIBundle",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
