@@ -27,13 +27,6 @@
  */
 @implementation TestService
 
-- (instancetype)init
-{
-    self = [super init];
-    self.textLogs = [[NSMutableDictionary alloc] init];
-    return self;
-}
-
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
 {
     printf("[Host App] Guest app requested file handle for %s\n", [path UTF8String]);
@@ -51,13 +44,8 @@
     if(bundleIdentifier)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            LogTextView *textLog =  [self.textLogs objectForKey:@(pid)];
-            if(!textLog)
-            {
-                textLog = [[LogTextView alloc] init];
-                //[self.textLogs setObject:textLog forKey:@(pid)];
-                [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier withTitle:@"Log"];
-            }
+            LogTextView *textLog = [[LogTextView alloc] init];
+            [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier withTitle:@"Log"];
             int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
             reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);
         });
