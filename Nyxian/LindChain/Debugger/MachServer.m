@@ -207,11 +207,14 @@ void machServerInit(void)
         
         // Setting each signal to be blocked, in order to make the threads stop on fault, in the past it just continued running
         sigset_t set;
-        sigemptyset(&set);
-        for (int sig = 1; sig < NSIG; sig++)
-            if (sig != SIGKILL && sig != SIGSTOP && sig != SIGABRT && sig != SIGTERM)
-                sigaddset(&set, sig);
-        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        sigfillset(&set);
+        sigdelset(&set, SIGKILL);
+        sigdelset(&set, SIGSTOP);
+        sigdelset(&set, SIGABRT);
+        sigdelset(&set, SIGTERM);
+        
+        // Using sigprocmask because according to libc source pthread_sigmask is just sigprocmask
+        sigprocmask(SIG_BLOCK, &set, NULL);
         
         // Its raised by stuff like malloc API symbols but doesnt matter so much... we raise the mach exception manually in our abort handler. the thread wont continue running as its literally raised by the abort() function that calls based on libc source raise(SIGABRT) which mean it directly jump to our handler.
         signal(SIGABRT, signal_handler);
