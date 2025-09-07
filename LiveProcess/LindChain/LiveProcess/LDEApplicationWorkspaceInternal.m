@@ -19,7 +19,65 @@
 
 #import "LDEApplicationWorkspaceInternal.h"
 #import "../LiveContainer/zip.h"
+#import <Security/Security.h>
 
+/*
+ Certificate check
+ */
+typedef uint32_t SecCSFlags;
+typedef struct CF_BRIDGED_TYPE(id) __SecCode *SecCodeRef;
+typedef SecCodeRef SecStaticCodeRef;
+OSStatus SecStaticCodeCreateWithPath(
+    CFURLRef path,
+    SecCSFlags flags,
+    SecStaticCodeRef *staticCode);
+OSStatus SecCodeCopySigningInformation(
+    SecStaticCodeRef code,
+    SecCSFlags flags,
+    CFDictionaryRef *information);
+extern const CFStringRef kSecCodeInfoTeamIdentifier
+    API_AVAILABLE(macos(10.7));
+enum {
+      kSecCSDefaultFlags       = 0U,
+      kSecCSSigningInformation = (1U << 1),
+  };
+
+static NSString *TeamIdentifierForBinary(NSString *path) {
+    if (path.length == 0) return nil;
+
+    SecStaticCodeRef codeRef = NULL;
+    CFDictionaryRef signingInfo = NULL;
+    NSString *teamID = nil;
+
+    CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:path];
+    OSStatus status = SecStaticCodeCreateWithPath(url, kSecCSDefaultFlags, &codeRef);
+    if (status != errSecSuccess || codeRef == NULL) goto cleanup;
+
+    status = SecCodeCopySigningInformation(codeRef, kSecCSSigningInformation, &signingInfo);
+    if (status != errSecSuccess || signingInfo == NULL) goto cleanup;
+
+    CFStringRef tid = CFDictionaryGetValue(signingInfo, kSecCodeInfoTeamIdentifier);
+    if (tid) {
+        teamID = [(__bridge NSString *)tid copy];
+    }
+
+cleanup:
+    if (signingInfo) CFRelease(signingInfo);
+    if (codeRef) CFRelease(codeRef);
+    return teamID;
+}
+
+BOOL BinariesHaveMatchingTeamID(NSString *pathA, NSString *pathB) {
+    NSString *teamA = TeamIdentifierForBinary(pathA);
+    NSString *teamB = TeamIdentifierForBinary(pathB);
+    if (!teamA || !teamB) return NO;
+    return [teamA isEqualToString:teamB];
+}
+
+
+/*
+ Internal class
+ */
 @interface LDEApplicationWorkspaceInternal ()
 
 @property (nonatomic,strong) NSURL *applicationsURL;
@@ -113,6 +171,9 @@
         NSLog(@"❌ No signature: %@", error);
     }
     NSLog(@"SIGNING RESULT %@", signInfo);*/
+    
+    // MARK: Replacement to CS check, check if both teamids match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
+    if(!BinariesHaveMatchingTeamID([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
     
     // File manager
     NSFileManager *fileManager = [NSFileManager defaultManager];
