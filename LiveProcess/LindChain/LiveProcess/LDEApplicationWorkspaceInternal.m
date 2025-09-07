@@ -41,39 +41,68 @@ enum {
       kSecCSDefaultFlags       = 0U,
       kSecCSSigningInformation = (1U << 1),
   };
+extern const CFStringRef kSecCodeInfoCertificates;
 
-static NSString *TeamIdentifierForBinary(NSString *path) {
-    if (path.length == 0) return nil;
+
+static SecCertificateRef LeafCertificateForBinary(NSString *path) {
+    if (path.length == 0) return NULL;
 
     SecStaticCodeRef codeRef = NULL;
-    CFDictionaryRef signingInfo = NULL;
-    NSString *teamID = nil;
+    CFDictionaryRef info = NULL;
+    SecCertificateRef leaf = NULL;
 
     CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:path];
     OSStatus status = SecStaticCodeCreateWithPath(url, kSecCSDefaultFlags, &codeRef);
-    if (status != errSecSuccess || codeRef == NULL) goto cleanup;
+    if (status != errSecSuccess || !codeRef) goto cleanup;
 
-    status = SecCodeCopySigningInformation(codeRef, kSecCSSigningInformation, &signingInfo);
-    if (status != errSecSuccess || signingInfo == NULL) goto cleanup;
+    status = SecCodeCopySigningInformation(codeRef, kSecCSSigningInformation, &info);
+    if (status != errSecSuccess || !info) goto cleanup;
 
-    CFStringRef tid = CFDictionaryGetValue(signingInfo, kSecCodeInfoTeamIdentifier);
-    if (tid) {
-        teamID = [(__bridge NSString *)tid copy];
-    }
+    CFArrayRef certs = CFDictionaryGetValue(info, kSecCodeInfoCertificates);
+    if (!certs || CFArrayGetCount(certs) == 0) goto cleanup;
+    leaf = (SecCertificateRef)CFRetain(CFArrayGetValueAtIndex(certs, 0));
 
 cleanup:
-    if (signingInfo) CFRelease(signingInfo);
+    if (info) CFRelease(info);
     if (codeRef) CFRelease(codeRef);
-    return teamID;
+    return leaf;
 }
 
-BOOL BinariesHaveMatchingTeamID(NSString *pathA, NSString *pathB) {
-    NSString *teamA = TeamIdentifierForBinary(pathA);
-    NSString *teamB = TeamIdentifierForBinary(pathB);
-    if (!teamA || !teamB) return NO;
-    return [teamA isEqualToString:teamB];
+static BOOL BinariesHaveMatchingLeafCertificate(NSString *pathA, NSString *pathB) {
+    SecCertificateRef a = LeafCertificateForBinary(pathA);
+    SecCertificateRef b = LeafCertificateForBinary(pathB);
+    if (!a || !b) { if (a) CFRelease(a); if (b) CFRelease(b); return NO; }
+
+    BOOL equal = CFEqual(a, b);
+
+    CFRelease(a); CFRelease(b);
+    return equal;
 }
 
+static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) {
+    SecCertificateRef a = LeafCertificateForBinary(pathA);
+    SecCertificateRef b = LeafCertificateForBinary(pathB);
+    if (!a || !b) { if (a) CFRelease(a); if (b) CFRelease(b); return NO; }
+
+    SecKeyRef keyA = NULL, keyB = NULL;
+    BOOL equal = NO;
+
+    keyA = SecCertificateCopyKey(a);
+    keyB = SecCertificateCopyKey(b);
+
+    if (keyA && keyB) {
+        CFDataRef da = SecKeyCopyExternalRepresentation(keyA, NULL);
+        CFDataRef db = SecKeyCopyExternalRepresentation(keyB, NULL);
+        if (da && db) equal = CFEqual(da, db);
+        if (da) CFRelease(da);
+        if (db) CFRelease(db);
+    }
+
+    if (keyA) CFRelease(keyA);
+    if (keyB) CFRelease(keyB);
+    CFRelease(a); CFRelease(b);
+    return equal;
+}
 
 /*
  Internal class
@@ -161,21 +190,8 @@ BOOL BinariesHaveMatchingTeamID(NSString *pathA, NSString *pathB) {
     
     // FIXME: Fix code signature validation
     // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
-    /*NSError *error = nil;
-    id signInfo = [NSClassFromString(@"MICodeSigningVerifier")
-                      _validateSignatureAndCopyInfoForURL:[bundle executableURL]
-                      withOptions:nil
-                      error:&error];
-
-    if (signInfo) {
-        NSLog(@"✅ Has a signature: %@", signInfo);
-    } else {
-        NSLog(@"❌ No signature: %@", error);
-    }
-    NSLog(@"SIGNING RESULT %@", signInfo);*/
-    
-    // MARK: Replacement to CS check, check if both teamids match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
-    if(!BinariesHaveMatchingTeamID([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
+    if(!BinariesHaveMatchingLeafCertificate([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
     
     // File manager
     NSFileManager *fileManager = [NSFileManager defaultManager];
