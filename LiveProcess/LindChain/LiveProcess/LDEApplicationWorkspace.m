@@ -37,15 +37,20 @@
     
     _sema = dispatch_semaphore_create(0);
     
+    return [self execute] ? self : nil;
+}
+
+- (BOOL)execute
+{
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
-        return nil;
+        return NO;
     }
     
     NSError* error = nil;
     _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
     if(error) {
-        return nil;
+        return NO;
     }
     _extension.preferredLanguages = @[];
     
@@ -56,19 +61,16 @@
     };
     
     __weak typeof(self) weakSelf = self;
-    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        dispatch_semaphore_signal(weakSelf.sema);
-        weakSelf.proxy = nil;
-    }];
     
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         dispatch_semaphore_signal(weakSelf.sema);
         weakSelf.proxy = nil;
+        [weakSelf execute];
     }];
     
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
     
-    return self;
+    return YES;
 }
 
 + (LDEApplicationWorkspace*)shared
