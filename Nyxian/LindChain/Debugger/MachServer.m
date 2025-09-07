@@ -167,10 +167,7 @@ void* mach_exception_self_server(void *arg)
             
         }
         else if (mr != MACH_MSG_SUCCESS)
-        {
-            // If the message was send and the kernel and is not successful, which shall never happen exit
             ORIG_FUNC(exit)(-1);
-        }
         
         // Sanity checks
         if (request->Head.msgh_size < sizeof(*request) || request_size - sizeof(*request) < (sizeof(mach_exception_data_type_t) * request->codeCnt))
@@ -202,25 +199,31 @@ void* mach_exception_self_server(void *arg)
 
 void machServerInit(void)
 {
-    // Hooking exit to avoid exiting the process
-    DO_HOOK_GLOBAL(exit);
-    
-    // Setting each signal to be blocked, in order to make the threads stop on fault, in the past it just continued running
-    sigset_t set;
-    sigemptyset(&set);
-    for (int sig = 1; sig < NSIG; sig++)
-        if (sig != SIGKILL && sig != SIGSTOP && sig != SIGABRT && sig != SIGTERM)
-            sigaddset(&set, sig);
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
-    
-    // Its raised by stuff like malloc API symbols but doesnt matter so much... we raise the mach exception manually in our abort handler. the thread wont continue running as its literally raised by the abort() function that calls based on libc source raise(SIGABRT) which mean it directly jump to our handler.
-    signal(SIGABRT, signal_handler);
-    
-    // Executing finally out mach exception server
-    pthread_t serverThread;
-    pthread_create(&serverThread,
-                   NULL,
-                   mach_exception_self_server,
-                   NULL);
+    // Dispatching once cuz the mach server shall only be initilized once
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // Hooking exit to avoid exiting the process
+        DO_HOOK_GLOBAL(exit);
+        
+        // Setting each signal to be blocked, in order to make the threads stop on fault, in the past it just continued running
+        sigset_t set;
+        sigemptyset(&set);
+        for (int sig = 1; sig < NSIG; sig++)
+            if (sig != SIGKILL && sig != SIGSTOP && sig != SIGABRT && sig != SIGTERM)
+                sigaddset(&set, sig);
+        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        
+        // Its raised by stuff like malloc API symbols but doesnt matter so much... we raise the mach exception manually in our abort handler. the thread wont continue running as its literally raised by the abort() function that calls based on libc source raise(SIGABRT) which mean it directly jump to our handler.
+        signal(SIGABRT, signal_handler);
+        
+        // Executing finally out mach exception server
+        pthread_t serverThread;
+        pthread_create(&serverThread,
+                       NULL,
+                       mach_exception_self_server,
+                       NULL);
+        
+        // Detach thread to automatically release its resources when it returns, cuz we wont join it
+        pthread_detach(serverThread);
+    });
 }
-
