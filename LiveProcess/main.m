@@ -53,6 +53,14 @@ static NSDictionary *retrievedAppInfo;
 }
 @end
 
+void handoffOutput(int fd)
+{
+    dup2(fd, STDOUT_FILENO);
+    dup2(fd, STDERR_FILENO);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+}
+
 extern int LiveContainerMain(int argc, char *argv[]);
 int LiveProcessMain(int argc, char *argv[]) {
     // Let NSExtensionContext initialize, once it's done it will call CFRunLoopStop
@@ -88,8 +96,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     {
         // Handoff stdout and stderr output to host app
         [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-            dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-            dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+            handoffOutput(stdoutHandle.fileDescriptor);
             dispatch_semaphore_signal(sema);
         }];
         dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
@@ -107,15 +114,13 @@ int LiveProcessMain(int argc, char *argv[]) {
         if(debugEnabled.boolValue)
         {
             [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
-                dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-                dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+                handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
             }];
             dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
         } else {
             [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-                dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-                dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+                handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
             }];
             dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
