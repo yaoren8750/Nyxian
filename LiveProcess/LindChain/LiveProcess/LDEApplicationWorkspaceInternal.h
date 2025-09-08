@@ -27,6 +27,8 @@
 
 @interface LDEApplicationWorkspaceInternal : NSObject
 
+@property (atomic,readwrite) NSMutableDictionary<NSString*,MIExecutableBundle*> *bundles;
+
 - (instancetype)init;
 + (LDEApplicationWorkspaceInternal*)shared;
 
@@ -35,7 +37,6 @@
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
 - (MIBundle*)applicationBundleForBundleID:(NSString*)bundleID;
 - (NSURL*)applicationContainerForBundleID:(NSString *)bundleID;
-- (NSArray<MIBundle*>*)applicationBundleList;
 - (BOOL)doWeTrustThatBundle:(MIExecutableBundle*)bundle;
 - (BOOL)clearContainerForBundleID:(NSString*)bundleID;
 

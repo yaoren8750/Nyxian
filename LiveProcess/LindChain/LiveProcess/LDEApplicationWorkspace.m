@@ -147,27 +147,15 @@
     return result;
 }
 
-- (NSArray<LDEApplicationObject*>*)allApplicationObjects
-{
-    if(!_proxy) return @[];
-    __block NSMutableArray<LDEApplicationObject*> *allApplicationObjects = [[NSMutableArray alloc] init];
-    __block NSArray<NSString*> *result = nil;
-    [_proxy allApplicationBundleIDWithReply:^(NSArray<NSString*> *replyResult){
-        result = replyResult;
+- (NSArray<LDEApplicationObject*>*)allApplicationObjects {
+    if (!_proxy) return @[];
+    __block NSArray<LDEApplicationObject*> *result = nil;
+    [_proxy allApplicationObjectsWithReply:^(LDEApplicationObjectArray *replyResult) {
+        result = replyResult.applicationObjects;
         dispatch_semaphore_signal(self.sema);
     }];
     dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    
-    for(NSString *bundleID in result)
-    {
-        [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
-            [allApplicationObjects addObject:replyResult];
-            dispatch_semaphore_signal(self.sema);
-        }];
-        dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    }
-    
-    return allApplicationObjects;
+    return result ?: @[];
 }
 
 - (BOOL)clearContainerForBundleID:(NSString *)bundleID

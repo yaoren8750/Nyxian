@@ -196,6 +196,14 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
                                attributes:nil
                                     error:nil];
     
+    NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
+    self.bundles = [[NSMutableDictionary alloc] init];
+    for(NSURL *uuidURL in uuidURLs)
+    {
+        MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleInDirectory:uuidURL withExtension:@"app" error:nil];
+        if(bundle) [self.bundles setObject:bundle forKey:bundle.identifier];
+    }
+    
     return self;
 }
 
@@ -207,22 +215,6 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
         applicationWorkspaceSingleton = [[LDEApplicationWorkspaceInternal alloc] init];
     });
     return applicationWorkspaceSingleton;
-}
-
-/*
- Helper
- */
-- (NSArray<MIBundle*>*)applicationBundleList
-{
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
-    NSMutableArray<MIBundle*> *applicationBundleList = [[NSMutableArray alloc] init];
-    for(NSURL *uuidURL in uuidURLs)
-    {
-        MIBundle *bundle = [[PrivClass(MIBundle) alloc] initWithBundleInDirectory:uuidURL withExtension:@"app" error:nil];
-        if(bundle) [applicationBundleList addObject:bundle];
-    }
-    return applicationBundleList;
 }
 
 /*
@@ -277,6 +269,9 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     if(![fileManager createDirectoryAtURL:[installURL URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:nil]) return NO;
     if(![fileManager moveItemAtURL:bundle.bundleURL toURL:installURL error:nil]) return NO;
     
+    // If existed we add object
+    [self.bundles setObject:[PrivClass(MIExecutableBundle) bundleForURL:installURL error:nil] forKey:bundle.identifier];
+    
     return YES;
 }
 
@@ -288,6 +283,7 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
         NSURL *container = [self applicationContainerForBundleID:bundleID];
         [[NSFileManager defaultManager] removeItemAtURL:[previousApplication bundleURL] error:nil];
         [[NSFileManager defaultManager] removeItemAtURL:container error:nil];
+        [self.bundles removeObjectForKey:bundleID];
         return YES;
     }
     return NO;
@@ -295,16 +291,12 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
 
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID
 {
-    NSArray<MIBundle*> *bundleList = [self applicationBundleList];
-    for(MIBundle *bundle in bundleList) if([bundle.identifier isEqualToString:bundleID]) return YES;
-    return NO;
+    return [self.bundles objectForKey:bundleID] ? YES : NO;
 }
 
 - (MIBundle*)applicationBundleForBundleID:(NSString *)bundleID
 {
-    NSArray<MIBundle*> *bundleList = [self applicationBundleList];
-    for(MIBundle *bundle in bundleList) if([bundle.identifier isEqualToString:bundleID]) return bundle;
-    return nil;
+    return [self.bundles objectForKey:bundleID];
 }
 
 - (NSURL*)applicationContainerForBundleID:(NSString *)bundleID
@@ -365,12 +357,16 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     reply([[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundleID]);
 }
 
-- (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply
-{
-    NSMutableArray<NSString*> *allBundleIDs = [[NSMutableArray alloc] init];
-    NSArray<MIBundle*> *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleList];
-    for(MIBundle *item in bundle) [allBundleIDs addObject:item.identifier];
-    reply(allBundleIDs);
+- (void)allApplicationObjectsWithReply:(void (^)(LDEApplicationObjectArray *))reply {
+    LDEApplicationWorkspaceInternal *workspace = [LDEApplicationWorkspaceInternal shared];
+    NSMutableArray<LDEApplicationObject*> *objects = [NSMutableArray array];
+    for (NSString *bundleID in workspace.bundles) {
+        MIBundle *bundle = workspace.bundles[bundleID];
+        if (bundle) {
+            [objects addObject:[[LDEApplicationObject alloc] initWithBundle:bundle]];
+        }
+    }
+    reply([[LDEApplicationObjectArray alloc] initWithApplicationObjects:[objects copy]]);
 }
 
 - (void)clearContainerForBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply
