@@ -36,7 +36,7 @@
 - (MIBundle*)applicationBundleForBundleID:(NSString*)bundleID;
 - (NSURL*)applicationContainerForBundleID:(NSString *)bundleID;
 - (NSArray<MIBundle*>*)applicationBundleList;
-- (BOOL)isLaunchAllowedOfBundleIdentifier:(NSString*)bundleIdentifier;
+- (BOOL)doWeTrustThatBundle:(MIExecutableBundle*)bundle;
 
 @end
 

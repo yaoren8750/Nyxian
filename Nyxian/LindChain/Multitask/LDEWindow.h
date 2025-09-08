@@ -15,9 +15,9 @@
 @property(nonatomic) BOOL isMaximized;
 @property(nonatomic) CGFloat scaleRatio;
 
-- (instancetype)initWithBundleID:(NSString*)bundleID
-                 enableDebugging:(BOOL)enableDebugging
-                  withDimensions:(CGRect)rect;
+- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
+                          enableDebugging:(BOOL)enableDebugging
+                           withDimensions:(CGRect)rect;
 - (instancetype)initWithAttachment:(UIView*)attachment
                          withTitle:(NSString*)title
                     withDimensions:(CGRect)rect;

@@ -32,6 +32,8 @@
 @property (nonatomic) NSString *bundlePath;
 @property (nonatomic) NSString *containerPath;
 
+@property (nonatomic) BOOL isLaunchAllowed;
+
 @property (nonatomic) UIImage *icon;
 
 - (instancetype)initWithBundle:(MIBundle*)bundle;

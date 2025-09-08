@@ -37,7 +37,6 @@
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
 - (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID;
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects;
-- (BOOL)isLaunchAllowedOfBundleIdentifier:(NSString*)bundleIdentifier;
 
 @end
 

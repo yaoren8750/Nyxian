@@ -42,9 +42,9 @@
 @property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) UIMutableApplicationSceneSettings *settings;
 
-- (instancetype)initWithBundleID:(NSString*)bundleID
-            withDebuggingEnabled:(BOOL)enableDebugging
-                    withDelegate:(id<LDEAppSceneDelegate>)delegate;
+- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
+                     withDebuggingEnabled:(BOOL)enableDebugging
+                             withDelegate:(id<LDEAppSceneDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)appTerminationCleanUp:(BOOL)restarts;
 - (void)terminate;

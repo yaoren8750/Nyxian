@@ -38,9 +38,9 @@
 
 @implementation LDEAppScene
 
-- (instancetype)initWithBundleID:(NSString*)bundleID
-            withDebuggingEnabled:(BOOL)enableDebugging
-                    withDelegate:(id<LDEAppSceneDelegate>)delegate
+- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
+                     withDebuggingEnabled:(BOOL)enableDebugging
+                             withDelegate:(id<LDEAppSceneDelegate>)delegate;
 {
     self = [super initWithNibName:nil bundle:nil];
     self.debuggingEnabled = enableDebugging;
@@ -50,9 +50,7 @@
     self.delegate = delegate;
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
-    self.appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleID];
-    if(![[LDEApplicationWorkspace shared] isLaunchAllowedOfBundleIdentifier:self.appObj.bundleIdentifier]) return nil;
-    if(!self.appObj) return nil;
+    self.appObj = applicationObject;
     return [self execute] ? self : nil;
 }
 

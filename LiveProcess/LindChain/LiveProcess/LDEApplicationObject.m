@@ -24,34 +24,38 @@
 
 @implementation LDEApplicationObject
 
-- (instancetype)initWithBundle:(MIBundle*)bundle
+- (instancetype)initWithBundle:(MIBundle*)miBundle
 {
     self = [super init];
     
-    self.bundleIdentifier = bundle.identifier;
-    self.bundlePath = [[bundle bundleURL] path];
-    self.displayName = bundle.displayName;
-    self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
+    MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleURL:miBundle.bundleURL error:nil];
     
-    if (self.bundlePath.length == 0) return nil;
-
-    NSBundle *nsBundle = [NSBundle bundleWithPath:self.bundlePath];
+    self.bundleIdentifier = bundle.identifier;
+    self.displayName = bundle.displayName;
+    self.isLaunchAllowed = [[LDEApplicationWorkspaceInternal shared] doWeTrustThatBundle:bundle];
+    if(self.isLaunchAllowed)
+    {
+        self.bundlePath = [[bundle bundleURL] path];
+        self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
+    }
+    
+    NSBundle *nsBundle = [NSBundle bundleWithPath:[[bundle bundleURL] path]];
     if (!nsBundle) return self;
-
+    
     NSDictionary *info = nsBundle.infoDictionary ?: @{};
     NSArray<NSDictionary *> *iconContainers = @[
         info[@"CFBundleIcons~iphone"] ?: @{},
         info[@"CFBundleIcons~ipad"]   ?: @{},
         info[@"CFBundleIcons"]        ?: @{}
     ];
-
+    
     UIUserInterfaceIdiom idiom = UIDevice.currentDevice.userInterfaceIdiom;
     CGFloat scale = UIScreen.mainScreen.scale;
     UITraitCollection *traits = [UITraitCollection traitCollectionWithTraitsFromCollections:@[
         [UITraitCollection traitCollectionWithUserInterfaceIdiom:idiom],
         [UITraitCollection traitCollectionWithDisplayScale:scale]
     ]];
-
+    
     for (NSDictionary *iconsDict in iconContainers)
     {
         NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
@@ -62,7 +66,7 @@
             if(self.icon) return self;
         }
     }
-
+    
     for (NSDictionary *iconsDict in iconContainers)
     {
         NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
@@ -70,10 +74,10 @@
         for (NSString *base in [files reverseObjectEnumerator])
         {
             if(base.length == 0) continue;
-
+            
             self.icon = [UIImage imageNamed:base inBundle:nsBundle compatibleWithTraitCollection:traits];
             if(self.icon) return self;
-
+            
             NSArray<NSString *> *exts = @[ @"png", @"jpg" ];
             for (NSString *ext in exts)
             {
@@ -86,7 +90,7 @@
             }
         }
     }
-
+    
     NSArray<NSString *> *allPaths = [nsBundle pathsForResourcesOfType:@"png" inDirectory:nil];
     UIImage *best = nil;
     CGFloat bestArea = 0;
@@ -105,9 +109,8 @@
             }
         }
     }
-    
     self.icon = best;
-
+    
     return self;
 }
 
@@ -121,6 +124,7 @@
     [coder encodeObject:self.displayName forKey:@"displayName"];
     [coder encodeObject:self.containerPath forKey:@"containerPath"];
     [coder encodeObject:self.icon forKey:@"icon"];
+    [coder encodeObject:@(self.isLaunchAllowed) forKey:@"isLaunchAllowed"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -131,6 +135,7 @@
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
         _containerPath = [coder decodeObjectOfClass:[NSString class] forKey:@"containerPath"];
         _icon = [coder decodeObjectOfClass:[UIImage class] forKey:@"icon"];
+        _isLaunchAllowed = [[coder decodeObjectOfClass:[NSNumber class] forKey:@"isLaunchAllowed"] boolValue];
     }
     return self;
 }

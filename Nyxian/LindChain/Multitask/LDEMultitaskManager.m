@@ -59,6 +59,13 @@
                          terminateIfRunning:(BOOL)terminate
                             enableDebugging:(BOOL)enableDebug
 {
+    LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
+    if(!applicationObject.isLaunchAllowed)
+    {
+        [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"\"%@\" Is No Longer Available", applicationObject.displayName] delay:0.0];
+        return NO;
+    }
+    
     NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
     if(windowGroup)
     {
@@ -99,18 +106,9 @@
         NSValue *cachedFrame = [self.windowDimensions objectForKey:mainKey];
         if (cachedFrame) frame = cachedFrame.CGRectValue;
         
-        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier
-                                                                         enableDebugging:enableDebug
-                                                                          withDimensions:frame];
-        
-        // TODO: Rewrite a lot of this to work fluindly, and implement restart checks and improve all checks in the window system please Frida I talk to you I talk with my self basically
-        // TODO: Dont compare in app scene, compare directly at the start of LDEMultitaskManager and pass it over to LDEAppScene, saves headache
-        if(!decoratedAppSceneViewController)
-        {
-            [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"%@ Is No Longer Available", bundleIdentifier] delay:0.0];
-            result = NO;
-            return;
-        }
+        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithApplicationObject:applicationObject
+                                                                                  enableDebugging:enableDebug
+                                                                                   withDimensions:frame];
         
         [self addSubview:decoratedAppSceneViewController.view];
         NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];

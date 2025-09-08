@@ -50,12 +50,12 @@ void UIKitFixesInit(void) {
 
 @implementation LDEWindow
 
-- (instancetype)initWithBundleID:(NSString*)bundleID
-                 enableDebugging:(BOOL)enableDebugging
-                  withDimensions:(CGRect)rect
+- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
+                          enableDebugging:(BOOL)enableDebugging
+                           withDimensions:(CGRect)rect;
 {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[LDEAppScene alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
+    _appSceneVC = [[LDEAppScene alloc] initWithApplicationObject:applicationObject withDebuggingEnabled:enableDebugging withDelegate:self];
     if(!_appSceneVC) return nil;
     _childVC = _appSceneVC;
     _multitaskingTermination = NO;
