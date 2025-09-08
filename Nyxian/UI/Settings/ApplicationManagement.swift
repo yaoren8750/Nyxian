@@ -21,7 +21,8 @@ import UIKit
 import UniformTypeIdentifiers
 
 class ApplicationManagementViewController: UIThemedTableViewController, UITextFieldDelegate, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
-    var applications: [LDEApplicationObject] = []
+    static var applications: [LDEApplicationObject] = []
+    static let lock: NSLock = NSLock()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,20 +32,28 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.applications = LDEApplicationWorkspace.shared().allApplicationObjects()
-        self.tableView.reloadData()
+        if ApplicationManagementViewController.lock.try() {
+            DispatchQueue.global().async { [weak self] in
+                let newApplications: [LDEApplicationObject] = LDEApplicationWorkspace.shared().allApplicationObjects()
+                ApplicationManagementViewController.applications = newApplications
+                DispatchQueue.main.async {
+                    self?.tableView.reloadData()
+                    ApplicationManagementViewController.lock.unlock()
+                }
+            }
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return applications.count
+        return ApplicationManagementViewController.applications.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return NXProjectTableCell(appObject: applications[indexPath.row])
+        return NXProjectTableCell(appObject: ApplicationManagementViewController.applications[indexPath.row])
     }
     
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        let application = applications[indexPath.row]
+        let application = ApplicationManagementViewController.applications[indexPath.row]
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak application] _ in
             let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
@@ -70,8 +79,8 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                       let application = application else { return }
                 LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
-                    if let index = self.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
-                        self.applications.remove(at: index)
+                    if let index = ApplicationManagementViewController.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
+                        ApplicationManagementViewController.applications.remove(at: index)
                         self.tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
                     }
                 }
@@ -83,7 +92,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let application = applications[indexPath.row]
+        let application = ApplicationManagementViewController.applications[indexPath.row]
         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
     }
     
@@ -120,7 +129,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
                         LDEMultitaskManager.shared().openApplication(withBundleIdentifier: bundleId)
                         let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
-                        self.applications.append(appObject)
+                        ApplicationManagementViewController.applications.append(appObject)
                         self.tableView.reloadData()
                     } else {
                         NotificationServer.NotifyUser(level: .error, notification: "Failed to install application.")
