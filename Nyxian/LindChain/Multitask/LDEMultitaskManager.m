@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <Nyxian-Swift.h>
 
 @implementation LDEMultitaskManager
 
@@ -101,6 +102,15 @@
         LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithBundleID:bundleIdentifier
                                                                          enableDebugging:enableDebug
                                                                           withDimensions:frame];
+        
+        // TODO: Rewrite a lot of this to work fluindly, and implement restart checks and improve all checks in the window system please Frida I talk to you I talk with my self basically
+        // TODO: Dont compare in app scene, compare directly at the start of LDEMultitaskManager and pass it over to LDEAppScene, saves headache
+        if(!decoratedAppSceneViewController)
+        {
+            [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"%@ Is No Longer Available", bundleIdentifier] delay:0.0];
+            result = NO;
+            return;
+        }
         
         [self addSubview:decoratedAppSceneViewController.view];
         NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];

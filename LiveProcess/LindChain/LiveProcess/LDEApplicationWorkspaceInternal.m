@@ -251,6 +251,27 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     return [self.containersURL URLByAppendingPathComponent:uuid];
 }
 
+- (BOOL)isLaunchAllowedOfBundleIdentifier:(NSString*)bundleIdentifier
+{
+    MIBundle *miBundle = [self applicationBundleForBundleID:bundleIdentifier];
+    if(!miBundle) return NO;
+    MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleURL:[miBundle bundleURL] error:nil];
+    if(!bundle) return NO;
+    else if(![bundle validateBundleMetadataWithError:nil]) return NO;
+    else if(![bundle isAppTypeBundle]) return NO;
+    else if(![bundle validateAppMetadataWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentOSVersionWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentDeviceFamilyWithError:nil]) return NO;
+    else if(![bundle isApplicableToCurrentDeviceCapabilitiesWithError:nil]) return NO;
+    
+    // FIXME: Fix code signature validation
+    // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
+    // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
+    if(!BinariesHaveMatchingLeafCertificate([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    
+    return YES;
+}
+
 @end
 
 @implementation LDEApplicationWorkspaceProxy
@@ -296,6 +317,11 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     NSArray<MIBundle*> *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleList];
     for(MIBundle *item in bundle) [allBundleIDs addObject:item.identifier];
     reply(allBundleIDs);
+}
+
+- (void)isLaunchAllowedOfBundleIdentifier:(NSString *)bundleIdentifier withReply:(void (^)(BOOL))reply
+{
+    reply([[LDEApplicationWorkspaceInternal shared] isLaunchAllowedOfBundleIdentifier:bundleIdentifier]);
 }
 
 @end

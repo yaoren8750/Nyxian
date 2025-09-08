@@ -40,14 +40,22 @@ func getTopViewController(base: UIViewController? = UIApplication.shared.connect
     return base
 }
 
-class NotificationServer {
-    enum NotifLevel: String {
-        case note = "Note"
-        case warning = "Warning"
-        case error = "Error"
+@objc class NotificationServer: NSObject {
+    @objc enum NotifLevel: Int {
+        case note = 0
+        case warning = 1
+        case error = 2
     }
     
-    static func NotifyUser(
+    static func getTitleForNotif(level: NotifLevel) -> String {
+        switch level {
+        case .note: return "Note"
+        case .warning: return "Warning"
+        case .error: return "Error"
+        }
+    }
+    
+    @objc static func NotifyUser(
         level: NotifLevel,
         notification: String,
         delay: Double = 0.0
@@ -56,7 +64,7 @@ class NotificationServer {
             DispatchQueue.main.async {
                 if let rootVC = getTopViewController() {
                     let alert: UIAlertController = UIAlertController(
-                        title: level.rawValue,
+                        title: getTitleForNotif(level: level),
                         message: notification,
                         preferredStyle: .alert
                     )

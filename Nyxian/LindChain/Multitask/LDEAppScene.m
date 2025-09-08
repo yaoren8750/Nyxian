@@ -51,6 +51,7 @@
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
     self.appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleID];
+    if(![[LDEApplicationWorkspace shared] isLaunchAllowedOfBundleIdentifier:self.appObj.bundleIdentifier]) return nil;
     if(!self.appObj) return nil;
     return [self execute] ? self : nil;
 }

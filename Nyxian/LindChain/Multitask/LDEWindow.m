@@ -56,6 +56,7 @@ void UIKitFixesInit(void) {
 {
     self = [super initWithNibName:nil bundle:nil];
     _appSceneVC = [[LDEAppScene alloc] initWithBundleID:bundleID withDebuggingEnabled:enableDebugging withDelegate:self];
+    if(!_appSceneVC) return nil;
     _childVC = _appSceneVC;
     _multitaskingTermination = NO;
     
