@@ -68,6 +68,37 @@ cleanup:
     return leaf;
 }
 
+BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
+    BOOL ok = NO;
+    SecCertificateRef leaf = LeafCertificateForBinary(path);
+    if (!leaf) return NO;
+
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
+    SecTrustRef trust = NULL;
+
+    if (SecTrustCreateWithCertificates(leaf, policy, &trust) == errSecSuccess && trust) {
+        CFArrayRef anchors = CFArrayCreate(kCFAllocatorDefault, (const void **)&leaf, 1, &kCFTypeArrayCallBacks);
+        if (anchors) {
+            SecTrustSetAnchorCertificates(trust, anchors);
+            SecTrustSetAnchorCertificatesOnly(trust, true);
+            CFRelease(anchors);
+        }
+
+        CFDateRef now = CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent());
+        if (now) {
+            SecTrustSetVerifyDate(trust, now);
+            CFRelease(now);
+        }
+
+        ok = SecTrustEvaluateWithError(trust, NULL);
+    }
+
+    if (trust) CFRelease(trust);
+    if (policy) CFRelease(policy);
+    CFRelease(leaf);
+    return ok;
+}
+
 static BOOL BinariesHaveMatchingLeafCertificate(NSString *pathA, NSString *pathB) {
     SecCertificateRef a = LeafCertificateForBinary(pathA);
     SecCertificateRef b = LeafCertificateForBinary(pathB);
@@ -192,6 +223,8 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
     // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
     if(!BinariesHaveMatchingLeafCertificate([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    if(!BinariesHaveMatchingLeafPublicKey([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    if(!ExecutableLeafCertificateIsCurrent([[bundle executableURL] path])) return NO;
     
     // File manager
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -268,6 +301,8 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
     // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
     if(!BinariesHaveMatchingLeafCertificate([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    if(!BinariesHaveMatchingLeafPublicKey([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    if(!ExecutableLeafCertificateIsCurrent([[bundle executableURL] path])) return NO;
     
     return YES;
 }
