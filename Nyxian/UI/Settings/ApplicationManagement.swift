@@ -103,17 +103,23 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
             let bundleURL = miBundle.bundleURL!
             let lcapp = LCAppInfo(bundlePath: bundleURL.path)
             lcapp!.patchExecAndSignIfNeed(completionHandler: { [weak self] result, error in
-                guard result, let self = self else { return }
-                lcapp!.save()
-                let bundlePath = lcapp!.bundlePath()
-                let bundleId = lcapp!.bundleIdentifier()
-                if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
-                    LDEMultitaskManager.shared().openApplication(withBundleIdentifier: bundleId)
-                    let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
-                    self.applications.append(appObject)
-                    self.tableView.reloadData()
+                guard let self = self else { return }
+                if result {
+                    lcapp!.save()
+                    let bundlePath = lcapp!.bundlePath()
+                    let bundleId = lcapp!.bundleIdentifier()
+                    if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
+                        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: bundleId)
+                        let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
+                        self.applications.append(appObject)
+                        self.tableView.reloadData()
+                    } else {
+                        NotificationServer.NotifyUser(level: .error, notification: "Failed to install application.")
+                    }
+                    try? fileManager.removeItem(atPath: workRoot)
+                } else {
+                    NotificationServer.NotifyUser(level: .error, notification: "Failed to sign application.")
                 }
-                try? fileManager.removeItem(atPath: workRoot)
             }, progressHandler: { _ in }, forceSign: false)
         }
     }
