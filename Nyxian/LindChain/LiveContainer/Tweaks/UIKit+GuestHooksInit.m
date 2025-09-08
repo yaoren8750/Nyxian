@@ -7,9 +7,6 @@
 #import <LindChain/ObjC/Swizzle.h>
 #import <objc/message.h>
 
-UIInterfaceOrientation LCOrientationLock = UIInterfaceOrientationUnknown;
-NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
 
@@ -50,12 +47,7 @@ NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 @implementation UIViewController (LiveContainerHook)
 
 - (UIInterfaceOrientationMask)hook___supportedInterfaceOrientations {
-    if(LCOrientationLock == UIInterfaceOrientationLandscapeRight) {
-        return UIInterfaceOrientationMaskLandscape;
-    } else {
-        return UIInterfaceOrientationMaskPortrait;
-    }
-
+    return UIInterfaceOrientationMaskAll;
 }
 
 - (BOOL)hook_shouldAutorotateToInterfaceOrientation:(NSInteger)orientation {
