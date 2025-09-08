@@ -292,6 +292,17 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     return [self.containersURL URLByAppendingPathComponent:uuid];
 }
 
+- (BOOL)clearContainerForBundleID:(NSString*)bundleID
+{
+    NSURL *containerURL = [self applicationContainerForBundleID:bundleID];
+    [[NSFileManager defaultManager] removeItemAtURL:containerURL error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtURL:containerURL
+                             withIntermediateDirectories:true
+                                              attributes:nil
+                                                   error:nil];
+    return YES;
+}
+
 @end
 
 @implementation LDEApplicationWorkspaceProxy
@@ -337,6 +348,11 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     NSArray<MIBundle*> *bundle = [[LDEApplicationWorkspaceInternal shared] applicationBundleList];
     for(MIBundle *item in bundle) [allBundleIDs addObject:item.identifier];
     reply(allBundleIDs);
+}
+
+- (void)clearContainerForBundleID:(NSString *)bundleID withReply:(void (^)(BOOL))reply
+{
+    reply([[LDEApplicationWorkspaceInternal shared] clearContainerForBundleID:bundleID]);
 }
 
 @end

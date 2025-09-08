@@ -170,6 +170,18 @@
     return allApplicationObjects;
 }
 
+- (BOOL)clearContainerForBundleID:(NSString *)bundleID
+{
+    if(!_proxy) return NO;
+    __block BOOL result = NO;
+    [_proxy clearContainerForBundleID:bundleID withReply:^(BOOL replyResult){
+        result = replyResult;
+        dispatch_semaphore_signal(self.sema);
+    }];
+    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    return result;
+}
+
 @end
 
 __attribute__((constructor))

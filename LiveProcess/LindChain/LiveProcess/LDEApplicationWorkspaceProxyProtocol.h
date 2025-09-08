@@ -30,6 +30,7 @@
 - (void)applicationObjectForBundleID:(NSString*)bundleID withReply:(void (^)(LDEApplicationObject*))reply;
 - (void)applicationContainerForBundleID:(NSString*)bundleID withReply:(void (^)(NSURL*))reply;
 - (void)allApplicationBundleIDWithReply:(void (^)(NSArray<NSString*>*))reply;
+- (void)clearContainerForBundleID:(NSString*)bundleID withReply:(void (^)(BOOL))reply;
 
 @end
 

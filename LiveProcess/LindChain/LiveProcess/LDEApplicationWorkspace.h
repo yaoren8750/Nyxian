@@ -37,6 +37,7 @@
 - (BOOL)applicationInstalledWithBundleID:(NSString*)bundleID;
 - (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID;
 - (NSArray<LDEApplicationObject*>*)allApplicationObjects;
+- (BOOL)clearContainerForBundleID:(NSString*)bundleID;
 
 @end
 

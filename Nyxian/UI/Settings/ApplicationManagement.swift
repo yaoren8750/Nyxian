@@ -46,19 +46,28 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let application = applications[indexPath.row]
         
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak application] _ in
             let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
+                guard let application = application else { return }
                 LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
             }
             
             let openActionDebug = UIAction(title: "Debug", image: UIImage(systemName: "ant.fill")) { _ in
+                guard let application = application else { return }
                 LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
             }
 
             let openMenu: UIMenu = UIMenu(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill"), children: [openAction,openActionDebug])
             
+            let clearContainerAction = UIAction(title: "Clear Data Container", image: UIImage(systemName: "arrow.up.trash.fill")) { _ in
+                guard let application = application else { return }
+                LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
+                LDEApplicationWorkspace.shared().clearContainer(forBundleID: application.bundleIdentifier)
+            }
+            
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
-                guard let self = self else { return }
+                guard let self = self,
+                      let application = application else { return }
                 LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
                     if let index = self.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
@@ -68,7 +77,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                 }
             }
             
-            return UIMenu(title: "", children: [openMenu, deleteAction])
+            return UIMenu(title: "", children: [openMenu, clearContainerAction, deleteAction])
         }
     }
     
