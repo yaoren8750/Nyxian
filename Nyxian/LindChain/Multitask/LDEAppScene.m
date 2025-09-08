@@ -14,6 +14,7 @@
 #import <dlfcn.h>
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 
 @interface LDEAppScene()
 

@@ -27,6 +27,7 @@ NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 - (void)hook_setDelegate:(id<UIApplicationDelegate>)delegate {
     if(![delegate respondsToSelector:@selector(application:configurationForConnectingSceneSession:options:)]) {
         // Fix old apps black screen when UIApplicationSupportsMultipleScenes is YES
+        [ObjCSwizzler replaceInstanceAction:@selector(makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(hook_makeKeyAndVisible)];
         [ObjCSwizzler replaceInstanceAction:@selector(makeKeyWindow) ofClass:UIWindow.class withAction:@selector(hook_makeKeyWindow)];
         [ObjCSwizzler replaceInstanceAction:@selector(setHidden:) ofClass:UIWindow.class withAction:@selector(hook_setHidden:)];
     }
@@ -69,8 +70,6 @@ NSMutableArray<NSString*>* LCSupportedUrlSchemes = nil;
 }
 
 - (void)hook_makeKeyAndVisible {
-    // TODO: Notify host app to display window
-    NSLog(@"Make key and visible!");
     [self updateWindowScene];
     [self hook_makeKeyAndVisible];
 }
@@ -106,7 +105,6 @@ void UIKitGuestHooksInit(void)
         [ObjCSwizzler replaceInstanceAction:@selector(__supportedInterfaceOrientations) ofClass:UIViewController.class withAction:@selector(hook___supportedInterfaceOrientations)];
         [ObjCSwizzler replaceInstanceAction:@selector(shouldAutorotateToInterfaceOrientation:) ofClass:UIViewController.class withAction:@selector(hook_shouldAutorotateToInterfaceOrientation:)];
         [ObjCSwizzler replaceInstanceAction:@selector(setAutorotates:forceUpdateInterfaceOrientation:) ofClass:UIWindow.class withAction:@selector(hook_setAutorotates:forceUpdateInterfaceOrientation:)];
-        [ObjCSwizzler replaceInstanceAction:@selector(makeKeyAndVisible) ofClass:UIWindow.class withAction:@selector(hook_makeKeyAndVisible)];
     });
 }
 
