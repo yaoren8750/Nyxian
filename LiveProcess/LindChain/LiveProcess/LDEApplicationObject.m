@@ -19,6 +19,7 @@
 
 #import "LDEApplicationObject.h"
 #import "LDEApplicationWorkspaceInternal.h"
+#import "ISIcon.h"
 
 #import <UIKit/UIKit.h>
 
@@ -39,78 +40,25 @@
         self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
     }
     
-    NSBundle *nsBundle = [NSBundle bundleWithPath:[[bundle bundleURL] path]];
-    if (!nsBundle) return self;
     
-    NSDictionary *info = nsBundle.infoDictionary ?: @{};
-    NSArray<NSDictionary *> *iconContainers = @[
-        info[@"CFBundleIcons~iphone"] ?: @{},
-        info[@"CFBundleIcons~ipad"]   ?: @{},
-        info[@"CFBundleIcons"]        ?: @{}
-    ];
-    
-    UIUserInterfaceIdiom idiom = UIDevice.currentDevice.userInterfaceIdiom;
-    CGFloat scale = UIScreen.mainScreen.scale;
-    UITraitCollection *traits = [UITraitCollection traitCollectionWithTraitsFromCollections:@[
-        [UITraitCollection traitCollectionWithUserInterfaceIdiom:idiom],
-        [UITraitCollection traitCollectionWithDisplayScale:scale]
-    ]];
-    
-    for (NSDictionary *iconsDict in iconContainers)
+    ISBundleIcon *bundleIcon = [[PrivClass(ISBundleIcon) alloc] initWithBundleURL:bundle.bundleURL type:nil];
+    if(bundleIcon)
     {
-        NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
-        NSString *assetName = primary[@"CFBundleIconName"];
-        if (assetName.length)
-        {
-            self.icon = [UIImage imageNamed:assetName inBundle:nsBundle compatibleWithTraitCollection:traits];
-            if(self.icon) return self;
+        ISResourceProvider *provider = [bundleIcon _makeAppResourceProvider];
+        if(provider.isGenericProvider) return self;
+        
+        ISAssetCatalogResource *resources = [provider iconResource];
+        if ([resources isKindOfClass:NSClassFromString(@"IFImageBag")]) {
+            IFImageBag *imageBag = (IFImageBag*)resources;
+            IFImage *image = [imageBag imageForSize:CGSizeMake(1024, 1024) scale:1.0];
+            self.icon = [UIImage imageWithCGImage:image.CGImage];
+            return self;
         }
+        
+        IFImage *image = [resources imageForSize:CGSizeMake(1024, 1024) scale:1.0];
+        self.icon = [UIImage imageWithCGImage:image.CGImage];
     }
-    
-    for (NSDictionary *iconsDict in iconContainers)
-    {
-        NSDictionary *primary = iconsDict[@"CFBundlePrimaryIcon"];
-        NSArray *files = primary[@"CFBundleIconFiles"];
-        for (NSString *base in [files reverseObjectEnumerator])
-        {
-            if(base.length == 0) continue;
-            
-            self.icon = [UIImage imageNamed:base inBundle:nsBundle compatibleWithTraitCollection:traits];
-            if(self.icon) return self;
-            
-            NSArray<NSString *> *exts = @[ @"png", @"jpg" ];
-            for (NSString *ext in exts)
-            {
-                NSString *path = [nsBundle pathForResource:base ofType:ext];
-                if (path.length)
-                {
-                    self.icon = [UIImage imageWithContentsOfFile:path];
-                    if(self.icon) return self;
-                }
-            }
-        }
-    }
-    
-    NSArray<NSString *> *allPaths = [nsBundle pathsForResourcesOfType:@"png" inDirectory:nil];
-    UIImage *best = nil;
-    CGFloat bestArea = 0;
-    for (NSString *path in allPaths)
-    {
-        NSString *name = path.lastPathComponent.lowercaseString;
-        if ([name containsString:@"appicon"] || [name containsString:@"icon"])
-        {
-            UIImage *img = [UIImage imageWithContentsOfFile:path];
-            CGSize sz = img.size;
-            CGFloat area = sz.width * sz.height * img.scale * img.scale;
-            if (img && area > bestArea)
-            {
-                best = img;
-                bestArea = area;
-            }
-        }
-    }
-    self.icon = best;
-    
+
     return self;
 }
 
