@@ -68,6 +68,65 @@ cleanup:
     return leaf;
 }
 
+static SecCertificateRef gHostLeafCert = NULL;
+static CFDataRef gHostPublicKeyData = NULL;
+
+static void CacheHostCertAndKeyOnce(void) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *hostPath = [[NSBundle mainBundle] executablePath];
+        SecCertificateRef hostCert = LeafCertificateForBinary(hostPath);
+        if (!hostCert) return;
+
+        gHostLeafCert = hostCert; // Retain once, never released (lives until process exits)
+
+        SecKeyRef key = SecCertificateCopyKey(hostCert);
+        if (key) {
+            CFDataRef keyData = SecKeyCopyExternalRepresentation(key, NULL);
+            if (keyData) {
+                gHostPublicKeyData = keyData; // cached for lifetime
+            }
+            CFRelease(key);
+        }
+    });
+}
+
+static BOOL ExecutableMatchesHostLeafCertificate(NSString *path) {
+    CacheHostCertAndKeyOnce();
+    if (!gHostLeafCert) return NO;
+
+    SecCertificateRef target = LeafCertificateForBinary(path);
+    if (!target) return NO;
+
+    BOOL equal = CFEqual(gHostLeafCert, target);
+    CFRelease(target);
+
+    return equal;
+}
+
+static BOOL ExecutableMatchesHostLeafPublicKey(NSString *path) {
+    CacheHostCertAndKeyOnce();
+    if (!gHostPublicKeyData) return NO;
+
+    SecCertificateRef target = LeafCertificateForBinary(path);
+    if (!target) return NO;
+
+    BOOL equal = NO;
+    SecKeyRef key = SecCertificateCopyKey(target);
+    if (key) {
+        CFDataRef keyData = SecKeyCopyExternalRepresentation(key, NULL);
+        if (keyData) {
+            equal = CFEqual(gHostPublicKeyData, keyData);
+            CFRelease(keyData);
+        }
+        CFRelease(key);
+    }
+
+    CFRelease(target);
+    return equal;
+}
+
+
 BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     BOOL ok = NO;
     SecCertificateRef leaf = LeafCertificateForBinary(path);
@@ -97,42 +156,6 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     if (policy) CFRelease(policy);
     CFRelease(leaf);
     return ok;
-}
-
-static BOOL BinariesHaveMatchingLeafCertificate(NSString *pathA, NSString *pathB) {
-    SecCertificateRef a = LeafCertificateForBinary(pathA);
-    SecCertificateRef b = LeafCertificateForBinary(pathB);
-    if (!a || !b) { if (a) CFRelease(a); if (b) CFRelease(b); return NO; }
-
-    BOOL equal = CFEqual(a, b);
-
-    CFRelease(a); CFRelease(b);
-    return equal;
-}
-
-static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) {
-    SecCertificateRef a = LeafCertificateForBinary(pathA);
-    SecCertificateRef b = LeafCertificateForBinary(pathB);
-    if (!a || !b) { if (a) CFRelease(a); if (b) CFRelease(b); return NO; }
-
-    SecKeyRef keyA = NULL, keyB = NULL;
-    BOOL equal = NO;
-
-    keyA = SecCertificateCopyKey(a);
-    keyB = SecCertificateCopyKey(b);
-
-    if (keyA && keyB) {
-        CFDataRef da = SecKeyCopyExternalRepresentation(keyA, NULL);
-        CFDataRef db = SecKeyCopyExternalRepresentation(keyB, NULL);
-        if (da && db) equal = CFEqual(da, db);
-        if (da) CFRelease(da);
-        if (db) CFRelease(db);
-    }
-
-    if (keyA) CFRelease(keyA);
-    if (keyB) CFRelease(keyB);
-    CFRelease(a); CFRelease(b);
-    return equal;
 }
 
 /*
@@ -218,8 +241,8 @@ static BOOL BinariesHaveMatchingLeafPublicKey(NSString *pathA, NSString *pathB) 
     // FIXME: Fix code signature validation
     // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
     // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
-    if(!BinariesHaveMatchingLeafCertificate([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
-    if(!BinariesHaveMatchingLeafPublicKey([[NSBundle mainBundle] executablePath], [[bundle executableURL] path])) return NO;
+    if(!ExecutableMatchesHostLeafCertificate([[bundle executableURL] path])) return NO;
+    if(!ExecutableMatchesHostLeafPublicKey([[bundle executableURL] path])) return NO;
     if(!ExecutableLeafCertificateIsCurrent([[bundle executableURL] path])) return NO;
     
     return YES;

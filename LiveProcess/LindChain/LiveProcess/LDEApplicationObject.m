@@ -48,15 +48,16 @@
         if(provider.isGenericProvider) return self;
         
         ISAssetCatalogResource *resources = [provider iconResource];
-        if ([resources isKindOfClass:NSClassFromString(@"IFImageBag")]) {
+        if ([resources isKindOfClass:NSClassFromString(@"IFImageBag")])
+        {
             IFImageBag *imageBag = (IFImageBag*)resources;
-            IFImage *image = [imageBag imageForSize:CGSizeMake(1024, 1024) scale:1.0];
-            self.icon = [UIImage imageWithCGImage:image.CGImage];
+            IFImage *image = [imageBag imageForSize:CGSizeMake(1024, 1024) scale:3.0];
+            self.icon = [UIImage imageWithCGImage:image.CGImage scale:3.0 orientation:UIImageOrientationUp];
             return self;
         }
         
-        IFImage *image = [resources imageForSize:CGSizeMake(1024, 1024) scale:1.0];
-        self.icon = [UIImage imageWithCGImage:image.CGImage];
+        IFImage *image = [resources imageForSize:CGSizeMake(1024, 1024) scale:3.0];
+        self.icon = [UIImage imageWithCGImage:image.CGImage scale:3.0 orientation:UIImageOrientationUp];
     }
 
     return self;
