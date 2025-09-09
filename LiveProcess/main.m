@@ -90,7 +90,11 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+    // MARK: Some devices dont support this, making it crash. We need some kind of check
+    // MARK: I think this only works on iPads
+    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+        [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+    }
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     

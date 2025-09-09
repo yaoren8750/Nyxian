@@ -178,12 +178,12 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     self = [super init];
     
     // Setting up paths
-    NSString *documentsDir = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-    self.applicationsURL = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Bundle/Application"]];
-    self.containersURL   = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Data/Application"]];
+    //NSString *documentsDir = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    //self.applicationsURL = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Bundle/Application"]];
+    //self.containersURL   = [NSURL fileURLWithPath:[documentsDir stringByAppendingPathComponent:@"Data/Application"]];
     
     // Creating paths if they dont exist
-    NSFileManager *fileManager = [NSFileManager defaultManager];
+    /*NSFileManager *fileManager = [NSFileManager defaultManager];
     if(![fileManager fileExistsAtPath:self.applicationsURL.path])
         [fileManager createDirectoryAtURL:self.applicationsURL
               withIntermediateDirectories:YES
@@ -194,15 +194,15 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
         [fileManager createDirectoryAtURL:self.containersURL
               withIntermediateDirectories:YES
                                attributes:nil
-                                    error:nil];
+                                    error:nil];*/
     
-    NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
+    /*NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
     self.bundles = [[NSMutableDictionary alloc] init];
     for(NSURL *uuidURL in uuidURLs)
     {
         MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleInDirectory:uuidURL withExtension:@"app" error:nil];
         if(bundle) [self.bundles setObject:bundle forKey:bundle.identifier];
-    }
+    }*/
     
     return self;
 }
