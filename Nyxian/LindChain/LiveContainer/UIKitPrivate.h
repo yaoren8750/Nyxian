@@ -536,3 +536,29 @@
 - (bool)shouldSendAmbiguityRecommendations;
 
 @end
+
+@interface RBSMachPort : NSObject <NSCopying, NSSecureCoding>
+
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (readonly) unsigned long long hash;
+@property (readonly) Class superclass;
+
++ (id)portConsumingRightForPort:(unsigned int)arg1;
++ (id)portForPort:(unsigned int)arg1;
++ (bool)supportsRBSXPCSecureCoding;
++ (bool)supportsSecureCoding;
+
+- (id)copyWithZone:(NSZone)arg1;
+- (void)dealloc;
+- (void)encodeWithCoder:(id)arg1;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (unsigned long long)hash;
+- (id)initWithCoder:(id)arg1;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (void)invalidate;
+- (bool)isEqual:(id)arg1;
+- (bool)isUsable;
+- (unsigned int)port;
+
+@end

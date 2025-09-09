@@ -73,6 +73,14 @@
     }
 }
 
+- (void)sendPort:(RBSMachPort*)machPort
+{
+    mach_port_t port = [machPort port];
+    pid_t pid = 999;
+    pid_for_task(port, &pid);
+    NSLog(@"pid: %d", pid);
+}
+
 @end
 
 @implementation ServerDelegate

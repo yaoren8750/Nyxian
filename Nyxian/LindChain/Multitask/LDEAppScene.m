@@ -31,8 +31,7 @@
 @property(nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
-
-@property (nonatomic, strong) id hidObserver;
+@property (nonatomic, strong) NSLock *restartLock;
 
 @end
 
@@ -43,6 +42,7 @@
                              withDelegate:(id<LDEAppSceneDelegate>)delegate;
 {
     self = [super initWithNibName:nil bundle:nil];
+    self.restartLock = [[NSLock alloc] init];
     self.debuggingEnabled = enableDebugging;
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];
@@ -149,8 +149,6 @@
     settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(0, 0, 0, 0);
     
     settings.statusBarDisabled = NO;
-    //settings.previewMaximumSize =
-    //settings.deviceOrientationEventsEnabled = YES;
     self.settings = settings;
     parameters.settings = settings;
     
@@ -216,12 +214,14 @@
 }
 
 - (void)restart {
+    if(![self.restartLock tryLock]) return;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {}];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {}];
     [self terminate];
     [self appTerminationCleanUp:YES];
     _isAppTerminationCleanUpCalled = NO;
     [self execute];
+    [self.restartLock unlock];
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {

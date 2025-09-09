@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <LindChain/Debugger/Logger.h>
+#import <LindChain/LiveContainer/UIKitPrivate.h>
 
 /*
  Server + Client Side
@@ -30,6 +31,7 @@
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
+- (void)sendPort:(RBSMachPort*)machPort;
 
 @end
 
@@ -42,6 +44,7 @@
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
+- (void)sendPort:(RBSMachPort*)machPort;
 
 @end
 

@@ -90,6 +90,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
+    [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+    
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
     if([mode isEqualToString:@"management"])
