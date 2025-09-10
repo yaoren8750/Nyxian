@@ -133,7 +133,12 @@ NSString *task_executable_path_via_dyld(task_t task)
  */
 - (RBSMachPort*)rbsTaskPort
 {
-    //if(!_rbsTaskPort) _rbsTaskPort = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] ports] objectForKey:@(_pid)];
+    if(!_rbsTaskPort)
+    {
+        mach_port_t port = MACH_PORT_NULL;
+        task_for_pid(mach_task_self(), _pid, &port);
+        if(port != MACH_PORT_NULL) _rbsTaskPort = [PrivClass(RBSMachPort) portForPort:port];
+    }
     return _rbsTaskPort;
 }
 

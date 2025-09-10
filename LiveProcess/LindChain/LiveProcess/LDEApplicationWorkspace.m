@@ -159,9 +159,3 @@
 }
 
 @end
-
-__attribute__((constructor))
-void ldeApplicationWorkspaceProxyInit(void)
-{
-    [LDEApplicationWorkspace shared];
-}

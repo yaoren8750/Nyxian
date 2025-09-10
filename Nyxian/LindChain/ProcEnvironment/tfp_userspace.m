@@ -35,7 +35,7 @@ kern_return_t task_for_pid(mach_port_name_t taskPort,
                            pid_t pid,
                            mach_port_name_t *requestTaskPort)
 {
-    kern_return_t kr = KERN_SUCCESS;
+    __block kern_return_t kr = KERN_SUCCESS;
     
     // Ignore input task port, literally take from `tfp_userspace_ports`
     RBSMachPort *machPortObject = [tfp_userspace_ports objectForKey:@(pid)];
@@ -54,12 +54,20 @@ kern_return_t task_for_pid(mach_port_name_t taskPort,
         else
         {
             [hostProcessProxy getPort:pid withReply:^(RBSMachPort *port){
+                if(!port)
+                {
+                    kr = KERN_DENIED;
+                    return;
+                }
+                
                 // We gather the port and save it!
                 [tfp_userspace_ports setObject:port forKey:@(pid)];
                 
                 // now we set `requestTaskPort`
                 *requestTaskPort = [port port];
+                dispatch_semaphore_signal(environment_semaphore);
             }];
+            dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
         }
     }
     
