@@ -78,8 +78,8 @@
 - (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply
 {
     mach_port_t port;
-    environment_task_for_pid(mach_task_self(), pid, &port);
-    reply([PrivClass(RBSMachPort) portForPort:port]);
+    kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
+    reply((kr == KERN_SUCCESS) ? [PrivClass(RBSMachPort) portForPort:port] : nil);
 }
 
 @end
