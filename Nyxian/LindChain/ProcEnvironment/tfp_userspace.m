@@ -41,7 +41,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     
     // Ignore input task port, literally take from `tfp_userspace_ports`
     RBSMachPort *machPortObject = [tfp_userspace_ports objectForKey:@(pid)];
-    if(machPortObject)
+    if(machPortObject && [machPortObject isUsable])
     {
         // We got machPortObject so insert it into `requestedTask`
         *requestTaskPort = [machPortObject port];
