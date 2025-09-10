@@ -27,8 +27,9 @@ extern BOOL environmentIsHost;
 
 void environment_init(BOOL host);
 
-void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy);
 void environment_client_connect(NSXPCListenerEndpoint *endpoint);
-void environment_client_debugging_init(void);
+void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy);
+void environment_client_handoff_standard_file_descriptors(void);
+void environment_client_attach_debugger(void);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

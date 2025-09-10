@@ -23,24 +23,27 @@
 #import <LindChain/Debugger/MachServer.h>
 
 BOOL environmentIsHost;
+dispatch_semaphore_t environment_semaphore;
 
 void environment_init(BOOL host)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         tfp_userspace_init(host);
+        if(!host) environment_semaphore = dispatch_semaphore_create(0);
         environmentIsHost = host;
     });
 }
 
 void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy)
 {
+    if(environmentIsHost || hostProcessProxy) return;
     hostProcessProxy = proxy;
 }
 
 void environment_client_connect(NSXPCListenerEndpoint *endpoint)
 {
-    if(environmentIsHost) return;
+    if(environmentIsHost || hostProcessProxy) return;
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
     connection.interruptionHandler = ^{
@@ -56,8 +59,21 @@ void environment_client_connect(NSXPCListenerEndpoint *endpoint)
     environment_client_handoff_proxy([connection remoteObjectProxy]);
 }
 
-void environment_client_debugging_init(void)
+void environment_client_attach_debugger(void)
 {
     if(environmentIsHost) return;
     machServerInit();
+}
+
+void environment_client_handoff_standard_file_descriptors(void)
+{
+    if(environmentIsHost || !hostProcessProxy) return;
+    [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
+        dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
+        dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stderr, NULL, _IONBF, 0);
+        dispatch_semaphore_signal(environment_semaphore);
+    }];
+    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
 }

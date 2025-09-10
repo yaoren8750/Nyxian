@@ -84,17 +84,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     if([mode isEqualToString:@"management"])
     {
-        // Handoff stdout and stderr output to host app
-        [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-            handoffOutput(stdoutHandle.fileDescriptor);
-            dispatch_semaphore_signal(sema);
-        }];
-        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-        
-        // Application management daemon
+        environment_client_handoff_standard_file_descriptors();
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
-        
-        // Keep server alive
         CFRunLoopRun();
     }
     else
@@ -103,18 +94,14 @@ int LiveProcessMain(int argc, char *argv[]) {
         // Debugging is only for applications
         if(debugEnabled.boolValue)
         {
-            environment_client_debugging_init();
+            environment_client_attach_debugger();
             [hostProcessProxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
                 handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
             }];
             dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
         } else {
-            [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-                handoffOutput(stdoutHandle.fileDescriptor);
-                dispatch_semaphore_signal(sema);
-            }];
-            dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+            environment_client_handoff_standard_file_descriptors();
         }
         
         // MARK: Keep it alive
