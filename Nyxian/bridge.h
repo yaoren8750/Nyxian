@@ -31,6 +31,7 @@
 #import "../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
 #import "../LiveProcess/LindChain/LiveContainer/zip.h"
 #import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 
 /*
  Project

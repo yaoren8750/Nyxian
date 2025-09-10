@@ -194,7 +194,7 @@
 
 + (instancetype)shared
 {
-    __block LDEProcessManager *processManagerSingletone = nil;
+    static LDEProcessManager *processManagerSingletone = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         processManagerSingletone = [[LDEProcessManager alloc] init];

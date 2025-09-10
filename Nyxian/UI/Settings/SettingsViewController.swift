@@ -26,7 +26,7 @@ class SettingsViewController: UIThemedTableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 6
+        return 7
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -49,18 +49,22 @@ class SettingsViewController: UIThemedTableViewController {
             cell.textLabel?.text = "Application Management"
             break
         case 2:
+            cell.imageView?.image = UIImage(systemName: "app.badge.fill")
+            cell.textLabel?.text = "Process Management"
+            break
+        case 3:
             cell.imageView?.image = UIImage(systemName: "paintbrush.fill")
             cell.textLabel?.text = "Customization"
             break
-        case 3:
+        case 4:
             cell.imageView?.image = UIImage(systemName: "tray.2.fill")
             cell.textLabel?.text = "Miscellaneous"
             break
-        case 4:
+        case 5:
             cell.imageView?.image = UIImage(systemName: "person.3.sequence.fill")
             cell.textLabel?.text = "Credits"
             break
-        case 5:
+        case 6:
             cell.imageView?.image = UIImage(systemName: "info")
             cell.textLabel?.text = "Info"
             break
@@ -84,12 +88,14 @@ class SettingsViewController: UIThemedTableViewController {
             case 1:
                 return ApplicationManagementViewController(style: .insetGrouped)
             case 2:
-                return CustomizationViewController(style: .insetGrouped)
+                return ProcessManagementViewController(style: .insetGrouped)
             case 3:
-                return MiscellaneousController(style: .insetGrouped)
+                return CustomizationViewController(style: .insetGrouped)
             case 4:
-                return CreditsViewController(style: .insetGrouped)
+                return MiscellaneousController(style: .insetGrouped)
             case 5:
+                return CreditsViewController(style: .insetGrouped)
+            case 6:
                 return AppInfoViewController(style: .insetGrouped)
             default:
                 return nil
