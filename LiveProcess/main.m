@@ -27,8 +27,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 
-NSString* invokeAppMain(BOOL attachMachServer,
-                        NSString *bundlePath,
+NSString* invokeAppMain(NSString *bundlePath,
                         NSString *homePath,
                         int argc,
                         char *argv[]);
@@ -104,6 +103,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         // Debugging is only for applications
         if(debugEnabled.boolValue)
         {
+            environment_client_debugging_init();
             [hostProcessProxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
                 handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
@@ -120,7 +120,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         // MARK: Keep it alive
         char *argv[1] = { NULL };
         int argc = 0;
-        NSString *error = invokeAppMain(debugEnabled.boolValue ,appObj.bundlePath, appObj.containerPath, argc, argv);
+        NSString *error = invokeAppMain(appObj.bundlePath, appObj.containerPath, argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     

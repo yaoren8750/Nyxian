@@ -20,6 +20,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/Debugger/MachServer.h>
 
 BOOL environmentIsHost;
 
@@ -39,6 +40,7 @@ void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy)
 
 void environment_client_connect(NSXPCListenerEndpoint *endpoint)
 {
+    if(environmentIsHost) return;
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
     connection.interruptionHandler = ^{
@@ -52,4 +54,10 @@ void environment_client_connect(NSXPCListenerEndpoint *endpoint)
     
     [connection activate];
     environment_client_handoff_proxy([connection remoteObjectProxy]);
+}
+
+void environment_client_debugging_init(void)
+{
+    if(environmentIsHost) return;
+    machServerInit();
 }
