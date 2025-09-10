@@ -28,7 +28,12 @@
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
+
+/*
+ tfp_userspace
+ */
 - (void)sendPort:(RBSMachPort*)machPort;
+- (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply;
 
 @end
 

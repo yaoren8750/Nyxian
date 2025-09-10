@@ -20,6 +20,7 @@
 /*
  Header
  */
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
@@ -45,8 +46,21 @@ kern_return_t task_for_pid(mach_port_name_t taskPort,
     }
     else
     {
-        // No machPortObject, so deny
-        kr = KERN_DENIED;
+        if(environmentIsHost)
+        {
+            // No machPortObject, so deny
+            kr = KERN_DENIED;
+        }
+        else
+        {
+            [hostProcessProxy getPort:pid withReply:^(RBSMachPort *port){
+                // We gather the port and save it!
+                [tfp_userspace_ports setObject:port forKey:@(pid)];
+                
+                // now we set `requestTaskPort`
+                *requestTaskPort = [port port];
+            }];
+        }
     }
     
     return kr;
@@ -67,29 +81,28 @@ void handoff_task_for_pid(RBSMachPort *machPort)
  */
 void tfp_userspace_init(BOOL host)
 {
-    if(host)
-    {
-        // Host Init
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         tfp_userspace_ports = [[NSMutableDictionary alloc] init];
-    }
-    else
-    {
-        // Guest Init
-        // TODO: Fixup guests `task_for_pid`
-        // MARK: TXM supported device is required to handoff task port to host app
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionTried"];
-        BOOL alreadyTried     = [defaults boolForKey:@"TXMOnlyActionSuccessful"];
-        if (alreadySucceeded || !alreadyTried) {
-            if (!alreadySucceeded && !alreadyTried) {
-                [defaults setBool:YES forKey:@"TXMOnlyActionTried"];
-                [defaults synchronize];
-                [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
-                [defaults setBool:YES forKey:@"TXMOnlyActionSuccessful"];
-                [defaults synchronize];
-            } else {
-                [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+        
+        if(!host)
+        {
+            // Guest Init
+            // MARK: TXM supported device is required to handoff task port to host app
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionTried"];
+            BOOL alreadyTried     = [defaults boolForKey:@"TXMOnlyActionSuccessful"];
+            if (alreadySucceeded || !alreadyTried) {
+                if (!alreadySucceeded && !alreadyTried) {
+                    [defaults setBool:YES forKey:@"TXMOnlyActionTried"];
+                    [defaults synchronize];
+                    [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+                    [defaults setBool:YES forKey:@"TXMOnlyActionSuccessful"];
+                    [defaults synchronize];
+                } else {
+                    [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+                }
             }
         }
-    }
+    });
 }

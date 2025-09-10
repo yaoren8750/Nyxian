@@ -24,6 +24,7 @@
 #import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
 extern BOOL environmentIsHost;
+extern dispatch_semaphore_t environment_semaphore;
 
 void environment_init(BOOL host);
 

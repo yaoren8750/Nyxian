@@ -24,11 +24,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
-
 @interface Server: NSObject <ServerProtocol>
-
-@property (nonatomic) NSMutableDictionary<NSNumber*, RBSMachPort*> *ports;
-
 @end
 
 #endif /* PROCENVIRONMENT_HOSTAPPSERVER_SERVER_H */
