@@ -22,6 +22,7 @@
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Debugger/Logger.h>
+#import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <mach/mach.h>
 
 @implementation Server
@@ -77,7 +78,7 @@
 - (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply
 {
     mach_port_t port;
-    task_for_pid(mach_task_self(), pid, &port);
+    environment_task_for_pid(mach_task_self(), pid, &port);
     reply([PrivClass(RBSMachPort) portForPort:port]);
 }
 

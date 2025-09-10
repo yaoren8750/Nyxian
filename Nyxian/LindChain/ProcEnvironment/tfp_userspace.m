@@ -25,15 +25,17 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
 #import <unistd.h>
+#import <LindChain/litehook/src/litehook.h>
+#import <dlfcn.h>
 
 /*
  Internal Implementation
  */
 static NSMutableDictionary <NSNumber*,RBSMachPort*> *tfp_userspace_ports;
 
-kern_return_t task_for_pid(mach_port_name_t taskPort,
-                           pid_t pid,
-                           mach_port_name_t *requestTaskPort)
+kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
+                                       pid_t pid,
+                                       mach_port_name_t *requestTaskPort)
 {
     __block kern_return_t kr = KERN_SUCCESS;
     
@@ -112,6 +114,9 @@ void tfp_userspace_init(BOOL host)
                     [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
                 }
             }
+            
+            void *replacee = dlsym(RTLD_DEFAULT, "task_for_pid");
+            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
         } else
         {
             // MARK: HOST Init
