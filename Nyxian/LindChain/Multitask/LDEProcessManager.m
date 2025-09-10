@@ -183,7 +183,7 @@
 - (instancetype)init
 {
     self = [super init];
-    self.processes = [[NSMutableArray alloc] init];
+    self.processes = [[NSMutableDictionary alloc] init];
     return self;
 }
 
@@ -200,12 +200,27 @@
 /*
  Action
  */
+- (pid_t)spawnProcessWithItems:(NSDictionary*)items
+{
+    LDEProcess *process = [[LDEProcess alloc] initWithItems:items];
+    if(!process) return 0;
+    pid_t pid = process.pid;
+    [self.processes setObject:process forKey:@(pid)];
+    return pid;
+}
+
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
 {
     LDEProcess *process = [[LDEProcess alloc] initWithBundleIdentifier:bundleIdentifier];
     if(!process) return 0;
-    [self.processes addObject:process];
-    return process.pid;
+    pid_t pid = process.pid;
+    [self.processes setObject:process forKey:@(pid)];
+    return pid;
+}
+
+- (LDEProcess*)processForProcessIdentifier:(pid_t)pid
+{
+    return [self.processes objectForKey:@(pid)];
 }
 
 @end

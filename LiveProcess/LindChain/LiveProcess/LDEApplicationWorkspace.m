@@ -43,10 +43,12 @@
 
 - (BOOL)execute
 {
-    LDEProcess *process = [[LDEProcess alloc] initWithItems:@{
+    LDEProcessManager *processManager = [LDEProcessManager shared];
+    pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"management",
     }];
+    LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     
     __weak typeof(self) weakSelf = self;

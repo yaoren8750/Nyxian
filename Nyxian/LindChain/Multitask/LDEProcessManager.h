@@ -57,12 +57,14 @@
  */
 @interface LDEProcessManager : NSObject
 
-@property (nonatomic) NSMutableArray<LDEProcess*> *processes;
+@property (nonatomic) NSMutableDictionary<NSNumber*,LDEProcess*> *processes;
 
 - (instancetype)init;
 + (instancetype)shared;
 
+- (pid_t)spawnProcessWithItems:(NSDictionary*)items;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
+- (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 
 @end
 
