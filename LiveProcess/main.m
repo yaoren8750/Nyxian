@@ -90,11 +90,20 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    // MARK: Some devices dont support this, making it crash. We need some kind of check
-    // MARK: I think this only works on iPads
-    // MARK: Maybe its tied to TXM support, I ordered a TXM supported device aka iPhone 14 Pro to research that
-    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
-        [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+    // MARK: TXM supported device is required to handoff task port to host app
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    BOOL alreadySucceeded = [defaults boolForKey:@"MyFunctionSucceeded"];
+    BOOL alreadyTried     = [defaults boolForKey:@"MyFunctionTested"];
+    if (alreadySucceeded || !alreadyTried) {
+        if (!alreadySucceeded && !alreadyTried) {
+            [defaults setBool:YES forKey:@"MyFunctionTested"];
+            [defaults synchronize];
+            [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+            [defaults setBool:YES forKey:@"MyFunctionSucceeded"];
+            [defaults synchronize];
+        } else {
+            [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+        }
     }
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
