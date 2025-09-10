@@ -26,6 +26,8 @@
 extern BOOL environmentIsHost;
 
 void environment_init(BOOL host);
-void environment_handoffProxy(NSObject<ServerProtocol> *proxy);
+
+void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy);
+void environment_client_connect(NSXPCListenerEndpoint *endpoint);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

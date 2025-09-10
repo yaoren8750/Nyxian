@@ -25,6 +25,7 @@
 #import "LindChain/LiveProcess/LDEApplicationWorkspaceInternal.h"
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/environment.h>
+#import <LindChain/ProcEnvironment/proxy.h>
 
 NSString* invokeAppMain(BOOL attachMachServer,
                         NSString *bundlePath,
@@ -76,23 +77,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     LDEApplicationObject *appObj = appInfo[@"appObject"];
     NSNumber *debugEnabled = appInfo[@"debugEnabled"];
     
-    NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
-    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
-    connection.interruptionHandler = ^{
-        NSLog(@"Connection to app interrupted");
-        exit(0);
-    };
-    connection.invalidationHandler = ^{
-        NSLog(@"Connection to app invalidated");
-        exit(0);
-    };
-    
-    [connection activate];
-    
-    NSObject<ServerProtocol> *proxy = [connection remoteObjectProxy];
-    
     // Setting up environment
-    environment_handoffProxy(proxy);
+    environment_client_connect(endpoint);
     environment_init(NO);
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
@@ -100,14 +86,14 @@ int LiveProcessMain(int argc, char *argv[]) {
     if([mode isEqualToString:@"management"])
     {
         // Handoff stdout and stderr output to host app
-        [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
+        [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
             handoffOutput(stdoutHandle.fileDescriptor);
             dispatch_semaphore_signal(sema);
         }];
         dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
         
         // Application management daemon
-        [proxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
+        [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         
         // Keep server alive
         CFRunLoopRun();
@@ -118,13 +104,13 @@ int LiveProcessMain(int argc, char *argv[]) {
         // Debugging is only for applications
         if(debugEnabled.boolValue)
         {
-            [proxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
+            [hostProcessProxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
                 handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
             }];
             dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
         } else {
-            [proxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
+            [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
                 handoffOutput(stdoutHandle.fileDescriptor);
                 dispatch_semaphore_signal(sema);
             }];

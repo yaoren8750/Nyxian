@@ -32,7 +32,24 @@ void environment_init(BOOL host)
     });
 }
 
-void environment_handoffProxy(NSObject<ServerProtocol> *proxy)
+void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy)
 {
     hostProcessProxy = proxy;
+}
+
+void environment_client_connect(NSXPCListenerEndpoint *endpoint)
+{
+    NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
+    connection.interruptionHandler = ^{
+        NSLog(@"Connection to app interrupted");
+        exit(0);
+    };
+    connection.invalidationHandler = ^{
+        NSLog(@"Connection to app invalidated");
+        exit(0);
+    };
+    
+    [connection activate];
+    environment_client_handoff_proxy([connection remoteObjectProxy]);
 }
