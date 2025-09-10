@@ -29,7 +29,7 @@ void environment_init(BOOL host)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        tfp_userspace_init(host);
+        environment_tfp_userspace_init(host);
         if(!host) environment_semaphore = dispatch_semaphore_create(0);
         environmentIsHost = host;
     });

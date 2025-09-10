@@ -28,8 +28,8 @@
 kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
                                        pid_t pid,
                                        mach_port_name_t *requestTaskPort);
-void handoff_task_for_pid(RBSMachPort *machPort);
+void environment_host_take_client_task_port(RBSMachPort *machPort);
 
-void tfp_userspace_init(BOOL host);
+void environment_tfp_userspace_init(BOOL host);
 
 #endif /* PROCENVIRONMENT_TFPUSERSPACE_H */

@@ -85,8 +85,9 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     return kr;
 }
 
-void handoff_task_for_pid(RBSMachPort *machPort)
+void environment_host_take_client_task_port(RBSMachPort *machPort)
 {
+    if(!environmentIsHost) return;
     if([machPort isUsable])
     {
         pid_t pid = 0;
@@ -98,7 +99,7 @@ void handoff_task_for_pid(RBSMachPort *machPort)
 /*
  Init
  */
-void tfp_userspace_init(BOOL host)
+void environment_tfp_userspace_init(BOOL host)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{

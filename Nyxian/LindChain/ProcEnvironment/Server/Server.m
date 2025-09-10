@@ -72,7 +72,7 @@
  */
 - (void)sendPort:(RBSMachPort*)machPort
 {
-    handoff_task_for_pid(machPort);
+    environment_host_take_client_task_port(machPort);
 }
 
 - (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply
