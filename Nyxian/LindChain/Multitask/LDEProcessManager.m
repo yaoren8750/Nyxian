@@ -21,7 +21,11 @@
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <serverDelegate.h>
 #import <mach/mach.h>
+#import <LindChain/LiveContainer/Tweaks/libproc.h>
 
+/*
+ Process
+ */
 @implementation LDEProcess
 
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
@@ -35,6 +39,7 @@
     
     // Check if we are even authorized to spawn the task
     LDEApplicationObject *appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
+    if(!appObj.isLaunchAllowed) return nil;
     
     NSError* error = nil;
     _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
@@ -58,16 +63,56 @@
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         // TODO: Handle termination
     }];
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
             self.identifier = identifier;
-            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            pid_t pid = [self.extension pidForRequestIdentifier:self.identifier];
+            self.pid = pid;
+            
+            RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(pid)];
+            self.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
         }
+        dispatch_semaphore_signal(sema);
     }];
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
     return self;
 }
 
+/*
+ Information
+ */
+- (NSString*)executablePath
+{
+    pid_t childPid = [self pid];
+    char buf[120];
+    proc_pidpath(childPid, buf, 120);
+    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+}
+
+- (pid_t)pid
+{
+    pid_t pid = 0;
+    if(self.rbsTaskPort) pid_for_task([self.rbsTaskPort port], &pid);
+    return (pid == 0) ? _pid : pid;
+}
+
+- (uid_t)uid
+{
+    // TODO: Implement it, currently returning mobile user
+    return 501;
+}
+
+- (gid_t)gid
+{
+    // TODO: Implement it, currently returning mobile user
+    return 501;
+}
+
+/*
+ Action
+ */
 - (BOOL)suspend
 {
     if(self.rbsTaskPort)
@@ -111,6 +156,41 @@
         [_extension _kill:SIGKILL];
         return YES;
     }
+}
+
+@end
+
+/*
+ Process Manager
+ */
+@implementation LDEProcessManager
+
+- (instancetype)init
+{
+    self = [super init];
+    self.processes = [[NSMutableArray alloc] init];
+    return self;
+}
+
++ (instancetype)shared
+{
+    __block LDEProcessManager *processManagerSingletone = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        processManagerSingletone = [[LDEProcessManager alloc] init];
+    });
+    return processManagerSingletone;
+}
+
+/*
+ Action
+ */
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+{
+    LDEProcess *process = [[LDEProcess alloc] initWithBundleIdentifier:bundleIdentifier];
+    if(!process) return 0;
+    [self.processes addObject:process];
+    return process.pid;
 }
 
 @end
