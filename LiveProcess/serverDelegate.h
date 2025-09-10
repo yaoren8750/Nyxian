@@ -40,6 +40,8 @@
  */
 @interface TestService: NSObject <TestServiceProtocol>
 
+@property (nonatomic) NSMutableDictionary<NSNumber*, RBSMachPort*> *ports;
+
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply;
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;

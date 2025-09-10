@@ -42,6 +42,7 @@
 @property (nonatomic) uid_t uid;
 @property (nonatomic) gid_t gid;
 
+- (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 
 // MARK: On devices with TXM support it will use `task_suspend()`,`task_resume()`,`task_terminate()` and on devices without `SIGSTOP`,`SIGCONT`,`SIGKILL`

@@ -1,3 +1,6 @@
+#ifndef FOUNDATION_PRIVATE_H
+#define FOUNDATION_PRIVATE_H
+
 #include <Foundation/Foundation.h>
 
 @interface NSBundle(private)
@@ -39,3 +42,5 @@ CFTypeRef SecTaskCopyValueForEntitlement(void *task, CFStringRef key, CFErrorRef
 @interface CFPrefsPlistSource2 : NSObject
 -(id)hook_initWithDomain:(CFStringRef)arg1 user:(CFStringRef)arg2 byHost:(bool)arg3 containerPath:(CFStringRef)arg4 containingPreferences:(id)arg5 ;
 @end
+
+#endif /* FOUNDATION_PRIVATE_H */

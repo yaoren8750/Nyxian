@@ -27,6 +27,13 @@
  */
 @implementation TestService
 
+- (instancetype)init
+{
+    self = [super init];
+    self.ports = [[NSMutableDictionary alloc] init];
+    return self;
+}
+
 - (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
 {
     printf("[Host App] Guest app requested file handle for %s\n", [path UTF8String]);
@@ -77,15 +84,9 @@
 {
     dispatch_async(dispatch_queue_create("meow", DISPATCH_QUEUE_CONCURRENT), ^{
         mach_port_t port = [machPort port];
-        pid_t pid = 999;
+        pid_t pid = 0;
         kern_return_t kr = pid_for_task(port, &pid);
-        NSLog(@"%d | pid: %d", kr, pid);
-        sleep(5);
-        kr = task_suspend(port);
-        NSLog(@"%d", kr);
-        sleep(5);
-        kr = task_resume(port);
-        NSLog(@"%d", kr);
+        if(kr == KERN_SUCCESS) [self.ports setObject:machPort forKey:@(pid)];
     });
 }
 

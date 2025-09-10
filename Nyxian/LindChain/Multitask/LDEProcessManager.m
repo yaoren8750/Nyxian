@@ -28,7 +28,7 @@
  */
 @implementation LDEProcess
 
-- (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
+- (instancetype)initWithItems:(NSDictionary*)items
 {
     self = [super init];
     
@@ -36,10 +36,6 @@
     if(!liveProcessBundle) {
         return nil;
     }
-    
-    // Check if we are even authorized to spawn the task
-    LDEApplicationObject *appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
-    if(!appObj.isLaunchAllowed) return nil;
     
     NSError* error = nil;
     _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
@@ -49,12 +45,7 @@
     _extension.preferredLanguages = @[];
     
     NSExtensionItem *item = [NSExtensionItem new];
-    item.userInfo = @{
-        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
-        @"mode": @"application",
-        @"appObject": appObj,
-        @"debugEnabled": @(NO)
-    };
+    item.userInfo = items;
     
     __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
@@ -78,6 +69,30 @@
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
     return self;
+}
+
+- (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
+{
+    LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
+    if(!applicationObject.isLaunchAllowed) return nil;
+    
+    self = [self initWithItems:@{
+        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"mode": @"application",
+        @"appObject": applicationObject,
+        @"debugEnabled": @(NO)
+    }];
+    
+    return self;
+}
+
+/*
+ Getter
+ */
+- (RBSMachPort*)rbsTaskPort
+{
+    if(!_rbsTaskPort) _rbsTaskPort = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] ports] objectForKey:@(_pid)];
+    return _rbsTaskPort;
 }
 
 /*

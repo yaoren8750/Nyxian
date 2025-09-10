@@ -21,6 +21,7 @@
 #import <LindChain/LiveContainer/FoundationPrivate.h>
 #import "../../serverDelegate.h"
 #import "../LiveContainer/zip.h"
+#import <LindChain/Multitask/LDEProcessManager.h>
 
 @interface LDEApplicationWorkspace ()
 
@@ -42,33 +43,18 @@
 
 - (BOOL)execute
 {
-    NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
-    if(!liveProcessBundle) {
-        return NO;
-    }
-    
-    NSError* error = nil;
-    _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
-    if(error) {
-        return NO;
-    }
-    _extension.preferredLanguages = @[];
-    
-    NSExtensionItem *item = [NSExtensionItem new];
-    item.userInfo = @{
+    LDEProcess *process = [[LDEProcess alloc] initWithItems:@{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
         @"mode": @"management",
-    };
+    }];
+    if(!process) return NO;
     
     __weak typeof(self) weakSelf = self;
-    
-    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+    [process.extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         dispatch_semaphore_signal(weakSelf.sema);
         weakSelf.proxy = nil;
         [weakSelf execute];
     }];
-    
-    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {}];
     
     return YES;
 }
