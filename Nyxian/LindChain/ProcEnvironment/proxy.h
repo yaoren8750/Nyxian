@@ -20,10 +20,10 @@
 #ifndef PROCENVIRONMENT_PROXY_H
 #define PROCENVIRONMENT_PROXY_H
 
-#import <serverDelegate.h>
+#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 #import <Foundation/Foundation.h>
 
 // Applicable for child process
-extern NSObject<TestServiceProtocol> *hostProcessProxy;
+extern NSObject<ServerProtocol> *hostProcessProxy;
 
 #endif /* PROCENVIRONMENT_PROXY_H */

@@ -8,7 +8,7 @@
 #ifndef APPSCENE_H
 #define APPSCENE_H
 
-#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Private/UIKitPrivate.h>
 #import <Project/NXProject.h>
 #import "FoundationPrivate.h"
 #import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"

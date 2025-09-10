@@ -22,7 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <LindChain/Private/FoundationPrivate.h>
-#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Private/UIKitPrivate.h>
 
 /*
  Process

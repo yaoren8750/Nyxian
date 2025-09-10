@@ -17,6 +17,19 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/proxy.h>
+#ifndef PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H
+#define PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H
 
-NSObject<ServerProtocol> *hostProcessProxy = nil;
+#import <Foundation/Foundation.h>
+#import <LindChain/Private/UIKitPrivate.h>
+
+@protocol ServerProtocol
+
+- (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
+- (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
+- (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
+- (void)sendPort:(RBSMachPort*)machPort;
+
+@end
+
+#endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */

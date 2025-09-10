@@ -77,7 +77,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSNumber *debugEnabled = appInfo[@"debugEnabled"];
     
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
-    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
     connection.interruptionHandler = ^{
         NSLog(@"Connection to app interrupted");
         exit(0);
@@ -89,7 +89,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     [connection activate];
     
-    NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
+    NSObject<ServerProtocol> *proxy = [connection remoteObjectProxy];
     
     // Setting up environment
     environment_handoffProxy(proxy);

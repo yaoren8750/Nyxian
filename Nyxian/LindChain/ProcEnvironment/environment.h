@@ -21,11 +21,11 @@
 #define PROCENVIRONMENT_ENVIRONMENT_H
 
 #import <Foundation/Foundation.h>
-#import <serverDelegate.h>
+#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
 extern BOOL environmentIsHost;
 
 void environment_init(BOOL host);
-void environment_handoffProxy(NSObject<TestServiceProtocol> *proxy);
+void environment_handoffProxy(NSObject<ServerProtocol> *proxy);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

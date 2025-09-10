@@ -19,7 +19,7 @@
 
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
-#import <serverDelegate.h>
+#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <mach/mach.h>
 #include <mach-o/dyld_images.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
@@ -119,7 +119,7 @@ NSString *task_executable_path_via_dyld(task_t task)
     }
     
     self = [self initWithItems:@{
-        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"application",
         @"appObject": applicationObject,
         @"debugEnabled": @(NO)
@@ -133,7 +133,7 @@ NSString *task_executable_path_via_dyld(task_t task)
  */
 - (RBSMachPort*)rbsTaskPort
 {
-    if(!_rbsTaskPort) _rbsTaskPort = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] ports] objectForKey:@(_pid)];
+    //if(!_rbsTaskPort) _rbsTaskPort = [[[[[ServerManager sharedManager] serverDelegate] globalProxy] ports] objectForKey:@(_pid)];
     return _rbsTaskPort;
 }
 

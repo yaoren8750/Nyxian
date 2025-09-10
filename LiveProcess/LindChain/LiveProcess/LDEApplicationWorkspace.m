@@ -18,8 +18,8 @@
 */
 
 #import "LDEApplicationWorkspace.h"
-#import <LindChain/LiveContainer/FoundationPrivate.h>
-#import "../../serverDelegate.h"
+#import <LindChain/Private/FoundationPrivate.h>
+#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import "../LiveContainer/zip.h"
 #import <LindChain/Multitask/LDEProcessManager.h>
 
@@ -45,7 +45,7 @@
 {
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
-        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"management",
     }];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];

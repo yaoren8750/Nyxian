@@ -2,13 +2,13 @@
 #import "ResizeHandleView.h"
 //#import "LiveContainerSwiftUI-Swift.h"
 #import "LDEAppScene.h"
-#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Private/UIKitPrivate.h>
 #import "PiPManager.h"
 #import "../LiveContainer/Localization.h"
 #import "utils.h"
 #import <objc/runtime.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
-#import "../../../LiveProcess/serverDelegate.h"
+#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/Debugger/Logger.h>
 
 @implementation RBSTarget(hook)

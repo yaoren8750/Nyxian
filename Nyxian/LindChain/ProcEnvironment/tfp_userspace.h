@@ -23,7 +23,7 @@
 #define PROCENVIRONMENT_TFPUSERSPACE_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/Private/UIKitPrivate.h>
 
 kern_return_t task_for_pid(mach_port_name_t taskPort,
                            pid_t pid,

@@ -57,8 +57,8 @@ void handoff_task_for_pid(RBSMachPort *machPort)
     if([machPort isUsable])
     {
         pid_t pid = 0;
-        pid_for_task([machPort port], &pid);
-        [tfp_userspace_ports setObject:machPort forKey:@(pid)];
+        kern_return_t kr = pid_for_task([machPort port], &pid);
+        if(kr == KERN_SUCCESS) [tfp_userspace_ports setObject:machPort forKey:@(pid)];
     }
 }
 

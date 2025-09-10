@@ -17,7 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import "../FoundationPrivate.h"
+#import <LindChain/Private/FoundationPrivate.h>
 #import <Foundation/Foundation.h>
 #import "Tweaks.h"
 #import <LindChain/ObjC/Swizzle.h>

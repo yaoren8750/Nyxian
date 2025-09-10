@@ -9,8 +9,8 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "PiPManager.h"
 #import "Localization.h"
-#import "../../../LiveProcess/serverDelegate.h"
-#import <LindChain/LiveContainer/UIKitPrivate.h>
+#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/Private/UIKitPrivate.h>
 #import <dlfcn.h>
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
@@ -73,7 +73,7 @@
     
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = @{
-        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"application",
         @"appObject": self.appObj,
         @"debugEnabled": @(self.debuggingEnabled)

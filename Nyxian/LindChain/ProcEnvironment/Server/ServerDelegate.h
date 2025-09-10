@@ -17,6 +17,18 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/proxy.h>
+#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
 
-NSObject<ServerProtocol> *hostProcessProxy = nil;
+#import <Foundation/Foundation.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
+
+@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+
+@property (nonatomic,strong) Server *globalProxy;
+
++ (NSXPCListenerEndpoint*)getEndpoint;
+
+@end
+
+#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */

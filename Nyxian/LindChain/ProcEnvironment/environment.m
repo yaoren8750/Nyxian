@@ -32,7 +32,7 @@ void environment_init(BOOL host)
     });
 }
 
-void environment_handoffProxy(NSObject<TestServiceProtocol> *proxy)
+void environment_handoffProxy(NSObject<ServerProtocol> *proxy)
 {
     hostProcessProxy = proxy;
 }

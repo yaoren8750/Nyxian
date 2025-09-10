@@ -17,28 +17,19 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import "serverDelegate.h"
-#import <LindChain/LiveContainer/LCUtils.h>
-#import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
-#import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
+#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/Debugger/Logger.h>
 
-/*
- Server
- */
-@implementation TestService
+@implementation Server
 
 - (instancetype)init
 {
     self = [super init];
     self.ports = [[NSMutableDictionary alloc] init];
     return self;
-}
-
-- (void)getFileHandleOfServerAtPath:(NSString *)path withServerReply:(void (^)(NSFileHandle *))reply
-{
-    printf("[Host App] Guest app requested file handle for %s\n", [path UTF8String]);
-    reply([NSFileHandle fileHandleForReadingAtPath:path]);
 }
 
 - (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply
@@ -84,61 +75,6 @@
 - (void)sendPort:(RBSMachPort*)machPort
 {
     handoff_task_for_pid(machPort);
-}
-
-@end
-
-@implementation ServerDelegate
-
-- (instancetype)init
-{
-    self = [super init];
-    _globalProxy = [[TestService alloc] init];
-    return self;
-}
-
-- (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
-{
-    newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(TestServiceProtocol)];
-    
-    TestService *exportedObject = _globalProxy;
-    newConnection.exportedObject = exportedObject;
-    
-    [newConnection resume];
-    
-    printf("[Host App] Guest app connected\n");
-    
-    return YES;
-}
-
-- (NSXPCListener*)createAnonymousListener
-{
-    printf("creating new listener\n");
-    NSXPCListener *listener = [NSXPCListener anonymousListener];
-    listener.delegate = self;
-    [listener resume];
-    return listener;
-}
-
-@end
-
-@implementation ServerManager
-
-+ (instancetype)sharedManager {
-    static ServerManager *sharedInstance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sharedInstance = [[self alloc] init];
-        sharedInstance.serverDelegate = [[ServerDelegate alloc] init];
-        sharedInstance.listener = [sharedInstance.serverDelegate createAnonymousListener];
-    });
-    return sharedInstance;
-}
-
-- (NSXPCListenerEndpoint*)getEndpointForNewConnections
-{
-    NSXPCListenerEndpoint *endpoint = self.listener.endpoint;
-    return endpoint;
 }
 
 @end
