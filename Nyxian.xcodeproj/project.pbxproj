@@ -130,6 +130,9 @@
 				LindChain/LiveContainer/utils.m,
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
+				LindChain/ProcEnvironment/environment.m,
+				LindChain/ProcEnvironment/proxy.m,
+				LindChain/ProcEnvironment/tfp_userspace.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
 		};
@@ -380,7 +383,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L4A6CKH3TV;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/;
+				HEADER_SEARCH_PATHS = (
+					Nyxian/,
+					LiveProcess/,
+				);
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -414,7 +420,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L4A6CKH3TV;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/;
+				HEADER_SEARCH_PATHS = (
+					Nyxian/,
+					LiveProcess/,
+				);
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

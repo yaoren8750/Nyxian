@@ -21,6 +21,7 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "LindChain/LiveProcess/LDEApplicationWorkspace.h"
 #import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/ProcEnvironment/tfp_userspace.h>
 
 /*
  Server
@@ -82,12 +83,7 @@
 
 - (void)sendPort:(RBSMachPort*)machPort
 {
-    dispatch_async(dispatch_queue_create("meow", DISPATCH_QUEUE_CONCURRENT), ^{
-        mach_port_t port = [machPort port];
-        pid_t pid = 0;
-        kern_return_t kr = pid_for_task(port, &pid);
-        if(kr == KERN_SUCCESS) [self.ports setObject:machPort forKey:@(pid)];
-    });
+    handoff_task_for_pid(machPort);
 }
 
 @end

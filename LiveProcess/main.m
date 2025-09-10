@@ -24,6 +24,7 @@
 #import "serverDelegate.h"
 #import "LindChain/LiveProcess/LDEApplicationWorkspaceInternal.h"
 #import <LindChain/litehook/src/litehook.h>
+#import <LindChain/ProcEnvironment/environment.h>
 
 NSString* invokeAppMain(BOOL attachMachServer,
                         NSString *bundlePath,
@@ -90,21 +91,9 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     NSObject<TestServiceProtocol> *proxy = [connection remoteObjectProxy];
     
-    // MARK: TXM supported device is required to handoff task port to host app
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    BOOL alreadySucceeded = [defaults boolForKey:@"MyFunctionSucceeded"];
-    BOOL alreadyTried     = [defaults boolForKey:@"MyFunctionTested"];
-    if (alreadySucceeded || !alreadyTried) {
-        if (!alreadySucceeded && !alreadyTried) {
-            [defaults setBool:YES forKey:@"MyFunctionTested"];
-            [defaults synchronize];
-            [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
-            [defaults setBool:YES forKey:@"MyFunctionSucceeded"];
-            [defaults synchronize];
-        } else {
-            [proxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
-        }
-    }
+    // Setting up environment
+    environment_handoffProxy(proxy);
+    environment_init(NO);
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
