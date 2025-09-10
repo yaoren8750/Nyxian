@@ -18,3 +18,99 @@
 */
 
 #import <LindChain/Multitask/LDEProcessManager.h>
+#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <serverDelegate.h>
+#import <mach/mach.h>
+
+@implementation LDEProcess
+
+- (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
+{
+    self = [super init];
+    
+    NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
+    if(!liveProcessBundle) {
+        return nil;
+    }
+    
+    // Check if we are even authorized to spawn the task
+    LDEApplicationObject *appObj = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
+    
+    NSError* error = nil;
+    _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
+    if(error) {
+        return nil;
+    }
+    _extension.preferredLanguages = @[];
+    
+    NSExtensionItem *item = [NSExtensionItem new];
+    item.userInfo = @{
+        @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
+        @"mode": @"application",
+        @"appObject": appObj,
+        @"debugEnabled": @(NO)
+    };
+    
+    __weak typeof(self) weakSelf = self;
+    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
+        // TODO: Handle termination
+    }];
+    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+        // TODO: Handle termination
+    }];
+    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
+        if(identifier) {
+            self.identifier = identifier;
+            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+        }
+    }];
+    
+    return self;
+}
+
+- (BOOL)suspend
+{
+    if(self.rbsTaskPort)
+    {
+        kern_return_t kr = KERN_SUCCESS;
+        kr = task_suspend([self.rbsTaskPort port]);
+        return (kr == KERN_SUCCESS) ? YES : NO;
+    }
+    else
+    {
+        [_extension _kill:SIGSTOP];
+        return YES;
+    }
+}
+
+- (BOOL)resume
+{
+    if(self.rbsTaskPort)
+    {
+        kern_return_t kr = KERN_SUCCESS;
+        kr = task_resume([self.rbsTaskPort port]);
+        return (kr == KERN_SUCCESS) ? YES : NO;
+    }
+    else
+    {
+        [_extension _kill:SIGCONT];
+        return YES;
+    }
+}
+
+- (BOOL)terminate
+{
+    if(self.rbsTaskPort)
+    {
+        kern_return_t kr = KERN_SUCCESS;
+        kr = task_terminate([self.rbsTaskPort port]);
+        return (kr == KERN_SUCCESS) ? YES : NO;
+    }
+    else
+    {
+        [_extension _kill:SIGKILL];
+        return YES;
+    }
+}
+
+@end

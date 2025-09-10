@@ -579,7 +579,10 @@
 				DEVELOPMENT_TEAM = L4A6CKH3TV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/;
+				HEADER_SEARCH_PATHS = (
+					Nyxian/,
+					LiveProcess/,
+				);
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nyxian;
 				INFOPLIST_KEY_GCSupportsControllerUserInteraction = YES;
@@ -668,7 +671,10 @@
 				DEVELOPMENT_TEAM = L4A6CKH3TV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = Nyxian/;
+				HEADER_SEARCH_PATHS = (
+					Nyxian/,
+					LiveProcess/,
+				);
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nyxian;
 				INFOPLIST_KEY_GCSupportsControllerUserInteraction = YES;

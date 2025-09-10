@@ -36,6 +36,7 @@
 @property (nonatomic,strong) RBSMachPort *rbsTaskPort;
 
 // Process properties
+@property (nonatomic,strong) NSUUID *identifier;
 @property (nonatomic,strong) NSString *executablePath;
 @property (nonatomic) pid_t pid;
 @property (nonatomic) uid_t uid;
@@ -46,7 +47,7 @@
 // MARK: On devices with TXM support it will use `task_suspend()`,`task_resume()`,`task_terminate()` and on devices without `SIGSTOP`,`SIGCONT`,`SIGKILL`
 - (BOOL)suspend;
 - (BOOL)resume;
-- (BOOL)stop;
+- (BOOL)terminate;
 
 @end
 
