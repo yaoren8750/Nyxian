@@ -96,7 +96,7 @@ void tfp_userspace_init(BOOL host)
         
         if(!host)
         {
-            // Guest Init
+            // MARK: Guest Init
             // MARK: TXM supported device is required to handoff task port to host app
             NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
             BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionTried"];
@@ -112,6 +112,11 @@ void tfp_userspace_init(BOOL host)
                     [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
                 }
             }
+        } else
+        {
+            // MARK: HOST Init
+            // Insert our own mach port as "kernel mach port"
+            [tfp_userspace_ports setObject:[PrivClass(RBSMachPort) portForPort:(mach_task_self())] forKey:@(0)];
         }
     });
 }
