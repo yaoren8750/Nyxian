@@ -57,6 +57,7 @@ kern_return_t task_for_pid(mach_port_name_t taskPort,
                 if(!port)
                 {
                     kr = KERN_DENIED;
+                    dispatch_semaphore_signal(environment_semaphore);
                     return;
                 }
                 
