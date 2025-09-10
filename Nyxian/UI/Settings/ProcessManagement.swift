@@ -46,7 +46,7 @@ class ProcessManagementViewController: UIThemedTableViewController, UITextFieldD
         let process: LDEProcess = self.processes[indexPath.row]
         
         let cell: UITableViewCell = UITableViewCell()
-        cell.textLabel?.text = "PORT: \(process.rbsTaskPort.port()) | PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
+        cell.textLabel?.text = "PATH: \(process.executablePath ?? "Unknown") | PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
         return cell
     }
     

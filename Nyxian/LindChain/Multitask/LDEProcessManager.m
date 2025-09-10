@@ -21,8 +21,45 @@
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <serverDelegate.h>
 #import <mach/mach.h>
+#include <mach-o/dyld_images.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <Nyxian-Swift.h>
+
+NSString *task_executable_path_via_dyld(task_t task)
+{
+    task_dyld_info_data_t dyld_info;
+    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+    kern_return_t kr = task_info(task, TASK_DYLD_INFO,
+                                 (task_info_t)&dyld_info, &count);
+    if (kr != KERN_SUCCESS) return nil;
+
+    struct dyld_all_image_infos infos = {0};
+    vm_size_t outsize = 0;
+    kr = vm_read_overwrite(task,
+                           (mach_vm_address_t)dyld_info.all_image_info_addr,
+                           sizeof(infos),
+                           (mach_vm_address_t)&infos,
+                           &outsize);
+    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
+    
+    struct dyld_image_info info;
+    kr = vm_read_overwrite(task,
+                           (mach_vm_address_t)infos.infoArray,
+                           sizeof(struct dyld_image_info),
+                           (mach_vm_address_t)&info,
+                           &outsize);
+    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
+    
+    char buf[PATH_MAX];
+    kr = vm_read_overwrite(task,
+                           (mach_vm_address_t)info.imageFilePath,
+                           sizeof(buf),
+                           (mach_vm_address_t)&buf,
+                           &outsize);
+    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
+    
+    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+}
 
 /*
  Process
@@ -48,7 +85,6 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = items;
     
-    __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
         // TODO: Handle termination
     }];
@@ -56,6 +92,7 @@
         // TODO: Handle termination
     }];
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
             self.identifier = identifier;
@@ -105,10 +142,20 @@
  */
 - (NSString*)executablePath
 {
-    pid_t childPid = [self pid];
-    char buf[120];
-    proc_pidpath(childPid, buf, 120);
-    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+    if(self.rbsTaskPort)
+    {
+        mach_port_t port = [self.rbsTaskPort port];
+        NSString *path = task_executable_path_via_dyld(port);
+        return path ? path : @"/bin/unknown";
+        return @"";
+    }
+    else
+    {
+        pid_t childPid = [self pid];
+        char buf[120];
+        proc_pidpath(childPid, buf, 120);
+        return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+    }
 }
 
 - (pid_t)pid
@@ -176,6 +223,24 @@
         [_extension _kill:SIGKILL];
         return YES;
     }
+}
+
+- (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
+{
+    __weak typeof(self) weakSelf = self;
+    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
+        [[[LDEProcessManager shared] processes] removeObjectForKey:@(weakSelf.pid)];
+        callback(uuid, error);
+    }];
+}
+
+- (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback
+{
+    __weak typeof(self) weakSelf = self;
+    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+        [[[LDEProcessManager shared] processes] removeObjectForKey:@(weakSelf.pid)];
+        callback(uuid);
+    }];
 }
 
 @end
