@@ -22,6 +22,7 @@
 #import <serverDelegate.h>
 #import <mach/mach.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
+#import <Nyxian-Swift.h>
 
 /*
  Process
@@ -74,7 +75,11 @@
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
 {
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
-    if(!applicationObject.isLaunchAllowed) return nil;
+    if(!applicationObject.isLaunchAllowed)
+    {
+        [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"\"%@\" Is No Longer Available", applicationObject.displayName] delay:0.0];
+        return nil;
+    }
     
     self = [self initWithItems:@{
         @"endpoint": [[ServerManager sharedManager] getEndpointForNewConnections],
