@@ -21,14 +21,15 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/application.h>
 #import <LindChain/litehook/src/litehook.h>
+#import <LindChain/ObjC/Swizzle.h>
 #import <dlfcn.h>
 
-static int (*real_UIApplicationMain)(int argc, char **argv, NSString *principalClassName, NSString *delegateClassName);
+@interface UIApplication (ProcEnvironment)
+@end
 
-int environment_UIApplicationMain(int argc,
-                                  char **argv,
-                                  NSString *principalClassName,
-                                  NSString *delegateClassName)
+@implementation UIApplication (ProcEnvironment)
+
+- (void)hook_run
 {
     // Only allow client processing
     if(!environmentIsHost)
@@ -36,12 +37,14 @@ int environment_UIApplicationMain(int argc,
         // Tell host app to let our process appear
         [hostProcessProxy makeWindowVisibleForProcessIdentifier:getpid() withReply:^(BOOL valid){
             // If host says nono, then nono
-            if(!valid) exit(-1);
+            if(!valid) exit(0);
         }];
     }
     
-    return real_UIApplicationMain(argc, argv, principalClassName, delegateClassName);
+    [self hook_run];
 }
+
+@end
 
 /*
  Init
@@ -51,9 +54,7 @@ void environment_application_init(BOOL host)
     if(!host)
     {
         // MARK: GUEST Init
-        // MARK: This hook looks weirder than in tfp_userspace for example because LiveProcess is redifining alreay UIApplicationMain(), means it will reference to its UIApplicatioMain, which means that we have to resolve UIApplicationMain() at runtime
-        void *addr = dlsym(RTLD_NEXT, "UIApplicationMain");
-        real_UIApplicationMain = addr;
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, addr, environment_UIApplicationMain, nil);
+        // MARK: Hooking _run of UIApplication class seems more reliable
+        [ObjCSwizzler replaceInstanceAction:@selector(_run) ofClass:UIApplication.class withAction:@selector(hook_run)];
     }
 }
