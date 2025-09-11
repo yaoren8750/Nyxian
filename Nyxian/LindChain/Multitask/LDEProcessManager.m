@@ -25,8 +25,6 @@
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <Nyxian-Swift.h>
 
-#import <LindChain/ProcEnvironment/tfp_userspace.h>
-
 NSString *task_executable_path_via_dyld(task_t task)
 {
     task_dyld_info_data_t dyld_info;
@@ -87,21 +85,20 @@ NSString *task_executable_path_via_dyld(task_t task)
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = items;
     
+    __typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        // TODO: Handle termination
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf->_pid];
     }];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        // TODO: Handle termination
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf->_pid];
     }];
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
             self.identifier = identifier;
-            pid_t pid = [self.extension pidForRequestIdentifier:self.identifier];
-            self.pid = pid;
-            
-            RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(pid)];
+            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
             self.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
         }
         dispatch_semaphore_signal(sema);
@@ -131,45 +128,15 @@ NSString *task_executable_path_via_dyld(task_t task)
 }
 
 /*
- Getter
- */
-- (RBSMachPort*)rbsTaskPort
-{
-    if(!_rbsTaskPort)
-    {
-        mach_port_t port = MACH_PORT_NULL;
-        environment_task_for_pid(mach_task_self(), _pid, &port);
-        if(port != MACH_PORT_NULL) _rbsTaskPort = [PrivClass(RBSMachPort) portForPort:port];
-    }
-    return _rbsTaskPort;
-}
-
-/*
  Information
  */
 - (NSString*)executablePath
 {
-    if(self.rbsTaskPort)
-    {
-        mach_port_t port = [self.rbsTaskPort port];
-        NSString *path = task_executable_path_via_dyld(port);
-        return path ? path : @"/bin/unknown";
-        return @"";
-    }
-    else
-    {
-        pid_t childPid = [self pid];
-        char buf[120];
-        proc_pidpath(childPid, buf, 120);
-        return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
-    }
-}
-
-- (pid_t)pid
-{
-    pid_t pid = 0;
-    if(self.rbsTaskPort) pid_for_task([self.rbsTaskPort port], &pid);
-    return (pid == 0) ? _pid : pid;
+    // FIXME: Use environment libproc when its ready
+    pid_t childPid = [self pid];
+    char buf[120];
+    proc_pidpath(childPid, buf, 120);
+    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
 }
 
 - (uid_t)uid
@@ -189,47 +156,20 @@ NSString *task_executable_path_via_dyld(task_t task)
  */
 - (BOOL)suspend
 {
-    if(self.rbsTaskPort)
-    {
-        kern_return_t kr = KERN_SUCCESS;
-        kr = task_suspend([self.rbsTaskPort port]);
-        return (kr == KERN_SUCCESS) ? YES : NO;
-    }
-    else
-    {
-        [_extension _kill:SIGSTOP];
-        return YES;
-    }
+    [_extension _kill:SIGSTOP];
+    return YES;
 }
 
 - (BOOL)resume
 {
-    if(self.rbsTaskPort)
-    {
-        kern_return_t kr = KERN_SUCCESS;
-        kr = task_resume([self.rbsTaskPort port]);
-        return (kr == KERN_SUCCESS) ? YES : NO;
-    }
-    else
-    {
-        [_extension _kill:SIGCONT];
-        return YES;
-    }
+    [_extension _kill:SIGCONT];
+    return YES;
 }
 
 - (BOOL)terminate
 {
-    if(self.rbsTaskPort)
-    {
-        kern_return_t kr = KERN_SUCCESS;
-        kr = task_terminate([self.rbsTaskPort port]);
-        return (kr == KERN_SUCCESS) ? YES : NO;
-    }
-    else
-    {
-        [_extension _kill:SIGKILL];
-        return YES;
-    }
+    [_extension _kill:SIGKILL];
+    return YES;
 }
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
@@ -298,6 +238,11 @@ NSString *task_executable_path_via_dyld(task_t task)
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid
 {
     return [self.processes objectForKey:@(pid)];
+}
+
+- (void)unregisterProcessWithProcessIdentifier:(pid_t)pid
+{
+    [self.processes removeObjectForKey:@(pid)];
 }
 
 @end

@@ -32,9 +32,6 @@
 @property (nonatomic,strong) NSExtension *extension;
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
 
-// MARK: This will only be relevant for devices with TXM support
-@property (nonatomic,strong) RBSMachPort *rbsTaskPort;
-
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;
 @property (nonatomic,strong) NSString *executablePath;
@@ -45,7 +42,6 @@
 - (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 
-// MARK: On devices with TXM support it will use `task_suspend()`,`task_resume()`,`task_terminate()` and on devices without `SIGSTOP`,`SIGCONT`,`SIGKILL`
 - (BOOL)suspend;
 - (BOOL)resume;
 - (BOOL)terminate;
@@ -67,7 +63,9 @@
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
+
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
+- (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
 
 @end
 
