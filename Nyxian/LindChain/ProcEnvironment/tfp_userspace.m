@@ -101,40 +101,24 @@ void environment_host_take_client_task_port(RBSMachPort *machPort)
  */
 void environment_tfp_userspace_init(BOOL host)
 {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
+    if (@available(iOS 26.0, *)) {
         tfp_userspace_ports = [[NSMutableDictionary alloc] init];
         
         if(!host)
         {
             // MARK: Guest Init
-            // MARK: TXM supported device is required to handoff task port to host app
-            // MARK: The user wont notice the failure of this procedure because `LDEApplicationWorkspace` service will call it on its first run and the checking flags are available to all child processes when initilizing environment, and `LDEApplicationWorkspace` service restarts automatically if it crashes due to a exception.
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionSuccessful"];
-            BOOL alreadyTried     = [defaults boolForKey:@"TXMOnlyActionTried"];
-            if (alreadySucceeded || !alreadyTried) {
-                if (!alreadySucceeded && !alreadyTried) {
-                    [defaults setBool:YES forKey:@"TXMOnlyActionTried"];
-                    [defaults synchronize];
-                    [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
-                    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
-                    [defaults setBool:YES forKey:@"TXMOnlyActionSuccessful"];
-                    [defaults synchronize];
-                } else {
-                    [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
-                    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
-                }
-            }
-            else
-            {
-                litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
-            }
+            // MARK: iOS 26 is required?
+            [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
         } else
         {
             // MARK: HOST Init
             // Insert our own mach port as "kernel mach port"
             [tfp_userspace_ports setObject:[PrivClass(RBSMachPort) portForPort:(mach_task_self())] forKey:@(0)];
         }
-    });
+    }
+    else
+    {
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
+    }
 }

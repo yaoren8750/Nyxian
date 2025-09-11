@@ -404,7 +404,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_FBSSceneParameters",
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian1234.LiveProcess;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian123456.LiveProcess;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -442,7 +442,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_FBSSceneParameters",
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian1234.LiveProcess;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian123456.LiveProcess;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -660,6 +660,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
 					"-Wl,-U,_OBJC_CLASS_$_MIBundle",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian123456;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -753,6 +754,7 @@
 					"-Wl,-U,_OBJC_CLASS_$_LSApplicationWorkspace",
 					"-Wl,-U,_OBJC_CLASS_$_MIBundle",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.cr4zy.nyxian123456;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
