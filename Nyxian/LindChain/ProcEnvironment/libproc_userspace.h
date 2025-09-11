@@ -23,8 +23,7 @@
 #import <Foundation/Foundation.h>
 #import <unistd.h>
 
-void environment_register_process_identifier(pid_t process_identifier);
-void environment_unregister_process_identifier(pid_t process_identifier);
+int environment_proc_listallpids(void *buffer, int buffersize);
 
 void environment_libproc_userspace_init(BOOL host);
 

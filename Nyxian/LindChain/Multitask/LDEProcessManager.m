@@ -18,13 +18,17 @@
 */
 
 #import <LindChain/Multitask/LDEProcessManager.h>
+#if __has_include(<Nyxian-Swift.h>)
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#endif
 #import <mach/mach.h>
 #include <mach-o/dyld_images.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
+#if __has_include(<Nyxian-Swift.h>)
 #import <Nyxian-Swift.h>
+#endif
 
 /*
  Process
@@ -35,6 +39,7 @@
 {
     self = [super init];
     
+#if __has_include(<Nyxian-Swift.h>)
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
         return nil;
@@ -73,12 +78,14 @@
     
     self.displayName = @"LiveProcess";
     self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
+#endif
     
     return self;
 }
 
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
 {
+#if __has_include(<Nyxian-Swift.h>)
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
     if(!applicationObject.isLaunchAllowed)
     {
@@ -98,6 +105,9 @@
     self.icon = applicationObject.icon;
     
     return self;
+#else
+    return [self init];
+#endif
 }
 
 /*
@@ -168,6 +178,32 @@
     }];
 }
 
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
+- (void)encodeWithCoder:(nonnull NSCoder *)coder {
+    [coder encodeObject:self.displayName forKey:@"displayName"];
+    [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
+    [coder encodeObject:self.executablePath forKey:@"executablePath"];
+    [coder encodeObject:@(self.pid) forKey:@"pid"];
+    [coder encodeObject:@(self.uid) forKey:@"uid"];
+    [coder encodeObject:@(self.gid) forKey:@"gid"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    if(self = [super init])
+    {
+        _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
+        _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
+        _executablePath = [coder decodeObjectOfClass:[NSString class] forKey:@"executablePath"];
+        _pid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"pid"]).intValue;
+        _uid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"uid"]).intValue;
+        _gid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"gid"]).intValue;
+    }
+    return self;
+}
+
 @end
 
 /*
@@ -221,7 +257,9 @@
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid
 {
     [self.processes removeObjectForKey:@(pid)];
+#if __has_include(<Nyxian-Swift.h>)
     [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:pid];
+#endif
 }
 
 @end

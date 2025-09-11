@@ -266,6 +266,7 @@ class Builder {
                         /*LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
                                                                      enableDebugging: project.projectConfig.debug)*/
+                        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: project.projectConfig.bundleid)
                     } else {
                         nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to install application"])
                     }

@@ -19,7 +19,9 @@
 
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
+#if __has_include(<Nyxian-Swift.h>)
 #import <Nyxian-Swift.h>
+#endif
 
 @implementation LDEMultitaskManager
 

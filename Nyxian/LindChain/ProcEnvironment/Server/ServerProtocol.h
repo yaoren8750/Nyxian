@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <LindChain/Private/UIKitPrivate.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 
 @protocol ServerProtocol
 
@@ -39,6 +40,7 @@
  libproc_userspace
  */
 - (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply;
+- (void)proc_getProcStructureForProcessIdentifier:(pid_t)pid withReply:(void (^)(LDEProcess*))reply;
 
 /*
  application

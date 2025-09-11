@@ -25,10 +25,7 @@
 #import <LindChain/ProcEnvironment/libproc_userspace.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
-
-#if HOST_ENV
 #import <LindChain/Multitask/LDEProcessManager.h>
-#endif
 
 /*
  Actual API override
@@ -36,54 +33,89 @@
 int environment_proc_listallpids(void *buffer,
                                  int buffersize)
 {
-#if HOST_ENV
-    // MARK: HOST Implementation
-    // Cast to pid array
-    pid_t *array = (pid_t*)buffer;
-    
-    // Calculate the amount of slices that fit into the array first
-    size_t count = buffersize / sizeof(pid_t);
-    size_t hounter = 0;
-    
-    // Now itterate, and remove each cycle a slice
-    for(NSNumber *number in [[LDEProcessManager shared] processes])
+    if(environmentIsHost)
     {
-        // Copy them to buffer
-        array[hounter] = number.intValue;
-        hounter++;
-        if(hounter == count) return (int)(hounter * sizeof(pid_t));
+        // MARK: HOST Implementation
+        // Cast to pid array
+        pid_t *array = (pid_t*)buffer;
+        
+        // Calculate the amount of slices that fit into the array first
+        size_t count = buffersize / sizeof(pid_t);
+        size_t hounter = 0;
+        
+        // Now itterate, and remove each cycle a slice
+        for(NSNumber *number in [[LDEProcessManager shared] processes])
+        {
+            // Copy them to buffer
+            array[hounter] = number.intValue;
+            hounter++;
+            if(hounter == count) return (int)(hounter * sizeof(pid_t));
+        }
+        
+        return (int)(hounter * sizeof(pid_t));
     }
-    
-    return (int)(hounter * sizeof(pid_t));
-#else
-    // MARK: GUEST Implementation
-    // Cast to pid array
-    pid_t *array = (pid_t*)buffer;
-    
-    // Calculate the amount of slices that fit into the array first
-    size_t count = buffersize / sizeof(pid_t);
-    size_t hounter = 0;
-    
-    // Get pids from server
-    __block NSMutableSet<NSNumber*> *environment_process_identifier;
-    [hostProcessProxy proc_listallpidsViaReply:^(NSSet *processes){
-        environment_process_identifier = [NSMutableSet setWithSet:processes];
-        dispatch_semaphore_signal(environment_semaphore);
-    }];
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
-    
-    // Now itterate, and remove each cycle a slice
-    for(NSNumber *number in environment_process_identifier)
+    else
     {
-        // Copy them to buffer
-        array[hounter] = number.intValue;
-        hounter++;
-        if(hounter == count) return (int)(hounter * sizeof(pid_t));
+        // MARK: GUEST Implementation
+        // Cast to pid array
+        pid_t *array = (pid_t*)buffer;
+        
+        // Calculate the amount of slices that fit into the array first
+        size_t count = buffersize / sizeof(pid_t);
+        size_t hounter = 0;
+        
+        // Get pids from server
+        __block NSMutableSet<NSNumber*> *environment_process_identifier;
+        [hostProcessProxy proc_listallpidsViaReply:^(NSSet *processes){
+            environment_process_identifier = [NSMutableSet setWithSet:processes];
+            dispatch_semaphore_signal(environment_semaphore);
+        }];
+        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+        
+        // Now itterate, and remove each cycle a slice
+        for(NSNumber *number in environment_process_identifier)
+        {
+            // Copy them to buffer
+            array[hounter] = number.intValue;
+            hounter++;
+            if(hounter == count) return (int)(hounter * sizeof(pid_t));
+        }
+        return (int)(hounter * sizeof(pid_t));
     }
-    return (int)(hounter * sizeof(pid_t));
-#endif
 }
 
+int environment_proc_name(int pid,
+                          void * buffer,
+                          uint32_t buffersize)
+{
+    if(environmentIsHost)
+    {
+        
+    }
+    else
+    {
+        // MARK: GUEST Init
+        // Take process structure of requested process identifier
+        __block LDEProcess *process = nil;
+        [hostProcessProxy proc_getProcStructureForProcessIdentifier:pid withReply:^(LDEProcess *replyProcess){
+            process = replyProcess;
+            dispatch_semaphore_signal(environment_semaphore);
+        }];
+        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+        
+        // Check if proc is valid
+        if(!process) return 0;
+        
+        // Now overwrite get c str of proc name
+        const char *c_str = process.displayName.UTF8String;
+        
+        // Now check if size is enough
+        size_t copied = (strlen(c_str) < buffersize) ? strlen(c_str) : buffersize;
+        strncpy(buffer, c_str, buffersize);
+        return (int)copied;
+    }
+    return 0;
+}
 
 
 /*
@@ -95,5 +127,6 @@ void environment_libproc_userspace_init(BOOL host)
     {
         // MARK: GUEST Init
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_listallpids, environment_proc_listallpids, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_name, environment_proc_name, nil);
     }
 }
