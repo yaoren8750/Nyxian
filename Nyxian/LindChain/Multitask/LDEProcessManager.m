@@ -71,7 +71,8 @@
     }];
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
-    self.displayName = @"NONAME";
+    self.displayName = @"LiveProcess";
+    self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
     
     return self;
 }
@@ -93,6 +94,7 @@
     }];
     
     self.displayName = applicationObject.displayName;
+    self.bundleIdentifier = applicationObject.bundleIdentifier;
     
     return self;
 }

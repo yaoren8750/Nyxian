@@ -66,7 +66,7 @@ class ProcessCell: UITableViewCell {
     }
     
     func configure(with process: LDEProcess) {
-        titleLabel.text = process.displayName ?? "Unknown Process"
+        titleLabel.text = "\(process.displayName ?? "Unknown Process") (\(process.bundleIdentifier ?? "com.fallback.bundleid"))"
         subtitleLabel.text = "PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
     }
 }
