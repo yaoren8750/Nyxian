@@ -49,7 +49,7 @@ class SettingsViewController: UIThemedTableViewController {
             cell.textLabel?.text = "Application Management"
             break
         case 2:
-            cell.imageView?.image = UIImage(systemName: "app.badge.fill")
+            cell.imageView?.image = UIImage(systemName: "apple.terminal.fill")
             cell.textLabel?.text = "Process Management"
             break
         case 3:
