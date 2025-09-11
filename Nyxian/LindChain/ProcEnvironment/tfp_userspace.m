@@ -117,15 +117,18 @@ void environment_tfp_userspace_init(BOOL host)
                     [defaults setBool:YES forKey:@"TXMOnlyActionTried"];
                     [defaults synchronize];
                     [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+                    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
                     [defaults setBool:YES forKey:@"TXMOnlyActionSuccessful"];
                     [defaults synchronize];
                 } else {
                     [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+                    litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
                 }
             }
-            
-            void *replacee = dlsym(RTLD_DEFAULT, "task_for_pid");
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
+            else
+            {
+                litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
+            }
         } else
         {
             // MARK: HOST Init
