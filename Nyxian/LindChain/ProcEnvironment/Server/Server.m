@@ -21,6 +21,7 @@
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <LindChain/ProcEnvironment/libproc_userspace.h>
@@ -91,7 +92,7 @@
  */
 - (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply
 {
-    reply(environment_process_identifier);
+    reply([NSSet setWithArray:[[LDEProcessManager shared] processes].allKeys]);
 }
 
 /*

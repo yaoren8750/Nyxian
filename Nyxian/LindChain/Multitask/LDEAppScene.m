@@ -185,8 +185,6 @@
 - (void)appTerminationCleanUp:(BOOL)restarts {
     if (_isAppTerminationCleanUpCalled) return;
     _isAppTerminationCleanUpCalled = YES;
-    environment_unregister_process_identifier(self.process.pid);
-
     void (^cleanupBlock)(void) = ^{
         if (self.sceneID) {
             [[PrivClass(FBSceneManager) sharedInstance] destroyScene:self.sceneID withTransitionContext:nil];

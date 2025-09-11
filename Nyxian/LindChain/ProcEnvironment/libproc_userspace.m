@@ -32,21 +32,6 @@
 NSMutableSet<NSNumber*> *environment_process_identifier;
 
 /*
- Helper
- */
-void environment_register_process_identifier(pid_t process_identifier)
-{
-    if(!environmentIsHost) return;
-    [environment_process_identifier addObject:@(process_identifier)];
-}
-
-void environment_unregister_process_identifier(pid_t process_identifier)
-{
-    if(!environmentIsHost) return;
-    [environment_process_identifier removeObject:@(process_identifier)];
-}
-
-/*
  Actual API override
  */
 int environment_proc_listallpids(void *buffer,
