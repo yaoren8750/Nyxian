@@ -23,8 +23,6 @@
 #import <Foundation/Foundation.h>
 #import <unistd.h>
 
-extern NSMutableSet<NSNumber*> *environment_process_identifier;
-
 void environment_register_process_identifier(pid_t process_identifier);
 void environment_unregister_process_identifier(pid_t process_identifier);
 

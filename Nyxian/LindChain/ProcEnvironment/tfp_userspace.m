@@ -111,8 +111,8 @@ void environment_tfp_userspace_init(BOOL host)
             // MARK: TXM supported device is required to handoff task port to host app
             // MARK: The user wont notice the failure of this procedure because `LDEApplicationWorkspace` service will call it on its first run and the checking flags are available to all child processes when initilizing environment, and `LDEApplicationWorkspace` service restarts automatically if it crashes due to a exception.
             NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionTried"];
-            BOOL alreadyTried     = [defaults boolForKey:@"TXMOnlyActionSuccessful"];
+            BOOL alreadySucceeded = [defaults boolForKey:@"TXMOnlyActionSuccessful"];
+            BOOL alreadyTried     = [defaults boolForKey:@"TXMOnlyActionTried"];
             if (alreadySucceeded || !alreadyTried) {
                 if (!alreadySucceeded && !alreadyTried) {
                     [defaults setBool:YES forKey:@"TXMOnlyActionTried"];
