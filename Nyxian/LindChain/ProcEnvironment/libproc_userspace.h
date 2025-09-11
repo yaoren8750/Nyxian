@@ -17,20 +17,17 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_ENVIRONMENT_H
-#define PROCENVIRONMENT_ENVIRONMENT_H
+#ifndef PROCENVIRONMENT_LIBPROCUSERSPACE_H
+#define PROCENVIRONMENT_LIBPROCUSERSPACE_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
+#import <unistd.h>
 
-extern BOOL environmentIsHost;
-extern dispatch_semaphore_t environment_semaphore;
+extern NSMutableSet<NSNumber*> *environment_process_identifier;
 
-void environment_client_connect(NSXPCListenerEndpoint *endpoint);
-void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy);
-void environment_client_handoff_standard_file_descriptors(void);
-void environment_client_attach_debugger(void);
+void environment_register_process_identifier(pid_t process_identifier);
+void environment_unregister_process_identifier(pid_t process_identifier);
 
-void environment_init(BOOL host);
+void environment_libproc_userspace_init(BOOL host);
 
-#endif /* PROCENVIRONMENT_ENVIRONMENT_H */
+#endif /* PROCENVIRONMENT_LIBPROCUSERSPACE_H */

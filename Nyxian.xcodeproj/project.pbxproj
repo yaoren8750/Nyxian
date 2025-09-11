@@ -130,6 +130,7 @@
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
 				LindChain/ProcEnvironment/environment.m,
+				LindChain/ProcEnvironment/libproc_userspace.m,
 				LindChain/ProcEnvironment/proxy.m,
 				LindChain/ProcEnvironment/tfp_userspace.m,
 			);

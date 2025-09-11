@@ -18,9 +18,11 @@
 */
 
 #import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/tfp_userspace.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/Debugger/MachServer.h>
+
+#import <LindChain/ProcEnvironment/tfp_userspace.h>
+#import <LindChain/ProcEnvironment/libproc_userspace.h>
 
 BOOL environmentIsHost;
 dispatch_semaphore_t environment_semaphore;
@@ -30,6 +32,7 @@ void environment_init(BOOL host)
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         environment_tfp_userspace_init(host);
+        environment_libproc_userspace_init(host);
         if(!host) environment_semaphore = dispatch_semaphore_create(0);
         environmentIsHost = host;
     });

@@ -35,6 +35,11 @@
 - (void)sendPort:(RBSMachPort*)machPort;
 - (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply;
 
+/*
+ libproc_userspace
+ */
+- (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */

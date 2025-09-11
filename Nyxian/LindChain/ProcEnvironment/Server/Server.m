@@ -23,6 +23,7 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/ProcEnvironment/tfp_userspace.h>
+#import <LindChain/ProcEnvironment/libproc_userspace.h>
 #import <mach/mach.h>
 
 @implementation Server
@@ -32,7 +33,8 @@
     reply([[NSFileHandle alloc] initWithFileDescriptor:STDOUT_FILENO]);
 }
 
-- (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply
+- (void)getMemoryLogFDsForPID:(pid_t)pid
+                    withReply:(void (^)(NSFileHandle *))reply
 {
     NSString *bundleIdentifier = [[LDEMultitaskManager shared] bundleIdentifierForProcessIdentifier:pid];
     if(bundleIdentifier)
@@ -75,11 +77,20 @@
     environment_host_take_client_task_port(machPort);
 }
 
-- (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply
+- (void)getPort:(pid_t)pid
+      withReply:(void (^)(RBSMachPort*))reply
 {
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
     reply((kr == KERN_SUCCESS) ? [PrivClass(RBSMachPort) portForPort:port] : nil);
+}
+
+/*
+ libproc_userspace
+ */
+- (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply
+{
+    reply(environment_process_identifier);
 }
 
 @end

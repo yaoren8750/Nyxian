@@ -77,13 +77,8 @@ int proc_listpids(uint32_t type, uint32_t typeinfo, void *buffer, int buffersize
     @result the number of bytes of data returned in the provided buffer;
         -1 if an error was encountered;
  */
-int    proc_listpidspath(uint32_t    type,
-              uint32_t    typeinfo,
-              const char    *path,
-              uint32_t    pathflags,
-              void        *buffer,
-              int        buffersize);
-
+int proc_listallpids(void * buffer, int buffersize);
+int proc_listpidspath(uint32_t    type, uint32_t    typeinfo, const char    *path, uint32_t    pathflags, void        *buffer, int        buffersize);
 int proc_pidinfo(int pid, int flavor, uint64_t arg,  void *buffer, int buffersize);
 int proc_pidfdinfo(int pid, int fd, int flavor, void * buffer, int buffersize);
 int proc_name(int pid, void * buffer, uint32_t buffersize);

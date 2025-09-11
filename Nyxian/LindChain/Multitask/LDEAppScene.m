@@ -14,6 +14,7 @@
 #import <dlfcn.h>
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <LindChain/ProcEnvironment/libproc_userspace.h>
 
 @interface LDEAppScene()
 
@@ -94,6 +95,7 @@
             //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
             self.identifier = identifier;
             self.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            environment_register_process_identifier(self.pid);
             
             NSLog(@"child process spawned with %u\n", self.pid);
             [self.delegate appSceneVC:self didInitializeWithError:nil];
@@ -248,6 +250,7 @@
 - (void)appTerminationCleanUp:(BOOL)restarts {
     if (_isAppTerminationCleanUpCalled) return;
     _isAppTerminationCleanUpCalled = YES;
+    environment_unregister_process_identifier(self.pid);
 
     void (^cleanupBlock)(void) = ^{
         if (self.sceneID) {
