@@ -77,7 +77,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSNumber *debugEnabled = appInfo[@"debugEnabled"];
     
     // Setting up environment
-    environment_client_connect(endpoint);
+    environment_client_connect_to_host(endpoint);
     environment_init(NO);
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);

@@ -38,13 +38,7 @@ void environment_init(BOOL host)
     });
 }
 
-void environment_client_handoff_proxy(NSObject<ServerProtocol> *proxy)
-{
-    if(environmentIsHost || hostProcessProxy) return;
-    hostProcessProxy = proxy;
-}
-
-void environment_client_connect(NSXPCListenerEndpoint *endpoint)
+void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint)
 {
     if(environmentIsHost || hostProcessProxy) return;
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
@@ -59,7 +53,7 @@ void environment_client_connect(NSXPCListenerEndpoint *endpoint)
     };
     
     [connection activate];
-    environment_client_handoff_proxy([connection remoteObjectProxy]);
+    hostProcessProxy = connection.remoteObjectProxy;
 }
 
 void environment_client_attach_debugger(void)
