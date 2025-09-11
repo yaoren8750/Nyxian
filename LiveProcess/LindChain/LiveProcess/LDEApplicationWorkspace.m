@@ -25,7 +25,7 @@
 
 @interface LDEApplicationWorkspace ()
 
-@property (nonatomic,strong,readonly) NSExtension *extension;
+@property (nonatomic,strong,readwrite) LDEProcess *process;
 @property (nonatomic,strong,readonly) dispatch_semaphore_t sema;
 
 @end
@@ -51,12 +51,16 @@
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     
+    process.displayName = @"LDEApplicationWorkspace";
+    
     __weak typeof(self) weakSelf = self;
-    [process.extension setRequestInterruptionBlock:^(NSUUID *uuid) {
+    [process setRequestInterruptionBlock:^(NSUUID *uuid) {
         dispatch_semaphore_signal(weakSelf.sema);
         weakSelf.proxy = nil;
         [weakSelf execute];
     }];
+    
+    self.process = process;
     
     return YES;
 }

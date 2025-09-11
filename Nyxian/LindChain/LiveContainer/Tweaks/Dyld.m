@@ -13,6 +13,7 @@
 #import "litehook_internal.h"
 #import "LCMachOUtils.h"
 #import "../utils.h"
+#import <LindChain/ProcEnvironment/application.h>
 
 extern NSBundle *lcMainBundle;
 

@@ -14,6 +14,7 @@
 #import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 
 @class LDEAppScene;
 
@@ -30,26 +31,18 @@
 
 @interface LDEAppScene : UIViewController<_UISceneSettingsDiffAction>
 
-@property(nonatomic) BOOL debuggingEnabled;
-@property(nonatomic) LDEApplicationObject *appObj;
+@property (nonatomic) LDEProcess *process;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
-@property(nonatomic) int pid;
 @property(nonatomic) id<LDEAppSceneDelegate> delegate;
-@property(nonatomic) BOOL isAppRunning;
 @property(nonatomic) CGFloat scaleRatio;
 @property(nonatomic) UIView* contentView;
 @property(nonatomic) _UIScenePresenter *presenter;
 @property (nonatomic, copy) void (^pendingSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) UIMutableApplicationSceneSettings *settings;
 
-- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
-                     withDebuggingEnabled:(BOOL)enableDebugging
-                             withDelegate:(id<LDEAppSceneDelegate>)delegate;
+- (instancetype)initWithProcess:(LDEProcess*)process
+                   withDelegate:(id<LDEAppSceneDelegate>)delegate;
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
-- (void)appTerminationCleanUp:(BOOL)restarts;
-- (void)terminate;
-- (void)restart;
-
 - (void)resizeActionStart;
 - (void)resizeActionEnd;
 

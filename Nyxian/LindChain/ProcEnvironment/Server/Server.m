@@ -36,7 +36,8 @@
 - (void)getMemoryLogFDsForPID:(pid_t)pid
                     withReply:(void (^)(NSFileHandle *))reply
 {
-    NSString *bundleIdentifier = [[LDEMultitaskManager shared] bundleIdentifierForProcessIdentifier:pid];
+    // TODO: Fix for new window api
+    /*NSString *bundleIdentifier = [[LDEMultitaskManager shared] bundleIdentifierForProcessIdentifier:pid];
     if(bundleIdentifier)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -47,7 +48,7 @@
         });
     } else {
         reply(nil);
-    }
+    }*/
 }
 
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
@@ -100,7 +101,7 @@
 {
     // To be done
     // TODO: Make windows spawn like on macOS
-    reply(YES);
+    reply([[LDEMultitaskManager shared] openWindowForProcessIdentifier:processIdentifier]);
 }
 
 @end

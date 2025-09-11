@@ -37,25 +37,25 @@ void UIKitFixesInit(void) {
 
 @interface LDEWindow ()
 
-@property(nonatomic) UIViewController *childVC;
-@property(nonatomic) UITextView *processLog;
-@property(nonatomic) NSArray* activatedVerticalConstraints;
-@property(nonatomic) int pid;
-@property(nonatomic) CGRect originalFrame;
-@property(nonatomic) UIBarButtonItem *maximizeButton;
-@property(nonatomic) bool isAppTerminationRequested;
-@property(nonatomic) BOOL multitaskingTermination;
+@property (nonatomic) UIViewController *childVC;
+@property (nonatomic) UITextView *processLog;
+@property (nonatomic) NSArray* activatedVerticalConstraints;
+@property (nonatomic) CGRect originalFrame;
+@property (nonatomic) UIBarButtonItem *maximizeButton;
+@property (nonatomic) bool isAppTerminationRequested;
+@property (nonatomic) BOOL multitaskingTermination;
+
+@property (nonatomic) dispatch_once_t closeWindowOnce;
 
 @end
 
 @implementation LDEWindow
 
-- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
-                          enableDebugging:(BOOL)enableDebugging
-                           withDimensions:(CGRect)rect;
+- (instancetype)initWithProcess:(LDEProcess*)process
+                 withDimensions:(CGRect)rect
 {
     self = [super initWithNibName:nil bundle:nil];
-    _appSceneVC = [[LDEAppScene alloc] initWithApplicationObject:applicationObject withDebuggingEnabled:enableDebugging withDelegate:self];
+    _appSceneVC = [[LDEAppScene alloc] initWithProcess:process withDelegate:self];
     if(!_appSceneVC) return nil;
     _childVC = _appSceneVC;
     _multitaskingTermination = NO;
@@ -64,12 +64,14 @@ void UIKitFixesInit(void) {
     self.scaleRatio = 1.0;
     self.isMaximized = NO;
     self.originalFrame = CGRectZero;
-    self.windowName = self.appSceneVC.appObj.displayName;
-    self.navigationItem.title = self.appSceneVC.appObj.displayName;
+    
+    //TODO: Take window name from future process API
+    self.windowName = process.displayName;
+    self.navigationItem.title = process.displayName;
     
     NSArray *menuItems = @[
         [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
-            UIPasteboard.generalPasteboard.string = @(self.appSceneVC.pid).stringValue;
+            UIPasteboard.generalPasteboard.string = @(self.appSceneVC.process.pid).stringValue;
         }],
         [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
             if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
@@ -92,7 +94,7 @@ void UIKitFixesInit(void) {
     UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
     UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
     closeImage = [closeImage imageWithConfiguration:closeConfig];
-    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(invokeMultitaskingTermination)];
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
     closeButton.tintColor = [UIColor systemRedColor];
 
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
@@ -110,43 +112,13 @@ void UIKitFixesInit(void) {
 
     __weak typeof(self) weakSelf = self;
     [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
-        if(!weakSelf.appSceneVC.isAppRunning) {
+        /*if(!weakSelf.appSceneVC.isAppRunning) {
             return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
-        } else {
-            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.pid];
+        } else {*/
+            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.appSceneVC.process.pid];
             return [UIMenu menuWithTitle:pidText children:menuItems];
-        }
+        //}
     }];
-    
-    return self;
-}
-
-- (instancetype)initWithAttachment:(UIView*)attachment
-                         withTitle:(NSString*)title
-                    withDimensions:(CGRect)rect
-{
-    _childVC = [[UIViewController alloc] init];
-    _childVC.view = attachment;
-    _multitaskingTermination = NO;
-    
-    [self setupDecoratedView:rect];
-    self.scaleRatio = 1.0;
-    self.isMaximized = NO;
-    self.originalFrame = CGRectZero;
-    self.windowName = title;
-    self.navigationItem.title = title;
-    
-    if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-        NSArray *barButtonItems = @[];
-        self.navigationItem.rightBarButtonItems = barButtonItems;
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
-                       dispatch_get_main_queue(), ^{
-            [self maximizeWindow];
-        });
-    }
-    
-    [self.view insertSubview:_childVC.view atIndex:2];
     
     return self;
 }
@@ -292,33 +264,20 @@ void UIKitFixesInit(void) {
 }
 
 - (void)closeWindow {
-    _isAppTerminationRequested = true;
-    if([_appSceneVC isAppRunning]) {
-        [_appSceneVC terminate];
-    } else {
-        [self appSceneVCAppDidExit:self.appSceneVC];
-    }
-}
-
-- (void)invokeMultitaskingTermination
-{
-    if(self.appSceneVC && !_multitaskingTermination)
-    {
-        _multitaskingTermination = YES;
-        [[LDEMultitaskManager shared] closeApplicationWithBundleIdentifier:self.appSceneVC.appObj.bundleIdentifier];
-    }
-}
-
-- (void)minimizeWindow {
-    [self.appSceneVC resizeActionStart];
-    [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
-        self.view.alpha = 0;
-        self.view.transform = CGAffineTransformMakeScale(0.1, 0.1);
-    } completion:^(BOOL finished) {
-        self.view.hidden = YES;
-        self.view.transform = CGAffineTransformIdentity;
-        [self.appSceneVC resizeActionEnd];
-    }];
+    dispatch_once(&_closeWindowOnce, ^{
+        if([self.appSceneVC.process isRunning]) [self.appSceneVC.process terminate];
+        self.view.layer.masksToBounds = NO;
+        [UIView transitionWithView:self.view.window
+                          duration:0.2
+                           options:UIViewAnimationOptionTransitionCrossDissolve
+                        animations:^
+         {
+            self.view.alpha = 0;
+        } completion:^(BOOL completed)
+         {
+            if(completed) [self.view removeFromSuperview];
+        }];
+    });
 }
 
 - (void)minimizeWindowPiP {
@@ -390,27 +349,20 @@ void UIKitFixesInit(void) {
 }
 
 - (void)appSceneVCAppDidExit:(LDEAppScene*)vc {
-    self.view.layer.masksToBounds = NO;
+    /*self.view.layer.masksToBounds = NO;
     [UIView transitionWithView:self.view.window
                       duration:0.4
                        options:UIViewAnimationOptionTransitionCrossDissolve
                     animations:^{
         self.view.hidden = YES;
-    } completion:nil];
-    [self invokeMultitaskingTermination];
-}
-
-- (void)restart
-{
-    [self.processLog removeFromSuperview];
-    self.processLog = nil;
-    [self.appSceneVC restart];
+    } completion:nil];*/
 }
 
 - (void)appSceneVC:(LDEAppScene*)vc didInitializeWithError:(NSError *)error {
+    // TODO: Fix it
     dispatch_async(dispatch_get_main_queue(), ^{
         if(error) {
-            [vc appTerminationCleanUp:NO];
+            //[vc appTerminationCleanUp:NO];
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"lc.common.error".loc message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"lc.common.ok".loc style:UIAlertActionStyleCancel handler:nil]];
             [alert addAction:[UIAlertAction actionWithTitle:@"lc.common.copy".loc style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
@@ -418,7 +370,6 @@ void UIKitFixesInit(void) {
             }]];
             [self presentViewController:alert animated:YES completion:nil];
         } else {
-            self.pid = vc.pid;
             [self updateOriginalFrame];
         }
     });

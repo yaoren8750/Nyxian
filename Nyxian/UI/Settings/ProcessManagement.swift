@@ -46,11 +46,26 @@ class ProcessManagementViewController: UIThemedTableViewController, UITextFieldD
         let process: LDEProcess = self.processes[indexPath.row]
         
         let cell: UITableViewCell = UITableViewCell()
-        cell.textLabel?.text = "PATH: \(process.executablePath ?? "Unknown") | PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
+        cell.textLabel?.text = "\(process.displayName ?? "Unknown") | PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    override func tableView(_ tableView: UITableView,
+                            commit editingStyle: UITableViewCell.EditingStyle,
+                            forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let process = processes[indexPath.row]
+            if process.terminate() {
+                processes.remove(at: indexPath.row)
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+            } else {
+                NotificationServer.NotifyUser(level: .error, notification: "Coult not kill \(process.pid)")
+            }
+        }
+    }
+
 }

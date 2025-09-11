@@ -53,7 +53,7 @@ class MainSplitViewController: UISplitViewController, UISplitViewControllerDeleg
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        LDEMultitaskManager.shared().bringWindowGroupToFront(withBundleIdentifier: self.project.projectConfig.bundleid)
+        //LDEMultitaskManager.shared().bringWindowGroupToFront(withBundleIdentifier: self.project.projectConfig.bundleid)
         NotificationCenter.default.addObserver(self, selector: #selector(invokeBuild), name: Notification.Name("RunAct"), object: nil)
     }
     

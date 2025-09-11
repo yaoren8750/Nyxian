@@ -34,6 +34,7 @@
 
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;
+@property (nonatomic,strong) NSString *displayName;
 @property (nonatomic,strong) NSString *executablePath;
 @property (nonatomic) pid_t pid;
 @property (nonatomic) uid_t uid;
@@ -45,6 +46,7 @@
 - (BOOL)suspend;
 - (BOOL)resume;
 - (BOOL)terminate;
+- (BOOL)isRunning;
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback;
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback;

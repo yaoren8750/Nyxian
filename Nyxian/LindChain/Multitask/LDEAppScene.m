@@ -20,112 +20,51 @@
 
 @property int resizeDebounceToken;
 @property CGPoint normalizedOrigin;
-@property NSUUID* identifier;
 
 @end
 
 @interface LDEAppScene()
 
-@property(nonatomic) UIWindowScene *hostScene;
-@property(nonatomic) NSString *sceneID;
-@property(nonatomic) NSExtension* extension;
-@property(nonatomic) bool isAppTerminationCleanUpCalled;
+@property (nonatomic) UIWindowScene *hostScene;
+@property (nonatomic) NSString *sceneID;
+@property (nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
-@property (nonatomic, strong) NSLock *restartLock;
 
 @end
 
 @implementation LDEAppScene
 
-- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
-                     withDebuggingEnabled:(BOOL)enableDebugging
-                             withDelegate:(id<LDEAppSceneDelegate>)delegate;
+- (instancetype)initWithProcess:(LDEProcess*)process
+                   withDelegate:(id<LDEAppSceneDelegate>)delegate;
 {
     self = [super initWithNibName:nil bundle:nil];
-    self.restartLock = [[NSLock alloc] init];
-    self.debuggingEnabled = enableDebugging;
     self.view = [[UIView alloc] init];
     self.contentView = [[UIView alloc] init];
     [self.view addSubview:_contentView];
     self.delegate = delegate;
     self.scaleRatio = 1.0;
     self.isAppTerminationCleanUpCalled = false;
-    self.appObj = applicationObject;
-    return [self execute] ? self : nil;
-}
-
-- (BOOL)execute
-{
-    // init extension
-    NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
-    if(!liveProcessBundle) {
-        [self.delegate appSceneVC:self didInitializeWithError:[NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"LiveProcess extension not found. Please reinstall Nyxian and select Keep Extensions"}]];
-        return NO;
-    }
-    
-    NSError* error = nil;
-    _extension = [NSExtension extensionWithIdentifier:liveProcessBundle.bundleIdentifier error:&error];
-    if(error) {
-        [self.delegate appSceneVC:self didInitializeWithError:error];
-        return NO;
-    }
-    _extension.preferredLanguages = @[];
-    
-    NSExtensionItem *item = [NSExtensionItem new];
-    item.userInfo = @{
-        @"endpoint": [ServerDelegate getEndpoint],
-        @"mode": @"application",
-        @"appObject": self.appObj,
-        @"debugEnabled": @(self.debuggingEnabled)
-    };
-    
-    __weak typeof(self) weakSelf = self;
-    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp:NO];
-        [weakSelf.delegate appSceneVC:weakSelf didInitializeWithError:error];
-    }];
-    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        NSLog(@"Extension down!");
-        [weakSelf appTerminationCleanUp:NO];
-    }];
-    [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
-        if(identifier) {
-            //[MultitaskManager registerMultitaskContainerWithContainer:self.dataUUID];
-            self.identifier = identifier;
-            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
-            environment_register_process_identifier(self.pid);
-            
-            NSLog(@"child process spawned with %u\n", self.pid);
-            [self.delegate appSceneVC:self didInitializeWithError:nil];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self setUpAppPresenter];
-            });
-        } else {
-            NSError* error = [NSError errorWithDomain:@"LiveProcess" code:2 userInfo:@{NSLocalizedDescriptionKey: @"Failed to start app. Child process has unexpectedly crashed"}];
-            NSLog(@"%@", [error localizedDescription]);
-            [self.delegate appSceneVC:self didInitializeWithError:error];
-        }
-    }];
-    
-    return YES;
+    self.process = process;
+    [self setUpAppPresenter];
+    return self;
 }
 
 - (void)setUpAppPresenter {
-    RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
+    //RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
     
     FBProcessManager *manager = [PrivClass(FBProcessManager) sharedInstance];
     // At this point, the process is spawned and we're ready to create a scene to render in our app
-    RBSProcessHandle* processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
-    [manager registerProcessForAuditToken:processHandle.auditToken];
+    //RBSProcessHandle* processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
+    
+    [manager registerProcessForAuditToken:self.process.processHandle.auditToken];
     self.sceneID = [NSString stringWithFormat:@"sceneID:%@-%@", @"LiveProcess", NSUUID.UUID.UUIDString];
     
     FBSMutableSceneDefinition *definition = [PrivClass(FBSMutableSceneDefinition) definition];
     definition.identity = [PrivClass(FBSSceneIdentity) identityForIdentifier:self.sceneID];
     
     // FIXME: Handle when the process is not valid anymore, it will cause EXC_BREAKPOINT otherwise because of "Invalid condition not satisfying: processIdentity"
-    definition.clientIdentity = [PrivClass(FBSSceneClientIdentity) identityForProcessIdentity:processHandle.identity];
+    definition.clientIdentity = [PrivClass(FBSSceneClientIdentity) identityForProcessIdentity:self.process.processHandle.identity];
     definition.specification = [UIApplicationSceneSpecification specification];
     FBSMutableSceneParameters *parameters = [PrivClass(FBSMutableSceneParameters) parametersForSpecification:definition.specification];
     
@@ -167,10 +106,10 @@
     }];
     [self.presenter activate];
     
-    __weak typeof(self) weakSelf = self;
+    /*__weak typeof(self) weakSelf = self;
     [self.extension setRequestInterruptionBlock:^(NSUUID *uuid) {
         [weakSelf appTerminationCleanUp:NO];
-    }];
+    }];*/
     
     [self.contentView addSubview:self.presenter.presentationView];
     self.contentView.layer.anchorPoint = CGPointMake(0, 0);
@@ -204,7 +143,7 @@
     });*/
 }
 
-- (void)terminate {
+/*- (void)terminate {
     if(self.isAppRunning) {
         NSExtension *targetExtension = self.extension;
         [targetExtension _kill:SIGCONT];
@@ -224,10 +163,10 @@
     _isAppTerminationCleanUpCalled = NO;
     [self execute];
     [self.restartLock unlock];
-}
+}*/
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
-    if(!self.isAppRunning) {
+    if(!self.process.isRunning) {
         [self appTerminationCleanUp:NO];
     }
     if(!diff) return;
@@ -243,14 +182,10 @@
     self.nextUpdateSettingsBlock = nil;
 }
 
-- (BOOL)isAppRunning {
-    return _pid > 0 && getpgid(_pid) > 0;
-}
-
 - (void)appTerminationCleanUp:(BOOL)restarts {
     if (_isAppTerminationCleanUpCalled) return;
     _isAppTerminationCleanUpCalled = YES;
-    environment_unregister_process_identifier(self.pid);
+    environment_unregister_process_identifier(self.process.pid);
 
     void (^cleanupBlock)(void) = ^{
         if (self.sceneID) {
@@ -275,10 +210,10 @@
 - (void)setBackgroundNotificationEnabled:(bool)enabled {
     if(enabled) {
         // Re-add UIApplicationDidEnterBackgroundNotification
-        [NSNotificationCenter.defaultCenter addObserver:self.extension selector:@selector(_hostDidEnterBackgroundNote:) name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
+        [NSNotificationCenter.defaultCenter addObserver:self.process.extension selector:@selector(_hostDidEnterBackgroundNote:) name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
     } else {
         // Remove UIApplicationDidEnterBackgroundNotification so apps like YouTube can continue playing video
-        [NSNotificationCenter.defaultCenter removeObserver:self.extension name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
+        [NSNotificationCenter.defaultCenter removeObserver:self.process.extension name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
     }
 }
 

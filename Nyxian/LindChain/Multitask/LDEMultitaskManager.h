@@ -24,23 +24,12 @@
 
 @interface LDEMultitaskManager : UIWindow
 
-@property (nonatomic,strong,readonly) NSMutableDictionary<NSString*,NSMutableArray<LDEWindow*>*> *windowGroups;
-@property (nonatomic, strong) NSMutableDictionary<NSString*, NSValue*> *windowDimensions;
+@property (nonatomic,strong,readonly) NSMutableDictionary<NSNumber*,LDEWindow*> *windows;
 
 - (instancetype)init;
 + (instancetype)shared;
 
-- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
-- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
-                         terminateIfRunning:(BOOL)terminate
-                            enableDebugging:(BOOL)enableDebug;
-- (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
-
-- (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier;
-- (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier;
-- (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier;
-- (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier;
-
-- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier withTitle:(NSString*)title;
+- (BOOL)openWindowForProcessIdentifier:(pid_t)processIdentifier;
+- (BOOL)closeWindowForProcessIdentifier:(pid_t)processIdentifier;
 
 @end

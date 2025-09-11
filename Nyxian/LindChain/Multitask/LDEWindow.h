@@ -3,28 +3,23 @@
 
 @interface LDEWindow : UIViewController<LDEAppSceneDelegate>
 
-@property(nonatomic) NSString* windowName;
-@property(nonatomic) LDEAppScene* appSceneVC;
-@property(nonatomic) UIStackView *view;
-@property(nonatomic) UINavigationBar *navigationBar;
-@property(nonatomic) UINavigationItem *navigationItem;
-@property(nonatomic) UIView *resizeHandle;
-@property(nonatomic) UIView *contentView;
-@property(nonatomic) UILabel *label;
+@property (nonatomic) NSString* windowName;
+@property (nonatomic) LDEAppScene* appSceneVC;
+@property (nonatomic) UIStackView *view;
+@property (nonatomic) UINavigationBar *navigationBar;
+@property (nonatomic) UINavigationItem *navigationItem;
+@property (nonatomic) UIView *resizeHandle;
+@property (nonatomic) UIView *contentView;
+@property (nonatomic) UILabel *label;
 
-@property(nonatomic) BOOL isMaximized;
-@property(nonatomic) CGFloat scaleRatio;
+@property (nonatomic) BOOL isMaximized;
+@property (nonatomic) CGFloat scaleRatio;
 
-- (instancetype)initWithApplicationObject:(LDEApplicationObject*)applicationObject
-                          enableDebugging:(BOOL)enableDebugging
-                           withDimensions:(CGRect)rect;
-- (instancetype)initWithAttachment:(UIView*)attachment
-                         withTitle:(NSString*)title
-                    withDimensions:(CGRect)rect;
+- (instancetype)initWithProcess:(LDEProcess*)process
+                 withDimensions:(CGRect)rect;
 - (void)minimizeWindowPiP;
 - (void)unminimizeWindowPiP;
 - (void)updateVerticalConstraints;
 - (void)closeWindow;
-- (void)restart;
 
 @end

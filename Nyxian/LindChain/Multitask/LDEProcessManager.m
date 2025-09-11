@@ -19,47 +19,12 @@
 
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <mach/mach.h>
 #include <mach-o/dyld_images.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <Nyxian-Swift.h>
-
-NSString *task_executable_path_via_dyld(task_t task)
-{
-    task_dyld_info_data_t dyld_info;
-    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
-    kern_return_t kr = task_info(task, TASK_DYLD_INFO,
-                                 (task_info_t)&dyld_info, &count);
-    if (kr != KERN_SUCCESS) return nil;
-
-    struct dyld_all_image_infos infos = {0};
-    vm_size_t outsize = 0;
-    kr = vm_read_overwrite(task,
-                           (mach_vm_address_t)dyld_info.all_image_info_addr,
-                           sizeof(infos),
-                           (mach_vm_address_t)&infos,
-                           &outsize);
-    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
-    
-    struct dyld_image_info info;
-    kr = vm_read_overwrite(task,
-                           (mach_vm_address_t)infos.infoArray,
-                           sizeof(struct dyld_image_info),
-                           (mach_vm_address_t)&info,
-                           &outsize);
-    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
-    
-    char buf[PATH_MAX];
-    kr = vm_read_overwrite(task,
-                           (mach_vm_address_t)info.imageFilePath,
-                           sizeof(buf),
-                           (mach_vm_address_t)&buf,
-                           &outsize);
-    if (kr != KERN_SUCCESS || outsize < sizeof(uint32_t)) return nil;
-    
-    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
-}
 
 /*
  Process
@@ -87,13 +52,14 @@ NSString *task_executable_path_via_dyld(task_t task)
     
     __typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf->_pid];
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
     }];
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf->_pid];
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
     }];
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
+    // FIXME: Executing LDEApplicationWorkspace twice causes deadlock in this block
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
             self.identifier = identifier;
@@ -104,6 +70,8 @@ NSString *task_executable_path_via_dyld(task_t task)
         dispatch_semaphore_signal(sema);
     }];
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    
+    self.displayName = @"NONAME";
     
     return self;
 }
@@ -123,6 +91,8 @@ NSString *task_executable_path_via_dyld(task_t task)
         @"appObject": applicationObject,
         @"debugEnabled": @(NO)
     }];
+    
+    self.displayName = applicationObject.displayName;
     
     return self;
 }
@@ -172,11 +142,16 @@ NSString *task_executable_path_via_dyld(task_t task)
     return YES;
 }
 
+- (BOOL)isRunning
+{
+    return self.pid > 0 && getpgid(self.pid) > 0;
+}
+
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
     __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        [[[LDEProcessManager shared] processes] removeObjectForKey:@(weakSelf.pid)];
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
         callback(uuid, error);
     }];
 }
@@ -185,7 +160,7 @@ NSString *task_executable_path_via_dyld(task_t task)
 {
     __weak typeof(self) weakSelf = self;
     [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [[[LDEProcessManager shared] processes] removeObjectForKey:@(weakSelf.pid)];
+        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
         callback(uuid);
     }];
 }
@@ -243,6 +218,7 @@ NSString *task_executable_path_via_dyld(task_t task)
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid
 {
     [self.processes removeObjectForKey:@(pid)];
+    [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:pid];
 }
 
 @end

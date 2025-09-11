@@ -58,26 +58,26 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak application] _ in
             let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
                 guard let application = application else { return }
-                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
+                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
             }
             
             let openActionDebug = UIAction(title: "Debug", image: UIImage(systemName: "ant.fill")) { _ in
                 guard let application = application else { return }
-                LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
+                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
             }
 
             let openMenu: UIMenu = UIMenu(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill"), children: [openAction,openActionDebug])
             
             let clearContainerAction = UIAction(title: "Clear Data Container", image: UIImage(systemName: "arrow.up.trash.fill")) { _ in
                 guard let application = application else { return }
-                LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
+                //LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
                 LDEApplicationWorkspace.shared().clearContainer(forBundleID: application.bundleIdentifier)
             }
             
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
                 guard let self = self,
                       let application = application else { return }
-                LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
+                //LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
                     if let index = ApplicationManagementViewController.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
                         ApplicationManagementViewController.applications.remove(at: index)
@@ -93,7 +93,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let application = ApplicationManagementViewController.applications[indexPath.row]
-        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier)
+        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier)
     }
     
     @objc func plusButtonPressed() {
@@ -127,7 +127,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     let bundlePath = lcapp!.bundlePath()
                     let bundleId = lcapp!.bundleIdentifier()
                     if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
-                        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: bundleId)
+                        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId)
                         let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
                         ApplicationManagementViewController.applications.append(appObject)
                         self.tableView.reloadData()

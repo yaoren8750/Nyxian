@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 #import <Nyxian-Swift.h>
 
 @implementation LDEMultitaskManager
@@ -31,8 +32,7 @@
     }
     self = [super initWithFrame:UIScreen.mainScreen.bounds];
     if (self) {
-        _windowGroups = [[NSMutableDictionary alloc] init];
-        _windowDimensions = [[NSMutableDictionary alloc] init];
+        _windows = [[NSMutableDictionary alloc] init];
         hasInitialized = YES;
     }
     return self;
@@ -48,156 +48,32 @@
     return multitaskManagerSingleton;
 }
 
-- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
+- (BOOL)openWindowForProcessIdentifier:(pid_t)processIdentifier
 {
-    return [self openApplicationWithBundleIdentifier:bundleIdentifier
-                                  terminateIfRunning:NO
-                                     enableDebugging:NO];
-}
-
-- (BOOL)openApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
-                         terminateIfRunning:(BOOL)terminate
-                            enableDebugging:(BOOL)enableDebug
-{
-    LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
-    if(!applicationObject.isLaunchAllowed)
-    {
-        [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"\"%@\" Is No Longer Available", applicationObject.displayName] delay:0.0];
-        return NO;
-    }
-    
-    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    if(windowGroup)
-    {
-        LDEWindow *mainWindow = [windowGroup firstObject];
-        if (terminate)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:processIdentifier];
+        if(process)
         {
-            mainWindow.appSceneVC.debuggingEnabled = enableDebug;
-            [windowGroup removeObjectAtIndex:0];
-            for (LDEWindow *window in windowGroup)
+            LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
+            if(window)
             {
-                NSString *key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, window.windowName];
-
-                if (window.view) {
-                    [self.windowDimensions setObject:[NSValue valueWithCGRect:window.view.frame]
-                                              forKey:key];
-                }
-
-                [window closeWindow];
+                [self.windows setObject:window forKey:@(processIdentifier)];
+                [self addSubview:window.view];
             }
-
-            NSMutableArray<LDEWindow*> *newWindowGroup = [[NSMutableArray alloc] init];
-            [newWindowGroup addObject:mainWindow];
-            [self.windowGroups setObject:newWindowGroup forKey:bundleIdentifier];
-            [mainWindow restart];
         }
-        else
-        {
-            [self bringSubviewToFront:mainWindow.view];
-        }
-        return YES;
-    }
-
-    __block BOOL result = NO;
-    void (^workBlock)(void) = ^{
-        // Go!
-        NSString *mainKey = [NSString stringWithFormat:@"%@.main", bundleIdentifier];
-        CGRect frame = CGRectMake(50, 150, 320, 480);
-        NSValue *cachedFrame = [self.windowDimensions objectForKey:mainKey];
-        if (cachedFrame) frame = cachedFrame.CGRectValue;
-        
-        LDEWindow *decoratedAppSceneViewController = [[LDEWindow alloc] initWithApplicationObject:applicationObject
-                                                                                  enableDebugging:enableDebug
-                                                                                   withDimensions:frame];
-        
-        [self addSubview:decoratedAppSceneViewController.view];
-        NSMutableArray<LDEWindow*> *windowGroup = [[NSMutableArray alloc] init];
-        [windowGroup addObject:decoratedAppSceneViewController];
-        [self.windowGroups setObject:windowGroup forKey:bundleIdentifier];
-        result = YES;
-    };
-
-    if ([NSThread isMainThread])
-        workBlock();
-    else
-        dispatch_sync(dispatch_get_main_queue(), workBlock);
-
-    return result;
+    });
+    
+    return YES;
 }
 
-- (void)closeApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
+- (BOOL)closeWindowForProcessIdentifier:(pid_t)processIdentifier
 {
-    if(!bundleIdentifier) return;
-    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    if(windowGroup) {
-        BOOL isFirst = YES;
-        for(LDEWindow *window in windowGroup) {
-            NSString *key;
-            if (isFirst) {
-                key = [NSString stringWithFormat:@"%@.main", bundleIdentifier];
-                isFirst = NO;
-            } else {
-                key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, window.windowName];
-            }
-
-            if (window.view) {
-                [self.windowDimensions setObject:[NSValue valueWithCGRect:window.view.frame]
-                                          forKey:key];
-            }
-
-            [window closeWindow];
-        }
-    }
-    [self.windowGroups removeObjectForKey:bundleIdentifier];
-}
-
-
-- (NSString*)bundleIdentifierForProcessIdentifier:(pid_t)processIdentifier
-{
-    for(NSString *key in self.windowGroups) {
-        NSMutableArray<LDEWindow*> *windowGroup = self.windowGroups[key];
-        LDEWindow *mainWindow = [windowGroup firstObject];
-        if(mainWindow.appSceneVC.pid == processIdentifier)
-        {
-            return mainWindow.appSceneVC.appObj.bundleIdentifier;
-        }
-    }
-    return nil;
-}
-
-- (NSMutableArray<LDEWindow*>*)windowGroupForBundleIdentifier:(NSString*)bundleIdentifier
-{
-    return [self.windowGroups objectForKey:bundleIdentifier];
-}
-
-- (LDEWindow*)mainWindowForBundleIdentifier:(NSString*)bundleIdentifier
-{
-    return [[self windowGroupForBundleIdentifier:bundleIdentifier] firstObject];
-}
-
-- (void)bringWindowGroupToFrontWithBundleIdentifier:(NSString*)bundleIdentifier
-{
-    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    if(windowGroup) for(LDEWindow *window in windowGroup) [self bringSubviewToFront:window.view];
-}
-
-- (void)attachView:(UIView*)view toWindowGroupOfBundleIdentifier:(NSString*)bundleIdentifier withTitle:(NSString*)title
-{
-    NSMutableArray<LDEWindow*> *windowGroup = [self windowGroupForBundleIdentifier:bundleIdentifier];
-    LDEWindow *mainWindow = [windowGroup firstObject];
-    if(windowGroup) {
-        NSString *actualTitle = [NSString stringWithFormat:@"%@ - %@", mainWindow.appSceneVC.appObj.displayName, title];
-        NSString *key = [NSString stringWithFormat:@"%@.%@", bundleIdentifier, actualTitle];
-        CGRect frame = CGRectMake(50, 150, 320, 480);
-        NSValue *cachedFrame = [self.windowDimensions objectForKey:key];
-        if (cachedFrame) frame = cachedFrame.CGRectValue;
-        
-        LDEWindow *window = [[LDEWindow alloc] initWithAttachment:view
-                                                        withTitle:actualTitle
-                                                   withDimensions:frame];
-        [self addSubview:window.view];
-        [windowGroup addObject:window];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        LDEWindow *window = [self.windows objectForKey:@(processIdentifier)];
+        if(window) [window closeWindow];
+        [self.windows removeObjectForKey:@(processIdentifier)];
+    });
+    return YES;
 }
 
 @end

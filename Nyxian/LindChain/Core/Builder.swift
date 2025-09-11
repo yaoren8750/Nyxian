@@ -263,9 +263,9 @@ class Builder {
                 if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
                     appInfo?.save()
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
-                        LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
+                        /*LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
                                                                      terminateIfRunning: true,
-                                                                     enableDebugging: project.projectConfig.debug)
+                                                                     enableDebugging: project.projectConfig.debug)*/
                     } else {
                         nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to install application"])
                     }
