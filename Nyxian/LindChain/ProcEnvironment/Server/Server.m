@@ -93,4 +93,14 @@
     reply(environment_process_identifier);
 }
 
+/*
+ application
+ */
+- (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply
+{
+    // To be done
+    // TODO: Make windows spawn like on macOS
+    reply(YES);
+}
+
 @end

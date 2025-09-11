@@ -17,6 +17,8 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
+#import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/application.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <dlfcn.h>
@@ -28,7 +30,16 @@ int environment_UIApplicationMain(int argc,
                                   NSString *principalClassName,
                                   NSString *delegateClassName)
 {
-    NSLog(@"environment_UIApplicationMain: Hello, World!");
+    // Only allow client processing
+    if(!environmentIsHost)
+    {
+        // Tell host app to let our process appear
+        [hostProcessProxy makeWindowVisibleForProcessIdentifier:getpid() withReply:^(BOOL valid){
+            // If host says nono, then nono
+            if(!valid) exit(-1);
+        }];
+    }
+    
     return real_UIApplicationMain(argc, argv, principalClassName, delegateClassName);
 }
 

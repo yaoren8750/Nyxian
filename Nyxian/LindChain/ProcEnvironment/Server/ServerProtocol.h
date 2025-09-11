@@ -40,6 +40,11 @@
  */
 - (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply;
 
+/*
+ application
+ */
+- (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */
