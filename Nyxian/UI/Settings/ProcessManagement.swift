@@ -18,54 +18,53 @@
 */
 
 import UIKit
-import UniformTypeIdentifiers
 
-class ProcessManagementViewController: UIThemedTableViewController, UITextFieldDelegate {
+class ProcessManagementViewController: UIThemedTableViewController {
     var processes: [LDEProcess] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Process Management"
+        tableView.register(ProcessCell.self, forCellReuseIdentifier: ProcessCell.reuseID)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        processes.removeAll()
         for value in LDEProcessManager.shared().processes {
-            let key: Any = value.0
-            let number: NSNumber = key as! NSNumber
-            self.processes.append(LDEProcessManager.shared().process(forProcessIdentifier: number.int32Value))
+            let number = value.0 as! NSNumber
+            if let proc = LDEProcessManager.shared().process(forProcessIdentifier: number.int32Value) {
+                processes.append(proc)
+            }
         }
-        self.tableView.reloadData()
+        tableView.reloadData()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.processes.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let process: LDEProcess = self.processes[indexPath.row]
-        
-        let cell: UITableViewCell = UITableViewCell()
-        cell.textLabel?.text = "\(process.displayName ?? "Unknown") | PID: \(process.pid) | UID: \(process.uid) | GID: \(process.gid)"
-        return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
+        return processes.count
     }
     
     override func tableView(_ tableView: UITableView,
-                            commit editingStyle: UITableViewCell.EditingStyle,
-                            forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            let process = processes[indexPath.row]
+                            cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: ProcessCell.reuseID, for: indexPath) as! ProcessCell
+        cell.configure(with: processes[indexPath.row])
+        return cell
+    }
+    
+    override func tableView(_ tableView: UITableView,
+                            trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let process = processes[indexPath.row]
+        
+        let killAction = UIContextualAction(style: .destructive, title: "Kill") { _, _, completion in
             if process.terminate() {
-                processes.remove(at: indexPath.row)
+                self.processes.remove(at: indexPath.row)
                 tableView.deleteRows(at: [indexPath], with: .automatic)
             } else {
-                NotificationServer.NotifyUser(level: .error, notification: "Coult not kill \(process.pid)")
+                NotificationServer.NotifyUser(level: .error, notification: "Could not kill \(process.pid)")
             }
+            completion(true)
         }
+        
+        return UISwipeActionsConfiguration(actions: [killAction])
     }
-
 }
