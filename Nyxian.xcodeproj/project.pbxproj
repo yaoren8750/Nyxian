@@ -129,6 +129,7 @@
 				LindChain/LiveContainer/utils.m,
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
+				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/libproc_userspace.m,
 				LindChain/ProcEnvironment/proxy.m,
