@@ -95,6 +95,7 @@
     
     self.displayName = applicationObject.displayName;
     self.bundleIdentifier = applicationObject.bundleIdentifier;
+    self.icon = applicationObject.icon;
     
     return self;
 }

@@ -37,6 +37,9 @@
 @property (nonatomic,strong) NSString *displayName;
 @property (nonatomic,strong) NSString *bundleIdentifier;
 @property (nonatomic,strong) NSString *executablePath;
+
+@property (nonatomic,strong) UIImage *icon;
+
 @property (nonatomic) pid_t pid;
 @property (nonatomic) uid_t uid;
 @property (nonatomic) gid_t gid;
