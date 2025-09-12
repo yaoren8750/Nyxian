@@ -31,6 +31,7 @@
 
 @property (nonatomic,strong) NSExtension *extension;
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
+@property (nonatomic,strong) RBSProcessMonitor *processMonitor;
 
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;

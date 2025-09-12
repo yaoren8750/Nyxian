@@ -56,12 +56,6 @@
     item.userInfo = items;
     
     __typeof(self) weakSelf = self;
-    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-    }];
-    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-    }];
     
     // FIXME: Executing LDEApplicationWorkspace twice causes deadlock in this block
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
@@ -71,6 +65,20 @@
             self.pid = [self.extension pidForRequestIdentifier:self.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
             self.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
+            self.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
+                                                                                                               RBSProcessHandle *handle,
+                                                                                                               RBSProcessStateUpdate *update)
+                                   {
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    // Interestingly, when a process exists then it the process monitor says that there is no state
+                    NSArray<RBSProcessState *> *states = [self.processMonitor states];
+                    if([states count] == 0)
+                    {
+                        // Process dead!
+                        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
+                    }
+                });
+            }];
         }
         dispatch_semaphore_signal(sema);
     }];
@@ -149,26 +157,21 @@
     return YES;
 }
 
-- (BOOL)isRunning {
+- (BOOL)isRunning
+{
     return [self.processHandle isValid];
 }
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
     __weak typeof(self) weakSelf = self;
-    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-        callback(uuid, error);
-    }];
+    [_extension setRequestCancellationBlock:callback];
 }
 
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback
 {
     __weak typeof(self) weakSelf = self;
-    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-        callback(uuid);
-    }];
+    [_extension setRequestInterruptionBlock:callback];
 }
 
 + (BOOL)supportsSecureCoding {

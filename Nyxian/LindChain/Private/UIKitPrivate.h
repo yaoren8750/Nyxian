@@ -333,6 +333,261 @@
 - (int)pid;
 @end
 
+@interface RBSProcessMonitorConfiguration : NSObject <NSCopying>
+
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (nonatomic) unsigned long long events;
+@property (readonly) unsigned long long hash;
+@property (nonatomic, readonly) unsigned long long identifier;
+@property (nonatomic, copy) NSArray *predicates;
+@property (nonatomic) unsigned int serviceClass;
+@property (readonly) Class superclass;
+@property (nonatomic, copy) id /* block */ updateHandler;
+
++ (bool)supportsRBSXPCSecureCoding;
+
+- (id)copyWithZone:(NSZone)arg1;
+- (id)debugDescription;
+- (id)description;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (unsigned long long)events;
+- (unsigned long long)hash;
+- (unsigned long long)identifier;
+- (id)init;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (bool)isEqual:(id)arg1;
+- (bool)matchesProcess:(id)arg1;
+- (id)predicates;
+- (unsigned int)serviceClass;
+- (void)setEvents:(unsigned long long)arg1;
+- (void)setPredicates:(NSArray<RBSProcessPredicate*>*)arg1;
+- (void)setPreventLaunchUpdateHandle:(id /* block */)arg1;
+- (void)setServiceClass:(unsigned int)arg1;
+- (void)setStateDescriptor:(id)arg1;
+- (void)setUpdateHandler:(id /* block */)arg1;
+- (id)stateDescriptor;
+- (id /* block */)updateHandler;
+
+@end
+
+@interface RBSProcessMonitor : NSObject
+
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (nonatomic, readonly) unsigned long long events;
+@property (readonly) unsigned long long hash;
+@property (nonatomic, readonly) unsigned int serviceClass;
+@property (nonatomic, readonly, copy) NSSet *states;
+@property (readonly) Class superclass;
+
++ (id)_monitorWithService:(id)arg1;
++ (id)_monitorWithService:(id)arg1 configuration:(id /* block */)arg2;
++ (id)monitor;
++ (id)monitorWithConfiguration:(id /* block */)arg1;
++ (id)monitorWithPredicate:(id)arg1 updateHandler:(id /* block */)arg2;
+
+- (void)_handleExitEvent:(id)arg1;
+- (void)_handlePreventLaunchUpdate:(id)arg1;
+- (void)_handleProcessStateChange:(id)arg1;
+- (id)calloutQueue;
+- (id)configuration;
+- (id)copyWithZone:(NSZone)arg1;
+- (void)dealloc;
+- (id)description;
+- (unsigned long long)events;
+- (id)init;
+- (void)invalidate;
+- (unsigned int)serviceClass;
+- (void)setEvents:(unsigned long long)arg1;
+- (void)setPredicates:(id)arg1;
+- (void)setPreventLaunchUpdateHandle:(id /* block */)arg1;
+- (void)setServiceClass:(unsigned int)arg1;
+- (void)setStateDescriptor:(id)arg1;
+- (void)setUpdateHandler:(id /* block */)arg1;
+- (id)stateForIdentity:(id)arg1;
+- (id)states;
+- (void)updateConfiguration:(id /* block */)arg1;
+
+@end
+
+@interface RBSProcessState : NSObject <NSCopying>
+
+@property (nonatomic, readonly, copy) NSSet *assertions;
+@property (nonatomic, readonly, copy) NSObject<OS_xpc_object> *codedState;
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (nonatomic) unsigned char debugState;
+@property (getter=isDebugging, nonatomic, readonly) bool debugging;
+@property (readonly, copy) NSString *description;
+@property (getter=isEmptyState, nonatomic, readonly) bool emptyState;
+@property (nonatomic, copy) NSSet *endowmentInfos;
+@property (nonatomic, copy) NSSet *endowmentNamespaces;
+@property (readonly) unsigned long long hash;
+@property (nonatomic, copy) NSSet *legacyAssertions;
+@property (getter=isPreventedFromLaunching, nonatomic, readonly) bool preventedFromLaunching;
+@property (nonatomic, copy) NSSet *primitiveAssertions;
+@property (nonatomic, readonly) RBSProcessHandle *process;
+@property (getter=isRunning, nonatomic, readonly) bool running;
+@property (readonly) Class superclass;
+@property (nonatomic, copy) NSSet *tags;
+@property (nonatomic) unsigned char taskState;
+@property (nonatomic) unsigned char terminationResistance;
+
++ (void)setActiveStateDescriptor:(id)arg1;
++ (id)stateWithProcess:(id)arg1;
++ (id)statesForPredicate:(id)arg1 withDescriptor:(id)arg2 error:(out id*)arg3;
++ (id)statesForPredicate:(id)arg1 withDescriptor:(id)arg2 service:(id)arg3 error:(out id*)arg4;
++ (bool)supportsRBSXPCSecureCoding;
++ (id)untrackedRunningStateforProcess:(id)arg1;
+
+- (id)assertions;
+- (id)codedState;
+- (id)copyWithZone:(NSZone)arg1;
+- (unsigned char)debugState;
+- (id)description;
+- (void)encodeWithPreviousState:(id)arg1;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (id)endowmentInfos;
+- (id)endowmentNamespaces;
+- (unsigned long long)hash;
+- (id)init;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (bool)isDebugging;
+- (bool)isDifferentFromState:(id)arg1 significantly:(out bool*)arg2;
+- (bool)isEmptyState;
+- (bool)isEqual:(id)arg1;
+- (bool)isPreventedFromLaunching;
+- (bool)isRunning;
+- (id)legacyAssertions;
+- (id)primitiveAssertions;
+- (id)process;
+- (void)setDebugState:(unsigned char)arg1;
+- (void)setEndowmentInfos:(id)arg1;
+- (void)setEndowmentNamespaces:(id)arg1;
+- (void)setLegacyAssertions:(id)arg1;
+- (void)setPrimitiveAssertions:(id)arg1;
+- (void)setTags:(id)arg1;
+- (void)setTaskState:(unsigned char)arg1;
+- (void)setTerminationResistance:(unsigned char)arg1;
+- (id)tags;
+- (unsigned char)taskState;
+- (unsigned char)terminationResistance;
+
+@end
+
+@interface RBSProcessExitStatus : NSObject <NSCopying, NSSecureCoding>
+
+@property (nonatomic, readonly) unsigned long long code;
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (nonatomic, readonly) unsigned int domain;
+@property (readonly) unsigned long long hash;
+@property (readonly) Class superclass;
+
++ (id)statusWithDomain:(unsigned int)arg1 code:(unsigned long long)arg2;
++ (bool)supportsRBSXPCSecureCoding;
++ (bool)supportsSecureCoding;
+
+- (id)_dictionaryRepresentation;
+- (id)_initWithDictionaryRepresentation:(id)arg1;
+- (bool)_isVoluntary;
+- (unsigned long long)code;
+- (id)copyWithZone:(struct _NSZone { }*)arg1;
+- (id)description;
+- (unsigned int)domain;
+- (void)encodeWithCoder:(id)arg1;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (id)error;
+- (unsigned long long)hash;
+- (id)initWithCoder:(id)arg1;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (bool)isCrash;
+- (bool)isEqual:(id)arg1;
+- (bool)isFairPlayFailure;
+- (bool)isJetsam;
+- (bool)isSignal;
+- (bool)isValid;
+
+@end
+
+@interface RBSProcessExitContext : NSObject <NSSecureCoding>
+
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (readonly) unsigned long long hash;
+@property (nonatomic, readonly) int legacyCode;
+@property (nonatomic, readonly) RBSProcessExitStatus *status;
+@property (readonly) Class superclass;
+@property (nonatomic, readonly) NSDate *timestamp;
+@property (nonatomic, readonly) long long type;
+
++ (id)exitContextForNamespace:(unsigned int)arg1 code:(unsigned long long)arg2 wait4Status:(int)arg3;
++ (bool)supportsRBSXPCSecureCoding;
++ (bool)supportsSecureCoding;
+
+- (id)copyWithStatus:(id)arg1;
+- (id)copyWithTerminationContext:(id)arg1;
+- (id)copyWithTimestamp:(id)arg1;
+- (id)debugDescription;
+- (id)description;
+- (void)encodeWithCoder:(id)arg1;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (unsigned long long)hash;
+- (id)initWithCoder:(id)arg1;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (bool)isEqual:(id)arg1;
+- (int)legacyCode;
+- (id)status;
+- (id)terminationContext;
+- (id)timestamp;
+- (long long)type;
+
+@end
+
+@interface RBSProcessExitEvent : NSObject {
+    RBSProcessExitContext * _context;
+    RBSProcessHandle * _process;
+}
+
+@property (nonatomic, retain) RBSProcessExitContext *context;
+@property (readonly, copy) NSString *debugDescription; /* unknown property attribute: ? */
+@property (readonly, copy) NSString *description;
+@property (readonly) unsigned long long hash;
+@property (nonatomic, retain) RBSProcessHandle *process;
+@property (readonly) Class superclass;
+
++ (bool)supportsRBSXPCSecureCoding;
+
+- (id)context;
+- (id)copyWithZone:(struct _NSZone { }*)arg1;
+- (id)description;
+- (void)encodeWithRBSXPCCoder:(id)arg1;
+- (unsigned long long)hash;
+- (id)initWithRBSXPCCoder:(id)arg1;
+- (bool)isEqual:(id)arg1;
+- (id)process;
+- (void)setContext:(id)arg1;
+- (void)setProcess:(id)arg1;
+
+@end
+
+@interface RBSProcessStateUpdate : NSObject
+
+@property (nonatomic, readonly) RBSProcessExitEvent *exitEvent;
+@property (nonatomic, readonly) RBSProcessState *previousState;
+@property (nonatomic, readonly) RBSProcessHandle *process;
+@property (nonatomic, readonly) RBSProcessState *state;
+
++ (id)updateWithState:(id)arg1 previousState:(id)arg2 exitEvent:(id)arg3;
+
+- (id)description;
+- (id)exitEvent;
+- (id)previousState;
+- (id)process;
+- (id)state;
+
+@end
+
 @interface RBSTarget : NSObject
 @end
 
