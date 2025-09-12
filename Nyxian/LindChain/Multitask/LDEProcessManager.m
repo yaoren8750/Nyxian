@@ -127,13 +127,15 @@
 - (uid_t)uid
 {
     // TODO: Implement it, currently returning mobile user
-    return 501;
+    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
+    return getuid();
 }
 
 - (gid_t)gid
 {
     // TODO: Implement it, currently returning mobile user
-    return 501;
+    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
+    return getgid();
 }
 
 /*
@@ -164,13 +166,11 @@
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
-    __weak typeof(self) weakSelf = self;
     [_extension setRequestCancellationBlock:callback];
 }
 
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback
 {
-    __weak typeof(self) weakSelf = self;
     [_extension setRequestInterruptionBlock:callback];
 }
 
