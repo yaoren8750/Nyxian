@@ -211,6 +211,15 @@
 {
     self = [super init];
     self.processes = [[NSMutableDictionary alloc] init];
+    
+    // Adding our own process as the "kernel"
+    LDEProcess *hostApp = [[LDEProcess alloc] init];
+    hostApp.displayName = @"Nyxian";
+    hostApp.bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+    hostApp.executablePath = [[NSBundle mainBundle] executablePath];
+    hostApp.pid = 0;
+    [self.processes setObject:hostApp forKey:@(0)];
+    
     return self;
 }
 
