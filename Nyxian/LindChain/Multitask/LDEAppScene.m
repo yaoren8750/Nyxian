@@ -14,7 +14,7 @@
 #import <dlfcn.h>
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
-#import <LindChain/ProcEnvironment/libproc_userspace.h>
+#import <LindChain/ProcEnvironment/libproc.h>
 
 @interface LDEAppScene()
 

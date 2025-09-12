@@ -17,19 +17,14 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-// MARK: This needs TXM support on-device
-
-#ifndef PROCENVIRONMENT_TFPUSERSPACE_H
-#define PROCENVIRONMENT_TFPUSERSPACE_H
+#ifndef PROCENVIRONMENT_LIBPROC_H
+#define PROCENVIRONMENT_LIBPROC_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/Private/UIKitPrivate.h>
+#import <unistd.h>
 
-kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
-                                       pid_t pid,
-                                       mach_port_name_t *requestTaskPort);
-void environment_host_take_client_task_port(RBSMachPort *machPort);
+int environment_proc_listallpids(void *buffer, int buffersize);
 
-void environment_tfp_userspace_init(BOOL host);
+void environment_libproc_init(BOOL host);
 
-#endif /* PROCENVIRONMENT_TFPUSERSPACE_H */
+#endif /* PROCENVIRONMENT_LIBPROC_H */

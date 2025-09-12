@@ -21,7 +21,7 @@
  Header
  */
 #import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/tfp_userspace.h>
+#import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
 #import <unistd.h>
@@ -99,7 +99,7 @@ void environment_host_take_client_task_port(RBSMachPort *machPort)
 /*
  Init
  */
-void environment_tfp_userspace_init(BOOL host)
+void environment_tfp_init(BOOL host)
 {
     if (@available(iOS 26.0, *)) {
         tfp_userspace_ports = [[NSMutableDictionary alloc] init];

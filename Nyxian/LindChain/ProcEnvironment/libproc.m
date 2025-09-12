@@ -22,7 +22,7 @@
  */
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
-#import <LindChain/ProcEnvironment/libproc_userspace.h>
+#import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
@@ -179,7 +179,7 @@ int environment_kill(pid_t pid, int signal)
 /*
  Init
  */
-void environment_libproc_userspace_init(BOOL host)
+void environment_libproc_init(BOOL host)
 {
     if(!host)
     {
