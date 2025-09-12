@@ -27,11 +27,13 @@
 #import <unistd.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <dlfcn.h>
+#import <LindChain/ProcEnvironment/tfp_object.h>
+
 
 /*
  Internal Implementation
  */
-static NSMutableDictionary <NSNumber*,RBSMachPort*> *tfp_userspace_ports;
+static NSMutableDictionary <NSNumber*,TaskPortObject*> *tfp_userspace_ports;
 
 kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
                                        pid_t pid,
@@ -40,7 +42,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     __block kern_return_t kr = KERN_SUCCESS;
     
     // Ignore input task port, literally take from `tfp_userspace_ports`
-    RBSMachPort *machPortObject = [tfp_userspace_ports objectForKey:@(pid)];
+    TaskPortObject *machPortObject = [tfp_userspace_ports objectForKey:@(pid)];
     if(machPortObject)
     {
         if([machPortObject isUsable])
@@ -63,7 +65,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         }
         else
         {
-            [hostProcessProxy getPort:pid withReply:^(RBSMachPort *port){
+            [hostProcessProxy getPort:pid withReply:^(TaskPortObject *port){
                 if(!port)
                 {
                     kr = KERN_FAILURE;
@@ -85,7 +87,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     return kr;
 }
 
-void environment_host_take_client_task_port(RBSMachPort *machPort)
+void environment_host_take_client_task_port(TaskPortObject *machPort)
 {
     if(!environmentIsHost) return;
     if([machPort isUsable])
@@ -108,14 +110,14 @@ void environment_tfp_init(BOOL host)
         {
             // MARK: Guest Init
             // MARK: iOS 26 is required?
-            [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
+            [hostProcessProxy sendPort:[[TaskPortObject alloc] initWithPort:mach_task_self()]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
         }
         else
         {
             // MARK: HOST Init
             // Set kernel mach port to our host apps mach port
-            [tfp_userspace_ports setObject:[PrivClass(RBSMachPort) portForPort:mach_task_self()] forKey:@(0)];
+            [tfp_userspace_ports setObject:[[TaskPortObject alloc] initWithPort:mach_task_self()] forKey:@(0)];
         }
     }
     else

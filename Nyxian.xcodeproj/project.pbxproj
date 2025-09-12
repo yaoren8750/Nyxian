@@ -134,6 +134,7 @@
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/libproc.m,
 				LindChain/ProcEnvironment/proxy.m,
+				LindChain/ProcEnvironment/tfp_object.m,
 				LindChain/ProcEnvironment/tfp.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;

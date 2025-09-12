@@ -71,13 +71,13 @@
 /*
  tfp_userspace
  */
-- (void)sendPort:(RBSMachPort*)machPort
+- (void)sendPort:(TaskPortObject*)machPort
 {
     environment_host_take_client_task_port(machPort);
 }
 
 - (void)getPort:(pid_t)pid
-      withReply:(void (^)(RBSMachPort*))reply
+      withReply:(void (^)(TaskPortObject*))reply
 {
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);

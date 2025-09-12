@@ -17,19 +17,21 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-// MARK: This needs TXM support on-device
-
-#ifndef PROCENVIRONMENT_TFP_H
-#define PROCENVIRONMENT_TFP_H
+#ifndef PROCENVIRONMENT_TFPOBJECT
+#define PROCENVIRONMENT_TFPOBJECT
 
 #import <Foundation/Foundation.h>
-#import <LindChain/Private/UIKitPrivate.h>
+#import <xpc/xpc.h>
+#import <mach/mach.h>
 
-kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
-                                       pid_t pid,
-                                       mach_port_name_t *requestTaskPort);
-void environment_host_take_client_task_port(TaskPortObject *machPort);
+@interface TaskPortObject : NSObject <NSSecureCoding>
 
-void environment_tfp_init(BOOL host);
+@property (nonatomic, readonly) mach_port_t port;
 
-#endif /* PROCENVIRONMENT_TFP_H */
+- (instancetype)initWithPort:(mach_port_t)port;
+
+- (BOOL)isUsable;
+
+@end
+
+#endif /* PROCENVIRONMENT_TFPOBJECT */

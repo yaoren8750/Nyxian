@@ -23,6 +23,7 @@
 #import <Foundation/Foundation.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
+#import <LindChain/ProcEnvironment/tfp_object.h>
 
 @protocol ServerProtocol
 
@@ -33,8 +34,8 @@
 /*
  tfp_userspace
  */
-- (void)sendPort:(RBSMachPort*)machPort;
-- (void)getPort:(pid_t)pid withReply:(void (^)(RBSMachPort*))reply;
+- (void)sendPort:(TaskPortObject*)machPort;
+- (void)getPort:(pid_t)pid withReply:(void (^)(TaskPortObject*))reply;
 
 /*
  libproc_userspace
