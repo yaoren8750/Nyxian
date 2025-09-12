@@ -64,11 +64,13 @@
             self.identifier = identifier;
             self.pid = [self.extension pidForRequestIdentifier:self.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
-            self.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
             self.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
                                                                                                                RBSProcessHandle *handle,
                                                                                                                RBSProcessStateUpdate *update)
                                    {
+                // Setting process handle directly from process monitor
+                weakSelf.processHandle = handle;
+                
                 // Interestingly, when a process exists then it the process monitor says that there is no state
                 NSArray<RBSProcessState *> *states = [monitor states];
                 if([states count] == 0)
