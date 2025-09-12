@@ -106,64 +106,12 @@
     }];
     [self.presenter activate];
     
-    /*__weak typeof(self) weakSelf = self;
-    [self.extension setRequestInterruptionBlock:^(NSUUID *uuid) {
-        [weakSelf appTerminationCleanUp:NO];
-    }];*/
-    
     [self.contentView addSubview:self.presenter.presentationView];
     self.contentView.layer.anchorPoint = CGPointMake(0, 0);
     self.contentView.layer.position = CGPointMake(0, 0);
     
     [self.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
-    
-    // FIXME: Route touch events to us so we can intercept them and bring the window to the front when user taps on it
-    // MARK: It already partially works, I assume we miss the displayUUID or entitlements
-    /*dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        FBSceneLayerManager *layerManager = scene.layerManager;
-        NSLog(@"Successfully gotten layerManager: %@\n", layerManager);
-        
-        NSArray<FBSceneLayer*> *layers = layerManager.layers;
-        NSLog(@"Successfully gotten layers of scene: %@\n", layers);
-        
-        BKSSceneHostSettings *backbordSettings =
-            [[PrivClass(BKSSceneHostSettings) alloc] initWithIdentifier:@"SystemOverlay"
-                                               touchBehavior:2];
-        
-        for(FBSceneLayer *layer in layers)
-        {
-            BKSSceneHostRegistration *registration = [[PrivClass(BKSTouchEventService) sharedInstance] registerSceneHostSettings:backbordSettings forCAContextID:layer.contextID];
-            NSLog(@"%@", registration);
-            
-            BKSTouchStreamPolicy *policy = [PrivClass(BKSTouchStreamPolicy) new];
-            
-            BKSTouchStream *touchStream = [[PrivClass(BKSTouchStream) alloc] initWithContextID:layer.contextID displayUUID:nil identifier:nil policy:policy];
-            NSLog(@"%@", touchStream);
-        }
-    });*/
 }
-
-/*- (void)terminate {
-    if(self.isAppRunning) {
-        NSExtension *targetExtension = self.extension;
-        [targetExtension _kill:SIGCONT];
-        [targetExtension _kill:SIGTERM];
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [targetExtension _kill:SIGKILL];
-        });
-    }
-}
-
-- (void)restart {
-    if(![self.restartLock tryLock]) return;
-    [_extension setRequestCancellationBlock:^(NSUUID *uuid, NSError *error) {}];
-    [_extension setRequestInterruptionBlock:^(NSUUID *uuid) {}];
-    [self terminate];
-    [self appTerminationCleanUp:YES];
-    _isAppTerminationCleanUpCalled = NO;
-    [self execute];
-    [self.restartLock unlock];
-}*/
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
     if(!self.process.isRunning) {

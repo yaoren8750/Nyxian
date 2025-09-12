@@ -72,6 +72,7 @@
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
+- (BOOL)isExecutingProcessWithBundleIdentifier:(NSString*)bundleIdentifier;
 
 @end
 

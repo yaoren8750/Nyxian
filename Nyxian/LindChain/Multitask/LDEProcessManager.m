@@ -87,6 +87,7 @@
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
 {
 #if __has_include(<Nyxian-Swift.h>)
+    if([[LDEProcessManager shared] isExecutingProcessWithBundleIdentifier:bundleIdentifier]) return nil;
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
     if(!applicationObject.isLaunchAllowed)
     {
@@ -148,9 +149,8 @@
     return YES;
 }
 
-- (BOOL)isRunning
-{
-    return self.pid > 0 && getpgid(self.pid) > 0;
+- (BOOL)isRunning {
+    return [self.processHandle isValid];
 }
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
@@ -253,6 +253,22 @@
 #if __has_include(<Nyxian-Swift.h>)
     [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:pid];
 #endif
+}
+
+- (BOOL)isExecutingProcessWithBundleIdentifier:(NSString*)bundleIdentifier
+{
+    for(NSNumber *key in self.processes)
+    {
+        LDEProcess *process = [self.processes objectForKey:key];
+        if(process)
+        {
+            if([process.bundleIdentifier isEqual:bundleIdentifier])
+            {
+                return YES;
+            }
+        }
+    }
+    return NO;
 }
 
 @end

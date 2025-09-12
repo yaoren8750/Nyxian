@@ -348,16 +348,6 @@ void UIKitFixesInit(void) {
     }
 }
 
-- (void)appSceneVCAppDidExit:(LDEAppScene*)vc {
-    /*self.view.layer.masksToBounds = NO;
-    [UIView transitionWithView:self.view.window
-                      duration:0.4
-                       options:UIViewAnimationOptionTransitionCrossDissolve
-                    animations:^{
-        self.view.hidden = YES;
-    } completion:nil];*/
-}
-
 - (void)appSceneVC:(LDEAppScene*)vc didInitializeWithError:(NSError *)error {
     // TODO: Fix it
     dispatch_async(dispatch_get_main_queue(), ^{
