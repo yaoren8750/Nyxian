@@ -173,7 +173,7 @@
                     [placeholderStack.centerYAnchor constraintEqualToAnchor:blurView.contentView.centerYAnchor]
                 ]];
             } else {
-                for(NSNumber *pidKey in self.windows) {
+                for (NSNumber *pidKey in self.windows) {
                     LDEWindow *window = self.windows[pidKey];
                     
                     UIView *tile = [[UIView alloc] init];
@@ -198,6 +198,11 @@
                         [title.centerXAnchor constraintEqualToAnchor:tile.centerXAnchor],
                         [title.centerYAnchor constraintEqualToAnchor:tile.centerYAnchor]
                     ]];
+                    
+                    tile.userInteractionEnabled = YES;
+                    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTileTap:)];
+                    tile.tag = pidKey.intValue;
+                    [tile addGestureRecognizer:tap];
                     
                     [stack addArrangedSubview:tile];
                 }
@@ -227,6 +232,37 @@
 
         [self showAppSwitcher];
     }
+}
+
+- (void)handleTileTap:(UITapGestureRecognizer *)recognizer {
+    UIView *tile = recognizer.view;
+    if (!tile) return;
+    
+    pid_t pid = (pid_t)tile.tag;
+    LDEWindow *window = self.windows[@(pid)];
+    if (!window) return;
+    
+    if (window.view.superview != self) {
+        [self addSubview:window.view];
+    }
+    
+    window.view.hidden = NO;
+    window.view.alpha = 1.0;
+    window.view.transform = CGAffineTransformMakeTranslation(0, 500);
+    
+    [self bringSubviewToFront:window.view];
+
+    [window.view.layer removeAllAnimations];
+    [UIView animateWithDuration:0.6
+                          delay:0
+         usingSpringWithDamping:0.8
+          initialSpringVelocity:0.6
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+        window.view.transform = CGAffineTransformIdentity;
+    } completion:nil];
+    
+    [self hideAppSwitcher];
 }
 
 - (void)showAppSwitcher

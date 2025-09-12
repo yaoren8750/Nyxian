@@ -69,58 +69,108 @@ void UIKitFixesInit(void) {
     self.windowName = process.displayName;
     self.navigationItem.title = process.displayName;
     
-    NSArray *menuItems = @[
-        [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
-            UIPasteboard.generalPasteboard.string = @(self.appSceneVC.process.pid).stringValue;
-        }],
-        [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
-            if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
-                [PiPManager.shared stopPiP];
-            } else {
-                [PiPManager.shared startPiPWithVC:self.appSceneVC];
-            }
-        }],
-        [UICustomViewMenuElement elementWithViewProvider:^UIView *(UICustomViewMenuElement *element) {
-            return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
-        }]
-    ];
-    
-    UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
-    UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
-    maximizeImage = [maximizeImage imageWithConfiguration:maximizeConfig];
-    self.maximizeButton = [[UIBarButtonItem alloc] initWithImage:maximizeImage style:UIBarButtonItemStylePlain target:self action:@selector(maximizeWindow)];
-    self.maximizeButton.tintColor = [UIColor systemGreenColor];
-    
-    UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
-    UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
-    closeImage = [closeImage imageWithConfiguration:closeConfig];
-    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
-    closeButton.tintColor = [UIColor systemRedColor];
-
-    if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-        NSArray *barButtonItems = @[closeButton];
+    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
+    {
+        NSArray *menuItems = @[
+            [UIAction actionWithTitle:@"Copy Pid" image:[UIImage systemImageNamed:@"doc.on.doc"] identifier:nil handler:^(UIAction * _Nonnull action) {
+                UIPasteboard.generalPasteboard.string = @(self.appSceneVC.process.pid).stringValue;
+            }],
+            [UIAction actionWithTitle:@"Enable Pip" image:[UIImage systemImageNamed:@"pip.enter"] identifier:nil handler:^(UIAction * _Nonnull action) {
+                if ([PiPManager.shared isPiPWithVC:self.appSceneVC]) {
+                    [PiPManager.shared stopPiP];
+                } else {
+                    [PiPManager.shared startPiPWithVC:self.appSceneVC];
+                }
+            }],
+            [UICustomViewMenuElement elementWithViewProvider:^UIView *(UICustomViewMenuElement *element) {
+                return [self scaleSliderViewWithTitle:@"Scale" min:0.5 max:2.0 value:self.scaleRatio stepInterval:0.01];
+            }]
+        ];
+        
+        UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
+        UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
+        maximizeImage = [maximizeImage imageWithConfiguration:maximizeConfig];
+        self.maximizeButton = [[UIBarButtonItem alloc] initWithImage:maximizeImage style:UIBarButtonItemStylePlain target:self action:@selector(maximizeWindow)];
+        self.maximizeButton.tintColor = [UIColor systemGreenColor];
+        
+        
+        UIImage *closeImage = [UIImage systemImageNamed:@"xmark.circle.fill"];
+        UIImageConfiguration *closeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
+        closeImage = [closeImage imageWithConfiguration:closeConfig];
+        UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithImage:closeImage style:UIBarButtonItemStylePlain target:self action:@selector(closeWindow)];
+        closeButton.tintColor = [UIColor systemRedColor];
+        
+        NSArray *barButtonItems = @[closeButton, self.maximizeButton];
         self.navigationItem.rightBarButtonItems = barButtonItems;
         
+        __weak typeof(self) weakSelf = self;
+        [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
+            /*if(!weakSelf.appSceneVC.isAppRunning) {
+             return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
+             } else {*/
+            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.appSceneVC.process.pid];
+            return [UIMenu menuWithTitle:pidText children:menuItems];
+            //}
+        }];
+    }
+    else
+    {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
             [self maximizeWindow];
+            UIPanGestureRecognizer *pullDownGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePullDown:)];
+            [self.navigationBar addGestureRecognizer:pullDownGesture];
         });
-    } else {
-        NSArray *barButtonItems = @[closeButton, self.maximizeButton];
-        self.navigationItem.rightBarButtonItems = barButtonItems;
     }
-
-    __weak typeof(self) weakSelf = self;
-    [self.navigationItem setTitleMenuProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions){
-        /*if(!weakSelf.appSceneVC.isAppRunning) {
-            return [UIMenu menuWithTitle:NSLocalizedString(@"lc.multitaskAppWindow.appTerminated", nil) children:@[]];
-        } else {*/
-            NSString *pidText = [NSString stringWithFormat:@"PID: %d", weakSelf.appSceneVC.process.pid];
-            return [UIMenu menuWithTitle:pidText children:menuItems];
-        //}
-    }];
     
     return self;
+}
+
+- (void)handlePullDown:(UIPanGestureRecognizer *)gesture {
+    UIView *windowView = self.view;
+    CGPoint translation = [gesture translationInView:windowView.superview];
+    
+    switch (gesture.state) {
+        case UIGestureRecognizerStateChanged: {
+            if (translation.y > 0) {
+                // move only downward
+                windowView.transform = CGAffineTransformMakeTranslation(0, translation.y);
+            }
+            break;
+        }
+        case UIGestureRecognizerStateEnded:
+        case UIGestureRecognizerStateCancelled: {
+            CGFloat velocityY = [gesture velocityInView:windowView.superview].y;
+            CGFloat offsetY = translation.y;
+            
+            BOOL shouldDismiss = (offsetY > 150 || velocityY > 600);
+            
+            if (shouldDismiss) {
+                [UIView animateWithDuration:0.3
+                                      delay:0
+                                    options:UIViewAnimationOptionCurveEaseInOut
+                                 animations:^{
+                                     windowView.transform = CGAffineTransformMakeTranslation(0, windowView.bounds.size.height + 100);
+                                     windowView.alpha = 0;
+                                 } completion:^(BOOL finished) {
+                                     [windowView removeFromSuperview];
+                                 }];
+            } else {
+                // snap back with spring
+                [UIView animateWithDuration:0.6
+                                      delay:0
+                     usingSpringWithDamping:0.8
+                      initialSpringVelocity:0.6
+                                    options:UIViewAnimationOptionCurveEaseInOut
+                                 animations:^{
+                                     windowView.transform = CGAffineTransformIdentity;
+                                 } completion:nil];
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
