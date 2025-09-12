@@ -81,6 +81,43 @@
 - (void)getPort:(pid_t)pid
       withReply:(void (^)(RBSMachPort*))reply
 {
+    if (pid == 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // TODO: Get callers identity
+            UIAlertController *alert =
+            [UIAlertController alertControllerWithTitle:@"Task Port Request"
+                                                message:[NSString stringWithFormat:
+                                                         @"Process <redacted> requested the task port of the host app."]
+                                         preferredStyle:UIAlertControllerStyleAlert];
+            
+            UIAlertAction *allow = [UIAlertAction actionWithTitle:@"Allow"
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * _Nonnull action) {
+                mach_port_t port;
+                kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
+                reply((kr == KERN_SUCCESS) ? [PrivClass(RBSMachPort) portForPort:port] : nil);
+            }];
+            
+            UIAlertAction *deny = [UIAlertAction actionWithTitle:@"Deny"
+                                                           style:UIAlertActionStyleCancel
+                                                         handler:^(UIAlertAction * _Nonnull action) {
+                reply(nil);
+            }];
+            
+            [alert addAction:allow];
+            [alert addAction:deny];
+            
+            // Present alert from top-most view controller
+            UIViewController *rootVC = UIApplication.sharedApplication.keyWindow.rootViewController;
+            UIViewController *presentingVC = rootVC;
+            while (presentingVC.presentedViewController) {
+                presentingVC = presentingVC.presentedViewController;
+            }
+            [presentingVC presentViewController:alert animated:YES completion:nil];
+        });
+        return;
+    }
+    
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
     reply((kr == KERN_SUCCESS) ? [PrivClass(RBSMachPort) portForPort:port] : nil);

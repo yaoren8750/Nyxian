@@ -111,6 +111,12 @@ void environment_tfp_userspace_init(BOOL host)
             [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
         }
+        else
+        {
+            // MARK: HOST Init
+            // Set kernel mach port to our host apps mach port
+            [tfp_userspace_ports setObject:[PrivClass(RBSMachPort) portForPort:mach_task_self()] forKey:@(0)];
+        }
     }
     else
     {
