@@ -28,33 +28,27 @@
 #import <LindChain/Multitask/LDEProcessManager.h>
 
 /*
+ Helper function
+ */
+LDEProcess *environment_client_get_process_of_process_identifier(pid_t process_identifier)
+{
+    if(environmentIsHost) return nil;
+    __block LDEProcess *process = nil;
+    [hostProcessProxy proc_getProcStructureForProcessIdentifier:process_identifier withReply:^(LDEProcess *replyProcess){
+        process = replyProcess;
+        dispatch_semaphore_signal(environment_semaphore);
+    }];
+    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+    return process;
+}
+
+/*
  Actual API override
  */
 int environment_proc_listallpids(void *buffer,
                                  int buffersize)
 {
-    if(environmentIsHost)
-    {
-        // MARK: HOST Implementation
-        // Cast to pid array
-        pid_t *array = (pid_t*)buffer;
-        
-        // Calculate the amount of slices that fit into the array first
-        size_t count = buffersize / sizeof(pid_t);
-        size_t hounter = 0;
-        
-        // Now itterate, and remove each cycle a slice
-        for(NSNumber *number in [[LDEProcessManager shared] processes])
-        {
-            // Copy them to buffer
-            array[hounter] = number.intValue;
-            hounter++;
-            if(hounter == count) return (int)(hounter * sizeof(pid_t));
-        }
-        
-        return (int)(hounter * sizeof(pid_t));
-    }
-    else
+    if(!environmentIsHost)
     {
         // MARK: GUEST Implementation
         // Cast to pid array
@@ -82,28 +76,18 @@ int environment_proc_listallpids(void *buffer,
         }
         return (int)(hounter * sizeof(pid_t));
     }
+    return 0;
 }
 
 int environment_proc_name(int pid,
                           void * buffer,
                           uint32_t buffersize)
 {
-    if(environmentIsHost)
+    if(!environmentIsHost)
     {
-        // MARK: Remind me in one or two years that the API is not implemented for host (Is it really necessary, like when does Nyxian need this API?)
-    }
-    else
-    {
-        // MARK: GUEST Init
+        // MARK: GUEST
         // Take process structure of requested process identifier
-        __block LDEProcess *process = nil;
-        [hostProcessProxy proc_getProcStructureForProcessIdentifier:pid withReply:^(LDEProcess *replyProcess){
-            process = replyProcess;
-            dispatch_semaphore_signal(environment_semaphore);
-        }];
-        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
-        
-        // Check if proc is valid
+        LDEProcess *process = environment_client_get_process_of_process_identifier(pid);
         if(!process) return 0;
         
         // Now overwrite get c str of proc name
@@ -121,22 +105,11 @@ int environment_proc_pidpath(int pid,
                              void *buffer,
                              uint32_t buffersize)
 {
-    if(environmentIsHost)
+    if(!environmentIsHost)
     {
-        // MARK: Remind me in one or two years that the API is not implemented for host (Is it really necessary, like when does Nyxian need this API?)
-    }
-    else
-    {
-        // MARK: GUEST Init
+        // MARK: GUEST
         // Take process structure of requested process identifier
-        __block LDEProcess *process = nil;
-        [hostProcessProxy proc_getProcStructureForProcessIdentifier:pid withReply:^(LDEProcess *replyProcess){
-            process = replyProcess;
-            dispatch_semaphore_signal(environment_semaphore);
-        }];
-        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
-        
-        // Check if proc is valid
+        LDEProcess *process = environment_client_get_process_of_process_identifier(pid);
         if(!process) return 0;
         
         // Now overwrite get c str of proc name
@@ -156,13 +129,9 @@ int environment_proc_pidpath(int pid,
 
 int environment_kill(pid_t pid, int signal)
 {
-    if(environmentIsHost)
+    if(!environmentIsHost)
     {
-        // MARK: Remind me in one or two years that the API is not implemented for host (Is it really necessary, like when does Nyxian need this API?)
-    }
-    else
-    {
-        // MARK: GUEST Init
+        // MARK: GUEST
         // Take process structure of requested process identifier
         __block int result = 1;
         [hostProcessProxy proc_kill:pid withSignal:signal withReply:^(int replyResult){

@@ -53,7 +53,7 @@
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder
 {
-    if ([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])
+    if([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])
     {
         xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
         xpc_dictionary_set_mach_send(dict, "port", _port);

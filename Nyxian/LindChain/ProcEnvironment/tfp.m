@@ -104,7 +104,7 @@ void environment_host_take_client_task_port(TaskPortObject *machPort)
 void environment_tfp_init(BOOL host)
 {
     // MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
-    if (@available(iOS 26.0, *)) {
+    if(@available(iOS 26.0, *)) {
         tfp_userspace_ports = [[NSMutableDictionary alloc] init];
         
         if(!host)

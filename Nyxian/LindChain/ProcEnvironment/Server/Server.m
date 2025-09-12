@@ -99,15 +99,21 @@
 
 - (void)proc_kill:(pid_t)pid withSignal:(int)signal withReply:(void (^)(int))reply
 {
-    // Other target, lets look for it!
-    LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
-    if(!process)
+    // If pid is 0 raise the signal on our selves
+    if(pid == 0) raise(signal);
+    else
     {
-        reply(1);
-        return;
+        
+        // Other target, lets look for it!
+        LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
+        if(!process)
+        {
+            reply(1);
+            return;
+        }
+        
+        [process.extension _kill:signal];
     }
-    
-    [process.extension _kill:signal];
     
     reply(0);
 }
