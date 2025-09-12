@@ -90,7 +90,7 @@ int environment_proc_name(int pid,
 {
     if(environmentIsHost)
     {
-        
+        // MARK: Remind me in one or two years that the API is not implemented for host (Is it really necessary, like when does Nyxian need this API?)
     }
     else
     {
@@ -117,6 +117,42 @@ int environment_proc_name(int pid,
     return 0;
 }
 
+int environment_proc_pidpath(int pid,
+                             void *buffer,
+                             uint32_t buffersize)
+{
+    if(environmentIsHost)
+    {
+        // MARK: Remind me in one or two years that the API is not implemented for host (Is it really necessary, like when does Nyxian need this API?)
+    }
+    else
+    {
+        // MARK: GUEST Init
+        // Take process structure of requested process identifier
+        __block LDEProcess *process = nil;
+        [hostProcessProxy proc_getProcStructureForProcessIdentifier:pid withReply:^(LDEProcess *replyProcess){
+            process = replyProcess;
+            dispatch_semaphore_signal(environment_semaphore);
+        }];
+        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+        
+        // Check if proc is valid
+        if(!process) return 0;
+        
+        // Now overwrite get c str of proc name
+        const char *c_str = process.executablePath.UTF8String;
+        
+        // Now check if size is enough
+        if (!c_str) {
+            c_str = "/unknown/path/to/binary";
+        }
+        
+        size_t copied = (strlen(c_str) < buffersize) ? strlen(c_str) : buffersize;
+        strncpy(buffer, c_str, buffersize);
+        return (int)copied;
+    }
+    return 0;
+}
 
 /*
  Init
@@ -128,5 +164,6 @@ void environment_libproc_userspace_init(BOOL host)
         // MARK: GUEST Init
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_listallpids, environment_proc_listallpids, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_name, environment_proc_name, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_pidpath, environment_proc_pidpath, nil);
     }
 }

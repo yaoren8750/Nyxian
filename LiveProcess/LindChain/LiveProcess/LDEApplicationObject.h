@@ -31,6 +31,7 @@
 
 @property (nonatomic) NSString *bundlePath;
 @property (nonatomic) NSString *containerPath;
+@property (nonatomic) NSString *executablePath;
 
 @property (nonatomic) BOOL isLaunchAllowed;
 

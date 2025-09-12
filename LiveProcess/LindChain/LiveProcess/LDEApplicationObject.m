@@ -37,9 +37,9 @@
     if(self.isLaunchAllowed)
     {
         self.bundlePath = [[bundle bundleURL] path];
+        self.executablePath = [[bundle executableURL] path];
         self.containerPath = [[[LDEApplicationWorkspaceInternal shared] applicationContainerForBundleID:bundle.identifier] path];
     }
-    
     
     ISBundleIcon *bundleIcon = [[PrivClass(ISBundleIcon) alloc] initWithBundleURL:bundle.bundleURL type:nil];
     if(bundleIcon)
@@ -70,6 +70,7 @@
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
     [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
     [coder encodeObject:self.bundlePath forKey:@"bundlePath"];
+    [coder encodeObject:self.executablePath forKey:@"executablePath"];
     [coder encodeObject:self.displayName forKey:@"displayName"];
     [coder encodeObject:self.containerPath forKey:@"containerPath"];
     [coder encodeObject:self.icon forKey:@"icon"];
@@ -81,6 +82,7 @@
     {
         _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
         _bundlePath = [coder decodeObjectOfClass:[NSString class] forKey:@"bundlePath"];
+        _executablePath = [coder decodeObjectOfClass:[NSString class] forKey:@"executablePath"];
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
         _containerPath = [coder decodeObjectOfClass:[NSString class] forKey:@"containerPath"];
         _icon = [coder decodeObjectOfClass:[UIImage class] forKey:@"icon"];

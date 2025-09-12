@@ -79,6 +79,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     // Setting up environment
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
+    environment_client_attach_debugger();
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     

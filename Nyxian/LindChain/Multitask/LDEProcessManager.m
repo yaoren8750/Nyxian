@@ -78,6 +78,7 @@
     
     self.displayName = @"LiveProcess";
     self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
+    self.executablePath = [liveProcessBundle executablePath];
 #endif
     
     return self;
@@ -102,6 +103,7 @@
     
     self.displayName = applicationObject.displayName;
     self.bundleIdentifier = applicationObject.bundleIdentifier;
+    self.executablePath = applicationObject.executablePath;
     self.icon = applicationObject.icon;
     
     return self;
@@ -113,15 +115,6 @@
 /*
  Information
  */
-- (NSString*)executablePath
-{
-    // FIXME: Use environment libproc when its ready
-    pid_t childPid = [self pid];
-    char buf[120];
-    proc_pidpath(childPid, buf, 120);
-    return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
-}
-
 - (uid_t)uid
 {
     // TODO: Implement it, currently returning mobile user
