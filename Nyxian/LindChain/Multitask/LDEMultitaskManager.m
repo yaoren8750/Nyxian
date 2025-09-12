@@ -120,30 +120,88 @@
                 [blurView.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
                 [blurView.trailingAnchor constraintEqualToAnchor:container.trailingAnchor]
             ]];
+            
+            UIScrollView *scrollView = [[UIScrollView alloc] init];
+            scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+            scrollView.showsHorizontalScrollIndicator = NO;
 
-            UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:48 weight:UIImageSymbolWeightRegular];
-            UIImage *symbol = [UIImage systemImageNamed:@"app.dashed" withConfiguration:config];
-            UIImageView *symbolView = [[UIImageView alloc] initWithImage:symbol];
-            symbolView.tintColor = [UIColor secondaryLabelColor];
-            symbolView.translatesAutoresizingMaskIntoConstraints = NO;
-
-            UILabel *placeholderLabel = [[UILabel alloc] init];
-            placeholderLabel.text = @"No Apps Launched Yet";
-            placeholderLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightSemibold];
-            placeholderLabel.textColor = [UIColor secondaryLabelColor];
-            placeholderLabel.translatesAutoresizingMaskIntoConstraints = NO;
-
-            UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[symbolView, placeholderLabel]];
-            stack.axis = UILayoutConstraintAxisVertical;
+            UIStackView *stack = [[UIStackView alloc] init];
+            stack.axis = UILayoutConstraintAxisHorizontal;
             stack.alignment = UIStackViewAlignmentCenter;
-            stack.spacing = 12;
+            stack.spacing = 20;
             stack.translatesAutoresizingMaskIntoConstraints = NO;
 
-            [blurView.contentView addSubview:stack];
+            [scrollView addSubview:stack];
+            [blurView.contentView addSubview:scrollView];
+
             [NSLayoutConstraint activateConstraints:@[
-                [stack.centerXAnchor constraintEqualToAnchor:blurView.contentView.centerXAnchor],
-                [stack.centerYAnchor constraintEqualToAnchor:blurView.contentView.centerYAnchor]
+                [scrollView.topAnchor constraintEqualToAnchor:blurView.contentView.topAnchor constant:20],
+                [scrollView.bottomAnchor constraintEqualToAnchor:blurView.contentView.bottomAnchor constant:-20],
+                [scrollView.leadingAnchor constraintEqualToAnchor:blurView.contentView.leadingAnchor constant:20],
+                [scrollView.trailingAnchor constraintEqualToAnchor:blurView.contentView.trailingAnchor constant:-20],
             ]];
+
+            [NSLayoutConstraint activateConstraints:@[
+                [stack.topAnchor constraintEqualToAnchor:scrollView.topAnchor],
+                [stack.bottomAnchor constraintEqualToAnchor:scrollView.bottomAnchor],
+                [stack.leadingAnchor constraintEqualToAnchor:scrollView.leadingAnchor],
+                [stack.trailingAnchor constraintEqualToAnchor:scrollView.trailingAnchor],
+                [stack.heightAnchor constraintEqualToAnchor:scrollView.heightAnchor]
+            ]];
+
+            if (self.windows.count == 0) {
+                UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:48 weight:UIImageSymbolWeightRegular];
+                UIImage *symbol = [UIImage systemImageNamed:@"app.dashed" withConfiguration:config];
+                UIImageView *symbolView = [[UIImageView alloc] initWithImage:symbol];
+                symbolView.tintColor = [UIColor secondaryLabelColor];
+
+                UILabel *placeholderLabel = [[UILabel alloc] init];
+                placeholderLabel.text = @"No Apps Launched Yet";
+                placeholderLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightSemibold];
+                placeholderLabel.textColor = [UIColor secondaryLabelColor];
+
+                UIStackView *placeholderStack = [[UIStackView alloc] initWithArrangedSubviews:@[symbolView, placeholderLabel]];
+                placeholderStack.axis = UILayoutConstraintAxisVertical;
+                placeholderStack.alignment = UIStackViewAlignmentCenter;
+                placeholderStack.spacing = 12;
+
+                placeholderStack.translatesAutoresizingMaskIntoConstraints = NO;
+                [blurView.contentView addSubview:placeholderStack];
+
+                [NSLayoutConstraint activateConstraints:@[
+                    [placeholderStack.centerXAnchor constraintEqualToAnchor:blurView.contentView.centerXAnchor],
+                    [placeholderStack.centerYAnchor constraintEqualToAnchor:blurView.contentView.centerYAnchor]
+                ]];
+            } else {
+                for(NSNumber *pidKey in self.windows) {
+                    LDEWindow *window = self.windows[pidKey];
+                    
+                    UIView *tile = [[UIView alloc] init];
+                    tile.translatesAutoresizingMaskIntoConstraints = NO;
+                    tile.backgroundColor = UIColor.systemBackgroundColor;
+                    tile.layer.cornerRadius = 16;
+                    tile.layer.shadowColor = [UIColor blackColor].CGColor;
+                    tile.layer.shadowOpacity = 0.15;
+                    tile.layer.shadowRadius = 6;
+                    tile.layer.shadowOffset = CGSizeMake(0, 3);
+                    
+                    UILabel *title = [[UILabel alloc] init];
+                    title.translatesAutoresizingMaskIntoConstraints = NO;
+                    title.text = [NSString stringWithFormat:@"%@", window.windowName];
+                    title.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
+                    title.textAlignment = NSTextAlignmentCenter;
+                    
+                    [tile addSubview:title];
+                    [NSLayoutConstraint activateConstraints:@[
+                        [tile.widthAnchor constraintEqualToConstant:150],
+                        [tile.heightAnchor constraintEqualToConstant:300],
+                        [title.centerXAnchor constraintEqualToAnchor:tile.centerXAnchor],
+                        [title.centerYAnchor constraintEqualToAnchor:tile.centerYAnchor]
+                    ]];
+                    
+                    [stack addArrangedSubview:tile];
+                }
+            }
 
             self.appSwitcherView = container;
             [self addSubview:self.appSwitcherView];
