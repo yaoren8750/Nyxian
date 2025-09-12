@@ -26,7 +26,6 @@
 {
     self = [super init];
     _port = port;
-    NSLog(@"%d", _port);
     return self;
 }
 
@@ -40,14 +39,9 @@
     mach_port_type_t type;
     kern_return_t kr = mach_port_type(mach_task_self(), _port, &type);
 
-    if(kr != KERN_SUCCESS)
+    if(kr != KERN_SUCCESS || type == MACH_PORT_TYPE_DEAD_NAME || type == 0)
     {
-        // Its useless
-        return NO;
-    }
-    else if(type == 0)
-    {
-        // No rights?
+        // No rights to the task name?
         return NO;
     }
     else
