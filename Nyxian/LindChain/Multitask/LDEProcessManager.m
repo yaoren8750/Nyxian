@@ -69,15 +69,13 @@
                                                                                                                RBSProcessHandle *handle,
                                                                                                                RBSProcessStateUpdate *update)
                                    {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    // Interestingly, when a process exists then it the process monitor says that there is no state
-                    NSArray<RBSProcessState *> *states = [self.processMonitor states];
-                    if([states count] == 0)
-                    {
-                        // Process dead!
-                        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-                    }
-                });
+                // Interestingly, when a process exists then it the process monitor says that there is no state
+                NSArray<RBSProcessState *> *states = [monitor states];
+                if([states count] == 0)
+                {
+                    // Process dead!
+                    [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
+                }
             }];
         }
         dispatch_semaphore_signal(sema);
