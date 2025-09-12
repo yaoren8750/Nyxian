@@ -26,6 +26,7 @@
 {
     self = [super init];
     _port = port;
+    NSLog(@"%d", _port);
     return self;
 }
 
@@ -80,7 +81,7 @@
         if(obj)
         {
             xpc_object_t dict = obj;
-            mach_port_t port = (uint32_t)xpc_dictionary_get_uint64(dict, "port");
+            mach_port_t port = xpc_dictionary_copy_mach_send(dict, "port");
             return [self initWithPort:port];
         }
     }

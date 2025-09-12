@@ -81,7 +81,7 @@
 {
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
-    reply((kr == KERN_SUCCESS) ? [PrivClass(RBSMachPort) portForPort:port] : nil);
+    reply((kr == KERN_SUCCESS) ? [[TaskPortObject alloc] initWithPort:port] : nil);
 }
 
 /*
