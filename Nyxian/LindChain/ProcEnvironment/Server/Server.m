@@ -99,6 +99,21 @@
     reply([[LDEProcessManager shared] processForProcessIdentifier:pid]);
 }
 
+- (void)proc_kill:(pid_t)pid withSignal:(int)signal withReply:(void (^)(int))reply
+{
+    // Other target, lets look for it!
+    LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
+    if(!process)
+    {
+        reply(1);
+        return;
+    }
+    
+    [process.extension _kill:signal];
+    
+    reply(0);
+}
+
 /*
  application
  */

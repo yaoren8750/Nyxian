@@ -110,15 +110,13 @@ void environment_tfp_userspace_init(BOOL host)
             // MARK: iOS 26 is required?
             [hostProcessProxy sendPort:[PrivClass(RBSMachPort) portForPort:mach_task_self()]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
-        } else
-        {
-            // MARK: HOST Init
-            // Insert our own mach port as "kernel mach port"
-            [tfp_userspace_ports setObject:[PrivClass(RBSMachPort) portForPort:(mach_task_self())] forKey:@(0)];
         }
     }
     else
     {
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
+        if(!host)
+        {
+            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
+        }
     }
 }

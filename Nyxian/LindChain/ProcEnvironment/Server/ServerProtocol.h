@@ -41,6 +41,7 @@
  */
 - (void)proc_listallpidsViaReply:(void (^)(NSSet*))reply;
 - (void)proc_getProcStructureForProcessIdentifier:(pid_t)pid withReply:(void (^)(LDEProcess*))reply;
+- (void)proc_kill:(pid_t)pid withSignal:(int)signal withReply:(void (^)(int))reply;
 
 /*
  application
