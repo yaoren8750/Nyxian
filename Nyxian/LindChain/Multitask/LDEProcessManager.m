@@ -71,7 +71,7 @@
                 // Setting process handle directly from process monitor
                 weakSelf.processHandle = handle;
                 
-                // Interestingly, when a process exits then it the process monitor says that there is no state
+                // Interestingly, when a process exits, the process monitor says that there is no state, so we can use that as a logic check
                 NSArray<RBSProcessState *> *states = [monitor states];
                 if([states count] == 0)
                 {
