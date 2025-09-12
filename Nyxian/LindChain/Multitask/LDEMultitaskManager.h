@@ -26,6 +26,10 @@
 
 @property (nonatomic,strong,readonly) NSMutableDictionary<NSNumber*,LDEWindow*> *windows;
 
+@property (nonatomic, strong) UIView *appSwitcherView;
+@property (nonatomic, strong) NSLayoutConstraint *appSwitcherTopConstraint;
+@property (nonatomic, strong) UIImpactFeedbackGenerator *impactGenerator;
+
 - (instancetype)init;
 + (instancetype)shared;
 
