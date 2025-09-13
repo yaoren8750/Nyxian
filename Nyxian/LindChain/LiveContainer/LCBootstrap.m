@@ -15,7 +15,8 @@
 #include "../litehook/src/litehook.h"
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
-#import <LindChain/Debugger/MachServer.h>
+#import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/LiveProcess/LDEApplicationObject.h>
 
 NSUserDefaults *lcUserDefaults;
 NSBundle *lcMainBundle;
@@ -158,6 +159,20 @@ NSString* invokeAppMain(NSString *executablePath,
     // Getting guestMainBundle, if applicable
     // Now trying to get bundle
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:[executablePath stringByDeletingLastPathComponent]];
+    
+    // Patch LDEProcess info of host app
+    if(guestMainBundle)
+    {
+        LDEApplicationObject *appObject = [[LDEApplicationObject alloc] initWithNSBundle:guestMainBundle];
+        LDEProcess *processInfo = [[LDEProcess alloc] init];
+        processInfo.executablePath = executablePath;
+        processInfo.bundleIdentifier = appObject.bundleIdentifier;
+        processInfo.displayName = appObject.displayName;
+        processInfo.icon = appObject.icon;
+        
+        // Sending to host
+        [hostProcessProxy assignProcessInfo:processInfo withProcessIdentfier:getpid()];
+    }
     
     NSLog(@"executing: %@, %@", executablePath, guestMainBundle);
 

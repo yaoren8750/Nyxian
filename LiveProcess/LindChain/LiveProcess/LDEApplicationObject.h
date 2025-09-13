@@ -38,6 +38,7 @@
 @property (nonatomic) UIImage *icon;
 
 - (instancetype)initWithBundle:(MIBundle*)bundle;
+- (instancetype)initWithNSBundle:(NSBundle*)nsBundle;
 
 @end
 

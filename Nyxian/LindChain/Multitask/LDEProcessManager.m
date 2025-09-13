@@ -138,8 +138,8 @@
     }];
     
     // FIXME: Arbitary fetching is needed
-    self.displayName = arguments[0];
-    self.executablePath = arguments[0];
+    self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
+    self.executablePath = binaryPath;
     
     return self;
 #else

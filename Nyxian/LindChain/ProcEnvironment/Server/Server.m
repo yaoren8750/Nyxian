@@ -124,7 +124,6 @@
 - (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply
 {
     // To be done
-    // TODO: Make windows spawn like on macOS
     reply([[LDEMultitaskManager shared] openWindowForProcessIdentifier:processIdentifier]);
 }
 
@@ -134,6 +133,19 @@
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply
 {
     reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment]);
+}
+
+- (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid
+{
+    // Get process
+    LDEProcess *targetProcess = [[LDEProcessManager shared] processForProcessIdentifier:pid];
+    if(targetProcess)
+    {
+        targetProcess.executablePath = process.executablePath;
+        targetProcess.bundleIdentifier = process.bundleIdentifier;
+        targetProcess.displayName = process.displayName;
+        targetProcess.icon = process.icon;
+    }
 }
 
 @end
