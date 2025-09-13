@@ -46,7 +46,7 @@ void UIKitFixesInit(void) {
 @property (nonatomic) BOOL multitaskingTermination;
 
 @property (nonatomic) dispatch_once_t closeWindowOnce;
-@property (nonatomic) dispatch_once_t maximizeOnPhoneOnce;
+@property (nonatomic) dispatch_once_t appearOnceAction;
 
 @end
 
@@ -165,17 +165,18 @@ void UIKitFixesInit(void) {
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
     
-    // MARK: Suppose to only run on phones
-    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
-    {
-        dispatch_once(&_maximizeOnPhoneOnce, ^{
+    dispatch_once(&_appearOnceAction, ^{
+        [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
+        
+        // MARK: Suppose to only run on phones
+        if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
+        {
             [self maximizeWindowNoAnim];
             UIPanGestureRecognizer *pullDownGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePullDown:)];
             [self.navigationBar addGestureRecognizer:pullDownGesture];
-        });
-    }
+        }
+    });
 }
 
 - (void)setupDecoratedView:(CGRect)dimensions
