@@ -32,6 +32,7 @@
 #import "../LiveProcess/LindChain/LiveContainer/zip.h"
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
+#import <LindChain/LiveContainer/ZSign/zsigner.h>
 
 /*
  Project

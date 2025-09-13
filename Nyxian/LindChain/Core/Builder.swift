@@ -260,12 +260,8 @@ class Builder {
             }
             LCAppInfo(bundlePath: project.bundlePath)?.patchExecAndSignIfNeed(completionHandler: { [weak self] result, errorDescription in
                 guard let self = self else { return }
-                if result, checkCodeSignature((self.project.machoPath as NSString).utf8String) {
-                    appInfo?.save()
+                if result {
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
-                        /*LDEMultitaskManager.shared().openApplication(withBundleIdentifier: self.project.projectConfig.bundleid,
-                                                                     terminateIfRunning: true,
-                                                                     enableDebugging: project.projectConfig.debug)*/
                         LDEProcessManager.shared().spawnProcess(withBundleIdentifier: project.projectConfig.bundleid)
                     } else {
                         nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to install application"])

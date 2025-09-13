@@ -129,10 +129,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
     environment_client_attach_debugger();
-    environment_client_handoff_standard_file_descriptors();
-    
-    NSLog(@"%@", executablePath);
-    
+    environment_client_handoff_standard_file_descriptors();    
     
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
     if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);

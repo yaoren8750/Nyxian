@@ -24,6 +24,11 @@ NSProgress* currentZSignProgress;
     return adhocSignMachO(path, bundleId, entitlementData);
 }
 
++ (BOOL)signMachOAtPath:(NSString *)path bundleId:(NSString*)bundleId prov:(NSData *)prov key:(NSData *)key pass:(NSString *)pass
+{
+    return zsignMachO(path, prov, key, pass);
+}
+
 // this method is used to get teamId for ADP/Enterprise certs ,don't use it in normal jitless
 + (NSString*)getTeamIdWithProv:(NSData *)prov key:(NSData *)key pass:(NSString *)pass {
     return getTeamId(prov, key, pass);
@@ -33,3 +38,13 @@ NSProgress* currentZSignProgress;
     return checkCert(prov, key, pass, completionHandler);
 }
 @end
+
+const char *getExecutablePath(void)
+{
+    return [[[NSBundle mainBundle] executablePath] UTF8String];
+}
+
+const char *getBundleIdentifier(void)
+{
+    return [[[NSBundle mainBundle] bundleIdentifier] UTF8String];
+}

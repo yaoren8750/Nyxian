@@ -127,6 +127,65 @@ void zsign(NSString *appPath,
 	return;
 }
 
+bool zsignMachO(NSString *machoPath,
+                NSData *prov,
+                NSData *key,
+                NSString *pass)
+{
+    ZTimer gtimer;
+    ZTimer timer;
+    timer.Reset();
+
+    string strPassword;
+    const char* strPKeyFileData = (const char*)[key bytes];
+    const char* strProvFileData = (const char*)[prov bytes];
+    strPassword = [pass cStringUsingEncoding:NSUTF8StringEncoding];
+
+    ZLog::logs.clear();
+
+    __block ZSignAsset zSignAsset;
+    if (!zSignAsset.InitSimple(strPKeyFileData, (int)[key length],
+                               strProvFileData, (int)[prov length],
+                               strPassword)) {
+        ZLog::logs.clear();
+        return NO;
+    }
+
+    __block ZMachO* macho = new ZMachO();
+    if (!macho->Init(machoPath.UTF8String)) {
+        NSDictionary* userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Invalid Mach-O file: %@", machoPath]
+        };
+        NSError* error = [NSError errorWithDomain:@"MachOSignError" code:-1 userInfo:userInfo];
+        delete macho;
+        ZLog::logs.clear();
+        return NO;
+    }
+
+    string strInfoSHA1;
+    string strInfoSHA256;
+    string strCodeResourcesData;
+    bool bRet = macho->Sign(&zSignAsset, true,
+                            "",
+                            strInfoSHA1, strInfoSHA256, strCodeResourcesData);
+
+    delete macho;
+
+    timer.PrintResult(bRet, ">>> Mach-O Signed %s!", bRet ? "OK" : "Failed");
+    gtimer.Print(">>> Done.");
+
+    NSError* signError = nil;
+    if (!bRet) {
+        NSDictionary* userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Failed to sign Mach-O at path: %@", machoPath]
+        };
+        signError = [NSError errorWithDomain:@"MachOSignError" code:-1 userInfo:userInfo];
+    }
+
+    ZLog::logs.clear();
+    return YES;
+}
+
 bool adhocSignMachO(NSString *machoPath, NSString *bundleId, NSData* entitlementData) {
     ZSignAsset zSignAsset;
     zSignAsset.InitAdhoc([entitlementData bytes], (int)[entitlementData length]);
