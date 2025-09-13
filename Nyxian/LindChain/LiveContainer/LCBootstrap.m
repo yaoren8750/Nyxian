@@ -145,26 +145,33 @@ static void *getAppEntryPoint(void *handle) {
     return (void *)header + entryoff;
 }
 
-NSString* invokeAppMain(NSString *executablePath,
-                        NSString *homePath,
-                        int argc,
+NSString* invokeAppMain(int argc,
                         char *argv[])
-{    
+{
+    // Getting executable path from argv
+    NSString *executablePath = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
+    if(!executablePath) return @"No executable path";
+    
+    // Getting home path from envp, it is okay if its not present
+    NSString *homePath = [NSString stringWithCString:getenv("HOME") encoding:NSUTF8StringEncoding];
+    
     // Getting guestMainBundle, if applicable
     // Now trying to get bundle
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:[executablePath stringByDeletingLastPathComponent]];
+    
+    NSLog(@"executing: %@, %@", executablePath, guestMainBundle);
 
     // Setup directories
-    if(homePath)
+    if(homePath && guestMainBundle)
     {
         NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData", @"Tmp"];
         for (NSString *dir in dirList)
             [[NSFileManager defaultManager] createDirectoryAtPath:[homePath stringByAppendingPathComponent:dir] withIntermediateDirectories:YES attributes:nil error:nil];
         
         // Setup environment variables
-        setenv("LC_HOME_PATH", getenv("HOME"), 1);
+        //setenv("LC_HOME_PATH", getenv("HOME"), 1);
         setenv("CFFIXED_USER_HOME", homePath.UTF8String, 1);
-        setenv("HOME", homePath.UTF8String, 1);
+        //setenv("HOME", homePath.UTF8String, 1);
         setenv("TMPDIR", [[NSString stringWithFormat:@"%@/Tmp", homePath] UTF8String], 1);
     }
     

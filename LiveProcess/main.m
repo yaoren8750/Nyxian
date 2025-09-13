@@ -27,9 +27,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 
-NSString* invokeAppMain(NSString *executablePath,
-                        NSString *homePath,
-                        int argc,
+NSString* invokeAppMain(int argc,
                         char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
@@ -62,64 +60,85 @@ void handoffOutput(int fd)
     setvbuf(stderr, NULL, _IONBF, 0);
 }
 
-extern int LiveContainerMain(int argc, char *argv[]);
+extern char **environ;
+void clear_environment(void) {
+    char **env = environ;
+    while (*env != NULL) {
+        char *eq = strchr(*env, '=');
+        if (eq) {
+            size_t len = eq - *env;
+            char key[len + 1];
+            strncpy(key, *env, len);
+            key[len] = '\0';
+            unsetenv(key);
+        }
+        env++;
+    }
+}
+
+void overwriteEnvironmentProperties(NSDictionary *enviroDict)
+{
+    clear_environment();
+    if(enviroDict)
+    {
+        for (NSString *key in enviroDict) {
+            NSString *value = enviroDict[key];
+            setenv([key UTF8String], [value UTF8String], 0);
+        }
+    }
+}
+
+void createArgv(NSArray<NSString *> *arguments,
+                int *argc,
+                char ***argv) {
+    if (!arguments) {
+        *argc = 0;
+        return;
+    }
+    
+    NSInteger count = arguments.count;
+    *argc = (int)count;
+    
+    *argv = malloc(sizeof(char *) * (count + 1));
+    for (NSInteger i = 0; i < count; i++) {
+        (*argv)[i] = strdup(arguments[i].UTF8String);
+    }
+    (*argv)[count] = NULL;
+}
+
 int LiveProcessMain(int argc, char *argv[]) {
     // Let NSExtensionContext initialize, once it's done it will call CFRunLoopStop
     CFRunLoopRun();
-    
-    // MARK: Its confirmed that it runs from here on
     NSDictionary *appInfo = LiveProcessHandler.retrievedAppInfo;
     
-    // MARK: Tested it, the endpoint is definetly transmitted
+    // MARK: New API that will overtake the previous one
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
     NSString *mode = appInfo[@"mode"];
-    LDEApplicationObject *appObj = appInfo[@"appObject"];
-    NSNumber *debugEnabled = appInfo[@"debugEnabled"];
-    NSString *executablePath = appInfo[@"executablePath"];
+    NSDictionary *environmentDictionary = appInfo[@"environment"];
+    NSArray *argumentDictionary = appInfo[@"arguments"];
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
     environment_client_attach_debugger();
+    environment_client_handoff_standard_file_descriptors();
     
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    
+    if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
+    if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);
     
     if([mode isEqualToString:@"management"])
     {
-        environment_client_handoff_standard_file_descriptors();
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
-    }
-    else if([mode isEqualToString:@"application"])
-    {
-        // Handoff stdout and stderr output to host app
-        // Debugging is only for applications
-        if(debugEnabled.boolValue)
-        {
-            environment_client_attach_debugger();
-            [hostProcessProxy getMemoryLogFDsForPID:getpid() withReply:^(NSFileHandle *stdoutHandle){
-                handoffOutput(stdoutHandle.fileDescriptor);
-                dispatch_semaphore_signal(sema);
-            }];
-            dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-        } else {
-            environment_client_handoff_standard_file_descriptors();
-        }
-        
-        // MARK: Keep it alive
-        char *argv[1] = { NULL };
-        int argc = 0;
-        NSString *error = invokeAppMain(appObj.executablePath, appObj.containerPath, argc, argv);
-        NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        environment_client_handoff_standard_file_descriptors();
+        NSLog(@"Arguments: %@", argumentDictionary);
+        NSLog(@"Environment: %@", environmentDictionary);
         
-        char *argv[1] = { NULL };
-        int argc = 0;
-        NSString *error = invokeAppMain(executablePath, nil, argc, argv);
+        NSString *error = invokeAppMain(argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     

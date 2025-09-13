@@ -103,11 +103,18 @@
         return nil;
     }
     
-    self = [self initWithItems:@{
+    /*self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"application",
         @"appObject": applicationObject,
         @"debugEnabled": @(NO)
+    }];*/
+    
+    self = [self initWithItems:@{
+        @"endpoint": [ServerDelegate getEndpoint],
+        @"mode": @"spawn",
+        @"environment": @{},
+        @"arguments": @[applicationObject.executablePath],
     }];
     
     self.displayName = applicationObject.displayName;
