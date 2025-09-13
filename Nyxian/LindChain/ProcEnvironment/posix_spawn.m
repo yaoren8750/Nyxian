@@ -18,31 +18,74 @@
 */
 
 #import <LindChain/ProcEnvironment/environment.h>
+#import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <spawn.h>
 
+#pragma mark - poxix_spawn helper
+
+NSArray<NSString *> *createNSArrayFromArgv(int argc, char *argv[])
+{
+    if(argc <= 0 || argv == NULL)
+    {
+        return @[];
+    }
+
+    NSMutableArray<NSString *> *array = [NSMutableArray arrayWithCapacity:argc];
+    for (int i = 0; i < argc; i++)
+    {
+        if(argv[i])
+        {
+            NSString *arg = [NSString stringWithUTF8String:argv[i]];
+            if(arg)
+            {
+                [array addObject:arg];
+            }
+        }
+    }
+    return [array copy];
+}
+
 #pragma mark - posix_spawn implementation
 
 int environment_posix_spawn(pid_t *process_identifier,
+                            const char *path,
                             const posix_spawn_file_actions_t *file_actions,
                             const posix_spawnattr_t *spawn_attr,
-                            char *const argv[__restrict],
-                            char *const envp[__restrict])
+                            char *const argv[],
+                            char *const envp[])
 {
-    if(environmentIsHost)
+    if(!environmentIsHost)
     {
         // MARK: First host implementation, first the basics
+        
+        // Is argv safe?
+        if(argv == NULL) return 1;
+        
         // Extract executables path from arguments
         const char *executablePath = argv[0];
         
         // Check if executable path is not null
-        if(!executablePath) return 1;
+        if(!executablePath) return 2;
+        
+        // Count argc
+        int count = 0;
+        while(argv[count] != NULL)
+        {
+            count++;
+        }
         
         // Now since we have executable path we execute
-        return [[LDEProcessManager shared] spawnProcessWithExecutablePath:[NSString stringWithCString:executablePath encoding:NSUTF8StringEncoding]];
+        // TODO: Implement envp
+        [hostProcessProxy spawnProcessWithArguments:createNSArrayFromArgv(count, (char**)argv) withEnvironmentVariables:@{} withReply:^(pid_t new_process_identifier){
+            *process_identifier = new_process_identifier;
+            dispatch_semaphore_signal(environment_semaphore);
+        }];
+        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
     }
+    
     return 0;
 }
 

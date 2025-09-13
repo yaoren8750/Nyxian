@@ -128,4 +128,12 @@
     reply([[LDEMultitaskManager shared] openWindowForProcessIdentifier:processIdentifier]);
 }
 
+/*
+ posix_spawn
+ */
+- (void)spawnProcessWithArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply
+{
+    reply([[LDEProcessManager shared] spawnProcessWithArguments:arguments withEnvironmentVariables:environment]);
+}
+
 @end

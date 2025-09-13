@@ -24,6 +24,7 @@
 #import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/ProcEnvironment/application.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
 
 BOOL environmentIsHost;
 dispatch_semaphore_t environment_semaphore;
@@ -35,6 +36,7 @@ void environment_init(BOOL host)
         environment_tfp_init(host);
         environment_libproc_init(host);
         environment_application_init(host);
+        environment_posix_spawn_init(host);
         if(!host) environment_semaphore = dispatch_semaphore_create(0);
         environmentIsHost = host;
     });

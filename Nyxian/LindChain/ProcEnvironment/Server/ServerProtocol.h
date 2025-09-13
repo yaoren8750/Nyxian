@@ -49,6 +49,11 @@
  */
 - (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply;
 
+/*
+ posix_spawn
+ */
+- (void)spawnProcessWithArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */
