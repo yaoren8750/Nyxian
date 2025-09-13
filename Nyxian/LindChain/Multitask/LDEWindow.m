@@ -176,6 +176,12 @@ void UIKitFixesInit(void) {
             UIPanGestureRecognizer *pullDownGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePullDown:)];
             [self.navigationBar addGestureRecognizer:pullDownGesture];
         }
+        else
+        {
+            // MARK: Triggering resize system at start to guarantee that it gets layouted
+            [self.appSceneVC resizeActionStart];
+            [self.appSceneVC resizeActionEnd];
+        }
     });
 }
 
