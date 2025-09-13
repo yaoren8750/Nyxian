@@ -87,8 +87,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LindChain/LiveContainer/zip.m,
-				LindChain/LiveProcess/LDEApplicationObject.m,
-				LindChain/LiveProcess/LDEApplicationWorkspaceInternal.m,
+				LindChain/Services/applicationmgmtd/LDEApplicationObject.m,
+				LindChain/Services/applicationmgmtd/LDEApplicationWorkspaceInternal.m,
 				main.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
@@ -97,9 +97,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LindChain/LiveContainer/zip.m,
-				LindChain/LiveProcess/LDEApplicationObject.m,
-				LindChain/LiveProcess/LDEApplicationWorkspace.m,
-				LindChain/LiveProcess/LDEApplicationWorkspaceInternal.m,
+				LindChain/Services/applicationmgmtd/LDEApplicationObject.m,
+				LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.m,
+				LindChain/Services/applicationmgmtd/LDEApplicationWorkspaceInternal.m,
 			);
 			target = AF9916D82DC8C42200DDF895 /* Nyxian */;
 		};

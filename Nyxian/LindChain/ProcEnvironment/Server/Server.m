@@ -19,7 +19,7 @@
 
 #import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/ProcEnvironment/tfp.h>
-#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/LiveContainer/LCUtils.h>

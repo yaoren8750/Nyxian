@@ -18,7 +18,7 @@
 */
 
 #import "LDEApplicationWorkspaceInternal.h"
-#import "../LiveContainer/zip.h"
+#import <LindChain/LiveContainer/zip.h>
 #import <Security/Security.h>
 
 bool checkCodeSignature(const char* path);

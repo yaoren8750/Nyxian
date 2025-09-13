@@ -11,7 +11,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <Project/NXProject.h>
 #import "FoundationPrivate.h"
-#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
+#import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #import <LindChain/Multitask/LDEProcessManager.h>

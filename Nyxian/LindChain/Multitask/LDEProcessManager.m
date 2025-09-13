@@ -24,7 +24,7 @@
 
 #if __has_include(<Nyxian-Swift.h>)
 #import <Nyxian-Swift.h>
-#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #endif

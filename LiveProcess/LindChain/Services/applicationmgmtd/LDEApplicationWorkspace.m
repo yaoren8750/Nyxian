@@ -20,7 +20,7 @@
 #import "LDEApplicationWorkspace.h"
 #import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
-#import "../LiveContainer/zip.h"
+#import <LindChain/LiveContainer/zip.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 
 @interface LDEApplicationWorkspace ()

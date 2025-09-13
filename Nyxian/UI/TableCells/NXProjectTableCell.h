@@ -22,7 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "../../../LiveProcess/LindChain/LiveProcess/LDEApplicationObject.h"
+#import <LindChain/Services/applicationmgmtd/LDEApplicationObject.h>
 
 @interface NXProjectTableCell : UITableViewCell
 

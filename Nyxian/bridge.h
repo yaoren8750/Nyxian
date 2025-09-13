@@ -28,8 +28,8 @@
 #import <LindChain/LiveContainer/LCMachOUtils.h>
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
-#import "../LiveProcess/LindChain/LiveProcess/LDEApplicationWorkspace.h"
-#import "../LiveProcess/LindChain/LiveContainer/zip.h"
+#import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
+#import <LindChain/LiveContainer/zip.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/LiveContainer/ZSign/zsigner.h>

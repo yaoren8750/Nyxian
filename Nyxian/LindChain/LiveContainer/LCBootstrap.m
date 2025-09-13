@@ -16,7 +16,7 @@
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
 #import <LindChain/ProcEnvironment/proxy.h>
-#import <LindChain/LiveProcess/LDEApplicationObject.h>
+#import <LindChain/Services/applicationmgmtd/LDEApplicationObject.h>
 
 NSUserDefaults *lcUserDefaults;
 NSBundle *lcMainBundle;
