@@ -58,7 +58,7 @@ NSString* signMachOAtPath(NSString *path)
     if (!hash) return nil;
     
     NSFileManager *fm = [NSFileManager defaultManager];
-    NSString *cacheDir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"NyxianCache"];
+    NSString *cacheDir = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"ArbSign"];
     [fm createDirectoryAtPath:cacheDir withIntermediateDirectories:YES attributes:nil error:nil];
     
     NSString *bundlePath = [cacheDir stringByAppendingPathComponent:[hash stringByAppendingPathExtension:@"app"]];
