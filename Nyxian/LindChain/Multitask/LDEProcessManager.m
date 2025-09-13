@@ -287,11 +287,6 @@
     return pid;
 }
 
-- (pid_t)spawnProcessWithExecutablePath:(NSString*)path
-{
-    return 1;
-}
-
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid
 {
     return [self.processes objectForKey:@(pid)];
