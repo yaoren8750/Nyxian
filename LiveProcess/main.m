@@ -27,7 +27,8 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 
-NSString* invokeAppMain(int argc,
+NSString* invokeAppMain(NSString *executablePath,
+                        int argc,
                         char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
@@ -119,6 +120,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     // MARK: New API that will overtake the previous one
     NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
+    NSString* executablePath = appInfo[@"executablePath"];
     NSString *mode = appInfo[@"mode"];
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
@@ -128,6 +130,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     environment_init(NO);
     environment_client_attach_debugger();
     environment_client_handoff_standard_file_descriptors();
+    
+    NSLog(@"%@", executablePath);
     
     
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
@@ -144,7 +148,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         NSLog(@"Arguments: %@", argumentDictionary);
         NSLog(@"Environment: %@", environmentDictionary);
         
-        NSString *error = invokeAppMain(argc, argv);
+        NSString *error = invokeAppMain(executablePath, argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     

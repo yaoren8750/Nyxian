@@ -59,16 +59,10 @@ int environment_posix_spawn(pid_t *process_identifier,
 {
     if(!environmentIsHost)
     {
-        // MARK: First host implementation, first the basics
+        // MARK: GUEST Implementation
         
         // Is argv safe?
         if(argv == NULL) return 1;
-        
-        // Extract executables path from arguments
-        const char *executablePath = argv[0];
-        
-        // Check if executable path is not null
-        if(!executablePath) return 2;
         
         // Count argc
         int count = 0;
@@ -79,7 +73,10 @@ int environment_posix_spawn(pid_t *process_identifier,
         
         // Now since we have executable path we execute
         // TODO: Implement envp
-        [hostProcessProxy spawnProcessWithArguments:createNSArrayFromArgv(count, (char**)argv) withEnvironmentVariables:@{} withReply:^(pid_t new_process_identifier){
+        [hostProcessProxy spawnProcessWithPath:[NSString stringWithCString:path encoding:NSUTF8StringEncoding]
+                                 withArguments:createNSArrayFromArgv(count, (char**)argv) withEnvironmentVariables:@{}
+                                     withReply:^(pid_t new_process_identifier)
+         {
             *process_identifier = new_process_identifier;
             dispatch_semaphore_signal(environment_semaphore);
         }];

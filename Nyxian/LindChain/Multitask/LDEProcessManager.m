@@ -106,10 +106,11 @@
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
+        @"executablePath": applicationObject.executablePath,
+        @"arguments": @[applicationObject.executablePath],
         @"environment": @{
             @"HOME":applicationObject.containerPath
-        },
-        @"arguments": @[applicationObject.executablePath]
+        }
     }];
     
     self.displayName = applicationObject.displayName;
@@ -123,15 +124,17 @@
 #endif
 }
 
-- (instancetype)initWithArguments:(NSArray *)arguments
-         withEnvironmentVariables:(NSDictionary*)environment
+- (instancetype)initWithPath:(NSString*)binaryPath
+               withArguments:(NSArray *)arguments
+    withEnvironmentVariables:(NSDictionary*)environment
 {
 #if __has_include(<Nyxian-Swift.h>)
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
-        @"environment": environment,
-        @"arguments": arguments
+        @"executablePath": binaryPath,
+        @"arguments": arguments,
+        @"environment": environment
     }];
     
     // FIXME: Arbitary fetching is needed
@@ -277,10 +280,11 @@
     return pid;
 }
 
-- (pid_t)spawnProcessWithArguments:(NSArray *)arguments
-          withEnvironmentVariables:(NSDictionary*)environment
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath
+                withArguments:(NSArray *)arguments
+     withEnvironmentVariables:(NSDictionary*)environment
 {
-    LDEProcess *process = [[LDEProcess alloc] initWithArguments:arguments withEnvironmentVariables:environment];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];

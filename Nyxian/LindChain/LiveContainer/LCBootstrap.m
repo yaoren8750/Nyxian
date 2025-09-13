@@ -145,11 +145,11 @@ static void *getAppEntryPoint(void *handle) {
     return (void *)header + entryoff;
 }
 
-NSString* invokeAppMain(int argc,
+NSString* invokeAppMain(NSString *executablePath,
+                        int argc,
                         char *argv[])
 {
     // Getting executable path from argv
-    NSString *executablePath = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
     if(!executablePath) return @"No executable path";
     
     // Getting home path from envp, it is okay if its not present

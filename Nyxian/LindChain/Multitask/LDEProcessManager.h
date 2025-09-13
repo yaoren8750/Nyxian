@@ -47,7 +47,8 @@
 
 - (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
-- (instancetype)initWithArguments:(NSArray *)arguments
+- (instancetype)initWithPath:(NSString*)binaryPath
+               withArguments:(NSArray *)arguments
          withEnvironmentVariables:(NSDictionary*)environment;
 
 - (BOOL)suspend;
@@ -72,8 +73,9 @@
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
-- (pid_t)spawnProcessWithArguments:(NSArray *)arguments
-          withEnvironmentVariables:(NSDictionary*)environment;
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath
+                withArguments:(NSArray *)arguments
+     withEnvironmentVariables:(NSDictionary*)environment;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;

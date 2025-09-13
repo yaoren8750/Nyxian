@@ -52,7 +52,7 @@
 /*
  posix_spawn
  */
-- (void)spawnProcessWithArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply;
+- (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply;
 
 @end
 
