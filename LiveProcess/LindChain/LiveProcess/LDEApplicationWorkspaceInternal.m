@@ -21,142 +21,7 @@
 #import "../LiveContainer/zip.h"
 #import <Security/Security.h>
 
-/*
- Certificate check
- */
-typedef uint32_t SecCSFlags;
-typedef struct CF_BRIDGED_TYPE(id) __SecCode *SecCodeRef;
-typedef SecCodeRef SecStaticCodeRef;
-OSStatus SecStaticCodeCreateWithPath(
-    CFURLRef path,
-    SecCSFlags flags,
-    SecStaticCodeRef *staticCode);
-OSStatus SecCodeCopySigningInformation(
-    SecStaticCodeRef code,
-    SecCSFlags flags,
-    CFDictionaryRef *information);
-extern const CFStringRef kSecCodeInfoTeamIdentifier
-    API_AVAILABLE(macos(10.7));
-enum {
-      kSecCSDefaultFlags       = 0U,
-      kSecCSSigningInformation = (1U << 1),
-  };
-extern const CFStringRef kSecCodeInfoCertificates;
-
-
-static SecCertificateRef LeafCertificateForBinary(NSString *path) {
-    if (path.length == 0) return NULL;
-
-    SecStaticCodeRef codeRef = NULL;
-    CFDictionaryRef info = NULL;
-    SecCertificateRef leaf = NULL;
-
-    CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:path];
-    OSStatus status = SecStaticCodeCreateWithPath(url, kSecCSDefaultFlags, &codeRef);
-    if (status != errSecSuccess || !codeRef) goto cleanup;
-
-    status = SecCodeCopySigningInformation(codeRef, kSecCSSigningInformation, &info);
-    if (status != errSecSuccess || !info) goto cleanup;
-
-    CFArrayRef certs = CFDictionaryGetValue(info, kSecCodeInfoCertificates);
-    if (!certs || CFArrayGetCount(certs) == 0) goto cleanup;
-    leaf = (SecCertificateRef)CFRetain(CFArrayGetValueAtIndex(certs, 0));
-
-cleanup:
-    if (info) CFRelease(info);
-    if (codeRef) CFRelease(codeRef);
-    return leaf;
-}
-
-static SecCertificateRef gHostLeafCert = NULL;
-static CFDataRef gHostPublicKeyData = NULL;
-
-static void CacheHostCertAndKeyOnce(void) {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSString *hostPath = [[NSBundle mainBundle] executablePath];
-        SecCertificateRef hostCert = LeafCertificateForBinary(hostPath);
-        if (!hostCert) return;
-
-        gHostLeafCert = hostCert; // Retain once, never released (lives until process exits)
-
-        SecKeyRef key = SecCertificateCopyKey(hostCert);
-        if (key) {
-            CFDataRef keyData = SecKeyCopyExternalRepresentation(key, NULL);
-            if (keyData) {
-                gHostPublicKeyData = keyData; // cached for lifetime
-            }
-            CFRelease(key);
-        }
-    });
-}
-
-static BOOL ExecutableMatchesHostLeafCertificate(NSString *path) {
-    CacheHostCertAndKeyOnce();
-    if (!gHostLeafCert) return NO;
-
-    SecCertificateRef target = LeafCertificateForBinary(path);
-    if (!target) return NO;
-
-    BOOL equal = CFEqual(gHostLeafCert, target);
-    CFRelease(target);
-
-    return equal;
-}
-
-static BOOL ExecutableMatchesHostLeafPublicKey(NSString *path) {
-    CacheHostCertAndKeyOnce();
-    if (!gHostPublicKeyData) return NO;
-
-    SecCertificateRef target = LeafCertificateForBinary(path);
-    if (!target) return NO;
-
-    BOOL equal = NO;
-    SecKeyRef key = SecCertificateCopyKey(target);
-    if (key) {
-        CFDataRef keyData = SecKeyCopyExternalRepresentation(key, NULL);
-        if (keyData) {
-            equal = CFEqual(gHostPublicKeyData, keyData);
-            CFRelease(keyData);
-        }
-        CFRelease(key);
-    }
-
-    CFRelease(target);
-    return equal;
-}
-
-
-BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
-    BOOL ok = NO;
-    SecCertificateRef leaf = LeafCertificateForBinary(path);
-    if (!leaf) return NO;
-
-    SecPolicyRef policy = SecPolicyCreateBasicX509();
-    SecTrustRef trust = NULL;
-
-    if (SecTrustCreateWithCertificates(leaf, policy, &trust) == errSecSuccess && trust) {
-        CFArrayRef anchors = CFArrayCreate(kCFAllocatorDefault, (const void **)&leaf, 1, &kCFTypeArrayCallBacks);
-        if (anchors) {
-            SecTrustSetAnchorCertificates(trust, anchors);
-            SecTrustSetAnchorCertificatesOnly(trust, true);
-            CFRelease(anchors);
-        }
-
-        CFDateRef now = CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent());
-        if (now) {
-            SecTrustSetVerifyDate(trust, now);
-            CFRelease(now);
-        }
-
-        ok = SecTrustEvaluateWithError(trust, NULL);
-    }
-
-    if (trust) CFRelease(trust);
-    if (policy) CFRelease(policy);
-    CFRelease(leaf);
-    return ok;
-}
+bool checkCodeSignature(const char* path);
 
 /*
  Internal class
@@ -230,12 +95,8 @@ BOOL ExecutableLeafCertificateIsCurrent(NSString *path) {
     else if(![bundle isApplicableToCurrentDeviceFamilyWithError:nil]) return NO;
     else if(![bundle isApplicableToCurrentDeviceCapabilitiesWithError:nil]) return NO;
     
-    // FIXME: Fix code signature validation
-    // MARK: The problem is that the code signature used in this bundle under the conditions of this bundle would of never pass installd
-    // MARK: Replacement to CS check, check if both leaf certificates match as that is one of the most important indicators, but not if the certificate is outdated, just makes sure they were both signed with a certificate of the same teamid, it also prevents the attempt to run unsigned bundles
-    if(!ExecutableMatchesHostLeafCertificate([[bundle executableURL] path])) return NO;
-    if(!ExecutableMatchesHostLeafPublicKey([[bundle executableURL] path])) return NO;
-    if(!ExecutableLeafCertificateIsCurrent([[bundle executableURL] path])) return NO;
+    // MARK: Validate certificate using LC`s CS Check
+    if(!checkCodeSignature([[bundle.executableURL path] UTF8String])) return NO;
     
     return YES;
 }
