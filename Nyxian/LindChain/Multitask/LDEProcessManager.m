@@ -18,16 +18,15 @@
 */
 
 #import <LindChain/Multitask/LDEProcessManager.h>
-#if __has_include(<Nyxian-Swift.h>)
-#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
-#import <LindChain/Multitask/LDEMultitaskManager.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
-#endif
 #import <mach/mach.h>
 #include <mach-o/dyld_images.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
+
 #if __has_include(<Nyxian-Swift.h>)
 #import <Nyxian-Swift.h>
+#import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
+#import <LindChain/Multitask/LDEMultitaskManager.h>
+#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #endif
 
 /*
@@ -104,11 +103,6 @@
     }
     
     self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath}];
-    
-    self.displayName = applicationObject.displayName;
-    self.bundleIdentifier = applicationObject.bundleIdentifier;
-    self.executablePath = applicationObject.executablePath;
-    self.icon = applicationObject.icon;
     
     return self;
 #else
@@ -199,6 +193,7 @@
     [coder encodeObject:self.displayName forKey:@"displayName"];
     [coder encodeObject:self.bundleIdentifier forKey:@"bundleIdentifier"];
     [coder encodeObject:self.executablePath forKey:@"executablePath"];
+    [coder encodeObject:self.icon forKey:@"icon"];
     [coder encodeObject:@(self.pid) forKey:@"pid"];
     [coder encodeObject:@(self.uid) forKey:@"uid"];
     [coder encodeObject:@(self.gid) forKey:@"gid"];
@@ -210,6 +205,7 @@
         _displayName = [coder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
         _bundleIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:@"bundleIdentifier"];
         _executablePath = [coder decodeObjectOfClass:[NSString class] forKey:@"executablePath"];
+        _icon = [coder decodeObjectOfClass:[UIImage class] forKey:@"icon"];
         _pid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"pid"]).intValue;
         _uid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"uid"]).intValue;
         _gid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"gid"]).intValue;
