@@ -147,6 +147,14 @@ int environment_posix_spawnp(pid_t *process_identifier,
 
 #pragma mark - posix file actions
 
+// MARK: Simple structure to keep track
+typedef struct {
+    int *dup2_actions;
+    size_t sup2_cnt;
+    
+    int *close_actions;
+    size_t close_cnt;
+} environment_posix_spawn_file_actions_t;
 
 
 #pragma mark - Initilizer
