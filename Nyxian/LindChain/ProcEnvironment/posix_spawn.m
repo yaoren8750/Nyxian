@@ -145,6 +145,10 @@ int environment_posix_spawnp(pid_t *process_identifier,
     return environment_posix_spawn(process_identifier, environment_which(path), file_actions, spawn_attr, argv, envp);
 }
 
+#pragma mark - posix file actions
+
+
+
 #pragma mark - Initilizer
 
 void environment_posix_spawn_init(BOOL host)
@@ -152,7 +156,15 @@ void environment_posix_spawn_init(BOOL host)
     if(!host)
     {
         // MARK: GUEST Init
+        
+        // MARK: Fixing spawning of child processes
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn, environment_posix_spawn, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawnp, environment_posix_spawnp, nil);
+        
+        // MARK: Fixing file actions, so developers can redirect file descriptors
+        //posix_spawn_file_actions_init(posix_file_actions_t *fa)
+        //posix_spawn_file_actions_destroy(posix_file_actions_t *fa)
+        //posix_spawn_file_actions_adddup2(posix_file_actions_t *fa, int fd, int child_target_fd)
+        //posix_spawn_file_actions_addclose(posix_file_actions_t *fa, int fd);
     }
 }
