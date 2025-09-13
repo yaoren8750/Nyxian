@@ -61,10 +61,10 @@
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
-            self.identifier = identifier;
-            self.pid = [self.extension pidForRequestIdentifier:self.identifier];
-            RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
-            self.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
+            weakSelf.identifier = identifier;
+            weakSelf.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
+            weakSelf.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
                                                                                                                RBSProcessHandle *handle,
                                                                                                                RBSProcessStateUpdate *update)
                                    {
@@ -103,15 +103,7 @@
         return nil;
     }
     
-    self = [self initWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
-        @"mode": @"spawn",
-        @"executablePath": applicationObject.executablePath,
-        @"arguments": @[applicationObject.executablePath],
-        @"environment": @{
-            @"HOME":applicationObject.containerPath
-        }
-    }];
+    self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath}];
     
     self.displayName = applicationObject.displayName;
     self.bundleIdentifier = applicationObject.bundleIdentifier;
@@ -137,7 +129,6 @@
         @"environment": environment
     }];
     
-    // FIXME: Arbitary fetching is needed
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
     self.executablePath = binaryPath;
     
