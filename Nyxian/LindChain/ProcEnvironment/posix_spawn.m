@@ -60,6 +60,11 @@ int environment_posix_spawn(pid_t *process_identifier,
                             char *const argv[],
                             char *const envp[])
 {
+    // Fixing executing binaries at relative paths
+    char resolved[PATH_MAX];
+    realpath(path, resolved);
+    path = resolved;
+    
     if(!environmentIsHost)
     {
         // MARK: GUEST Implementation
@@ -68,7 +73,6 @@ int environment_posix_spawn(pid_t *process_identifier,
         if(!path) return 1;
         if(!checkCodeSignature(path))
         {
-            NSLog(@"Big nono!");
             // Is not valid
             NSString *signMachOAtPath(NSString *path);
             path = [signMachOAtPath([NSString stringWithCString:path encoding:NSUTF8StringEncoding]) UTF8String];
