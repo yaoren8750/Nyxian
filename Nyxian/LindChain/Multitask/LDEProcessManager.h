@@ -47,6 +47,10 @@
 
 - (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
+- (instancetype)initWithArguments:(NSArray *)arguments
+         withEnvironmentVariables:(NSDictionary*)environment;
+- (pid_t)spawnProcessWithArguments:(NSArray *)arguments
+          withEnvironmentVariables:(NSDictionary*)environment;
 
 - (BOOL)suspend;
 - (BOOL)resume;

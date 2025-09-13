@@ -103,26 +103,40 @@
         return nil;
     }
     
-    /*self = [self initWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
-        @"mode": @"application",
-        @"appObject": applicationObject,
-        @"debugEnabled": @(NO)
-    }];*/
-    
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
         @"environment": @{
             @"HOME":applicationObject.containerPath
         },
-        @"arguments": @[applicationObject.executablePath],
+        @"arguments": @[applicationObject.executablePath]
     }];
     
     self.displayName = applicationObject.displayName;
     self.bundleIdentifier = applicationObject.bundleIdentifier;
     self.executablePath = applicationObject.executablePath;
     self.icon = applicationObject.icon;
+    
+    return self;
+#else
+    return [self init];
+#endif
+}
+
+- (instancetype)initWithArguments:(NSArray *)arguments
+         withEnvironmentVariables:(NSDictionary*)environment
+{
+#if __has_include(<Nyxian-Swift.h>)
+    self = [self initWithItems:@{
+        @"endpoint": [ServerDelegate getEndpoint],
+        @"mode": @"spawn",
+        @"environment": environment,
+        @"arguments": arguments
+    }];
+    
+    // FIXME: Arbitary fetching is needed
+    self.displayName = arguments[0];
+    self.executablePath = arguments[0];
     
     return self;
 #else
@@ -257,6 +271,16 @@
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
 {
     LDEProcess *process = [[LDEProcess alloc] initWithBundleIdentifier:bundleIdentifier];
+    if(!process) return 0;
+    pid_t pid = process.pid;
+    [self.processes setObject:process forKey:@(pid)];
+    return pid;
+}
+
+- (pid_t)spawnProcessWithArguments:(NSArray *)arguments
+          withEnvironmentVariables:(NSDictionary*)environment
+{
+    LDEProcess *process = [[LDEProcess alloc] initWithArguments:arguments withEnvironmentVariables:environment];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
