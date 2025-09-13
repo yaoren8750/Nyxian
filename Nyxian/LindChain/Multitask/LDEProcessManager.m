@@ -113,7 +113,9 @@
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
-        @"environment": @{},
+        @"environment": @{
+            @"HOME":applicationObject.containerPath
+        },
         @"arguments": @[applicationObject.executablePath],
     }];
     

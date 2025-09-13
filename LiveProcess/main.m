@@ -61,18 +61,23 @@ void handoffOutput(int fd)
 }
 
 extern char **environ;
-void clear_environment(void) {
-    char **env = environ;
-    while (*env != NULL) {
-        char *eq = strchr(*env, '=');
-        if (eq) {
-            size_t len = eq - *env;
+void clear_environment(void)
+{
+    while (environ[0] != NULL)
+    {
+        char *eq = strchr(environ[0], '=');
+        if(eq)
+        {
+            size_t len = eq - environ[0];
             char key[len + 1];
-            strncpy(key, *env, len);
+            strncpy(key, environ[0], len);
             key[len] = '\0';
             unsetenv(key);
         }
-        env++;
+        else
+        {
+            environ++;
+        }
     }
 }
 
@@ -81,7 +86,8 @@ void overwriteEnvironmentProperties(NSDictionary *enviroDict)
     clear_environment();
     if(enviroDict)
     {
-        for (NSString *key in enviroDict) {
+        for (NSString *key in enviroDict)
+        {
             NSString *value = enviroDict[key];
             setenv([key UTF8String], [value UTF8String], 0);
         }
