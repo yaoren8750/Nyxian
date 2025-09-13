@@ -46,6 +46,7 @@ void UIKitFixesInit(void) {
 @property (nonatomic) BOOL multitaskingTermination;
 
 @property (nonatomic) dispatch_once_t closeWindowOnce;
+@property (nonatomic) dispatch_once_t maximizeOnPhoneOnce;
 
 @end
 
@@ -113,15 +114,6 @@ void UIKitFixesInit(void) {
             //}
         }];
     }
-    else
-    {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
-                       dispatch_get_main_queue(), ^{
-            [self maximizeWindow];
-            UIPanGestureRecognizer *pullDownGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePullDown:)];
-            [self.navigationBar addGestureRecognizer:pullDownGesture];
-        });
-    }
     
     return self;
 }
@@ -129,22 +121,19 @@ void UIKitFixesInit(void) {
 - (void)handlePullDown:(UIPanGestureRecognizer *)gesture {
     UIView *windowView = self.view;
     CGPoint translation = [gesture translationInView:windowView.superview];
-    
+    CGFloat offsetY = MAX(translation.y, 0); // never allow negative
+    CGFloat velocityY = [gesture velocityInView:windowView.superview].y;
+
     switch (gesture.state) {
         case UIGestureRecognizerStateChanged: {
-            if (translation.y > 0) {
-                // move only downward
-                windowView.transform = CGAffineTransformMakeTranslation(0, translation.y);
-            }
+            // Only move downward
+            windowView.transform = CGAffineTransformMakeTranslation(0, offsetY);
             break;
         }
         case UIGestureRecognizerStateEnded:
         case UIGestureRecognizerStateCancelled: {
-            CGFloat velocityY = [gesture velocityInView:windowView.superview].y;
-            CGFloat offsetY = translation.y;
-            
             BOOL shouldDismiss = (offsetY > 150 || velocityY > 600);
-            
+
             if (shouldDismiss) {
                 [UIView animateWithDuration:0.3
                                       delay:0
@@ -156,7 +145,7 @@ void UIKitFixesInit(void) {
                                      [windowView removeFromSuperview];
                                  }];
             } else {
-                // snap back with spring
+                // Snap back
                 [UIView animateWithDuration:0.6
                                       delay:0
                      usingSpringWithDamping:0.8
@@ -177,6 +166,16 @@ void UIKitFixesInit(void) {
 {
     [super viewDidAppear:animated];
     [self adjustNavigationBarButtonSpacingWithNegativeSpacing:-8.0 rightMargin:8.0];
+    
+    // MARK: Suppose to only run on phones
+    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
+    {
+        dispatch_once(&_maximizeOnPhoneOnce, ^{
+            [self maximizeWindowNoAnim];
+            UIPanGestureRecognizer *pullDownGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePullDown:)];
+            [self.navigationBar addGestureRecognizer:pullDownGesture];
+        });
+    }
 }
 
 - (void)setupDecoratedView:(CGRect)dimensions
@@ -397,6 +396,61 @@ void UIKitFixesInit(void) {
         }];
     }
 }
+
+- (void)maximizeWindowNoAnim {
+    [self.appSceneVC resizeActionStart];
+    if (self.isMaximized) {
+        // Restore to windowed
+        CGRect maxFrame = UIEdgeInsetsInsetRect(self.view.window.frame, self.view.window.safeAreaInsets);
+        CGRect newFrame = CGRectMake(self.originalFrame.origin.x * maxFrame.size.width,
+                                     self.originalFrame.origin.y * maxFrame.size.height,
+                                     self.originalFrame.size.width,
+                                     self.originalFrame.size.height);
+
+        self.view.frame = newFrame;
+        self.view.layer.borderWidth = 1;
+        self.resizeHandle.alpha = 1;
+
+        if (self.appSceneVC) {
+            [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+                [self updateWindowedFrameWithSettings:settings];
+            }];
+        }
+
+        self.isMaximized = NO;
+        UIImage *maximizeImage = [UIImage systemImageNamed:@"arrow.up.left.and.arrow.down.right.circle.fill"];
+        UIImageConfiguration *maximizeConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
+        self.maximizeButton.image = [maximizeImage imageWithConfiguration:maximizeConfig];
+
+        if (self.appSceneVC) {
+            [self.appSceneVC resizeActionEnd];
+        }
+    } else {
+        // Maximize
+        [self.view.superview bringSubviewToFront:self.view];
+        [self updateOriginalFrame];
+
+        self.isMaximized = YES;
+        [self updateVerticalConstraints];
+        self.view.layer.borderWidth = 0;
+        self.resizeHandle.alpha = 0;
+
+        if (self.appSceneVC) {
+            [self.appSceneVC.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+                [self updateMaximizedFrameWithSettings:settings];
+            }];
+        }
+
+        UIImage *restoreImage = [UIImage systemImageNamed:@"arrow.down.right.and.arrow.up.left.circle.fill"];
+        UIImageConfiguration *restoreConfig = [UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIImageSymbolWeightMedium];
+        self.maximizeButton.image = [restoreImage imageWithConfiguration:restoreConfig];
+
+        if (self.appSceneVC) {
+            [self.appSceneVC resizeActionEnd];
+        }
+    }
+}
+
 
 - (void)appSceneVC:(LDEAppScene*)vc didInitializeWithError:(NSError *)error {
     // TODO: Fix it
