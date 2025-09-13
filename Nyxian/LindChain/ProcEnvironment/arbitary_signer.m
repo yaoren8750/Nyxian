@@ -20,31 +20,56 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
+#import <CommonCrypto/CommonDigest.h>
 
 extern NSBundle *overridenNSBundleOfNyxian;
 
-NSString* signMachOAtPath(NSString *path)
-{
-    NSString *resolvedPath = path;
-    NSFileManager *fm = [NSFileManager defaultManager];
+NSString *hashOfFileAtPath(NSString *path) {
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:path];
+    if (!fileHandle) {
+        return nil;
+    }
+    
+    CC_SHA256_CTX ctx;
+    CC_SHA256_Init(&ctx);
     
     while (true) {
-        NSDictionary *attrs = [fm attributesOfItemAtPath:resolvedPath error:nil];
-        NSString *fileType = attrs[NSFileType];
-        if ([fileType isEqualToString:NSFileTypeSymbolicLink]) {
-            NSString *dest = [fm destinationOfSymbolicLinkAtPath:resolvedPath error:nil];
-            if (!dest) {
-                return nil;
-            }
-            if (![dest isAbsolutePath]) {
-                dest = [[resolvedPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:dest];
-            }
-            resolvedPath = [dest stringByStandardizingPath];
-            continue;
+        @autoreleasepool {
+            NSData *data = [fileHandle readDataOfLength:4096];
+            if (data.length == 0) break;
+            CC_SHA256_Update(&ctx, data.bytes, (CC_LONG)data.length);
         }
-        break;
     }
+    [fileHandle closeFile];
+    
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256_Final(digest, &ctx);
+    
+    NSMutableString *hex = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
+        [hex appendFormat:@"%02x", digest[i]];
+    }
+    return hex;
+}
 
+NSString* signMachOAtPath(NSString *path)
+{
+    NSString *hash = hashOfFileAtPath(path);
+    if (!hash) return nil;
+    
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSString *cacheDir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"NyxianCache"];
+    [fm createDirectoryAtPath:cacheDir withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    NSString *bundlePath = [cacheDir stringByAppendingPathComponent:[hash stringByAppendingPathExtension:@"app"]];
+    NSString *binPath = [bundlePath stringByAppendingPathComponent:@"main"];
+    NSString *infoPath = [bundlePath stringByAppendingPathComponent:@"Info.plist"];
+    
+    if ([fm fileExistsAtPath:bundlePath]) {
+        return binPath;
+    }
+    
+    // Gather signing info
     [hostProcessProxy gatherCodeSignerViaReply:^(NSData *certificateData, NSString *certificatePassword){
         NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
         if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
@@ -62,32 +87,30 @@ NSString* signMachOAtPath(NSString *path)
     }];
     dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
     
-    NSString *tmpBundle = [NSString stringWithFormat:@"%@/%@.app", NSHomeDirectory(), [[NSUUID UUID] UUIDString]];
-    [fm createDirectoryAtPath:tmpBundle withIntermediateDirectories:YES attributes:nil error:nil];
+    // Create bundle structure
+    [fm createDirectoryAtPath:bundlePath withIntermediateDirectories:YES attributes:nil error:nil];
     
-    NSString *tmpBinPath = [tmpBundle stringByAppendingPathComponent:@"main"];
-    [fm moveItemAtPath:resolvedPath toPath:tmpBinPath error:nil];
+    // Copy binary into bundle
+    if (![fm copyItemAtPath:path toPath:binPath error:nil]) {
+        return nil;
+    }
     
-    NSString *infoPath = [tmpBundle stringByAppendingPathComponent:@"Info.plist"];
+    // Write Info.plist with hash marker
     NSDictionary *plistDict = @{
-        @"CFBundleIdentifier" : overridenNSBundleOfNyxian.bundleIdentifier,
+        @"CFBundleIdentifier" : overridenNSBundleOfNyxian.bundleIdentifier ?: @"com.nyxian.unsigned",
         @"CFBundleExecutable" : @"main",
-        @"CFBundleVersion"    : @"1.0.0"
+        @"CFBundleVersion"    : @"1.0.0",
+        @"NyxianOriginalHash" : hash
     };
-    NSError *error = nil;
     NSData *plistData = [NSPropertyListSerialization dataWithPropertyList:plistDict
                                                                    format:NSPropertyListXMLFormat_v1_0
                                                                   options:0
-                                                                    error:&error];
-    if (!plistData) {
-        return nil;
-    }
-    if (![plistData writeToFile:infoPath atomically:YES]) {
-        return nil;
-    }
+                                                                    error:nil];
+    [plistData writeToFile:infoPath atomically:YES];
     
+    // Run signer
     dispatch_async(dispatch_queue_create("sign-queue", DISPATCH_QUEUE_CONCURRENT), ^{
-        LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:tmpBundle];
+        LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
         [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL succeeded, NSString *errorDescription){
             dispatch_semaphore_signal(environment_semaphore);
         } progressHandler:^(NSProgress *progress) {
@@ -95,8 +118,5 @@ NSString* signMachOAtPath(NSString *path)
     });
     dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
     
-    [fm removeItemAtPath:path error:nil];
-    [fm createSymbolicLinkAtPath:path withDestinationPath:tmpBinPath error:nil];
-    
-    return path;
+    return binPath;
 }

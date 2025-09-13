@@ -203,7 +203,7 @@ void machServerInit(void)
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // Hooking exit to avoid exiting the process
-        DO_HOOK_GLOBAL(exit);
+        //DO_HOOK_GLOBAL(exit);
         
         // Setting each signal to be blocked, in order to make the threads stop on fault, in the past it just continued running
         sigset_t set;
