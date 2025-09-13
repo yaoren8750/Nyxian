@@ -27,7 +27,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 
-NSString* invokeAppMain(NSString *bundlePath,
+NSString* invokeAppMain(NSString *executablePath,
                         NSString *homePath,
                         int argc,
                         char *argv[]);
@@ -75,6 +75,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSString *mode = appInfo[@"mode"];
     LDEApplicationObject *appObj = appInfo[@"appObject"];
     NSNumber *debugEnabled = appInfo[@"debugEnabled"];
+    NSString *executablePath = appInfo[@"executablePath"];
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
@@ -89,7 +90,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
-    else
+    else if([mode isEqualToString:@"application"])
     {
         // Handoff stdout and stderr output to host app
         // Debugging is only for applications
@@ -108,7 +109,17 @@ int LiveProcessMain(int argc, char *argv[]) {
         // MARK: Keep it alive
         char *argv[1] = { NULL };
         int argc = 0;
-        NSString *error = invokeAppMain(appObj.bundlePath, appObj.containerPath, argc, argv);
+        NSString *error = invokeAppMain(appObj.executablePath, appObj.containerPath, argc, argv);
+        NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
+    }
+    else if([mode isEqualToString:@"spawn"])
+    {
+        // posix_spawn and similar implementation
+        environment_client_handoff_standard_file_descriptors();
+        
+        char *argv[1] = { NULL };
+        int argc = 0;
+        NSString *error = invokeAppMain(executablePath, nil, argc, argv);
         NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     

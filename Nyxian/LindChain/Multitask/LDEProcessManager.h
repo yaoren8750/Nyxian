@@ -70,6 +70,7 @@
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
+- (pid_t)spawnProcessWithExecutablePath:(NSString*)path;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;

@@ -133,6 +133,7 @@
 				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/libproc.m,
+				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
 				LindChain/ProcEnvironment/tfp_object.m,
 				LindChain/ProcEnvironment/tfp.m,
@@ -393,7 +394,7 @@
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -431,7 +432,7 @@
 				INFOPLIST_FILE = LiveProcess/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveProcess;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

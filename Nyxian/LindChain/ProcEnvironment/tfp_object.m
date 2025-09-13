@@ -83,4 +83,13 @@
     return [self initWithPort:port];
 }
 
+- (void)dealloc
+{
+    if(_port != MACH_PORT_NULL)
+    {
+        mach_port_deallocate(mach_task_self(), _port);
+        _port = MACH_PORT_NULL;
+    }
+}
+
 @end

@@ -23,9 +23,20 @@
 #import <Nyxian-Swift.h>
 #endif
 
+@interface LDEMultitaskManager ()
+
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, LDEWindow *> *windows;
+
+@property (nonatomic, strong) UIStackView *stackView;
+@property (nonatomic, strong) UIStackView *placeholderStack;
+
+@end
+
 @implementation LDEMultitaskManager
 
-- (instancetype)init {
+
+- (instancetype)init
+{
     static BOOL hasInitialized = NO;
     if (hasInitialized) {
         @throw [NSException exceptionWithName:NSInternalInconsistencyException
@@ -59,46 +70,105 @@
             LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
             if(window)
             {
-                [self.windows setObject:window forKey:@(processIdentifier)];
+                self.windows[@(processIdentifier)] = window;
                 [self addSubview:window.view];
+                if (self.appSwitcherView) [self addTileForProcess:processIdentifier window:window];
             }
         }
     });
-    
     return YES;
 }
 
 - (BOOL)closeWindowForProcessIdentifier:(pid_t)processIdentifier
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        LDEWindow *window = [self.windows objectForKey:@(processIdentifier)];
-        if(window) [window closeWindow];
-        [self.windows removeObjectForKey:@(processIdentifier)];
+        LDEWindow *window = self.windows[@(processIdentifier)];
+        if(window)
+        {
+            [window closeWindow];
+            [self.windows removeObjectForKey:@(processIdentifier)];
+        }
+        if(self.appSwitcherView) [self removeTileForProcess:processIdentifier];
     });
     return YES;
+}
+
+- (void)addTileForProcess:(pid_t)processIdentifier window:(LDEWindow *)window
+{
+    if(!self.stackView) return;
+
+    self.placeholderStack.hidden = YES;
+
+    UIView *tile = [[UIView alloc] init];
+    tile.translatesAutoresizingMaskIntoConstraints = NO;
+    tile.backgroundColor = UIColor.systemBackgroundColor;
+    tile.layer.cornerRadius = 16;
+    tile.layer.shadowColor = [UIColor blackColor].CGColor;
+    tile.layer.shadowOpacity = 0.15;
+    tile.layer.shadowRadius = 6;
+    tile.layer.shadowOffset = CGSizeMake(0, 3);
+    tile.tag = processIdentifier;
+
+    UILabel *title = [[UILabel alloc] init];
+    title.translatesAutoresizingMaskIntoConstraints = NO;
+    title.text = window.windowName ?: @"App";
+    title.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
+    title.textAlignment = NSTextAlignmentCenter;
+
+    [tile addSubview:title];
+    [NSLayoutConstraint activateConstraints:@[
+        [tile.widthAnchor constraintEqualToConstant:150],
+        [tile.heightAnchor constraintEqualToConstant:300],
+        [title.centerXAnchor constraintEqualToAnchor:tile.centerXAnchor],
+        [title.centerYAnchor constraintEqualToAnchor:tile.centerYAnchor]
+    ]];
+
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTileTap:)];
+    [tile addGestureRecognizer:tap];
+
+    UIPanGestureRecognizer *verticalPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleTileVerticalSwipe:)];
+    [tile addGestureRecognizer:verticalPan];
+
+    [self.stackView addArrangedSubview:tile];
+}
+
+- (void)removeTileForProcess:(pid_t)processIdentifier
+{
+    if(!self.stackView) return;
+
+    for(UIView *tile in self.stackView.arrangedSubviews)
+    {
+        if (tile.tag == processIdentifier)
+        {
+            [self.stackView removeArrangedSubview:tile];
+            [tile removeFromSuperview];
+            break;
+        }
+    }
+
+    if(self.stackView.arrangedSubviews.count == 0)
+    {
+        self.placeholderStack.hidden = NO;
+    }
 }
 
 - (void)makeKeyAndVisible
 {
     [super makeKeyAndVisible];
-    
-    if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
+
+    if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone)
     {
-        UILongPressGestureRecognizer *gestureRecognizer =
-        [[UILongPressGestureRecognizer alloc] initWithTarget:self
-                                                      action:@selector(handleLongPress:)];
-        
+        UILongPressGestureRecognizer *gestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
         gestureRecognizer.numberOfTouchesRequired = 2;
         [self addGestureRecognizer:gestureRecognizer];
     }
-
 }
 
 - (void)handleLongPress:(UILongPressGestureRecognizer *)recognizer
 {
-    if (recognizer.state == UIGestureRecognizerStateBegan)
+    if(recognizer.state == UIGestureRecognizerStateBegan)
     {
-        if (!self.appSwitcherView)
+        if(!self.appSwitcherView)
         {
             UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
             UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
@@ -130,6 +200,7 @@
             stack.alignment = UIStackViewAlignmentCenter;
             stack.spacing = 20;
             stack.translatesAutoresizingMaskIntoConstraints = NO;
+            self.stackView = stack;
 
             [scrollView addSubview:stack];
             [blurView.contentView addSubview:scrollView];
@@ -149,7 +220,8 @@
                 [stack.heightAnchor constraintEqualToAnchor:scrollView.heightAnchor]
             ]];
 
-            if (self.windows.count == 0) {
+            if (!self.placeholderStack)
+            {
                 UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:48 weight:UIImageSymbolWeightRegular];
                 UIImage *symbol = [UIImage systemImageNamed:@"app.dashed" withConfiguration:config];
                 UIImageView *symbolView = [[UIImageView alloc] initWithImage:symbol];
@@ -164,16 +236,22 @@
                 placeholderStack.axis = UILayoutConstraintAxisVertical;
                 placeholderStack.alignment = UIStackViewAlignmentCenter;
                 placeholderStack.spacing = 12;
-
                 placeholderStack.translatesAutoresizingMaskIntoConstraints = NO;
-                [blurView.contentView addSubview:placeholderStack];
+                self.placeholderStack = placeholderStack;
 
+                [blurView.contentView addSubview:placeholderStack];
                 [NSLayoutConstraint activateConstraints:@[
                     [placeholderStack.centerXAnchor constraintEqualToAnchor:blurView.contentView.centerXAnchor],
                     [placeholderStack.centerYAnchor constraintEqualToAnchor:blurView.contentView.centerYAnchor]
                 ]];
-            } else {
-                for (NSNumber *pidKey in self.windows) {
+            }
+
+            self.placeholderStack.hidden = (self.windows.count > 0);
+
+            if(self.windows.count > 0)
+            {
+                for(NSNumber *pidKey in self.windows)
+                {
                     LDEWindow *window = self.windows[pidKey];
                     
                     UIView *tile = [[UIView alloc] init];
@@ -187,7 +265,7 @@
                     
                     UILabel *title = [[UILabel alloc] init];
                     title.translatesAutoresizingMaskIntoConstraints = NO;
-                    title.text = [NSString stringWithFormat:@"%@", window.windowName];
+                    title.text = window.windowName ?: @"App";
                     title.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
                     title.textAlignment = NSTextAlignmentCenter;
                     
@@ -204,6 +282,10 @@
                     tile.tag = pidKey.intValue;
                     [tile addGestureRecognizer:tap];
                     
+                    UIPanGestureRecognizer *verticalPan = [[UIPanGestureRecognizer alloc] initWithTarget:self
+                                                                                                  action:@selector(handleTileVerticalSwipe:)];
+                    [tile addGestureRecognizer:verticalPan];
+                    
                     [stack addArrangedSubview:tile];
                 }
             }
@@ -217,8 +299,7 @@
                 [self.appSwitcherView.heightAnchor constraintEqualToAnchor:self.heightAnchor multiplier:0.5]
             ]];
 
-            self.appSwitcherTopConstraint =
-                [self.appSwitcherView.topAnchor constraintEqualToAnchor:self.bottomAnchor];
+            self.appSwitcherTopConstraint = [self.appSwitcherView.topAnchor constraintEqualToAnchor:self.bottomAnchor];
             self.appSwitcherTopConstraint.active = YES;
             [self layoutIfNeeded];
 
@@ -234,7 +315,61 @@
     }
 }
 
-- (void)handleTileTap:(UITapGestureRecognizer *)recognizer {
+- (void)handleTileVerticalSwipe:(UIPanGestureRecognizer *)pan
+{
+    UIView *tile = pan.view;
+    if(!tile) return;
+
+    CGPoint translation = [pan translationInView:tile.superview];
+    
+    if(pan.state == UIGestureRecognizerStateChanged)
+    {
+        if(translation.y < 0)
+        {
+            tile.transform = CGAffineTransformMakeTranslation(0, translation.y);
+        }
+    }
+    else if(pan.state == UIGestureRecognizerStateEnded || pan.state == UIGestureRecognizerStateCancelled)
+    {
+        
+        CGFloat velocityY = [pan velocityInView:tile.superview].y;
+        CGFloat offsetY = translation.y;
+        
+        BOOL shouldDismiss = (offsetY < -100) || (velocityY < -500);
+        
+        if(shouldDismiss)
+        {
+            [UIView animateWithDuration:0.3
+                                  delay:0
+                                options:UIViewAnimationOptionCurveEaseIn
+                             animations:^{
+                                 tile.transform = CGAffineTransformMakeTranslation(0, -tile.superview.bounds.size.height);
+                                 tile.alpha = 0;
+                             }
+                             completion:^(BOOL finished) {
+                                 pid_t pid = (pid_t)tile.tag;
+                                 LDEWindow *window = self.windows[@(pid)];
+                                 
+                                 if (window) {
+                                     [window.appSceneVC.process terminate];
+                                     [self.windows removeObjectForKey:@(pid)];
+                                 }
+                                 [tile removeFromSuperview];
+                             }];
+        }
+        else
+        {
+            [UIView animateWithDuration:0.3
+                             animations:^{
+                                 tile.transform = CGAffineTransformIdentity;
+                             }];
+        }
+    }
+}
+
+
+- (void)handleTileTap:(UITapGestureRecognizer *)recognizer
+{
     UIView *tile = recognizer.view;
     if (!tile) return;
     
@@ -242,17 +377,15 @@
     LDEWindow *window = self.windows[@(pid)];
     if (!window) return;
     
-    if (window.view.superview != self) {
-        [self addSubview:window.view];
-    }
-    
+    if(window.view.superview != self) [self addSubview:window.view];
+
     window.view.hidden = NO;
     window.view.alpha = 1.0;
-    window.view.transform = CGAffineTransformMakeTranslation(0, 500);
-    
-    [self bringSubviewToFront:window.view];
+    window.view.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height); // start off-screen bottom
 
+    [self bringSubviewToFront:window.view];
     [window.view.layer removeAllAnimations];
+    
     [UIView animateWithDuration:0.6
                           delay:0
          usingSpringWithDamping:0.8
@@ -288,21 +421,23 @@
     self.appSwitcherTopConstraint.active = NO;
     self.appSwitcherTopConstraint = [self.appSwitcherView.topAnchor constraintEqualToAnchor:self.bottomAnchor];
     self.appSwitcherTopConstraint.active = YES;
-
+    
     [UIView animateWithDuration:0.5
                           delay:0
          usingSpringWithDamping:1.0
           initialSpringVelocity:1.0
                         options:UIViewAnimationOptionCurveEaseInOut
                      animations:^{
-                         [self layoutIfNeeded];
-                     }
+        [self layoutIfNeeded];
+    }
                      completion:^(BOOL finished) {
-                         [self.appSwitcherView removeFromSuperview];
-                         self.appSwitcherView = nil;
-                         self.appSwitcherTopConstraint = nil;
-                     }];
-
+        [self.appSwitcherView removeFromSuperview];
+        self.appSwitcherView = nil;
+        self.appSwitcherTopConstraint = nil;
+        
+        self.placeholderStack = nil;
+    }];
+    
     UIImpactFeedbackGenerator *dismissHaptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
     [dismissHaptic impactOccurred];
 }
@@ -310,24 +445,25 @@
 - (void)handlePan:(UIPanGestureRecognizer *)pan
 {
     CGPoint translation = [pan translationInView:self];
-
-    if (pan.state == UIGestureRecognizerStateChanged)
+    
+    if(pan.state == UIGestureRecognizerStateChanged)
     {
         CGFloat offset = MAX(0, translation.y);
         self.appSwitcherTopConstraint.constant = offset;
         [self layoutIfNeeded];
     }
-    else if (pan.state == UIGestureRecognizerStateEnded ||
-             pan.state == UIGestureRecognizerStateCancelled)
+    else if(pan.state == UIGestureRecognizerStateEnded ||
+            pan.state == UIGestureRecognizerStateCancelled)
     {
-
+        
         CGFloat velocityY = [pan velocityInView:self].y;
         CGFloat offset = self.appSwitcherTopConstraint.constant;
-
-        if (offset > 100 || velocityY > 500)
+        
+        if(offset > 100 || velocityY > 500)
         {
             [self hideAppSwitcher];
-        } else
+        }
+        else
         {
             self.appSwitcherTopConstraint.constant = 0;
             [UIView animateWithDuration:0.5
@@ -336,8 +472,8 @@
                   initialSpringVelocity:0.7
                                 options:UIViewAnimationOptionCurveEaseInOut
                              animations:^{
-                                 [self layoutIfNeeded];
-                             }
+                [self layoutIfNeeded];
+            }
                              completion:nil];
         }
     }
