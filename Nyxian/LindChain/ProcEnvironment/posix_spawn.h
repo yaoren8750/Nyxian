@@ -22,6 +22,25 @@
 
 #import <Foundation/Foundation.h>
 
+// MARK: Simple structure to keep track
+typedef struct {
+    int **dup2_actions;
+    size_t dup2_cnt;
+    
+    int *close_actions;
+    size_t close_cnt;
+} environment_posix_spawn_file_actions_t;
+
+@interface PosixSpawnFileActionsObject : NSObject <NSSecureCoding>
+
+@property (nonatomic) NSArray<NSNumber*> *closeActions;
+
+- (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa;
+
++ (instancetype)empty;
+
+@end
+
 void environment_posix_spawn_init(BOOL host);
 
 #endif /* PROCENVIRONMENT_POSIXSPAWN_H */

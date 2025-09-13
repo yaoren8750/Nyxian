@@ -24,6 +24,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
 
 @protocol ServerProtocol
 
@@ -52,7 +53,7 @@
 /*
  posix_spawn
  */
-- (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply;
+- (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withFileActions:(PosixSpawnFileActionsObject*)fileActions withReply:(void (^)(pid_t))reply;
 - (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid;
 
 /*

@@ -26,6 +26,7 @@
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
 
 NSString* invokeAppMain(NSString *executablePath,
                         int argc,
@@ -124,12 +125,17 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSString *mode = appInfo[@"mode"];
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
+    PosixSpawnFileActionsObject *fileActions = appInfo[@"fileActions"];
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
     environment_client_attach_debugger();
-    environment_client_handoff_standard_file_descriptors();    
+    environment_client_handoff_standard_file_descriptors();
+    
+    // Assign fileActions
+    for(NSNumber *rawFileDescriptor in fileActions.closeActions)
+        close(rawFileDescriptor.intValue);
     
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
     if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);

@@ -102,7 +102,7 @@
         return nil;
     }
     
-    self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath}];
+    self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath} withFileActions:nil];
     
     return self;
 #else
@@ -113,6 +113,7 @@
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
+             withFileActions:(PosixSpawnFileActionsObject*)fileActions
 {
 #if __has_include(<Nyxian-Swift.h>)
     self = [self initWithItems:@{
@@ -120,11 +121,13 @@
         @"mode": @"spawn",
         @"executablePath": binaryPath,
         @"arguments": arguments,
-        @"environment": environment
+        @"environment": environment,
+        @"fileActions": fileActions ? fileActions : [PosixSpawnFileActionsObject empty]
     }];
     
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
     self.executablePath = binaryPath;
+    self.fileActions = fileActions;
     
     return self;
 #else
@@ -197,6 +200,7 @@
     [coder encodeObject:@(self.pid) forKey:@"pid"];
     [coder encodeObject:@(self.uid) forKey:@"uid"];
     [coder encodeObject:@(self.gid) forKey:@"gid"];
+    [coder encodeObject:self.fileActions forKey:@"fileActions"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -209,6 +213,7 @@
         _pid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"pid"]).intValue;
         _uid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"uid"]).intValue;
         _gid = ((NSNumber*)[coder decodeObjectOfClass:[NSNumber class] forKey:@"gid"]).intValue;
+        _fileActions = [coder decodeObjectOfClass:[PosixSpawnFileActionsObject class] forKey:@"fileActions"];
     }
     return self;
 }
@@ -270,8 +275,9 @@
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
+              withFileActions:(PosixSpawnFileActionsObject*)fileActions
 {
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];

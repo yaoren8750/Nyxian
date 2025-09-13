@@ -23,6 +23,7 @@
 #import <Foundation/Foundation.h>
 #import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/Private/UIKitPrivate.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
 
 /*
  Process
@@ -32,6 +33,9 @@
 @property (nonatomic,strong) NSExtension *extension;
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
 @property (nonatomic,strong) RBSProcessMonitor *processMonitor;
+
+// Posix properties
+@property (nonatomic,strong) PosixSpawnFileActionsObject *fileActions;
 
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;
@@ -49,7 +53,8 @@
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
-         withEnvironmentVariables:(NSDictionary*)environment;
+    withEnvironmentVariables:(NSDictionary*)environment
+             withFileActions:(PosixSpawnFileActionsObject*)fileActions;
 
 - (BOOL)suspend;
 - (BOOL)resume;
@@ -75,7 +80,8 @@
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
-     withEnvironmentVariables:(NSDictionary*)environment;
+     withEnvironmentVariables:(NSDictionary*)environment
+              withFileActions:(PosixSpawnFileActionsObject*)fileActions;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;

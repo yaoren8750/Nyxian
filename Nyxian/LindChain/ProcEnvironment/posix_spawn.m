@@ -27,7 +27,52 @@
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
 #import <spawn.h>
 
-#pragma mark - poxix_spawn helper
+#pragma mark - Sendable objects
+
+@implementation PosixSpawnFileActionsObject
+
+- (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa {
+    self = [super init];
+    
+    // Setup close actions
+    NSMutableArray *futureCloseActions = [[NSMutableArray alloc] init];
+    
+    // Add to the actions
+    for(int i = 0; i < (*fa)->close_cnt; i++) [futureCloseActions addObject:@((*fa)->close_actions[i])];
+    
+    _closeActions = [NSArray arrayWithArray:futureCloseActions];
+    
+    return self;
+}
+
++ (instancetype)empty
+{
+    PosixSpawnFileActionsObject *instance = [[PosixSpawnFileActionsObject alloc] init];
+    instance.closeActions = @[];
+    return instance;
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
+- (void)encodeWithCoder:(nonnull NSCoder *)coder { 
+    [coder encodeObject:_closeActions forKey:@"closeActions"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super init];
+    _closeActions = [coder decodeObjectOfClasses:[NSSet setWithObjects:
+                                                  [NSArray class],
+                                                  [NSNumber class],
+                                                  nil]
+                                          forKey:@"closeActions"];
+    return self;
+}
+
+@end
+
+#pragma mark - posix_spawn helper
 
 NSArray<NSString *> *createNSArrayFromArgv(int argc, char *argv[])
 {
@@ -84,7 +129,7 @@ char *environment_which(const char *name)
 
 int environment_posix_spawn(pid_t *process_identifier,
                             const char *path,
-                            const posix_spawn_file_actions_t *file_actions,
+                            const environment_posix_spawn_file_actions_t *fa,
                             const posix_spawnattr_t *spawn_attr,
                             char *const argv[],
                             char *const envp[])
@@ -118,10 +163,15 @@ int environment_posix_spawn(pid_t *process_identifier,
             count++;
         }
         
+        // Create file actions object
+        PosixSpawnFileActionsObject *fileActions = [[PosixSpawnFileActionsObject alloc] initWithFileActions:&fa];
+        
         // Now since we have executable path we execute
         // TODO: Implement envp
         [hostProcessProxy spawnProcessWithPath:[NSString stringWithCString:path encoding:NSUTF8StringEncoding]
-                                 withArguments:createNSArrayFromArgv(count, (char**)argv) withEnvironmentVariables:@{}
+                                 withArguments:createNSArrayFromArgv(count, (char**)argv)
+                      withEnvironmentVariables:@{}
+                               withFileActions:fileActions
                                      withReply:^(pid_t new_process_identifier)
          {
             *process_identifier = new_process_identifier;
@@ -135,7 +185,7 @@ int environment_posix_spawn(pid_t *process_identifier,
 
 int environment_posix_spawnp(pid_t *process_identifier,
                              const char *path,
-                             const posix_spawn_file_actions_t *file_actions,
+                             const environment_posix_spawn_file_actions_t *file_actions,
                              const posix_spawnattr_t *spawn_attr,
                              char *const argv[],
                              char *const envp[])
@@ -146,16 +196,6 @@ int environment_posix_spawnp(pid_t *process_identifier,
 }
 
 #pragma mark - posix file actions
-
-// MARK: Simple structure to keep track
-typedef struct {
-    int **dup2_actions;
-    size_t dup2_cnt;
-    
-    int *close_actions;
-    size_t close_cnt;
-} environment_posix_spawn_file_actions_t;
-
 
 // MARK: Creation and destruction
 int environment_posix_spawn_file_actions_init(environment_posix_spawn_file_actions_t **fa)
@@ -173,8 +213,6 @@ int environment_posix_spawn_file_actions_destroy(environment_posix_spawn_file_ac
 {
     // Destroy each slices
     for(int i = 0; i < (*fa)->dup2_cnt; i++)
-        free(((*fa)->dup2_actions)[i]);
-    for(int i = 0; i < (*fa)->close_cnt; i++)
         free(((*fa)->dup2_actions)[i]);
     
     // Destroy structure and return
@@ -206,11 +244,11 @@ int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_ac
 int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_actions_t **fa,
                                                   int child_fd)
 {
-    // Now allocate one more slot
     (*fa)->close_cnt++;
-    (*fa)->close_actions = realloc((*fa)->dup2_actions, sizeof(int) * (*fa)->close_cnt);
-    (*fa)->close_actions[(*fa)->close_cnt--] = child_fd;
-    
+    (*fa)->close_actions = realloc((*fa)->close_actions,
+                                   sizeof(int) * (*fa)->close_cnt);
+
+    (*fa)->close_actions[(*fa)->close_cnt - 1] = child_fd;
     return 0;
 }
 
