@@ -15,6 +15,7 @@
 #import "../utils.h"
 #import <LindChain/ProcEnvironment/application.h>
 
+NSString* signMachOAtPath(NSString *path);
 extern NSBundle *lcMainBundle;
 
 typedef struct {
@@ -84,6 +85,19 @@ DEFINE_HOOK(_dyld_get_image_vmaddr_slide, intptr_t, (uint32_t image_index))
 DEFINE_HOOK(_dyld_get_image_name, const char*, (uint32_t image_index))
 {
     __attribute__((musttail)) return ORIG_FUNC(_dyld_get_image_name)(translateImageIndex(image_index));
+}
+
+DEFINE_HOOK(dlopen, void *, (const char * __path, int __mode))
+{
+    // Check CS
+    if(!checkCodeSignature(__path))
+    {
+        // Sign if invalid
+        signMachOAtPath([NSString stringWithCString:__path encoding:NSUTF8StringEncoding]);
+    }
+    
+    // Continue with opening
+    return ORIG_FUNC(dlopen)(__path, __mode);
 }
 
 // Rewrite End
@@ -168,6 +182,7 @@ void DyldHooksInit(void)
         DO_HOOK_GLOBAL(_dyld_get_image_header)
         DO_HOOK_GLOBAL(_dyld_get_image_vmaddr_slide)
         DO_HOOK_GLOBAL(_dyld_get_image_name)
+        DO_HOOK_GLOBAL(dlopen);
     });
 }
 
