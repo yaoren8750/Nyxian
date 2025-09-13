@@ -34,6 +34,7 @@ typedef struct {
 @interface PosixSpawnFileActionsObject : NSObject <NSSecureCoding>
 
 @property (nonatomic) NSArray<NSNumber*> *closeActions;
+@property (nonatomic) NSDictionary<NSNumber *, NSFileHandle*> *dup2Actions;
 
 - (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa;
 

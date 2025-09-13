@@ -137,6 +137,15 @@ int LiveProcessMain(int argc, char *argv[]) {
     for(NSNumber *rawFileDescriptor in fileActions.closeActions)
         close(rawFileDescriptor.intValue);
     
+    for(NSNumber *rawFileDescriptor in fileActions.dup2Actions)
+    {
+        NSFileHandle *handle = [fileActions.dup2Actions objectForKey:rawFileDescriptor];
+        dup2(handle.fileDescriptor, rawFileDescriptor.intValue);
+    }
+    
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
     if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);
     

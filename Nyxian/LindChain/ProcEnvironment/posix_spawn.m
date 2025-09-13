@@ -33,15 +33,25 @@
 
 - (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa {
     self = [super init];
-    
-    // Setup close actions
-    NSMutableArray *futureCloseActions = [[NSMutableArray alloc] init];
-    
-    // Add to the actions
-    for(int i = 0; i < (*fa)->close_cnt; i++) [futureCloseActions addObject:@((*fa)->close_actions[i])];
-    
-    _closeActions = [NSArray arrayWithArray:futureCloseActions];
-    
+    if (self) {
+        NSMutableArray *futureCloseActions = [NSMutableArray array];
+        for (int i = 0; i < (*fa)->close_cnt; i++) {
+            [futureCloseActions addObject:@((*fa)->close_actions[i])];
+        }
+        _closeActions = [futureCloseActions copy];
+
+        NSMutableDictionary<NSNumber *, NSFileHandle *> *futureDup2 = [NSMutableDictionary dictionary];
+        for (int i = 0; i < (*fa)->dup2_cnt; i++) {
+            int *slice = (*fa)->dup2_actions[i];
+            int host_fd = slice[0];
+            int child_fd = slice[1];
+
+            NSFileHandle *handle = [[NSFileHandle alloc] initWithFileDescriptor:host_fd
+                                                                closeOnDealloc:NO];
+            futureDup2[@(child_fd)] = handle;
+        }
+        _dup2Actions = [futureDup2 copy];
+    }
     return self;
 }
 
@@ -49,6 +59,7 @@
 {
     PosixSpawnFileActionsObject *instance = [[PosixSpawnFileActionsObject alloc] init];
     instance.closeActions = @[];
+    instance.dup2Actions = @{};
     return instance;
 }
 
@@ -58,6 +69,7 @@
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder { 
     [coder encodeObject:_closeActions forKey:@"closeActions"];
+    [coder encodeObject:_dup2Actions forKey:@"dup2Actions"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -67,6 +79,11 @@
                                                   [NSNumber class],
                                                   nil]
                                           forKey:@"closeActions"];
+    _dup2Actions = [coder decodeObjectOfClasses:[NSSet setWithObjects:
+                                                 [NSDictionary class],
+                                                 [NSNumber class],
+                                                 [NSFileHandle class],
+                                                 nil] forKey:@"dup2Actions"];
     return self;
 }
 
@@ -226,18 +243,15 @@ int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_ac
                                                  int host_fd,
                                                  int child_fd)
 {
-    // Allocate a slice where the 1st item wil be host_fd and the 2nd child_fd
     int *slice = calloc(2, sizeof(int));
-    
-    // Now slide host_fd and child_fd into the slice
     slice[0] = host_fd;
-    slice[1] = child_fd;                                    // MARK: Note for later, for my self, do never create a NSFileHandle from this, this is just the raw number that will be targeted in the child process
+    slice[1] = child_fd;
     
-    // Now allocate one more slot
     (*fa)->dup2_cnt++;
-    (*fa)->dup2_actions = realloc((*fa)->dup2_actions, sizeof(void*) * (*fa)->dup2_cnt);
-    (*fa)->dup2_actions[(*fa)->dup2_cnt--] = slice;
-    
+    (*fa)->dup2_actions = realloc((*fa)->dup2_actions,
+                                  sizeof(int*) * (*fa)->dup2_cnt);
+    (*fa)->dup2_actions[(*fa)->dup2_cnt - 1] = slice;
+
     return 0;
 }
 
@@ -247,7 +261,6 @@ int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_a
     (*fa)->close_cnt++;
     (*fa)->close_actions = realloc((*fa)->close_actions,
                                    sizeof(int) * (*fa)->close_cnt);
-
     (*fa)->close_actions[(*fa)->close_cnt - 1] = child_fd;
     return 0;
 }
