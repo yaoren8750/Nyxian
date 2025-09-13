@@ -55,6 +55,12 @@
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withReply:(void (^)(pid_t))reply;
 - (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid;
 
+/*
+ CS
+ */
+- (void)gatherCodeSignerViaReply:(void (^)(NSData*,NSString*))reply;
+- (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */

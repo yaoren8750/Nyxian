@@ -351,7 +351,8 @@ uint32_t dyld_get_sdk_version(const struct mach_header* mh);
     NSURL *appPathURL = [NSURL fileURLWithPath:appPath];
     
     void (^signCompletionHandler)(BOOL success, NSError *error)  = ^(BOOL success, NSError *_Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        // MARK: Duy wtf does this prone to deadlock code do here?
+        //dispatch_async(dispatch_get_main_queue(), ^{
             // Save sign ID and restore bundle ID
             [self save];
             [infoPlist writeToFile:infoPath atomically:YES];
@@ -367,7 +368,7 @@ uint32_t dyld_get_sdk_version(const struct mach_header* mh);
                 }
             }
             
-        });
+        //});
     };
     
     __block NSProgress *progress = [LCUtils signAppBundleWithZSign:appPathURL completionHandler:signCompletionHandler];

@@ -9,6 +9,7 @@
 #import <dlfcn.h>
 
 extern NSUserDefaults *lcUserDefaults;
+extern NSBundle *overridenNSBundleOfNyxian;
 
 // make SFSafariView happy and open data: URLs
 @implementation NSURL(hack)
@@ -170,7 +171,7 @@ extern NSUserDefaults *lcUserDefaults;
     NSError *error;
 
     // use zsign as our signer~
-    NSURL *profilePath = [NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
+    NSURL *profilePath = [overridenNSBundleOfNyxian ? overridenNSBundleOfNyxian: NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
     NSData *profileData = [NSData dataWithContentsOfURL:profilePath];
     // Load libraries from Documents, yeah
 
@@ -188,7 +189,7 @@ extern NSUserDefaults *lcUserDefaults;
 
 + (NSString*)getCertTeamIdWithKeyData:(NSData*)keyData password:(NSString*)password {
     NSError *error;
-    NSURL *profilePath = [NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
+    NSURL *profilePath = [overridenNSBundleOfNyxian ? overridenNSBundleOfNyxian: NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
     NSData *profileData = [NSData dataWithContentsOfURL:profilePath];
     if (error) {
         return nil;
@@ -199,7 +200,7 @@ extern NSUserDefaults *lcUserDefaults;
 
 + (int)validateCertificateWithCompletionHandler:(void(^)(int status, NSDate *expirationDate, NSString *error))completionHandler {
     NSError *error;
-    NSURL *profilePath = [NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
+    NSURL *profilePath = [overridenNSBundleOfNyxian ? overridenNSBundleOfNyxian: NSBundle.mainBundle URLForResource:@"embedded" withExtension:@"mobileprovision"];
     NSData *profileData = [NSData dataWithContentsOfURL:profilePath];
     NSData *certData = [LCUtils certificateData];
     if (error) {

@@ -39,12 +39,14 @@ NSProgress* currentZSignProgress;
 }
 @end
 
+NSBundle *overridenNSBundleOfNyxian = nil;
+
 const char *getExecutablePath(void)
 {
-    return [[[NSBundle mainBundle] executablePath] UTF8String];
+    return [[overridenNSBundleOfNyxian ? overridenNSBundleOfNyxian : [NSBundle mainBundle] executablePath] UTF8String];
 }
 
 const char *getBundleIdentifier(void)
 {
-    return [[[NSBundle mainBundle] bundleIdentifier] UTF8String];
+    return [[overridenNSBundleOfNyxian ? overridenNSBundleOfNyxian : [NSBundle mainBundle] bundleIdentifier] UTF8String];
 }

@@ -173,8 +173,6 @@ NSString* invokeAppMain(NSString *executablePath,
         // Sending to host
         [hostProcessProxy assignProcessInfo:processInfo withProcessIdentfier:getpid()];
     }
-    
-    NSLog(@"executing: %@, %@", executablePath, guestMainBundle);
 
     // Setup directories
     if(homePath && guestMainBundle)
@@ -227,7 +225,6 @@ NSString* invokeAppMain(NSString *executablePath,
     if (!appMain)
         return @"Could not find the main entry point";
 
-    NSLog(@"Jumping to app main!");
     return [NSString stringWithFormat:@"App returned from its main function with code %d.", appMain(argc, argv)];
 }
 

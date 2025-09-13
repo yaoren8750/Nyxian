@@ -142,14 +142,10 @@ int LiveProcessMain(int argc, char *argv[]) {
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        NSLog(@"Arguments: %@", argumentDictionary);
-        NSLog(@"Environment: %@", environmentDictionary);
-        
         NSString *error = invokeAppMain(executablePath, argc, argv);
-        NSLog(@"invokeAppMain() failed with error: %@\nGuest app shutting down", error);
     }
     
-    return 0;
+    exit(0);
 }
 
 // this is our fake UIApplicationMain called from _xpc_objc_uimain (xpc_main)

@@ -22,6 +22,9 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/litehook/src/litehook.h>
+#import <LindChain/LiveContainer/LCUtils.h>
+#import <LindChain/LiveContainer/LCAppInfo.h>
+#import <LindChain/LiveContainer/ZSign/zsigner.h>
 #import <spawn.h>
 
 #pragma mark - poxix_spawn helper
@@ -60,6 +63,17 @@ int environment_posix_spawn(pid_t *process_identifier,
     if(!environmentIsHost)
     {
         // MARK: GUEST Implementation
+        
+        // Check code signature
+        if(!path) return 1;
+        if(!checkCodeSignature(path))
+        {
+            NSLog(@"Big nono!");
+            // Is not valid
+            NSString *signMachOAtPath(NSString *path);
+            path = [signMachOAtPath([NSString stringWithCString:path encoding:NSUTF8StringEncoding]) UTF8String];
+            if(!path) return 1;
+        }
         
         // Is argv safe?
         if(argv == NULL) return 1;

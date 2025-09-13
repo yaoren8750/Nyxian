@@ -22,6 +22,7 @@
 #import <LindChain/LiveProcess/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Debugger/Logger.h>
+#import <LindChain/LiveContainer/LCUtils.h>
 #import <mach/mach.h>
 
 @implementation Server
@@ -146,6 +147,19 @@
         targetProcess.displayName = process.displayName;
         targetProcess.icon = process.icon;
     }
+}
+
+/*
+ Code signer
+ */
+- (void)gatherCodeSignerViaReply:(void (^)(NSData*,NSString*))reply
+{
+    reply(LCUtils.certificateData, LCUtils.certificatePassword);
+}
+
+- (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply
+{
+    reply([[NSBundle mainBundle] bundlePath]);
 }
 
 @end
