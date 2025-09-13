@@ -51,7 +51,7 @@
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     
-    process.displayName = @"LDEApplicationWorkspace";
+    process.displayName = @"applicationmgmtd";
     
     __weak typeof(self) weakSelf = self;
     [process setRequestInterruptionBlock:^(NSUUID *uuid) {
