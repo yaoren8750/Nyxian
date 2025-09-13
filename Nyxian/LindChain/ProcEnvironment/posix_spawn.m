@@ -51,6 +51,35 @@ NSArray<NSString *> *createNSArrayFromArgv(int argc, char *argv[])
     return [array copy];
 }
 
+char *environment_which(const char *name)
+{
+    if(!name) return NULL;
+    if(strchr(name, '/'))
+    {
+        if (access(name, X_OK) == 0)
+            return realpath(name, NULL);
+        return NULL;
+    }
+    
+    char *path = getenv("PATH");
+    if (!path) return NULL;
+    
+    char *copy = strdup(path);
+    char *token = strtok(copy, ":");
+    while(token)
+    {
+        char candidate[PATH_MAX];
+        snprintf(candidate, sizeof(candidate), "%s/%s", token, name);
+        if (access(candidate, X_OK) == 0) {
+            free(copy);
+            return realpath(candidate, NULL);
+        }
+        token = strtok(NULL, ":");
+    }
+    free(copy);
+    return NULL;
+}
+
 #pragma mark - posix_spawn implementation
 
 int environment_posix_spawn(pid_t *process_identifier,
@@ -104,6 +133,18 @@ int environment_posix_spawn(pid_t *process_identifier,
     return 0;
 }
 
+int environment_posix_spawnp(pid_t *process_identifier,
+                             const char *path,
+                             const posix_spawn_file_actions_t *file_actions,
+                             const posix_spawnattr_t *spawn_attr,
+                             char *const argv[],
+                             char *const envp[])
+{
+    // Itterates through PATH variable
+    // Essentially for dash which uses PATH
+    return environment_posix_spawn(process_identifier, environment_which(path), file_actions, spawn_attr, argv, envp);
+}
+
 #pragma mark - Initilizer
 
 void environment_posix_spawn_init(BOOL host)
@@ -112,5 +153,6 @@ void environment_posix_spawn_init(BOOL host)
     {
         // MARK: GUEST Init
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn, environment_posix_spawn, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawnp, environment_posix_spawnp, nil);
     }
 }
