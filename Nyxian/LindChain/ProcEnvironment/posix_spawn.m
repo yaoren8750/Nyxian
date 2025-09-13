@@ -146,7 +146,7 @@ char *environment_which(const char *name)
 
 int environment_posix_spawn(pid_t *process_identifier,
                             const char *path,
-                            const environment_posix_spawn_file_actions_t *fa,
+                            const environment_posix_spawn_file_actions_t **fa,
                             const posix_spawnattr_t *spawn_attr,
                             char *const argv[],
                             char *const envp[])
@@ -181,7 +181,7 @@ int environment_posix_spawn(pid_t *process_identifier,
         }
         
         // Create file actions object
-        PosixSpawnFileActionsObject *fileActions = [[PosixSpawnFileActionsObject alloc] initWithFileActions:&fa];
+        PosixSpawnFileActionsObject *fileActions = [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa];
         
         // Now since we have executable path we execute
         // TODO: Implement envp
@@ -202,7 +202,7 @@ int environment_posix_spawn(pid_t *process_identifier,
 
 int environment_posix_spawnp(pid_t *process_identifier,
                              const char *path,
-                             const environment_posix_spawn_file_actions_t *file_actions,
+                             const environment_posix_spawn_file_actions_t **file_actions,
                              const posix_spawnattr_t *spawn_attr,
                              char *const argv[],
                              char *const envp[])
