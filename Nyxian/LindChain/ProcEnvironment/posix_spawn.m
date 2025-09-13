@@ -149,13 +149,70 @@ int environment_posix_spawnp(pid_t *process_identifier,
 
 // MARK: Simple structure to keep track
 typedef struct {
-    int *dup2_actions;
-    size_t sup2_cnt;
+    int **dup2_actions;
+    size_t dup2_cnt;
     
     int *close_actions;
     size_t close_cnt;
 } environment_posix_spawn_file_actions_t;
 
+
+// MARK: Creation and destruction
+int environment_posix_spawn_file_actions_init(environment_posix_spawn_file_actions_t **fa)
+{
+    // Allocate structure and return
+    *fa = malloc(sizeof(environment_posix_spawn_file_actions_t));
+    (*fa)->dup2_cnt = 0;
+    (*fa)->dup2_actions = NULL;
+    (*fa)->close_cnt = 0;
+    (*fa)->close_actions = NULL;
+    return 0;
+}
+
+int environment_posix_spawn_file_actions_destroy(environment_posix_spawn_file_actions_t **fa)
+{
+    // Destroy each slices
+    for(int i = 0; i < (*fa)->dup2_cnt; i++)
+        free(((*fa)->dup2_actions)[i]);
+    for(int i = 0; i < (*fa)->close_cnt; i++)
+        free(((*fa)->dup2_actions)[i]);
+    
+    // Destroy structure and return
+    free((*fa)->dup2_actions);
+    free((*fa)->close_actions);
+    return 0;
+}
+
+// MARK: Management
+int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_actions_t **fa,
+                                                 int host_fd,
+                                                 int child_fd)
+{
+    // Allocate a slice where the 1st item wil be host_fd and the 2nd child_fd
+    int *slice = calloc(2, sizeof(int));
+    
+    // Now slide host_fd and child_fd into the slice
+    slice[0] = host_fd;
+    slice[1] = child_fd;                                    // MARK: Note for later, for my self, do never create a NSFileHandle from this, this is just the raw number that will be targeted in the child process
+    
+    // Now allocate one more slot
+    (*fa)->dup2_cnt++;
+    (*fa)->dup2_actions = realloc((*fa)->dup2_actions, sizeof(void*) * (*fa)->dup2_cnt);
+    (*fa)->dup2_actions[(*fa)->dup2_cnt--] = slice;
+    
+    return 0;
+}
+
+int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_actions_t **fa,
+                                                  int child_fd)
+{
+    // Now allocate one more slot
+    (*fa)->close_cnt++;
+    (*fa)->close_actions = realloc((*fa)->dup2_actions, sizeof(int) * (*fa)->close_cnt);
+    (*fa)->close_actions[(*fa)->close_cnt--] = child_fd;
+    
+    return 0;
+}
 
 #pragma mark - Initilizer
 
@@ -170,9 +227,9 @@ void environment_posix_spawn_init(BOOL host)
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawnp, environment_posix_spawnp, nil);
         
         // MARK: Fixing file actions, so developers can redirect file descriptors
-        //posix_spawn_file_actions_init(posix_file_actions_t *fa)
-        //posix_spawn_file_actions_destroy(posix_file_actions_t *fa)
-        //posix_spawn_file_actions_adddup2(posix_file_actions_t *fa, int fd, int child_target_fd)
-        //posix_spawn_file_actions_addclose(posix_file_actions_t *fa, int fd);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn_file_actions_init, environment_posix_spawn_file_actions_init, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn_file_actions_destroy, environment_posix_spawn_file_actions_destroy, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn_file_actions_adddup2, environment_posix_spawn_file_actions_adddup2, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, posix_spawn_file_actions_addclose, environment_posix_spawn_file_actions_addclose, nil);
     }
 }
