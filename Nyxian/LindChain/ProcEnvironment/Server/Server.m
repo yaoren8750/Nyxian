@@ -67,13 +67,13 @@
 /*
  tfp_userspace
  */
-- (void)sendPort:(TaskPortObject*)machPort
+- (void)sendPort:(TaskPortObject*)machPort API_AVAILABLE(ios(26.0));
 {
     environment_host_take_client_task_port(machPort);
 }
 
 - (void)getPort:(pid_t)pid
-      withReply:(void (^)(TaskPortObject*))reply
+      withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
 {
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);

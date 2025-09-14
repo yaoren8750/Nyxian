@@ -104,14 +104,14 @@ void environment_tfp_init(BOOL host)
         if(!host)
         {
             // MARK: Guest Init
-            [hostProcessProxy sendPort:[[TaskPortObject alloc] initWithPort:mach_task_self()]];
+            [hostProcessProxy sendPort:[TaskPortObject taskPortSelf]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
         }
         else
         {
             // MARK: HOST Init
             // Set kernel mach port to our host apps mach port
-            [tfp_userspace_ports setObject:[[TaskPortObject alloc] initWithPort:mach_task_self()] forKey:@(0)];
+            [tfp_userspace_ports setObject:[TaskPortObject taskPortSelf] forKey:@(0)];
         }
     }
 }

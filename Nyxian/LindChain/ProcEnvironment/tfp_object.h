@@ -33,6 +33,8 @@ API_AVAILABLE(ios(26.0))
 
 - (instancetype)initWithPort:(mach_port_t)port;
 
++ (instancetype)taskPortSelf;
+
 - (BOOL)isUsable;
 
 @end

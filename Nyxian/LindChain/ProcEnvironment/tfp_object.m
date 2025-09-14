@@ -29,6 +29,11 @@
     return self;
 }
 
++ (instancetype)taskPortSelf
+{
+    return [[TaskPortObject alloc] initWithPort:mach_task_self()];
+}
+
 + (BOOL)supportsSecureCoding
 {
     return YES;
