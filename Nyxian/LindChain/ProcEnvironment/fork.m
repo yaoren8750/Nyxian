@@ -28,4 +28,5 @@ void environment_fork(void)
     // MARK: We also need the task right of the process requesting
     // MARK: We then suspend both processes(requesting and the one at fork stage) and then clear the entire task at fork stage and copy over vm map and thread states over
     // MARK: Mammut task
+    // MARK: Page allignment will probably kill me
 }
