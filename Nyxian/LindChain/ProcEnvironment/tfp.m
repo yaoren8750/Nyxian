@@ -33,14 +33,13 @@
 /*
  Internal Implementation
  */
+API_AVAILABLE(ios(26.0))
 static NSMutableDictionary <NSNumber*,TaskPortObject*> *tfp_userspace_ports;
 
 kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
                                        pid_t pid,
                                        mach_port_name_t *requestTaskPort)
 {
-    __block kern_return_t kr = KERN_SUCCESS;
-    
     // Ignore input task port, literally take from `tfp_userspace_ports`
     TaskPortObject *machPortObject = [tfp_userspace_ports objectForKey:@(pid)];
     if(machPortObject)
@@ -53,7 +52,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         else
         {
             [tfp_userspace_ports removeObjectForKey:@(pid)];
-            kr = KERN_FAILURE;
+            return KERN_FAILURE;
         }
     }
     else
@@ -61,30 +60,25 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         if(environmentIsHost)
         {
             // No machPortObject, so deny
-            kr = KERN_FAILURE;
+            return KERN_FAILURE;
         }
         else
         {
-            [hostProcessProxy getPort:pid withReply:^(TaskPortObject *port){
-                if(!port)
-                {
-                    kr = KERN_FAILURE;
-                    dispatch_semaphore_signal(environment_semaphore);
-                    return;
-                }
-                
-                // We gather the port and save it!
-                [tfp_userspace_ports setObject:port forKey:@(pid)];
-                
-                // now we set `requestTaskPort`
-                *requestTaskPort = [port port];
-                dispatch_semaphore_signal(environment_semaphore);
-            }];
-            dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+            // Asking the host application for the port object that contains the task port of the pid
+            TaskPortObject *portObject = environment_proxy_tfp_get_port_object_for_process_identifier(pid);
+            
+            // If the port is valid, we save it
+            if(!portObject)
+                return KERN_FAILURE;
+            else
+                [tfp_userspace_ports setObject:portObject forKey:@(pid)];
+            
+            // now we set `requestTaskPort`
+            *requestTaskPort = [portObject port];
         }
     }
     
-    return kr;
+    return KERN_SUCCESS;
 }
 
 void environment_host_take_client_task_port(TaskPortObject *machPort)
@@ -118,13 +112,6 @@ void environment_tfp_init(BOOL host)
             // MARK: HOST Init
             // Set kernel mach port to our host apps mach port
             [tfp_userspace_ports setObject:[[TaskPortObject alloc] initWithPort:mach_task_self()] forKey:@(0)];
-        }
-    }
-    else
-    {
-        if(!host)
-        {
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, environment_task_for_pid, task_for_pid, nil);
         }
     }
 }

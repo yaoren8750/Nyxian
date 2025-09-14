@@ -27,7 +27,6 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 
 BOOL environmentIsHost;
-dispatch_semaphore_t environment_semaphore;
 
 void environment_init(BOOL host)
 {
@@ -37,7 +36,6 @@ void environment_init(BOOL host)
         environment_libproc_init(host);
         environment_application_init(host);
         environment_posix_spawn_init(host);
-        if(!host) environment_semaphore = dispatch_semaphore_create(0);
         environmentIsHost = host;
     });
 }
@@ -69,12 +67,9 @@ void environment_client_attach_debugger(void)
 void environment_client_handoff_standard_file_descriptors(void)
 {
     if(environmentIsHost || !hostProcessProxy) return;
-    [hostProcessProxy getStdoutOfServerViaReply:^(NSFileHandle *stdoutHandle){
-        dup2(stdoutHandle.fileDescriptor, STDOUT_FILENO);
-        dup2(stdoutHandle.fileDescriptor, STDERR_FILENO);
-        setvbuf(stdout, NULL, _IONBF, 0);
-        setvbuf(stderr, NULL, _IONBF, 0);
-        dispatch_semaphore_signal(environment_semaphore);
-    }];
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+    int server_fd = environment_proxy_get_stdout_of_server();
+    dup2(server_fd, STDOUT_FILENO);
+    dup2(server_fd, STDERR_FILENO);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 }

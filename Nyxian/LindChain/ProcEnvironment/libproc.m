@@ -28,21 +28,6 @@
 #import <LindChain/Multitask/LDEProcessManager.h>
 
 /*
- Helper function
- */
-LDEProcess *environment_client_get_process_of_process_identifier(pid_t process_identifier)
-{
-    if(environmentIsHost) return nil;
-    __block LDEProcess *process = nil;
-    [hostProcessProxy proc_getProcStructureForProcessIdentifier:process_identifier withReply:^(LDEProcess *replyProcess){
-        process = replyProcess;
-        dispatch_semaphore_signal(environment_semaphore);
-    }];
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
-    return process;
-}
-
-/*
  Actual API override
  */
 int environment_proc_listallpids(void *buffer,
@@ -59,15 +44,13 @@ int environment_proc_listallpids(void *buffer,
         size_t hounter = 0;
         
         // Get pids from server
-        __block NSMutableSet<NSNumber*> *environment_process_identifier;
-        [hostProcessProxy proc_listallpidsViaReply:^(NSSet *processes){
-            environment_process_identifier = [NSMutableSet setWithSet:processes];
-            dispatch_semaphore_signal(environment_semaphore);
-        }];
-        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+        NSSet<NSNumber*> *environment_processes = environment_proxy_proc_list_all_process_identifier();
+        
+        // Check if we got it
+        if(!environment_processes) return 0;
         
         // Now itterate, and remove each cycle a slice
-        for(NSNumber *number in environment_process_identifier)
+        for(NSNumber *number in environment_processes)
         {
             // Copy them to buffer
             array[hounter] = number.intValue;
@@ -87,7 +70,7 @@ int environment_proc_name(int pid,
     {
         // MARK: GUEST
         // Take process structure of requested process identifier
-        LDEProcess *process = environment_client_get_process_of_process_identifier(pid);
+        LDEProcess *process = environment_proxy_proc_structure_for_process_identifier(pid);
         if(!process) return 0;
         
         // Now overwrite get c str of proc name
@@ -109,7 +92,7 @@ int environment_proc_pidpath(int pid,
     {
         // MARK: GUEST
         // Take process structure of requested process identifier
-        LDEProcess *process = environment_client_get_process_of_process_identifier(pid);
+        LDEProcess *process = environment_proxy_proc_structure_for_process_identifier(pid);
         if(!process) return 0;
         
         // Now overwrite get c str of proc name
@@ -127,24 +110,6 @@ int environment_proc_pidpath(int pid,
     return 0;
 }
 
-int environment_kill(pid_t pid, int signal)
-{
-    if(!environmentIsHost)
-    {
-        // MARK: GUEST
-        // Take process structure of requested process identifier
-        __block int result = 1;
-        [hostProcessProxy proc_kill:pid withSignal:signal withReply:^(int replyResult){
-            result = replyResult;
-            dispatch_semaphore_signal(environment_semaphore);
-        }];
-        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
-        
-        return result;
-    }
-    return 1;
-}
-
 /*
  Init
  */
@@ -156,6 +121,6 @@ void environment_libproc_init(BOOL host)
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_listallpids, environment_proc_listallpids, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_name, environment_proc_name, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_pidpath, environment_proc_pidpath, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, kill, environment_kill, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, kill, environment_proxy_proc_kill_process_identifier, nil);
     }
 }

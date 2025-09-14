@@ -24,7 +24,6 @@
 #import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
 extern BOOL environmentIsHost;
-extern dispatch_semaphore_t environment_semaphore;
 
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint);
 void environment_client_handoff_standard_file_descriptors(void);

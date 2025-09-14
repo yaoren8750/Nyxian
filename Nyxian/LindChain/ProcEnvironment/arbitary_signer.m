@@ -55,7 +55,7 @@ NSString *hashOfFileAtPath(NSString *path) {
 NSString* signMachOAtPath(NSString *path)
 {
     NSString *hash = hashOfFileAtPath(path);
-    if (!hash) return nil;
+    if(!hash) return nil;
     
     NSFileManager *fm = [NSFileManager defaultManager];
     NSString *cacheDir = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"ArbSign"];
@@ -65,27 +65,25 @@ NSString* signMachOAtPath(NSString *path)
     NSString *binPath = [bundlePath stringByAppendingPathComponent:@"main"];
     NSString *infoPath = [bundlePath stringByAppendingPathComponent:@"Info.plist"];
     
-    if ([fm fileExistsAtPath:bundlePath]) {
-        return binPath;
-    }
+    if([fm fileExistsAtPath:bundlePath]) return binPath;
     
     // Gather signing info
-    [hostProcessProxy gatherCodeSignerViaReply:^(NSData *certificateData, NSString *certificatePassword){
-        NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
-        if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
-        [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
-        [appGroupUserDefault setObject:certificatePassword forKey:@"LCCertificatePassword"];
-        [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
-        [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
-        dispatch_semaphore_signal(environment_semaphore);
-    }];
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+    NSData *certificateData = nil;
+    NSString *certificatePassword = nil;
+    NSString *extras = nil;
+    environment_proxy_gather_code_signature_info(&certificateData, &certificatePassword);
+    extras = environment_proxy_gather_code_signature_extras();
+    if(!(certificateData && certificatePassword && extras)) return nil;
     
-    [hostProcessProxy gatherSignerExtrasViaReply:^(NSString *bundle){
-        overridenNSBundleOfNyxian = [NSBundle bundleWithPath:bundle];
-        dispatch_semaphore_signal(environment_semaphore);
-    }];
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+    NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
+    if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
+    [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
+    [appGroupUserDefault setObject:certificatePassword forKey:@"LCCertificatePassword"];
+    [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
+    [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
+    
+    // Override signer bundle
+    overridenNSBundleOfNyxian = [NSBundle bundleWithPath:extras];
     
     // Create bundle structure
     [fm createDirectoryAtPath:bundlePath withIntermediateDirectories:YES attributes:nil error:nil];
@@ -109,14 +107,15 @@ NSString* signMachOAtPath(NSString *path)
     [plistData writeToFile:infoPath atomically:YES];
     
     // Run signer
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     dispatch_async(dispatch_queue_create("sign-queue", DISPATCH_QUEUE_CONCURRENT), ^{
-        LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
+    LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
         [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL succeeded, NSString *errorDescription){
-            dispatch_semaphore_signal(environment_semaphore);
+            dispatch_semaphore_signal(sema);
         } progressHandler:^(NSProgress *progress) {
         } forceSign:NO];
     });
-    dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
     return binPath;
 }

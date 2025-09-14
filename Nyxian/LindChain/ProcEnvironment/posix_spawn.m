@@ -185,16 +185,10 @@ int environment_posix_spawn(pid_t *process_identifier,
         
         // Now since we have executable path we execute
         // TODO: Implement envp
-        [hostProcessProxy spawnProcessWithPath:[NSString stringWithCString:path encoding:NSUTF8StringEncoding]
-                                 withArguments:createNSArrayFromArgv(count, (char**)argv)
-                      withEnvironmentVariables:@{}
-                               withFileActions:fileActions
-                                     withReply:^(pid_t new_process_identifier)
-         {
-            *process_identifier = new_process_identifier;
-            dispatch_semaphore_signal(environment_semaphore);
-        }];
-        dispatch_semaphore_wait(environment_semaphore, DISPATCH_TIME_FOREVER);
+        *process_identifier = environment_proxy_spawn_process_at_path([NSString stringWithCString:path encoding:NSUTF8StringEncoding],
+                                                                      createNSArrayFromArgv(count, (char**)argv),
+                                                                      @{},
+                                                                      fileActions);
     }
     
     return 0;

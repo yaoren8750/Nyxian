@@ -17,6 +17,217 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 
+#define PROXY_MAX_DISPATCH_TIME 1.0
+#define PROXY_TYPE_REPLY(type) ^(void (^reply)(type))
+
 NSObject<ServerProtocol> *hostProcessProxy = nil;
+
+static inline id
+_Nullable
+sync_call_with_timeout(void (^invoke)(void (^reply)(id)))
+{
+    __block id result = nil;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+    invoke(^(id obj){
+        result = obj;
+        dispatch_semaphore_signal(sem);
+    });
+
+    long waited = dispatch_semaphore_wait(
+        sem,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(PROXY_MAX_DISPATCH_TIME * NSEC_PER_SEC))
+    );
+    if (waited != 0) return nil; // timeout
+    return result;
+}
+
+static inline NSArray*
+_Nullable
+sync_call_with_timeout2(void (^invoke)(void (^reply)(id,id)))
+{
+    __block NSArray *result = nil;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+    invoke(^(id obj, id obj2){
+        result = @[obj, obj2];
+        dispatch_semaphore_signal(sem);
+    });
+
+    long waited = dispatch_semaphore_wait(
+        sem,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(PROXY_MAX_DISPATCH_TIME * NSEC_PER_SEC))
+    );
+    if (waited != 0) return nil;
+    return result;
+}
+
+static inline int
+sync_call_with_timeout_int(void (^invoke)(void (^reply)(int)))
+{
+    __block int result = -1;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+    invoke(^(int val){
+        result = val;
+        dispatch_semaphore_signal(sem);
+    });
+
+    long waited = dispatch_semaphore_wait(
+        sem,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(PROXY_MAX_DISPATCH_TIME * NSEC_PER_SEC))
+    );
+    return (waited == 0) ? result : -1;
+}
+
+static inline BOOL
+sync_call_with_timeout_bool(void (^invoke)(void (^reply)(BOOL)))
+{
+    __block int result = -1;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+    invoke(^(BOOL val){
+        result = val;
+        dispatch_semaphore_signal(sem);
+    });
+
+    long waited = dispatch_semaphore_wait(
+        sem,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(PROXY_MAX_DISPATCH_TIME * NSEC_PER_SEC))
+    );
+    return (waited == 0) ? result : -1;
+}
+
+static inline pid_t
+sync_call_with_timeout_pid(void (^invoke)(void (^reply)(pid_t)))
+{
+    __block int result = -1;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+    invoke(^(pid_t val){
+        result = val;
+        dispatch_semaphore_signal(sem);
+    });
+
+    long waited = dispatch_semaphore_wait(
+        sem,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(PROXY_MAX_DISPATCH_TIME * NSEC_PER_SEC))
+    );
+    return (waited == 0) ? result : -1;
+}
+
+int environment_proxy_get_stdout_of_server(void)
+{
+    if(environmentIsHost) return -1;
+    static int server_stdout_file_descriptor = -1;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSFileHandle *fh = sync_call_with_timeout(PROXY_TYPE_REPLY(NSFileHandle*){
+            [hostProcessProxy getStdoutOfServerViaReply:reply];
+        });
+        if(fh) server_stdout_file_descriptor = fh.fileDescriptor;
+    });
+    return server_stdout_file_descriptor;
+}
+
+void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint)
+{
+    if(environmentIsHost) return;
+    [hostProcessProxy setLDEApplicationWorkspaceEndPoint:endpoint];
+}
+
+void environment_proxy_tfp_send_port_object(TaskPortObject *port)
+{
+    if(environmentIsHost) return;
+    [hostProcessProxy sendPort:port];
+}
+
+TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
+{
+    if(environmentIsHost) return nil;
+    TaskPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(TaskPortObject*){
+        [hostProcessProxy getPort:process_identifier withReply:reply];
+    });
+    return object;
+}
+
+NSSet *environment_proxy_proc_list_all_process_identifier(void)
+{
+    if(environmentIsHost) return nil;
+    NSSet *set = sync_call_with_timeout(PROXY_TYPE_REPLY(NSSet*){
+        [hostProcessProxy proc_listallpidsViaReply:reply];
+    });
+    return set;
+}
+
+LDEProcess *environment_proxy_proc_structure_for_process_identifier(pid_t process_identifier)
+{
+    if(environmentIsHost) return nil;
+    LDEProcess *process = sync_call_with_timeout(PROXY_TYPE_REPLY(LDEProcess*){
+        [hostProcessProxy proc_getProcStructureForProcessIdentifier:process_identifier withReply:reply];
+    });
+    return process;
+}
+
+int environment_proxy_proc_kill_process_identifier(pid_t process_identifier,
+                                                   int signal)
+{
+    if(environmentIsHost) return EFAULT;
+    if(signal <= 0 || signal >= NSIG) return EINVAL;
+    int result = EFAULT;
+    result = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy proc_kill:process_identifier withSignal:signal withReply:reply];
+    });
+    return result;
+}
+
+int environment_proxy_make_window_visible_of_process_with_process_identifier(pid_t process_identifier)
+{
+    if(environmentIsHost) return EFAULT;
+    BOOL appeared = sync_call_with_timeout_bool(PROXY_TYPE_REPLY(BOOL){
+        [hostProcessProxy makeWindowVisibleForProcessIdentifier:process_identifier withReply:reply];
+    });
+    return appeared;
+}
+
+pid_t environment_proxy_spawn_process_at_path(NSString *path,
+                                              NSArray *arguments,
+                                              NSDictionary *environment,
+                                              PosixSpawnFileActionsObject *file_actions)
+{
+    if(environmentIsHost) return EFAULT;
+    pid_t process_identifier = sync_call_with_timeout_pid(PROXY_TYPE_REPLY(pid_t){
+        [hostProcessProxy spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withFileActions:file_actions withReply:reply];
+    });
+    return process_identifier;
+}
+
+void environment_proxy_assign_process_structure_information(LDEProcess *process_structure,
+                                                            pid_t process_identifier)
+{
+    if(environmentIsHost) return;
+    [hostProcessProxy assignProcessInfo:process_structure withProcessIdentfier:process_identifier];
+}
+
+void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword)
+{
+    if(environmentIsHost) return;
+    NSArray *array = sync_call_with_timeout2(^(void (^reply)(NSData*,NSString*)){
+        [hostProcessProxy gatherCodeSignerViaReply:reply];
+    });
+    if(!array) return;
+    *certificateData = array[0];
+    *certificatePassword = array[1];
+}
+
+NSString *environment_proxy_gather_code_signature_extras(void)
+{
+    if(environmentIsHost) return nil;
+    NSString *extra = sync_call_with_timeout(PROXY_TYPE_REPLY(NSString*){
+        [hostProcessProxy gatherSignerExtrasViaReply:reply];
+    });
+    return extra;
+}
