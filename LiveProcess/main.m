@@ -159,6 +159,11 @@ int LiveProcessMain(int argc, char *argv[]) {
         // posix_spawn and similar implementation
         NSString *error = invokeAppMain(executablePath, argc, argv);
     }
+    else if([mode isEqualToString:@"fork"])
+    {
+        // MARK: Will wait for Nyxian to suspend this task and perform a fork
+        while(true) {};
+    }
     
     exit(0);
 }
