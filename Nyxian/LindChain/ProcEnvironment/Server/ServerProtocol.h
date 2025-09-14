@@ -28,15 +28,14 @@
 
 @protocol ServerProtocol
 
-- (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply;
 - (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
 
 /*
  tfp_userspace
  */
-- (void)sendPort:(TaskPortObject*)machPort;
-- (void)getPort:(pid_t)pid withReply:(void (^)(TaskPortObject*))reply;
+- (void)sendPort:(TaskPortObject*)machPort API_AVAILABLE(ios(26.0));
+- (void)getPort:(pid_t)pid withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
 
 /*
  libproc_userspace

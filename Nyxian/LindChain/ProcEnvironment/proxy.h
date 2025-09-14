@@ -28,9 +28,6 @@ extern NSObject<ServerProtocol> *hostProcessProxy;
 
 // MARK: Helper symbols that are intended stabilizing the proc environment api proxy wise and reduce the amount of deadlocking in the future
 
-/// Gets the standard file output descriptor of the host application
-int environment_proxy_get_stdout_of_server(void);
-
 /// Sets the endpoint of applicationmgmtd in the host application, so it can manage applications and such
 void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint);
 

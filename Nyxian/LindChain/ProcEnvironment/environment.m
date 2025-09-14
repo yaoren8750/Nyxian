@@ -63,13 +63,3 @@ void environment_client_attach_debugger(void)
     if(environmentIsHost) return;
     machServerInit();
 }
-
-void environment_client_handoff_standard_file_descriptors(void)
-{
-    if(environmentIsHost || !hostProcessProxy) return;
-    int server_fd = environment_proxy_get_stdout_of_server();
-    dup2(server_fd, STDOUT_FILENO);
-    dup2(server_fd, STDERR_FILENO);
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-}

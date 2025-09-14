@@ -27,11 +27,6 @@
 
 @implementation Server
 
-- (void)getStdoutOfServerViaReply:(void (^)(NSFileHandle *))reply
-{
-    reply([[NSFileHandle alloc] initWithFileDescriptor:STDOUT_FILENO]);
-}
-
 - (void)getMemoryLogFDsForPID:(pid_t)pid
                     withReply:(void (^)(NSFileHandle *))reply
 {

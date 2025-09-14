@@ -126,12 +126,20 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
     PosixSpawnFileActionsObject *fileActions = appInfo[@"fileActions"];
+    NSFileHandle *outputHandle = appInfo[@"outputFD"];
+    
+    
+    // Handing off standard filefds
+    int server_fd = outputHandle.fileDescriptor;
+    dup2(server_fd, STDOUT_FILENO);
+    dup2(server_fd, STDERR_FILENO);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
     environment_client_attach_debugger();
-    environment_client_handoff_standard_file_descriptors();
     
     // Assign fileActions
     for(NSNumber *rawFileDescriptor in fileActions.closeActions)

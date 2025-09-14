@@ -119,20 +119,6 @@ sync_call_with_timeout_pid(void (^invoke)(void (^reply)(pid_t)))
     return (waited == 0) ? result : -1;
 }
 
-int environment_proxy_get_stdout_of_server(void)
-{
-    if(environmentIsHost) return -1;
-    static int server_stdout_file_descriptor = -1;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSFileHandle *fh = sync_call_with_timeout(PROXY_TYPE_REPLY(NSFileHandle*){
-            [hostProcessProxy getStdoutOfServerViaReply:reply];
-        });
-        if(fh) server_stdout_file_descriptor = fh.fileDescriptor;
-    });
-    return server_stdout_file_descriptor;
-}
-
 void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint)
 {
     if(environmentIsHost) return;

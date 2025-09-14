@@ -122,7 +122,8 @@
         @"executablePath": binaryPath,
         @"arguments": arguments,
         @"environment": environment,
-        @"fileActions": fileActions ? fileActions : [PosixSpawnFileActionsObject empty]
+        @"fileActions": fileActions ? fileActions : [PosixSpawnFileActionsObject empty],
+        @"outputFD": [NSFileHandle fileHandleWithStandardOutput]
     }];
     
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];

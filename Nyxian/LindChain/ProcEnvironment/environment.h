@@ -29,9 +29,6 @@ extern BOOL environmentIsHost;
 /// Connects client to host environment via its preshipped endpoint
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint);
 
-/// Hands off clients standard file descriptors to host environment so output gets redirected to host environment
-void environment_client_handoff_standard_file_descriptors(void);
-
 /// Attaches debugger to the guest environment it self, its a self debugger
 void environment_client_attach_debugger(void);
 
