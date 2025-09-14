@@ -26,6 +26,41 @@
 #import <LindChain/LiveContainer/LCAppInfo.h>
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
 #import <spawn.h>
+#import <sys/sysctl.h>
+#import <LindChain/LiveContainer/Tweaks/libproc.h>
+
+#pragma mark - Horrible code nobody ever wants to read
+
+NSArray<NSFileHandle *> *AllOpenFileHandles(void) {
+    pid_t pid = getpid();
+    int bufferSize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, NULL, 0);
+    if (bufferSize <= 0) return @[];
+
+    struct proc_fdinfo *fdinfo = malloc(bufferSize);
+    if (!fdinfo) return @[];
+
+    int count = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, fdinfo, bufferSize);
+    if (count <= 0) {
+        free(fdinfo);
+        return @[];
+    }
+
+    NSMutableArray<NSFileHandle *> *handles = [NSMutableArray array];
+    int numFDs = count / sizeof(struct proc_fdinfo);
+
+    for (int i = 0; i < numFDs; i++) {
+        int fd = fdinfo[i].proc_fd;
+        @try {
+            NSFileHandle *fh = [[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO];
+            if (fh) [handles addObject:fh];
+        } @catch (__unused NSException *ex) {
+            continue;
+        }
+    }
+
+    free(fdinfo);
+    return [handles copy];
+}
 
 #pragma mark - Sendable objects
 
@@ -34,6 +69,8 @@
 - (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa {
     self = [super init];
     if (self) {
+        // First we need to get all file descriptors in our processs
+        
         NSMutableArray *futureCloseActions = [NSMutableArray array];
         for (int i = 0; i < (*fa)->close_cnt; i++) {
             [futureCloseActions addObject:@((*fa)->close_actions[i])];
