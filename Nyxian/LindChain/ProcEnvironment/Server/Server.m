@@ -162,4 +162,12 @@
     reply([[NSBundle mainBundle] bundlePath]);
 }
 
+/*
+ fork
+ */
+- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply
+{
+    reply([[LDEProcessManager shared] spawnProcessWithItems:@{ @"mode": @"fork" }]);
+}
+
 @end

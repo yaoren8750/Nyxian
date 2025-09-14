@@ -62,6 +62,11 @@
 - (void)gatherCodeSignerViaReply:(void (^)(NSData*,NSString*))reply;
 - (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply;
 
+/*
+ fork
+ */
+- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */
