@@ -20,3 +20,12 @@
 // MARK: The craziest thing to prove my skill level ever
 
 #include <mach/mach.h>
+
+void environment_fork(void)
+{
+    // MARK: Okay so now executing a task, huh?
+    // MARK: We just need to get our hands onto a task right that belongs to no process the user needs, a brand new one
+    // MARK: We also need the task right of the process requesting
+    // MARK: We then suspend both processes(requesting and the one at fork stage) and then clear the entire task at fork stage and copy over vm map and thread states over
+    // MARK: Mammut task
+}
