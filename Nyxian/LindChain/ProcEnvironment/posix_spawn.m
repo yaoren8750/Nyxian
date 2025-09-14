@@ -274,6 +274,7 @@ int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_ac
                                                  int host_fd,
                                                  int child_fd)
 {
+    if(!(child_fd != STDIN_FILENO | child_fd != STDOUT_FILENO | child_fd != STDERR_FILENO)) return EFAULT;
     int *slice = calloc(2, sizeof(int));
     slice[0] = host_fd;
     slice[1] = child_fd;
@@ -289,6 +290,7 @@ int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_ac
 int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_actions_t **fa,
                                                   int child_fd)
 {
+    if(!(child_fd != STDIN_FILENO | child_fd != STDOUT_FILENO | child_fd != STDERR_FILENO)) return EFAULT;
     (*fa)->close_cnt++;
     (*fa)->close_actions = realloc((*fa)->close_actions,
                                    sizeof(int) * (*fa)->close_cnt);
