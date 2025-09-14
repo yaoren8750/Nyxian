@@ -150,6 +150,7 @@
 				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/arbitary_signer.m,
 				LindChain/ProcEnvironment/environment.m,
+				LindChain/ProcEnvironment/fork.m,
 				LindChain/ProcEnvironment/libproc.m,
 				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
