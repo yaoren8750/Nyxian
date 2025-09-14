@@ -218,7 +218,7 @@ int environment_posix_spawn(pid_t *process_identifier,
         }
         
         // Create file actions object
-        PosixSpawnFileActionsObject *fileActions = [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa];
+        PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
         
         // Now since we have executable path we execute
         // TODO: Implement envp
