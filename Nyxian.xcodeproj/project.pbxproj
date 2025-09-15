@@ -154,6 +154,8 @@
 				LindChain/ProcEnvironment/libproc.m,
 				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
+				LindChain/ProcEnvironment/Surface/memfd.c,
+				LindChain/ProcEnvironment/Surface/surface.m,
 				LindChain/ProcEnvironment/sysctl.m,
 				LindChain/ProcEnvironment/tfp_object.m,
 				LindChain/ProcEnvironment/tfp.m,

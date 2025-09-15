@@ -17,3 +17,13 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef PROCENVIRONMENT_SURFACE_H
+#define PROCENVIRONMENT_SURFACE_H
+
+// MARK: The fastest way to exchange process information HAHA
+
+NSFileHandle* proc_surface_handoff(void);
+void proc_surface_init(BOOL host);
+
+
+#endif

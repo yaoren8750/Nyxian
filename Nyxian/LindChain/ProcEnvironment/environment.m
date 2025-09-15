@@ -26,6 +26,7 @@
 #import <LindChain/ProcEnvironment/application.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 BOOL environmentIsHost;
 
@@ -38,6 +39,7 @@ void environment_init(BOOL host)
         environment_application_init(host);
         environment_posix_spawn_init(host);
         environment_sysctl_init(host);
+        proc_surface_init(host);
         environmentIsHost = host;
     });
 }

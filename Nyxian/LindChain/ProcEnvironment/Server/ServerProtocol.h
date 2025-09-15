@@ -25,6 +25,7 @@
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 @protocol ServerProtocol
 
@@ -65,6 +66,11 @@
  fork
  */
 - (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply;
+
+/*
+ surface
+ */
+- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *))reply;
 
 @end
 

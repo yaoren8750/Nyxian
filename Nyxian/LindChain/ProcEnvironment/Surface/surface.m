@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/memfd.h>
+#import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
 
 typedef struct {
@@ -60,6 +61,17 @@ proc_object_t proc_object_for_pid(pid_t pid)
     return cur;
 }
 
+void proc_object_append(proc_object_t object)
+{
+    flock(sharing_fd, LOCK_EX);
+    
+    // To append we just add it to the end of the array
+    proc_object_t *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
+    memcpy(dest, &object, sizeof(proc_object_t));
+    
+    flock(sharing_fd, LOCK_UN);
+}
+
 /*
  Management
  */
@@ -71,40 +83,57 @@ NSFileHandle* proc_surface_handoff(void)
 /*
  Init
  */
-__attribute__((constructor))
-void proc_surface_init_host(void)
+void proc_surface_init(BOOL host)
 {
-    // Initilize surface
-    const char *name = "proc_surface_memfd";
-    sharing_fd = memfd_create(name, O_CREAT | O_RDWR);
-    ftruncate(sharing_fd, PROC_SURFACE_OBJECT_MAX_SIZE);
-    surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-    
-    // Prepare to write
-    off_t offset = 0;
-    uint32_t magic = PROC_SURFACE_MAGIC;
-    
-    // Write magic
-    memcpy(surface_start + offset, &magic, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    
-    // Write count
-    proc_surface_object_array_count = surface_start + offset;
-    offset += sizeof(uint32_t);
-    *proc_surface_object_array_count = 1;
-    
-    // Now were done, except no, we have to write our own process to it
-    proc_surface_object_array = surface_start + offset;
-    proc_object_t *object = proc_surface_object_array;
-    strcpy(object->name, "Nyxian");
-    strcpy(object->executablePath, [[[NSBundle mainBundle] executablePath] UTF8String]);
-    object->pid = getpid();
-    object->uid = getuid();
-    object->gid = getgid();
-    
-    /* Experimentation */
-    proc_object_t lookup_proc = proc_object_for_pid(getpid());
-    lookup_proc = proc_object_for_pid(getpid());
+    if(host)
+    {
+        // Initilize surface
+        const char *name = "proc_surface_memfd";
+        sharing_fd = memfd_create(name, O_CREAT | O_RDWR);
+        ftruncate(sharing_fd, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
+        surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
+        
+        // Prepare to write
+        off_t offset = 0;
+        uint32_t magic = PROC_SURFACE_MAGIC;
+        
+        // Write magic
+        memcpy(surface_start + offset, &magic, sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+        
+        // Write count
+        proc_surface_object_array_count = surface_start + offset;
+        offset += sizeof(uint32_t);
+        *proc_surface_object_array_count = 0;
+        
+        // Now were done, except no, we have to write our own process to it
+        proc_surface_object_array = surface_start + offset;
+        
+        // Adding Nyxian
+        proc_object_t object;
+        strcpy(object.name, "Nyxian");
+        strcpy(object.executablePath, [[[NSBundle mainBundle] executablePath] UTF8String]);
+        object.pid = getpid();
+        object.uid = getuid();
+        object.gid = getgid();
+        proc_object_append(object);
+    }
+    else
+    {
+        // Get file handle
+        NSFileHandle *handle = environment_proxy_get_surface_handle();
+        
+        // Now use the handle to connect
+        sharing_fd = handle.fileDescriptor;
+        
+        // Now map it!!
+        surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
+        
+        // Is the magic matching
+        uint32_t magic = *((uint32_t*)surface_start);
+        if(magic == PROC_SURFACE_MAGIC)
+            NSLog(@"Successfully mapped proc surface!");
+    }
     
     return;
 }

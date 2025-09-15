@@ -165,4 +165,12 @@
     reply([[LDEProcessManager shared] spawnProcessWithItems:@{ @"mode": @"fork" }]);
 }
 
+/*
+ surface
+ */
+- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *))reply
+{
+    reply(proc_surface_handoff());
+}
+
 @end

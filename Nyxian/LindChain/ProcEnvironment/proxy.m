@@ -217,3 +217,12 @@ NSString *environment_proxy_gather_code_signature_extras(void)
     });
     return extra;
 }
+
+NSFileHandle *environment_proxy_get_surface_handle(void)
+{
+    if(environmentIsHost) return nil;
+    NSFileHandle *handle = sync_call_with_timeout(PROXY_TYPE_REPLY(NSFileHandle*){
+        [hostProcessProxy handinSurfaceFileDescriptorViaReply:reply];
+    });
+    return handle;
+}
