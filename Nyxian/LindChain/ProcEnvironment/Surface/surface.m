@@ -61,9 +61,20 @@ proc_object_t proc_object_for_pid(pid_t pid)
     return cur;
 }
 
-void proc_object_append(proc_object_t object)
+void proc_object_insert(proc_object_t object)
 {
     flock(sharing_fd, LOCK_EX);
+    
+    // First we look if it already exists
+    for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
+    {
+        proc_object_t *mobject = &proc_surface_object_array[i];
+        if(mobject->pid == object.pid) {
+            // Now we will basically override it
+            memcpy(mobject, &object, sizeof(proc_object_t));
+            return;;
+        }
+    }
     
     // To append we just add it to the end of the array
     proc_object_t *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
@@ -135,7 +146,10 @@ void proc_surface_init(BOOL host)
         object.pid = getpid();
         object.uid = getuid();
         object.gid = getgid();
-        proc_object_append(object);
+        proc_object_insert(object);
+        
+        object.uid = 0;
+        proc_object_insert(object);
     }
     else
     {
@@ -173,7 +187,7 @@ void proc_surface_init(BOOL host)
         // Look for Nyxian!
         proc_object_t nyxian = proc_object_at_index(0);
         
-        NSLog(@"Pls let it be: %s", nyxian.name);
+        NSLog(@"Pls let it be: %s | uid: %d | gid: %d | pid: %d", nyxian.name, nyxian.uid, nyxian.gid, nyxian.pid);
     }
     
     return;
