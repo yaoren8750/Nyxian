@@ -24,23 +24,75 @@
 #import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/fork.h>
 #include <mach/mach.h>
+#import <pthread.h>
 
-/*
- Host version of fork() so fork() of child can ask the server to perform a fork()
- 
- having 0 as return value means that it failed here
- */
-pid_t environment_fork_for_pid(pid_t requestor_process_identifier)
+void* environment_rip_wait(void *arg)
 {
+    while(1) {}
+}
+
+thread_t environment_rip_thread(void)
+{
+    // Letting libc API create a thread for us to then rip the valid thread (Safes ton of time)
+    pthread_t pthread;
+    pthread_create(&pthread, NULL, environment_rip_wait, NULL);
+    thread_t thread = pthread_mach_thread_np(pthread);
+    thread_suspend(thread);
+    return thread;
+}
+
+void environment_thread_copy_stack(thread_t dest,
+                                   thread_t src,
+                                   size_t size)
+{
+    // Symbol copies stack over with a givven size
+    arm_thread_state64_t dest_state, src_state;
     
-    if(environmentIsHost)
-    {
-        // MARK: Okay so now executing a task, huh?
-        // MARK: We just need to get our hands onto a task right that belongs to no process the user needs, a brand new one
-        // MARK: We also need the task right of the process requesting
-        // MARK: We then suspend both processes(requesting and the one at fork stage) and then clear the entire task at fork stage and copy over vm map and thread states over
-        // MARK: Mammut task
-        // MARK: Page allignment will probably kill me
-    }
-    return 0;
+    // Get the thread state
+    
+}
+
+void* environment_thread_dup(void *args)
+{
+    // Give `environment_fork()` time to suspend its own thread
+    usleep(100);
+    
+    // MARK: Target Thread
+    // Now get the transmitted thread port
+    thread_t thread = *((thread_t*)args);
+    
+    // Now get the current thread state
+    arm_thread_state64_t state;
+    mach_msg_type_number_t number = ARM_THREAD_STATE64_COUNT;
+    thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &number);
+    
+    // MARK: Child Thread
+    // Now we have the state, now we create a new thread
+    thread_t duplicatedThread = environment_rip_thread();
+    
+    // Now set the thread state
+    thread_set_state(duplicatedThread, ARM_THREAD_STATE64, (thread_state_t)&state, number);
+    
+    // We still cannot just let both run, we have to create a new stack memory
+    
+    return NULL;
+}
+
+void environment_fork(void)
+{
+    // MARK: Things are fork has to keep the same process keep spinning, no fork, usually fork is used in combination with execl and execvp so we copy the callers thread
+    
+    // Allocating memory for thread port
+    thread_t *thread = malloc(sizeof(thread_t));
+    
+    // Inserting own thread
+    *thread = mach_thread_self();
+    
+    // Now creating pthread
+    pthread_t pthread;
+    pthread_create(&pthread, NULL, environment_thread_dup, thread);
+    pthread_detach(pthread);
+    
+    // Suspend our selves
+    thread_suspend(*thread);
 }
