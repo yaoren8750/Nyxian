@@ -29,6 +29,7 @@
 
 @property (nonatomic, strong) UIStackView *stackView;
 @property (nonatomic, strong) UIStackView *placeholderStack;
+@property (nonatomic, assign) pid_t activeProcessIdentifier;
 
 @end
 
@@ -61,19 +62,108 @@
     return multitaskManagerSingleton;
 }
 
+- (void)deactivateWindowForProcessIdentifier:(pid_t)processIdentifier
+                                   pullDown:(BOOL)pullDown
+                                 completion:(void (^)(void))completion
+{
+    LDEWindow *window = self.windows[@(processIdentifier)];
+    if (!window || window.view.hidden) { if (completion) completion(); return; }
+
+    UIView *v = window.view;
+    [self bringSubviewToFront:v];
+
+    if (!pullDown) {
+        v.hidden = YES;
+        v.transform = CGAffineTransformIdentity;
+        if (completion) completion();
+        return;
+    }
+
+    CGFloat h = self.bounds.size.height;
+    [v.layer removeAllAnimations];
+
+    [UIView animateWithDuration:0.5
+                          delay:0
+         usingSpringWithDamping:1.0
+          initialSpringVelocity:1.0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+        v.transform = CGAffineTransformMakeTranslation(0, h);
+        v.alpha = 0.0;
+    } completion:^(BOOL finished) {
+        v.hidden = YES;
+        v.alpha = 1.0;
+        v.transform = CGAffineTransformIdentity;
+        if (completion) completion();
+    }];
+}
+
+- (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier animated:(BOOL)animated {
+    LDEWindow *window = self.windows[@(processIdentifier)];
+    if (!window) return;
+    
+    UIView *v = window.view;
+    if (v.superview != self) {
+        [self addSubview:v];
+    }
+    v.hidden = NO;
+    [self bringSubviewToFront:v];
+    [v.layer removeAllAnimations];
+    
+    if (animated) {
+        v.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height);
+        v.alpha = 1.0;
+        [UIView animateWithDuration:0.6
+                              delay:0
+             usingSpringWithDamping:0.8
+              initialSpringVelocity:0.6
+                            options:UIViewAnimationOptionCurveEaseInOut
+                         animations:^{
+            v.transform = CGAffineTransformIdentity;
+        } completion:nil];
+    } else {
+        v.transform = CGAffineTransformIdentity;
+    }
+    
+    self.activeProcessIdentifier = processIdentifier;
+    
+    if (self.appSwitcherView) {
+        [self hideAppSwitcher];
+    }
+}
+
 - (BOOL)openWindowForProcessIdentifier:(pid_t)processIdentifier
 {
+    __typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:processIdentifier];
-        if(process)
-        {
-            LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
-            if(window)
+        void (^openAct)(void) = ^{
+            LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:processIdentifier];
+            if(process)
             {
-                self.windows[@(processIdentifier)] = window;
-                [self addSubview:window.view];
-                if (self.appSwitcherView) [self addTileForProcess:processIdentifier window:window];
+                LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
+                if(window)
+                {
+                    weakSelf.windows[@(processIdentifier)] = window;
+                    [weakSelf addSubview:window.view];
+                    if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
+
+                    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+                        [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+                    }
+                }
             }
+        };
+        
+        if(weakSelf.activeProcessIdentifier != processIdentifier)
+        {
+            // close first the old one and wait
+            [self deactivateWindowForProcessIdentifier:weakSelf.activeProcessIdentifier pullDown:YES completion:^{
+                openAct();
+            }];
+        }
+        else
+        {
+            openAct();
         }
     });
     return YES;
@@ -85,6 +175,10 @@
         LDEWindow *window = self.windows[@(processIdentifier)];
         if(window)
         {
+            // If this was the active one, clear active pid
+            if (self.activeProcessIdentifier == processIdentifier) {
+                self.activeProcessIdentifier = (pid_t)-1;
+            }
             [window closeWindow];
             [self.windows removeObjectForKey:@(processIdentifier)];
         }
@@ -372,30 +466,9 @@
 {
     UIView *tile = recognizer.view;
     if (!tile) return;
-    
+
     pid_t pid = (pid_t)tile.tag;
-    LDEWindow *window = self.windows[@(pid)];
-    if (!window) return;
-    
-    if(window.view.superview != self) [self addSubview:window.view];
-
-    window.view.hidden = NO;
-    window.view.alpha = 1.0;
-    window.view.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height); // start off-screen bottom
-
-    [self bringSubviewToFront:window.view];
-    [window.view.layer removeAllAnimations];
-    
-    [UIView animateWithDuration:0.6
-                          delay:0
-         usingSpringWithDamping:0.8
-          initialSpringVelocity:0.6
-                        options:UIViewAnimationOptionCurveEaseInOut
-                     animations:^{
-        window.view.transform = CGAffineTransformIdentity;
-    } completion:nil];
-    
-    [self hideAppSwitcher];
+    [self activateWindowForProcessIdentifier:pid animated:YES];
 }
 
 - (void)showAppSwitcher

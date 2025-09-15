@@ -94,7 +94,6 @@
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
 {
 #if __has_include(<Nyxian-Swift.h>)
-    if([[LDEProcessManager shared] isExecutingProcessWithBundleIdentifier:bundleIdentifier]) return nil;
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
     if(!applicationObject.isLaunchAllowed)
     {
@@ -265,12 +264,28 @@
 }
 
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                       doRestartIfRunning:(BOOL)doRestartIfRunning
 {
+    if(doRestartIfRunning)
+    {
+        for(NSNumber *key in self.processes)
+        {
+            LDEProcess *process = self.processes[key];
+            if(!process || ![process.bundleIdentifier isEqualToString:bundleIdentifier]) continue;
+            [process terminate];
+        }
+    }
+    
     LDEProcess *process = [[LDEProcess alloc] initWithBundleIdentifier:bundleIdentifier];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
     return pid;
+}
+
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+{
+    return [self spawnProcessWithBundleIdentifier:bundleIdentifier doRestartIfRunning:NO];
 }
 
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath

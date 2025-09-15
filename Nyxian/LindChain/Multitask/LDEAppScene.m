@@ -108,6 +108,7 @@
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
+    // MARK: This method gets never fired!? might be the problem for not occuring trait appareance changes
     if(!self.process.isRunning) {
         [self appTerminationCleanUp:NO];
     }

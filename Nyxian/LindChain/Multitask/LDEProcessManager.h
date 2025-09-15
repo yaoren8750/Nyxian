@@ -77,6 +77,8 @@
 + (instancetype)shared;
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                       doRestartIfRunning:(BOOL)doRestartIfRunning;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments

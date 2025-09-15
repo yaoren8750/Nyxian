@@ -262,7 +262,7 @@ class Builder {
                 guard let self = self else { return }
                 if result {
                     if(LDEApplicationWorkspace.shared().installApplication(atBundlePath: self.project.bundlePath)) {
-                        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: project.projectConfig.bundleid)
+                        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: project.projectConfig.bundleid, doRestartIfRunning: true)
                     } else {
                         nsError = NSError(domain: "com.cr4zy.nyxian.builder.install", code: 1, userInfo: [NSLocalizedDescriptionKey:"Failed to install application"])
                     }
