@@ -20,6 +20,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
+#import <LindChain/litehook/src/litehook.h>
 #include <sys/sysctl.h>
 
 struct kinfo_proc environment_own_kinfo_proc(void)
@@ -72,4 +73,66 @@ struct kinfo_proc environment_kinfo_proc_for_process_identifier(pid_t pid)
     proc.kp_proc.p_pid = pid;                 /* First insert givven pid into the structure */
     
     return proc;
+}
+
+DEFINE_HOOK(sysctl, int, (int *name,
+                          u_int namelen,
+                          void *__sized_by(*oldlenp) oldp,
+                          size_t *oldlenp,
+                          void *__sized_by(newlen) newp,
+                          size_t newlen))
+{
+    // Logging
+    /*NSLog(@"[sysctl] CALL!\n"
+          "name: %p\n"
+          "namelen: %u\n"
+          "oldp: %p\n"
+          "oldlenp: %p (%zu)\n"
+          "newp: %p\n"
+          "newlen: %zu\n",
+          name,
+          namelen,
+          oldp,
+          oldlenp, oldlenp ? *oldlenp : 0,
+          newp,
+          newlen);*/
+    
+    if(namelen == 2 && name[0] == CTL_KERN && name[1] == KERN_MAXPROC)
+    {
+        NSLog(@"ProcArray.m asked for maxproc to be filled");
+        int *maxproc = name;
+        *maxproc = 1;
+        NSLog(@"Returned with 1 max prox;");
+        return 0;
+        
+    }
+    
+    if(namelen == 4 && name[0] == CTL_KERN && name[1] == KERN_PROC && name[2] == KERN_PROC_ALL && name[3] == 0)
+    {
+        NSLog(@"ProcArray.m asked for buffer");
+        if(oldlenp == NULL) return 1;
+        if(oldp == NULL || *oldlenp < sizeof(struct kinfo_proc))
+        {
+            // Write length of kinfo_proc into *oldlenp
+            *oldlenp = sizeof(struct kinfo_proc);
+            return 0;
+        }
+        
+        // Length is enough, we write it into the buffer
+        struct kinfo_proc proc = environment_own_kinfo_proc();
+        memcpy(oldp, &proc, sizeof(struct kinfo_proc));
+        
+        return 0;
+    }
+    
+    // Call original sysctl
+    return ORIG_FUNC(sysctl)(name, namelen, oldp, oldlenp, newp, newlen);
+}
+
+void environment_sysctl_init(BOOL host)
+{
+    if(!host)
+    {
+        DO_HOOK_GLOBAL(sysctl)
+    }
 }

@@ -17,4 +17,10 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef PROCENVIRONMENT_SYSCTL_H
+#define PROCENVIRONMENT_SYSCTL_H
+
 // MARK: WIP sysctl fix
+void environment_sysctl_init(BOOL host);
+
+#endif /* PROCENVIRONMENT_SYSCTL_H */
