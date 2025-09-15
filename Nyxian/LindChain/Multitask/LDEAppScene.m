@@ -50,13 +50,10 @@
     return self;
 }
 
-- (void)setUpAppPresenter {
-    //RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(self.pid)];
-    
+- (void)setUpAppPresenter
+{
     FBProcessManager *manager = [PrivClass(FBProcessManager) sharedInstance];
     // At this point, the process is spawned and we're ready to create a scene to render in our app
-    //RBSProcessHandle* processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
-    
     [manager registerProcessForAuditToken:self.process.processHandle.auditToken];
     self.sceneID = [NSString stringWithFormat:@"sceneID:%@-%@", @"LiveProcess", NSUUID.UUID.UUIDString];
     
@@ -76,11 +73,8 @@
     
     settings.deviceOrientation = UIDevice.currentDevice.orientation;
     settings.interfaceOrientation = UIApplication.sharedApplication.statusBarOrientation;
-    if(UIInterfaceOrientationIsLandscape(settings.interfaceOrientation)) {
-        settings.frame = CGRectMake(0, 0, self.view.frame.size.height, self.view.frame.size.width);
-    } else {
-        settings.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-    }
+    settings.frame = CGRectMake(0, 0, self.view.frame.size.height, self.view.frame.size.width);
+    
     //settings.interruptionPolicy = 2; // reconnect
     settings.level = 1;
     settings.persistenceIdentifier = NSUUID.UUID.UUIDString;
@@ -206,6 +200,12 @@
             self.pendingSettingsBlock(settings);
         }
     }];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    [self endLiveResize];
 }
 
 - (void)endLiveResize {

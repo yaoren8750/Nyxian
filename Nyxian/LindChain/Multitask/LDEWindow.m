@@ -569,7 +569,7 @@ void UIKitFixesInit(void) {
     
     CGPoint point = [sender translationInView:self.view];
     [sender setTranslation:CGPointZero inView:self.view];
-
+    
     self.view.center = CGPointMake(self.view.center.x + point.x, self.view.center.y + point.y);
     [self updateOriginalFrame];
 }
@@ -672,7 +672,7 @@ void UIKitFixesInit(void) {
                 settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(settings.peripheryInsets.top, settings.peripheryInsets.left, settings.peripheryInsets.bottom, settings.peripheryInsets.right);
                 break;
         }
-
+        
     } else {
         settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(settings.peripheryInsets.top, settings.peripheryInsets.left, settings.peripheryInsets.bottom, settings.peripheryInsets.right);
     }
