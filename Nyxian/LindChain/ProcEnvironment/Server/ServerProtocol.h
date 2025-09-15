@@ -70,7 +70,7 @@
 /*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *))reply;
+- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;
 
 @end
 

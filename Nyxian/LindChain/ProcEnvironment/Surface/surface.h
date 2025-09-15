@@ -22,8 +22,18 @@
 
 // MARK: The fastest way to exchange process information HAHA
 
-NSFileHandle* proc_surface_handoff(void);
-void proc_surface_init(BOOL host);
+typedef struct {
+    pid_t pid;
+    uid_t uid;
+    gid_t gid;
+    
+    char name[512];
+    char executablePath[512];
+} proc_object_t;
 
+NSFileHandle* proc_surface_handoff(void);
+NSFileHandle *proc_safety_handoff(void);
+
+void proc_surface_init(BOOL host);
 
 #endif

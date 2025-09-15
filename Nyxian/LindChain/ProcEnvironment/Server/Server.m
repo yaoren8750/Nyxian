@@ -168,9 +168,9 @@
 /*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *))reply
+- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply
 {
-    reply(proc_surface_handoff());
+    reply(proc_surface_handoff(), proc_safety_handoff());
 }
 
 @end

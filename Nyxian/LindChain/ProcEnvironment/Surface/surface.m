@@ -23,20 +23,12 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
 
-typedef struct {
-    pid_t pid;
-    uid_t uid;
-    gid_t gid;
-    
-    char name[512];
-    char executablePath[512];
-} proc_object_t;
-
 #define PROC_SURFACE_MAGIC 0xFABCDEFB
 #define PROC_SURFACE_OBJECT_MAX 500
 #define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(proc_object_t) * 500
 
 int sharing_fd = -1;
+int safety_fd = -1;
 void *surface_start;
 
 uint32_t *proc_surface_object_array_count;
@@ -47,7 +39,7 @@ static proc_object_t *proc_surface_object_array = NULL;
  */
 proc_object_t proc_object_for_pid(pid_t pid)
 {
-    flock(sharing_fd, LOCK_SH);
+    flock(safety_fd, LOCK_SH);
     proc_object_t cur = {};
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
     {
@@ -57,13 +49,13 @@ proc_object_t proc_object_for_pid(pid_t pid)
             break;
         }
     }
-    flock(sharing_fd, LOCK_UN);
+    flock(safety_fd, LOCK_UN);
     return cur;
 }
 
 void proc_object_insert(proc_object_t object)
 {
-    flock(sharing_fd, LOCK_EX);
+    flock(safety_fd, LOCK_EX);
     
     // First we look if it already exists
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
@@ -80,12 +72,12 @@ void proc_object_insert(proc_object_t object)
     proc_object_t *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
     memcpy(dest, &object, sizeof(proc_object_t));
     
-    flock(sharing_fd, LOCK_UN);
+    flock(safety_fd, LOCK_UN);
 }
 
 proc_object_t proc_object_at_index(uint32_t index)
 {
-    flock(sharing_fd, LOCK_SH);
+    flock(safety_fd, LOCK_SH);
     proc_object_t cur = {};
     
     // Do we have that index?
@@ -98,7 +90,7 @@ proc_object_t proc_object_at_index(uint32_t index)
     // So give it to me
     cur = proc_surface_object_array[index];
     
-    flock(sharing_fd, LOCK_UN);
+    flock(safety_fd, LOCK_UN);
     return cur;
 }
 
@@ -110,6 +102,11 @@ NSFileHandle* proc_surface_handoff(void)
     return [[NSFileHandle alloc] initWithFileDescriptor:sharing_fd];
 }
 
+NSFileHandle *proc_safety_handoff(void)
+{
+    return [[NSFileHandle alloc] initWithFileDescriptor:safety_fd];
+}
+
 /*
  Init
  */
@@ -118,17 +115,16 @@ void proc_surface_init(BOOL host)
     if(host)
     {
         // Initilize surface
-        const char *name = "proc_surface_memfd";
-        sharing_fd = memfd_create(name, O_CREAT | O_RDWR);
+        sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
+        safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDONLY);
         ftruncate(sharing_fd, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
         surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
         
         // Prepare to write
         off_t offset = 0;
-        uint32_t magic = PROC_SURFACE_MAGIC;
-        
+
         // Write magic
-        memcpy(surface_start + offset, &magic, sizeof(uint32_t));
+        *((uint32_t*)surface_start) = PROC_SURFACE_MAGIC;
         offset += sizeof(uint32_t);
         
         // Write count
@@ -147,17 +143,18 @@ void proc_surface_init(BOOL host)
         object.uid = getuid();
         object.gid = getgid();
         proc_object_insert(object);
-        
-        object.uid = 0;
-        proc_object_insert(object);
     }
     else
     {
         // Get file handle
-        NSFileHandle *handle = environment_proxy_get_surface_handle();
+        NSFileHandle *handle;
+        NSFileHandle *safety;
+        environment_proxy_get_surface_handle(&handle, &safety);
+        if(!(handle && safety)) return;
         
         // Now map it!! (but only with max readable)
         sharing_fd = handle.fileDescriptor;
+        safety_fd = handle.fileDescriptor;
         surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
         close(sharing_fd);
         

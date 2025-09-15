@@ -62,6 +62,6 @@ void environment_proxy_gather_code_signature_info(NSData **certificateData, NSSt
 NSString *environment_proxy_gather_code_signature_extras(void);
 
 /// Returns the proc surfaces handle
-NSFileHandle *environment_proxy_get_surface_handle(void);
+void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety);
 
 #endif /* PROCENVIRONMENT_PROXY_H */
