@@ -72,6 +72,25 @@ void proc_object_append(proc_object_t object)
     flock(sharing_fd, LOCK_UN);
 }
 
+proc_object_t proc_object_at_index(uint32_t index)
+{
+    flock(sharing_fd, LOCK_SH);
+    proc_object_t cur = {};
+    
+    // Do we have that index?
+    if(*proc_surface_object_array_count < index)
+    {
+        flock(sharing_fd, LOCK_UN);
+        return cur;
+    }
+    
+    // So give it to me
+    cur = proc_surface_object_array[index];
+    
+    flock(sharing_fd, LOCK_UN);
+    return cur;
+}
+
 /*
  Management
  */
@@ -130,9 +149,23 @@ void proc_surface_init(BOOL host)
         surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
         
         // Is the magic matching
+        off_t offset = 0;
         uint32_t magic = *((uint32_t*)surface_start);
         if(magic == PROC_SURFACE_MAGIC)
             NSLog(@"Successfully mapped proc surface!");
+        offset += sizeof(uint32_t);
+        
+        // Map the count
+        proc_surface_object_array_count = surface_start + offset;
+        offset += sizeof(uint32_t);
+        
+        // Map the array
+        proc_surface_object_array = surface_start + offset;
+        
+        // Look for Nyxian!
+        proc_object_t nyxian = proc_object_at_index(0);
+        
+        NSLog(@"Pls let it be: %s", nyxian.name);
     }
     
     return;
