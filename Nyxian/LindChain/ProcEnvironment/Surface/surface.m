@@ -142,11 +142,19 @@ void proc_surface_init(BOOL host)
         // Get file handle
         NSFileHandle *handle = environment_proxy_get_surface_handle();
         
-        // Now use the handle to connect
+        // Now map it!! (but only with max readable)
         sharing_fd = handle.fileDescriptor;
-        
-        // Now map it!!
         surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
+        close(sharing_fd);
+        
+        // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
+        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
+        if(kr != KERN_SUCCESS)
+        {
+            // Its not secure, our own sandbox policies got broken, we blind the process
+            munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
+            return;
+        }
         
         // Is the magic matching
         off_t offset = 0;
