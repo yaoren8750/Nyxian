@@ -128,7 +128,7 @@ NSArray<NSFileHandle *> *AllOpenFileHandles(void) {
 
 #pragma mark - posix_spawn helper
 
-NSArray<NSString *> *createNSArrayFromArgv(int argc, char *argv[])
+NSArray<NSString *> *createNSArrayFromArgv(int argc, char *const argv[])
 {
     if(argc <= 0 || argv == NULL)
     {
@@ -148,6 +148,29 @@ NSArray<NSString *> *createNSArrayFromArgv(int argc, char *argv[])
         }
     }
     return [array copy];
+}
+
+NSDictionary *EnvironmentDictionaryFromEnvp(char *const envp[]) {
+    if (envp == NULL) {
+        return @{};
+    }
+    
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    
+    for (char *const *p = envp; *p != NULL; p++) {
+        NSString *entry = [NSString stringWithUTF8String:*p];
+        NSRange equalRange = [entry rangeOfString:@"="];
+        
+        if (equalRange.location != NSNotFound) {
+            NSString *key = [entry substringToIndex:equalRange.location];
+            NSString *value = [entry substringFromIndex:equalRange.location + 1];
+            if (key && value) {
+                dict[key] = value;
+            }
+        }
+    }
+    
+    return [dict copy];
 }
 
 char *environment_which(const char *name)
@@ -221,10 +244,9 @@ int environment_posix_spawn(pid_t *process_identifier,
         PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
         
         // Now since we have executable path we execute
-        // TODO: Implement envp
         *process_identifier = environment_proxy_spawn_process_at_path([NSString stringWithCString:path encoding:NSUTF8StringEncoding],
-                                                                      createNSArrayFromArgv(count, (char**)argv),
-                                                                      @{},
+                                                                      createNSArrayFromArgv(count, argv),
+                                                                      EnvironmentDictionaryFromEnvp(envp),
                                                                       fileActions);
     }
     
