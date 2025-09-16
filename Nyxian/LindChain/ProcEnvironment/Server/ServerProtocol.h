@@ -29,7 +29,9 @@
 
 @protocol ServerProtocol
 
-- (void)getMemoryLogFDsForPID:(pid_t)pid withReply:(void (^)(NSFileHandle *))reply;
+/*
+ sets lde application workspace endpoint
+ */
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
 
 /*
@@ -48,7 +50,7 @@
 /*
  application
  */
-- (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply;
+- (void)makeWindowVisibleWithReply:(void (^)(BOOL))reply;
 
 /*
  posix_spawn
@@ -71,6 +73,11 @@
  surface
  */
 - (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;
+
+/*
+ Internal
+ */
+- (void)setProcessIdentifier:(pid_t)processIdentifier;
 
 @end
 

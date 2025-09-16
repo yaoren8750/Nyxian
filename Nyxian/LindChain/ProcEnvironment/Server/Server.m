@@ -27,24 +27,6 @@
 
 @implementation Server
 
-- (void)getMemoryLogFDsForPID:(pid_t)pid
-                    withReply:(void (^)(NSFileHandle *))reply
-{
-    // TODO: Fix for new window api
-    /*NSString *bundleIdentifier = [[LDEMultitaskManager shared] bundleIdentifierForProcessIdentifier:pid];
-    if(bundleIdentifier)
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            LogTextView *textLog = [[LogTextView alloc] init];
-            [[LDEMultitaskManager shared] attachView:textLog toWindowGroupOfBundleIdentifier:bundleIdentifier withTitle:@"Log"];
-            int fd = textLog.pipe.fileHandleForWriting.fileDescriptor;
-            reply([[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO]);
-        });
-    } else {
-        reply(nil);
-    }*/
-}
-
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
 {
     LDEApplicationWorkspace *workspace = [LDEApplicationWorkspace shared];
@@ -95,21 +77,15 @@
 
 - (void)proc_kill:(pid_t)pid withSignal:(int)signal withReply:(void (^)(int))reply
 {
-    // If pid is 0 raise the signal on our selves
-    if(pid == 0) raise(signal);
-    else
+    // Other target, lets look for it!
+    LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
+    if(!process)
     {
-        
-        // Other target, lets look for it!
-        LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
-        if(!process)
-        {
-            reply(1);
-            return;
-        }
-        
-        [process.extension _kill:signal];
+        reply(1);
+        return;
     }
+    
+    [process.extension _kill:signal];
     
     reply(0);
 }
@@ -117,10 +93,15 @@
 /*
  application
  */
-- (void)makeWindowVisibleForProcessIdentifier:(pid_t)processIdentifier withReply:(void (^)(BOOL))reply
+- (void)makeWindowVisibleWithReply:(void (^)(BOOL))reply
 {
-    // To be done
-    reply([[LDEMultitaskManager shared] openWindowForProcessIdentifier:processIdentifier]);
+    __block BOOL didInvokeWindow = NO;
+    dispatch_once(&_makeWindowVisibleOnce,^{
+        // To be done
+        didInvokeWindow = [[LDEMultitaskManager shared] openWindowForProcessIdentifier:_processIdentifier];
+    });
+    
+    reply(didInvokeWindow);
 }
 
 /*
@@ -176,6 +157,16 @@
     });
     
     if(_handoffSurfaceOnce != 0) reply(nil,nil);
+}
+
+/*
+ Internal
+ */
+- (void)setProcessIdentifier:(pid_t)processIdentifier
+{
+    dispatch_once(&_handoffProcessIdentifierOnce, ^{
+        _processIdentifier = processIdentifier;
+    });
 }
 
 @end

@@ -47,7 +47,7 @@ LDEProcess *environment_proxy_proc_structure_for_process_identifier(pid_t proces
 int environment_proxy_proc_kill_process_identifier(pid_t process_identifier, int signal);
 
 /// Asks the host application to make your process visible via a window, similar to macOS
-int environment_proxy_make_window_visible_of_process_with_process_identifier(pid_t process_identifier);
+BOOL environment_proxy_make_window_visible(void);
 
 /// Spawns a process using a binary at `path` with `arguments` and `environment` and posix like `file_actions`
 pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments, NSDictionary *environment, PosixSpawnFileActionsObject *file_actions);

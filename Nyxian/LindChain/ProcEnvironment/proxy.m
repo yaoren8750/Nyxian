@@ -170,11 +170,11 @@ int environment_proxy_proc_kill_process_identifier(pid_t process_identifier,
     return result;
 }
 
-int environment_proxy_make_window_visible_of_process_with_process_identifier(pid_t process_identifier)
+BOOL environment_proxy_make_window_visible(void)
 {
     if(environmentIsHost) return EFAULT;
     BOOL appeared = sync_call_with_timeout_bool(PROXY_TYPE_REPLY(BOOL){
-        [hostProcessProxy makeWindowVisibleForProcessIdentifier:process_identifier withReply:reply];
+        [hostProcessProxy makeWindowVisibleWithReply:reply];
     });
     return appeared;
 }

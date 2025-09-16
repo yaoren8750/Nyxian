@@ -35,10 +35,7 @@
     if(!environmentIsHost)
     {
         // Tell host app to let our process appear
-        [hostProcessProxy makeWindowVisibleForProcessIdentifier:getpid() withReply:^(BOOL valid){
-            // If host says nono, then nono
-            if(!valid) exit(0);
-        }];
+        if(!environment_proxy_make_window_visible()) exit(0);
     }
     
     [self hook_run];

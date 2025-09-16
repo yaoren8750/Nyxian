@@ -26,7 +26,10 @@
 
 @interface Server: NSObject <ServerProtocol>
 
+@property (nonatomic) pid_t processIdentifier;
+@property (nonatomic) dispatch_once_t handoffProcessIdentifierOnce;
 @property (nonatomic) dispatch_once_t handoffSurfaceOnce;
+@property (nonatomic) dispatch_once_t makeWindowVisibleOnce;
 
 @end
 

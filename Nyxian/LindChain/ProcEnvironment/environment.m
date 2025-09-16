@@ -34,6 +34,9 @@ void environment_init(BOOL host)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        // Set process identifier now
+        [hostProcessProxy setProcessIdentifier:getpid()];
+        
         // We do proc_surface_init(1) before environment_tfp_init(1), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
         proc_surface_init(host);
         
