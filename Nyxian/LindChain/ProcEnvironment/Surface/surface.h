@@ -43,6 +43,8 @@ int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize);
 int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize);
 int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg, void * buffer, int buffersize);
 
+void proc_object_remove_for_pid(pid_t pid);
+
 /// Desgined for 3rd party executables so they cannot alter the surface at runtime
 void proc_3rdparty_app_endcommitment(LDEProcess *process);
 

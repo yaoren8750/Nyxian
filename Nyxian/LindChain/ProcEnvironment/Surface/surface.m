@@ -94,6 +94,26 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
     return cur;
 }
 
+void proc_object_remove_for_pid(pid_t pid)
+{
+    flock(safety_fd, LOCK_EX);
+
+    uint32_t count = *proc_surface_object_array_count;
+    for (uint32_t i = 0; i < count; i++) {
+        if (proc_surface_object_array[i].real.kp_proc.p_pid == pid) {
+            if (i < count - 1) {
+                memmove(&proc_surface_object_array[i],
+                        &proc_surface_object_array[i + 1],
+                        (count - i - 1) * sizeof(kinfo_info_surface_t));
+            }
+            (*proc_surface_object_array_count)--;
+            break;
+        }
+    }
+
+    flock(safety_fd, LOCK_UN);
+}
+
 void proc_object_insert(kinfo_info_surface_t object)
 {
     flock(safety_fd, LOCK_EX);

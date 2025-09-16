@@ -27,6 +27,7 @@
 #import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 #endif
 
 /*
@@ -310,6 +311,7 @@
     [self.processes removeObjectForKey:@(pid)];
 #if __has_include(<Nyxian-Swift.h>)
     [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:pid];
+    proc_object_remove_for_pid(pid);
 #endif
 }
 
