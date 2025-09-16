@@ -20,16 +20,11 @@
 #ifndef PROCENVIRONMENT_SURFACE_H
 #define PROCENVIRONMENT_SURFACE_H
 
-// MARK: The fastest way to exchange process information HAHA
+#import <Foundation/Foundation.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
+#include <sys/sysctl.h>
 
-typedef struct {
-    pid_t pid;
-    uid_t uid;
-    gid_t gid;
-    
-    char name[512];
-    char executablePath[512];
-} proc_object_t;
+// MARK: The fastest way to exchange process information HAHA
 
 NSFileHandle* proc_surface_handoff(void);
 NSFileHandle *proc_safety_handoff(void);

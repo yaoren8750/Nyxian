@@ -25,26 +25,26 @@
 
 #define PROC_SURFACE_MAGIC 0xFABCDEFB
 #define PROC_SURFACE_OBJECT_MAX 500
-#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(proc_object_t) * 500
+#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(struct kinfo_proc) * 500
 
-int sharing_fd = -1;
-int safety_fd = -1;
-void *surface_start;
+static int sharing_fd = -1;
+static int safety_fd = -1;
+static void *surface_start;
 
-uint32_t *proc_surface_object_array_count;
-static proc_object_t *proc_surface_object_array = NULL;
+static uint32_t *proc_surface_object_array_count;
+static struct kinfo_proc *proc_surface_object_array = NULL;
 
 /*
  Read and Write of process information
  */
-proc_object_t proc_object_for_pid(pid_t pid)
+struct kinfo_proc proc_object_for_pid(pid_t pid)
 {
     flock(safety_fd, LOCK_SH);
-    proc_object_t cur = {};
+    struct kinfo_proc cur = {};
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
     {
-        proc_object_t object = proc_surface_object_array[i];
-        if(object.pid == pid) {
+        struct kinfo_proc object = proc_surface_object_array[i];
+        if(object.kp_proc.p_pid == pid) {
             cur = object;
             break;
         }
@@ -53,32 +53,33 @@ proc_object_t proc_object_for_pid(pid_t pid)
     return cur;
 }
 
-void proc_object_insert(proc_object_t object)
+void proc_object_insert(struct kinfo_proc object)
 {
     flock(safety_fd, LOCK_EX);
     
     // First we look if it already exists
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
     {
-        proc_object_t *mobject = &proc_surface_object_array[i];
-        if(mobject->pid == object.pid) {
+        struct kinfo_proc *mobject = &proc_surface_object_array[i];
+        if(mobject->kp_proc.p_pid == object.kp_proc.p_pid) {
             // Now we will basically override it
-            memcpy(mobject, &object, sizeof(proc_object_t));
-            return;;
+            memcpy(mobject, &object, sizeof(struct kinfo_proc));
+            flock(safety_fd, LOCK_UN);
+            return;
         }
     }
     
     // To append we just add it to the end of the array
-    proc_object_t *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
-    memcpy(dest, &object, sizeof(proc_object_t));
+    struct kinfo_proc *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
+    memcpy(dest, &object, sizeof(struct kinfo_proc));
     
     flock(safety_fd, LOCK_UN);
 }
 
-proc_object_t proc_object_at_index(uint32_t index)
+struct kinfo_proc proc_object_at_index(uint32_t index)
 {
     flock(safety_fd, LOCK_SH);
-    proc_object_t cur = {};
+    struct kinfo_proc cur = {};
     
     // Do we have that index?
     if(*proc_surface_object_array_count < index)
@@ -92,6 +93,21 @@ proc_object_t proc_object_at_index(uint32_t index)
     
     flock(safety_fd, LOCK_UN);
     return cur;
+}
+
+void proc_insert_self(void)
+{
+    pid_t pid = getpid();
+    struct kinfo_proc kp;
+    size_t len = sizeof(kp);
+    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, pid };
+    
+    if (sysctl(mib, 4, &kp, &len, NULL, 0) == -1) {
+        perror("sysctl");
+        return;
+    }
+    
+    proc_object_insert(kp);
 }
 
 /*
@@ -136,13 +152,7 @@ void proc_surface_init(BOOL host)
         proc_surface_object_array = surface_start + offset;
         
         // Adding Nyxian
-        proc_object_t object;
-        strcpy(object.name, "Nyxian");
-        strcpy(object.executablePath, [[[NSBundle mainBundle] executablePath] UTF8String]);
-        object.pid = getpid();
-        object.uid = getuid();
-        object.gid = getgid();
-        proc_object_insert(object);
+        proc_insert_self();
     }
     else
     {
@@ -158,15 +168,6 @@ void proc_surface_init(BOOL host)
         surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
         close(sharing_fd);
         
-        // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
-        if(kr != KERN_SUCCESS)
-        {
-            // Its not secure, our own sandbox policies got broken, we blind the process
-            munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
-            return;
-        }
-        
         // Is the magic matching
         off_t offset = 0;
         uint32_t magic = *((uint32_t*)surface_start);
@@ -181,10 +182,17 @@ void proc_surface_init(BOOL host)
         // Map the array
         proc_surface_object_array = surface_start + offset;
         
-        // Look for Nyxian!
-        proc_object_t nyxian = proc_object_at_index(0);
+        // Insert self, before securing it!
+        proc_insert_self();
         
-        NSLog(@"Pls let it be: %s | uid: %d | gid: %d | pid: %d", nyxian.name, nyxian.uid, nyxian.gid, nyxian.pid);
+        // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
+        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
+        if(kr != KERN_SUCCESS)
+        {
+            // Its not secure, our own sandbox policies got broken, we blind the process
+            munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
+            return;
+        }
     }
     
     return;
