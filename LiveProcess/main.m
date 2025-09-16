@@ -162,7 +162,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     if([mode isEqualToString:@"management"])
     {
         LDEProcess *process = [[LDEProcess alloc] init];
-        process.executablePath = [[[[NSURL fileURLWithPath:[[NSBundle mainBundle] executablePath]] URLByDeletingPathExtension] URLByAppendingPathComponent:@"applicationmgmtd"] path];
+        process.executablePath = [NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()];
         proc_3rdparty_app_endcommitment(process);
         
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
