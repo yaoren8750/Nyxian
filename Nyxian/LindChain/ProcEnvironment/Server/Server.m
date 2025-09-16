@@ -170,7 +170,12 @@
  */
 - (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply
 {
-    reply(proc_surface_handoff(), proc_safety_handoff());
+    dispatch_once(&_handoffSurfaceOnce, ^{
+        reply(proc_surface_handoff(), proc_safety_handoff());
+        return;
+    });
+    
+    if(_handoffSurfaceOnce != 0) reply(nil,nil);
 }
 
 @end

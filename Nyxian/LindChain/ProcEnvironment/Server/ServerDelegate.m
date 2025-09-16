@@ -21,17 +21,10 @@
 
 @implementation ServerDelegate
 
-- (instancetype)init
-{
-    self = [super init];
-    _globalProxy = [[Server alloc] init];
-    return self;
-}
-
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
-    newConnection.exportedObject = _globalProxy;
+    newConnection.exportedObject = [[Server alloc] init];
     [newConnection resume];
     return YES;
 }

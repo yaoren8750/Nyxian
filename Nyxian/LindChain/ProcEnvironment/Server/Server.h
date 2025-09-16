@@ -25,6 +25,9 @@
 #import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
 @interface Server: NSObject <ServerProtocol>
+
+@property (nonatomic) dispatch_once_t handoffSurfaceOnce;
+
 @end
 
 #endif /* PROCENVIRONMENT_HOSTAPPSERVER_SERVER_H */

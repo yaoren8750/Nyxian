@@ -140,7 +140,9 @@ int LiveProcessMain(int argc, char *argv[]) {
     // Setting up environment
     environment_client_connect_to_host(endpoint);
     environment_init(NO);
-    environment_client_attach_debugger();
+    
+    // TODO: Reimplement first the concept of debugging
+    //environment_client_attach_debugger();
     
     // Assign fileActions
     for(NSNumber *rawFileDescriptor in fileActions.closeActions)

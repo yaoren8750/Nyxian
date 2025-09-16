@@ -25,8 +25,6 @@
 
 @interface ServerDelegate : NSObject <NSXPCListenerDelegate>
 
-@property (nonatomic,strong) Server *globalProxy;
-
 + (NSXPCListenerEndpoint*)getEndpoint;
 
 @end
