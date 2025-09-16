@@ -104,6 +104,9 @@
     
     self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath} withFileActions:nil];
     
+    // I know, I know LDEProcess is on the verge of deprecation of being replaced by proc surface, but... yk... we need to match bundleids for now
+    self.bundleIdentifier = applicationObject.bundleIdentifier;
+    
     return self;
 #else
     return [self init];
