@@ -220,11 +220,15 @@ int environment_posix_spawn(pid_t *process_identifier,
     {
         // MARK: GUEST Implementation
         
+        // Real executable path
+        const char *realExec = NULL;
+        
         // Check code signature
         if(!path) return 1;
         if(!checkCodeSignature(path))
         {
             // Is not valid
+            realExec = path;
             NSString *signMachOAtPath(NSString *path);
             path = [signMachOAtPath([NSString stringWithCString:path encoding:NSUTF8StringEncoding]) UTF8String];
             if(!path) return 1;
@@ -243,10 +247,19 @@ int environment_posix_spawn(pid_t *process_identifier,
         // Create file actions object
         PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
         
+        // Real exec patch if applicable
+        NSDictionary *environ = EnvironmentDictionaryFromEnvp(envp);
+        if(realExec)
+        {
+            NSMutableDictionary *array = [[NSMutableDictionary alloc] initWithDictionary:environ];
+            [array setObject:[NSString stringWithCString:realExec encoding:NSUTF8StringEncoding] forKey:@"realExecutablePath"];
+            environ = [array copy];
+        }
+        
         // Now since we have executable path we execute
         *process_identifier = environment_proxy_spawn_process_at_path([NSString stringWithCString:path encoding:NSUTF8StringEncoding],
                                                                       createNSArrayFromArgv(count, argv),
-                                                                      EnvironmentDictionaryFromEnvp(envp),
+                                                                      environ,
                                                                       fileActions);
     }
     

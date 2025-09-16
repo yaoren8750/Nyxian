@@ -154,29 +154,31 @@ NSString* invokeAppMain(NSString *executablePath,
     if(!executablePath) return @"No executable path";
     
     // Getting home path from envp, it is okay if its not present
-    NSString *homePath = [NSString stringWithCString:getenv("HOME") encoding:NSUTF8StringEncoding];
+    const char *home = getenv("HOME");
+    const char *realExecPath = getenv("realExecutablePath");
+    
+    // Convert them if applicable to nsstrings
+    NSString *homePath = home ? [NSString stringWithCString:getenv("HOME") encoding:NSUTF8StringEncoding] : nil;
+    NSString *realExecutablePath = realExecPath ? [NSString stringWithCString:getenv("realExecutablePath") encoding:NSUTF8StringEncoding] : nil;
     
     // Getting guestMainBundle, if applicable
     // Now trying to get bundle
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:[executablePath stringByDeletingLastPathComponent]];
     
     // Patch LDEProcess info of host app
+    LDEProcess *processInfo = [[LDEProcess alloc] init];
     if(guestMainBundle)
     {
         LDEApplicationObject *appObject = [[LDEApplicationObject alloc] initWithNSBundle:guestMainBundle];
-        LDEProcess *processInfo = [[LDEProcess alloc] init];
         processInfo.executablePath = executablePath;
         processInfo.bundleIdentifier = appObject.bundleIdentifier;
         processInfo.displayName = appObject.displayName;
         processInfo.icon = appObject.icon;
-        
-        // Writing to proc
-        proc_3rdparty_app_endcommitment(processInfo);
     }
-    else
-    {
-        proc_3rdparty_app_endcommitment(nil);
-    }
+
+    processInfo.executablePath = realExecutablePath ? realExecutablePath : executablePath;
+    
+    proc_3rdparty_app_endcommitment(processInfo);
 
     // Setup directories
     if(homePath && guestMainBundle)

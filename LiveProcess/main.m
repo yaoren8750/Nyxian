@@ -129,7 +129,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     PosixSpawnFileActionsObject *fileActions = appInfo[@"fileActions"];
     NSFileHandle *outputHandle = appInfo[@"outputFD"];
     
-    
     // Handing off standard filefds
     int server_fd = outputHandle.fileDescriptor;
     dup2(server_fd, STDOUT_FILENO);
@@ -172,7 +171,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        NSString *error = invokeAppMain(executablePath, argc, argv);
+        invokeAppMain(executablePath, argc, argv);
     }
     
     exit(0);
