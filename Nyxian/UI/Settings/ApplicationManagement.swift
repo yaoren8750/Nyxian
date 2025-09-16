@@ -127,10 +127,12 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     let bundlePath = lcapp!.bundlePath()
                     let bundleId = lcapp!.bundleIdentifier()
                     if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
-                        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId)
-                        let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
-                        ApplicationManagementViewController.applications.append(appObject)
-                        self.tableView.reloadData()
+                        DispatchQueue.main.async {
+                            LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId)
+                            let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
+                            ApplicationManagementViewController.applications.append(appObject)
+                            self.tableView.reloadData()
+                        }
                     } else {
                         NotificationServer.NotifyUser(level: .error, notification: "Failed to install application.")
                     }

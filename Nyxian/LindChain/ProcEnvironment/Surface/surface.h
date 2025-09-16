@@ -38,10 +38,14 @@ typedef struct {
 NSFileHandle *proc_surface_handoff(void);
 NSFileHandle *proc_safety_handoff(void);
 
+/* libproc */
 int proc_libproc_listallpids(void *buffer, int buffersize);
 int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize);
 int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize);
 int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg, void * buffer, int buffersize);
+
+/* sysctl */
+int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);
 
 void proc_object_remove_for_pid(pid_t pid);
 

@@ -174,6 +174,7 @@ void proc_insert_self(void)
     proc_object_insert(info);
 }
 
+/* libproc */
 int proc_libproc_listallpids(void *buffer, int buffersize)
 {
     if (buffersize < 0) { errno = EINVAL; return -1; }
@@ -257,6 +258,42 @@ int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg,
         return 0;
     }
 }
+
+/* sysctl */
+int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
+{
+    flock(safety_fd, LOCK_SH);
+
+    uint32_t count = *proc_surface_object_array_count;
+    size_t needed_bytes = (size_t)count * sizeof(struct kinfo_proc);
+
+    if(needed_out) *needed_out = needed_bytes;
+
+    if(buffer == NULL || buffersize == 0)
+    {
+        flock(safety_fd, LOCK_UN);
+        return (int)needed_bytes;
+    }
+
+    if(buffersize < needed_bytes)
+    {
+        flock(safety_fd, LOCK_UN);
+        errno = ENOMEM;
+        if(needed_out) *needed_out = needed_bytes;
+        return -1;
+    }
+
+    struct kinfo_proc *kprocs = buffer;
+    for(uint32_t i = 0; i < count; i++)
+    {
+        memset(&kprocs[i], 0, sizeof(struct kinfo_proc));
+        memcpy(&kprocs[i], &proc_surface_object_array[i].real, sizeof(struct kinfo_proc));
+    }
+
+    flock(safety_fd, LOCK_UN);
+    return (int)needed_bytes;
+}
+
 
 void proc_3rdparty_app_endcommitment(LDEProcess *process)
 {

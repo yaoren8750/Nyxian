@@ -20,7 +20,8 @@
 #ifndef PROCENVIRONMENT_SYSCTL_H
 #define PROCENVIRONMENT_SYSCTL_H
 
-// MARK: WIP sysctl fix
+#import <Foundation/Foundation.h>
+
 void environment_sysctl_init(BOOL host);
 
 #endif /* PROCENVIRONMENT_SYSCTL_H */
