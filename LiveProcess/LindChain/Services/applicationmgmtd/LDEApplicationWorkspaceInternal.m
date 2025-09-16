@@ -61,12 +61,16 @@ bool checkCodeSignature(const char* path);
                                attributes:nil
                                     error:nil];
     
+    // Enumerating all app bundles
     NSArray<NSURL*> *uuidURLs = [fileManager contentsOfDirectoryAtURL:self.applicationsURL includingPropertiesForKeys:nil options:0 error:nil];
     self.bundles = [[NSMutableDictionary alloc] init];
     for(NSURL *uuidURL in uuidURLs)
     {
         MIExecutableBundle *bundle = [[PrivClass(MIExecutableBundle) alloc] initWithBundleInDirectory:uuidURL withExtension:@"app" error:nil];
-        if(bundle) [self.bundles setObject:bundle forKey:bundle.identifier];
+        if(bundle)
+            [self.bundles setObject:bundle forKey:bundle.identifier];
+        else
+            [[NSFileManager defaultManager] removeItemAtURL:uuidURL error:nil];
     }
     
     return self;
@@ -142,7 +146,7 @@ bool checkCodeSignature(const char* path);
     if(previousApplication)
     {
         NSURL *container = [self applicationContainerForBundleID:bundleID];
-        [[NSFileManager defaultManager] removeItemAtURL:[previousApplication bundleURL] error:nil];
+        [[NSFileManager defaultManager] removeItemAtURL:[[previousApplication bundleURL] URLByDeletingLastPathComponent] error:nil];
         [[NSFileManager defaultManager] removeItemAtURL:container error:nil];
         [self.bundles removeObjectForKey:bundleID];
         return YES;
