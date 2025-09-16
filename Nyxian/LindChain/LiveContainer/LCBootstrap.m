@@ -15,8 +15,8 @@
 #include "../litehook/src/litehook.h"
 #import "Tweaks/Tweaks.h"
 #include <mach-o/ldsyms.h>
-#import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/Services/applicationmgmtd/LDEApplicationObject.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 NSUserDefaults *lcUserDefaults;
 NSBundle *lcMainBundle;
@@ -170,8 +170,12 @@ NSString* invokeAppMain(NSString *executablePath,
         processInfo.displayName = appObject.displayName;
         processInfo.icon = appObject.icon;
         
-        // Sending to host
-        [hostProcessProxy assignProcessInfo:processInfo withProcessIdentfier:getpid()];
+        // Writing to proc
+        proc_3rdparty_app_endcommitment(processInfo);
+    }
+    else
+    {
+        proc_3rdparty_app_endcommitment(nil);
     }
 
     // Setup directories

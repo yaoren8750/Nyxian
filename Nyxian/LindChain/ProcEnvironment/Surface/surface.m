@@ -22,29 +22,70 @@
 #import <LindChain/ProcEnvironment/Surface/memfd.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <mach/mach.h>
+#import <sys/sysctl.h>
+
+// Minimal stubs if <libproc.h> is not available
+#ifndef PROC_PIDTASKINFO
+#define PROC_PIDTASKINFO     4
+#endif
+#ifndef PROC_PIDTASKALLINFO
+#define PROC_PIDTASKALLINFO  2
+#endif
+
+struct proc_taskinfo {
+    uint64_t        pti_virtual_size;
+    uint64_t        pti_resident_size;
+    uint64_t        pti_total_user;
+    uint64_t        pti_total_system;
+    uint64_t        pti_threads_user;
+    uint64_t        pti_threads_system;
+    int32_t         pti_policy;
+    int32_t         pti_faults;
+    int32_t         pti_pageins;
+    int32_t         pti_cow_faults;
+    int32_t         pti_messages_sent;
+    int32_t         pti_messages_received;
+    int32_t         pti_syscalls_mach;
+    int32_t         pti_syscalls_unix;
+    int32_t         pti_csw;
+    int32_t         pti_threadnum;
+    int32_t         pti_numrunning;
+    int32_t         pti_priority;
+};
+
+struct proc_bsdinfo {
+    // truncated stub; real struct has many fields
+    uint32_t        pbi_pid;
+    char            pbi_comm[20];
+};
+
+struct proc_taskallinfo {
+    struct proc_bsdinfo   pbsd;
+    struct proc_taskinfo  ptinfo;
+};
 
 #define PROC_SURFACE_MAGIC 0xFABCDEFB
 #define PROC_SURFACE_OBJECT_MAX 500
-#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(struct kinfo_proc) * 500
+#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * 500
 
 static int sharing_fd = -1;
 static int safety_fd = -1;
 static void *surface_start;
 
 static uint32_t *proc_surface_object_array_count;
-static struct kinfo_proc *proc_surface_object_array = NULL;
+static kinfo_info_surface_t *proc_surface_object_array = NULL;
 
 /*
  Read and Write of process information
  */
-struct kinfo_proc proc_object_for_pid(pid_t pid)
+kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
     flock(safety_fd, LOCK_SH);
-    struct kinfo_proc cur = {};
+    kinfo_info_surface_t cur = {};
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
     {
-        struct kinfo_proc object = proc_surface_object_array[i];
-        if(object.kp_proc.p_pid == pid) {
+        kinfo_info_surface_t object = proc_surface_object_array[i];
+        if(object.real.kp_proc.p_pid == pid) {
             cur = object;
             break;
         }
@@ -53,42 +94,37 @@ struct kinfo_proc proc_object_for_pid(pid_t pid)
     return cur;
 }
 
-void proc_object_insert(struct kinfo_proc object)
+void proc_object_insert(kinfo_info_surface_t object)
 {
     flock(safety_fd, LOCK_EX);
     
-    // First we look if it already exists
     for(uint32_t i = 0; i < *proc_surface_object_array_count; i++)
     {
-        struct kinfo_proc *mobject = &proc_surface_object_array[i];
-        if(mobject->kp_proc.p_pid == object.kp_proc.p_pid) {
-            // Now we will basically override it
-            memcpy(mobject, &object, sizeof(struct kinfo_proc));
+        kinfo_info_surface_t *mobject = &proc_surface_object_array[i];
+        if(mobject->real.kp_proc.p_pid == object.real.kp_proc.p_pid) {
+            memcpy(mobject, &object, sizeof(kinfo_info_surface_t));
             flock(safety_fd, LOCK_UN);
             return;
         }
     }
     
-    // To append we just add it to the end of the array
-    struct kinfo_proc *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
-    memcpy(dest, &object, sizeof(struct kinfo_proc));
+    kinfo_info_surface_t *dest = &proc_surface_object_array[(*proc_surface_object_array_count)++];
+    memcpy(dest, &object, sizeof(kinfo_info_surface_t));
     
     flock(safety_fd, LOCK_UN);
 }
 
-struct kinfo_proc proc_object_at_index(uint32_t index)
+kinfo_info_surface_t proc_object_at_index(uint32_t index)
 {
     flock(safety_fd, LOCK_SH);
-    struct kinfo_proc cur = {};
+    kinfo_info_surface_t cur = {};
     
-    // Do we have that index?
     if(*proc_surface_object_array_count < index)
     {
         flock(sharing_fd, LOCK_UN);
         return cur;
     }
     
-    // So give it to me
     cur = proc_surface_object_array[index];
     
     flock(safety_fd, LOCK_UN);
@@ -107,8 +143,129 @@ void proc_insert_self(void)
         return;
     }
     
-    proc_object_insert(kp);
+    char pathbuf[PATH_MAX];
+    int proc_pidpath(pid_t pid, void *buf, size_t bufsize);
+    proc_pidpath(pid, pathbuf, sizeof(pathbuf));
+    
+    kinfo_info_surface_t info;
+    info.real = kp;
+    strncpy(info.path, pathbuf, sizeof(pathbuf));
+    
+    proc_object_insert(info);
 }
+
+int proc_libproc_listallpids(void *buffer, int buffersize)
+{
+    if (buffersize < 0) { errno = EINVAL; return -1; }
+
+    flock(safety_fd, LOCK_SH);
+
+    uint32_t count = *proc_surface_object_array_count;
+    size_t needed_bytes = (size_t)count * sizeof(pid_t);
+
+    if (buffer == NULL || buffersize == 0) {
+        flock(safety_fd, LOCK_UN);
+        return (int)needed_bytes;
+    }
+
+    size_t capacity = (size_t)buffersize / sizeof(pid_t);
+    size_t n = count < capacity ? count : capacity;
+
+    pid_t *pids = (pid_t *)buffer;
+    for (size_t i = 0; i < n; i++) {
+        pids[i] = proc_surface_object_array[i].real.kp_proc.p_pid;
+    }
+
+    flock(safety_fd, LOCK_UN);
+
+    return (int)(n * sizeof(pid_t));
+}
+
+int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize)
+{
+    if (buffersize == 0 || buffer == NULL)
+        return 0;
+
+    kinfo_info_surface_t info = proc_object_for_pid(pid);
+    if (info.real.kp_proc.p_pid == 0)
+        return 0;
+
+    strlcpy((char*)buffer, info.real.kp_proc.p_comm, buffersize);
+
+    return (int)strlen((char*)buffer);
+}
+
+int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize)
+{
+    if (buffersize == 0 || buffer == NULL)
+        return 0;
+
+    kinfo_info_surface_t info = proc_object_for_pid(pid);
+    if (info.real.kp_proc.p_pid == 0)
+        return 0;
+
+    strlcpy((char*)buffer, info.path, buffersize);
+    return (int)strlen((char*)buffer);
+}
+
+int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg,
+                 void * buffer, int buffersize)
+{
+    if (buffer == NULL || buffersize <= 0)
+        return 0;
+
+    kinfo_info_surface_t kinfo = proc_object_for_pid(pid);
+    if (kinfo.real.kp_proc.p_pid == 0)
+        return 0;
+
+    switch (flavor) {
+    case PROC_PIDTASKINFO:
+        memset(buffer, 0, buffersize);
+        return sizeof(struct proc_taskinfo);
+
+    case PROC_PIDTASKALLINFO: {
+        if (buffersize < sizeof(struct proc_taskallinfo))
+            return 0;
+        struct proc_taskallinfo *info = (struct proc_taskallinfo*)buffer;
+        memset(info, 0, sizeof(*info));
+        memcpy(&info->pbsd, &kinfo.real, sizeof(kinfo.real) < sizeof(info->pbsd) ? sizeof(kinfo.real) : sizeof(info->pbsd));
+        return sizeof(struct proc_taskallinfo);
+    }
+
+    default:
+        errno = ENOTSUP;
+        return 0;
+    }
+}
+
+void proc_3rdparty_app_endcommitment(LDEProcess *process)
+{
+    // Insert self, before securing it!
+    proc_insert_self();
+    
+    // Overwrite some info if process is passed
+    if(process)
+    {
+        // Getting self
+        kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
+        
+        // Modifying self
+        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:process.executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
+        strncpy(kinfo.path, [process.executablePath UTF8String], PATH_MAX);
+        
+        proc_object_insert(kinfo);
+    }
+    
+    // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
+    kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
+    if(kr != KERN_SUCCESS)
+    {
+        // Its not secure, our own sandbox policies got broken, we blind the process
+        munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
+        return;
+    }
+}
+
 
 /*
  Management
@@ -181,18 +338,6 @@ void proc_surface_init(BOOL host)
         
         // Map the array
         proc_surface_object_array = surface_start + offset;
-        
-        // Insert self, before securing it!
-        proc_insert_self();
-        
-        // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
-        if(kr != KERN_SUCCESS)
-        {
-            // Its not secure, our own sandbox policies got broken, we blind the process
-            munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
-            return;
-        }
     }
     
     return;

@@ -27,6 +27,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 NSString* invokeAppMain(NSString *executablePath,
                         int argc,
@@ -159,6 +160,10 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     if([mode isEqualToString:@"management"])
     {
+        LDEProcess *process = [[LDEProcess alloc] init];
+        process.executablePath = [[[[NSURL fileURLWithPath:[[NSBundle mainBundle] executablePath]] URLByDeletingPathExtension] URLByAppendingPathComponent:@"applicationmgmtd"] path];
+        proc_3rdparty_app_endcommitment(process);
+        
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
@@ -166,11 +171,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     {
         // posix_spawn and similar implementation
         NSString *error = invokeAppMain(executablePath, argc, argv);
-    }
-    else if([mode isEqualToString:@"fork"])
-    {
-        // MARK: Will wait for Nyxian to suspend this task and perform a fork
-        while(true) {};
     }
     
     exit(0);

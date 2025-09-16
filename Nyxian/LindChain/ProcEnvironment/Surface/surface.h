@@ -26,8 +26,25 @@
 
 // MARK: The fastest way to exchange process information HAHA
 
-NSFileHandle* proc_surface_handoff(void);
+typedef struct {
+    /* Real structure */
+    struct kinfo_proc real;
+    
+    /* Now we come to my other things */
+    /* Because its important */
+    char path[PATH_MAX];
+} kinfo_info_surface_t;
+
+NSFileHandle *proc_surface_handoff(void);
 NSFileHandle *proc_safety_handoff(void);
+
+int proc_libproc_listallpids(void *buffer, int buffersize);
+int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize);
+int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize);
+int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg, void * buffer, int buffersize);
+
+/// Desgined for 3rd party executables so they cannot alter the surface at runtime
+void proc_3rdparty_app_endcommitment(LDEProcess *process);
 
 void proc_surface_init(BOOL host);
 
