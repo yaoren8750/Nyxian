@@ -61,6 +61,7 @@
     if([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])
     {
         xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
+        mach_port_mod_refs(mach_task_self(), _port, MACH_PORT_RIGHT_SEND, 1);
         xpc_dictionary_set_mach_send(dict, "port", _port);
         [(id)coder encodeXPCObject:dict forKey:@"machPort"];
     }
