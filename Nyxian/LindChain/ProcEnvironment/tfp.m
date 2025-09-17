@@ -48,6 +48,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         {
             // We got machPortObject so insert it into `requestedTask`
             *requestTaskPort = [machPortObject port];
+            mach_port_mod_refs(mach_task_self(), *requestTaskPort, MACH_PORT_RIGHT_SEND, 1);
         }
         else
         {
