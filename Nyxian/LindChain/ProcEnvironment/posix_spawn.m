@@ -20,7 +20,6 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
-#import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>

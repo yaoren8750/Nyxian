@@ -295,20 +295,20 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 }
 
 
-void proc_3rdparty_app_endcommitment(LDEProcess *process)
+void proc_3rdparty_app_endcommitment(NSString *executablePath)
 {
     // Insert self, before securing it!
     proc_insert_self();
     
     // Overwrite some info if process is passed
-    if(process)
+    if(executablePath)
     {
         // Getting self
         kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
         
         // Modifying self
-        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:process.executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
-        strncpy(kinfo.path, [process.executablePath UTF8String], PATH_MAX);
+        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
+        strncpy(kinfo.path, [executablePath UTF8String], PATH_MAX);
         
         proc_object_insert(kinfo);
     }

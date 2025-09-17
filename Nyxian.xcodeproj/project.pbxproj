@@ -144,7 +144,6 @@
 				LindChain/LiveContainer/ZSign/zsign.mm,
 				LindChain/LiveContainer/ZSign/zsigner.m,
 				LindChain/LLVM.xcframework,
-				LindChain/Multitask/LDEProcessManager.m,
 				LindChain/ObjC/Swizzle.m,
 				LindChain/OpenSSL.xcframework,
 				LindChain/ProcEnvironment/application.m,

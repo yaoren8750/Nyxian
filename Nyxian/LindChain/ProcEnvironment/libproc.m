@@ -25,7 +25,6 @@
 #import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
-#import <LindChain/Multitask/LDEProcessManager.h>
 
 // MARK: The saviour API of Nyxians modern day proc API performance
 #import <LindChain/ProcEnvironment/Surface/surface.h>

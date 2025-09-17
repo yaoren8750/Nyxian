@@ -191,13 +191,6 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path,
     return process_identifier;
 }
 
-void environment_proxy_assign_process_structure_information(LDEProcess *process_structure,
-                                                            pid_t process_identifier)
-{
-    if(environmentIsHost) return;
-    [hostProcessProxy assignProcessInfo:process_structure withProcessIdentfier:process_identifier];
-}
-
 void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword)
 {
     if(environmentIsHost) return;

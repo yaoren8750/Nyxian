@@ -270,13 +270,21 @@
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
                        doRestartIfRunning:(BOOL)doRestartIfRunning
 {
-    if(doRestartIfRunning)
+    for(NSNumber *key in self.processes)
     {
-        for(NSNumber *key in self.processes)
+        LDEProcess *process = self.processes[key];
+        if(!process || ![process.bundleIdentifier isEqualToString:bundleIdentifier]) continue;
+        else
         {
-            LDEProcess *process = self.processes[key];
-            if(!process || ![process.bundleIdentifier isEqualToString:bundleIdentifier]) continue;
-            [process terminate];
+            if(doRestartIfRunning)
+            {
+                [process terminate];
+            }
+            else
+            {
+                [[LDEMultitaskManager shared] openWindowForProcessIdentifier:process.pid];
+                return process.pid;
+            }
         }
     }
     
