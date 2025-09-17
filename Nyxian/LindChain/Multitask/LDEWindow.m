@@ -142,6 +142,7 @@ void UIKitFixesInit(void) {
                                      windowView.transform = CGAffineTransformMakeTranslation(0, windowView.bounds.size.height + 100);
                                      windowView.alpha = 0;
                                  } completion:^(BOOL finished) {
+                                     [self.appSceneVC setForegroundEnabled:NO];
                                      [windowView removeFromSuperview];
                                  }];
             } else {

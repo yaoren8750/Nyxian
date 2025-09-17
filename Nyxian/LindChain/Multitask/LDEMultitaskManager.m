@@ -68,7 +68,6 @@
 {
     LDEWindow *window = self.windows[@(processIdentifier)];
     if (!window || window.view.hidden) { if (completion) completion(); return; }
-    [window.appSceneVC setForegroundEnabled:NO];
 
     UIView *v = window.view;
     [self bringSubviewToFront:v];
@@ -95,6 +94,7 @@
         v.hidden = YES;
         v.alpha = 1.0;
         v.transform = CGAffineTransformIdentity;
+        [window.appSceneVC setForegroundEnabled:NO];
         if (completion) completion();
     }];
 }
@@ -102,8 +102,7 @@
 - (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier animated:(BOOL)animated {
     LDEWindow *window = self.windows[@(processIdentifier)];
     if (!window) return;
-    [window.appSceneVC setForegroundEnabled:YES];
-    
+
     UIView *v = window.view;
     if (v.superview != self) {
         [self addSubview:v];
@@ -111,6 +110,9 @@
     v.hidden = NO;
     [self bringSubviewToFront:v];
     [v.layer removeAllAnimations];
+    
+    // Tell window to foreground application
+    [window.appSceneVC setForegroundEnabled:YES];
     
     if (animated) {
         v.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height);
