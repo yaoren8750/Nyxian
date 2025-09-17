@@ -45,6 +45,7 @@
 - (void)setBackgroundNotificationEnabled:(bool)enabled;
 - (void)resizeActionStart;
 - (void)resizeActionEnd;
+- (void)setForegroundEnabled:(BOOL)foreground;
 
 @end
 

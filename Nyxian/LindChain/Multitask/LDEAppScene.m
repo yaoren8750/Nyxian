@@ -230,5 +230,13 @@
     }];
 }
 
+- (void)setForegroundEnabled:(BOOL)foreground
+{
+    if(foreground)
+        [self.presenter activate];
+    else
+        [self.presenter deactivate];
+}
+
 @end
  

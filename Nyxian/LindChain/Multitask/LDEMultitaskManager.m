@@ -68,6 +68,7 @@
 {
     LDEWindow *window = self.windows[@(processIdentifier)];
     if (!window || window.view.hidden) { if (completion) completion(); return; }
+    [window.appSceneVC setForegroundEnabled:NO];
 
     UIView *v = window.view;
     [self bringSubviewToFront:v];
@@ -101,6 +102,7 @@
 - (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier animated:(BOOL)animated {
     LDEWindow *window = self.windows[@(processIdentifier)];
     if (!window) return;
+    [window.appSceneVC setForegroundEnabled:YES];
     
     UIView *v = window.view;
     if (v.superview != self) {
@@ -261,7 +263,7 @@
     if(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone)
     {
         UILongPressGestureRecognizer *gestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-        gestureRecognizer.numberOfTouchesRequired = 2;
+        //gestureRecognizer.numberOfTouchesRequired = 2;
         [self addGestureRecognizer:gestureRecognizer];
     }
 }
