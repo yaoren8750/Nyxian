@@ -19,6 +19,8 @@
 
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
+#include <signal.h>
+#include <errno.h>
 
 #define PROXY_MAX_DISPATCH_TIME 1.0
 #define PROXY_TYPE_REPLY(type) ^(void (^reply)(type))
@@ -161,13 +163,31 @@ LDEProcess *environment_proxy_proc_structure_for_process_identifier(pid_t proces
 int environment_proxy_proc_kill_process_identifier(pid_t process_identifier,
                                                    int signal)
 {
-    if(environmentIsHost) return EFAULT;
-    if(signal <= 0 || signal >= NSIG) return EINVAL;
-    int result = EFAULT;
-    result = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy proc_kill:process_identifier withSignal:signal withReply:reply];
+    if(environmentIsHost)
+    {
+        errno = EPERM;
+        return -1;
+    }
+
+    if(signal <= 0 || signal >= NSIG)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int result = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy proc_kill:process_identifier
+                          withSignal:signal
+                           withReply:reply];
     });
-    return result;
+
+    if(result != 0)
+    {
+        errno = result;
+        return -1;
+    }
+
+    return 0;
 }
 
 BOOL environment_proxy_make_window_visible(void)

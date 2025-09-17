@@ -42,16 +42,11 @@ int proc_libproc_pid_rusage(pid_t pid,
             return -1;
         }
         
-        
-        struct task_thread_times_info tti;
-        mach_msg_type_number_t count = TASK_THREAD_TIMES_INFO_COUNT;
-        if (task_info(task, TASK_THREAD_TIMES_INFO, (task_info_t)&tti, &count) == KERN_SUCCESS) {
-            ri->ri_user_time =
-            (uint64_t)tti.user_time.seconds * NSEC_PER_SEC +
-            (uint64_t)tti.user_time.microseconds * NSEC_PER_USEC;
-            ri->ri_system_time =
-            (uint64_t)tti.system_time.seconds * NSEC_PER_SEC +
-            (uint64_t)tti.system_time.microseconds * NSEC_PER_USEC;
+        struct task_absolutetime_info tai2;
+        mach_msg_type_number_t count = TASK_ABSOLUTETIME_INFO_COUNT;
+        if (task_info(task, TASK_ABSOLUTETIME_INFO, (task_info_t)&tai2, &count) == KERN_SUCCESS) {
+            ri->ri_user_time = tai2.total_user;
+            ri->ri_system_time = tai2.total_system;
         }
         
         struct task_basic_info_64 tbi;
