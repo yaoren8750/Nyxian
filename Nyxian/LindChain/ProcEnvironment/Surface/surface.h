@@ -32,8 +32,19 @@ typedef struct {
     /* Now we come to my other things */
     /* Because its important */
     char path[PATH_MAX];
+    
+    /* Storing override flag for TASK_UNSPECIFIED */
+    bool force_task_unspecified;
 } kinfo_info_surface_t;
 
+/* api */
+kinfo_info_surface_t proc_object_for_pid(pid_t pid);
+void proc_object_remove_for_pid(pid_t pid);
+void proc_object_insert(kinfo_info_surface_t object);
+kinfo_info_surface_t proc_object_at_index(uint32_t index);
+void proc_insert_self(void);
+
+/* handoff */
 NSFileHandle *proc_surface_handoff(void);
 NSFileHandle *proc_safety_handoff(void);
 
@@ -49,7 +60,8 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);
 void proc_object_remove_for_pid(pid_t pid);
 
 /// Desgined for 3rd party executables so they cannot alter the surface at runtime
-void proc_3rdparty_app_endcommitment(NSString *executablePath);
+void proc_3rdparty_app_endcommitment(NSString *executablePath,
+                                     bool force_task_unspecified);
 
 void proc_surface_init(BOOL host);
 

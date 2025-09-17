@@ -294,24 +294,25 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     return (int)needed_bytes;
 }
 
-
-void proc_3rdparty_app_endcommitment(NSString *executablePath)
+void proc_3rdparty_app_endcommitment(NSString *executablePath,
+                                     bool force_task_unspecified)
 {
     // Insert self, before securing it!
     proc_insert_self();
     
     // Overwrite some info if process is passed
+    kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
+    
     if(executablePath)
     {
-        // Getting self
-        kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
-        
         // Modifying self
         strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
         strncpy(kinfo.path, [executablePath UTF8String], PATH_MAX);
-        
-        proc_object_insert(kinfo);
     }
+    
+    kinfo.force_task_unspecified = force_task_unspecified;
+    
+    proc_object_insert(kinfo);
     
     // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
     kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
@@ -322,7 +323,6 @@ void proc_3rdparty_app_endcommitment(NSString *executablePath)
         return;
     }
 }
-
 
 /*
  Management

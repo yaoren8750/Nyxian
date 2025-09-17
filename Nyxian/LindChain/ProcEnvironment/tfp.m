@@ -28,7 +28,7 @@
 #import <LindChain/litehook/src/litehook.h>
 #import <dlfcn.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
-
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 /*
  Internal Implementation
@@ -82,6 +82,33 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     return KERN_SUCCESS;
 }
 
+// task_policy_get(task, TASK_CATEGORY_POLICY, (task_policy_t)&policy_info, &info_count, &get_default);
+DEFINE_HOOK(task_policy_get, kern_return_t,(task_policy_get_t task,
+                                            task_policy_flavor_t flavor,
+                                            task_policy_t policy_info,
+                                            mach_msg_type_number_t *policy_infoCnt,
+                                            boolean_t *get_default))
+{
+    kern_return_t kr = ORIG_FUNC(task_policy_get)(task, flavor, policy_info, policy_infoCnt, get_default);
+    
+    if(kr == KERN_SUCCESS && flavor == TASK_CATEGORY_POLICY)
+    {
+        pid_t pid = 0;
+        kr = pid_for_task(task, &pid);
+        if(kr == KERN_SUCCESS)
+        {
+            kinfo_info_surface_t object = proc_object_for_pid(pid);
+            if(object.force_task_unspecified)
+            {
+                task_category_policy_data_t *data = (task_category_policy_data_t*)policy_info;
+                data->role = TASK_UNSPECIFIED;
+            }
+        }
+    }
+    
+    return kr;
+}
+
 void environment_host_take_client_task_port(TaskPortObject *machPort)
 {
     if(!environmentIsHost) return;
@@ -107,6 +134,7 @@ void environment_tfp_init(BOOL host)
             // MARK: Guest Init
             [hostProcessProxy sendPort:[TaskPortObject taskPortSelf]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
+            DO_HOOK_GLOBAL(task_policy_get);
         }
     }
 }
