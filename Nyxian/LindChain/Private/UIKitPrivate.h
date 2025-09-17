@@ -707,6 +707,10 @@
 - (void)invalidate;
 - (bool)isActive;
 - (bool)_isHosting;
+
+- (id)newSnapshot;
+- (id)newSnapshotPresentationView;
+
 @end
 
 @interface UIRootWindowScenePresentationBinder : UIScenePresentationBinder

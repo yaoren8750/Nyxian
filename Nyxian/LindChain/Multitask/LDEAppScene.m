@@ -232,6 +232,10 @@
 
 - (void)setForegroundEnabled:(BOOL)foreground
 {
+    [self.presenter.scene updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
+        settings.foreground = foreground;
+    }];
+    
     if(foreground)
         [self.presenter activate];
     else
