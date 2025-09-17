@@ -137,18 +137,26 @@
     __typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         void (^openAct)(void) = ^{
-            LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:processIdentifier];
-            if(process)
+            LDEWindow *window = [self.windows objectForKey:@(processIdentifier)];
+            if(window)
             {
-                LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
-                if(window)
+                [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+            }
+            else
+            {
+                LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:processIdentifier];
+                if(process)
                 {
-                    weakSelf.windows[@(processIdentifier)] = window;
-                    [weakSelf addSubview:window.view];
-                    if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
-
-                    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-                        [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+                    LDEWindow *window = [[LDEWindow alloc] initWithProcess:process withDimensions:CGRectMake(50, 50, 300, 400)];
+                    if(window)
+                    {
+                        weakSelf.windows[@(processIdentifier)] = window;
+                        [weakSelf addSubview:window.view];
+                        if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
+                        
+                        if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+                            [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+                        }
                     }
                 }
             }
