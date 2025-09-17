@@ -231,6 +231,7 @@ bool checkCodeSignature(const char* path);
             [objects addObject:[[LDEApplicationObject alloc] initWithBundle:bundle]];
         }
     }
+    
     reply([[LDEApplicationObjectArray alloc] initWithApplicationObjects:[objects copy]]);
 }
 

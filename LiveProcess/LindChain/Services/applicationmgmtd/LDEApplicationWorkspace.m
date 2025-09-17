@@ -26,7 +26,7 @@
 @interface LDEApplicationWorkspace ()
 
 @property (nonatomic,strong,readwrite) LDEProcess *process;
-@property (nonatomic,strong,readonly) dispatch_semaphore_t sema;
+@property (nonatomic,strong,readwrite) dispatch_semaphore_t sema;
 
 @end
 
@@ -57,8 +57,11 @@
     __weak typeof(self) weakSelf = self;
     [process setRequestInterruptionBlock:^(NSUUID *uuid) {
         dispatch_semaphore_signal(weakSelf.sema);
+        weakSelf.sema = dispatch_semaphore_create(0);
         weakSelf.proxy = nil;
-        [weakSelf execute];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf execute];
+        });
     }];
     
     self.process = process;
@@ -148,7 +151,7 @@
         dispatch_semaphore_signal(self.sema);
     }];
     dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    return result ?: @[];
+    return result ? result : @[];
 }
 
 - (BOOL)clearContainerForBundleID:(NSString *)bundleID

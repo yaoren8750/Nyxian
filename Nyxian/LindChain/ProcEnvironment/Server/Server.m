@@ -42,7 +42,7 @@
         };
         
         [connection activate];
-        [[LDEApplicationWorkspace shared] setProxy:[connection remoteObjectProxy]];
+        workspace.proxy = [connection remoteObjectProxy];
     }
 }
 
