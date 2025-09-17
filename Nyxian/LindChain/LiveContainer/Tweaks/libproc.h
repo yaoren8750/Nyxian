@@ -86,6 +86,7 @@ int proc_regionfilename(int pid, uint64_t address, void * buffer, uint32_t buffe
 int proc_kmsgbuf(void * buffer, uint32_t buffersize);
 int proc_pidpath(int pid, void * buffer, uint32_t  buffersize);
 int proc_libversion(int *major, int * minor);
+int proc_pid_rusage(int pid, int flavor, struct rusage_info_v2 *rusage);
 /*
  * A process can use the following api to set its own process control
  * state on resoure starvation. The argument can have one of the PROC_SETPC_XX values

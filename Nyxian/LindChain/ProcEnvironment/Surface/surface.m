@@ -24,50 +24,6 @@
 #import <mach/mach.h>
 #import <sys/sysctl.h>
 
-// Minimal stubs if <libproc.h> is not available
-#ifndef PROC_PIDTASKINFO
-#define PROC_PIDTASKINFO     4
-#endif
-#ifndef PROC_PIDTASKALLINFO
-#define PROC_PIDTASKALLINFO  2
-#endif
-
-struct proc_taskinfo {
-    uint64_t        pti_virtual_size;
-    uint64_t        pti_resident_size;
-    uint64_t        pti_total_user;
-    uint64_t        pti_total_system;
-    uint64_t        pti_threads_user;
-    uint64_t        pti_threads_system;
-    int32_t         pti_policy;
-    int32_t         pti_faults;
-    int32_t         pti_pageins;
-    int32_t         pti_cow_faults;
-    int32_t         pti_messages_sent;
-    int32_t         pti_messages_received;
-    int32_t         pti_syscalls_mach;
-    int32_t         pti_syscalls_unix;
-    int32_t         pti_csw;
-    int32_t         pti_threadnum;
-    int32_t         pti_numrunning;
-    int32_t         pti_priority;
-};
-
-struct proc_bsdinfo {
-    // truncated stub; real struct has many fields
-    uint32_t        pbi_pid;
-    char            pbi_comm[20];
-};
-
-struct proc_taskallinfo {
-    struct proc_bsdinfo   pbsd;
-    struct proc_taskinfo  ptinfo;
-};
-
-#define PROC_SURFACE_MAGIC 0xFABCDEFB
-#define PROC_SURFACE_OBJECT_MAX 500
-#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * 500
-
 static int sharing_fd = -1;
 static int safety_fd = -1;
 static void *surface_start;

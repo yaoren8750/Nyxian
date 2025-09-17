@@ -88,6 +88,20 @@
 }
 @end
 
+@interface GridTableCell2 : NSObject
+@end
+
+@implementation GridTableCell2
+
+- (void)hook_configureWithId:(int)id columns:(NSArray *)columns size:(CGSize)size
+{
+    if(columns.count == 0)
+        return;
+    return [self hook_configureWithId:id columns:columns size:size];
+}
+
+@end
+
 void UIKitGuestHooksInit(void)
 {
     static dispatch_once_t onceToken;
@@ -97,6 +111,13 @@ void UIKitGuestHooksInit(void)
         [ObjCSwizzler replaceInstanceAction:@selector(__supportedInterfaceOrientations) ofClass:UIViewController.class withAction:@selector(hook___supportedInterfaceOrientations)];
         [ObjCSwizzler replaceInstanceAction:@selector(shouldAutorotateToInterfaceOrientation:) ofClass:UIViewController.class withAction:@selector(hook_shouldAutorotateToInterfaceOrientation:)];
         [ObjCSwizzler replaceInstanceAction:@selector(setAutorotates:forceUpdateInterfaceOrientation:) ofClass:UIWindow.class withAction:@selector(hook_setAutorotates:forceUpdateInterfaceOrientation:)];
+        
+        Class class = NSClassFromString(@"GridTableCell");
+        if(class)
+        {
+            NSLog(@"Fixing CocoaTop!");
+            [ObjCSwizzler replaceInstanceAction:@selector(configureWithId:columns:size:) ofClass:class withAction:@selector(hook_configureWithId:columns:size:) ofClass:GridTableCell2.class];
+        }
     });
 }
 
