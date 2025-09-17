@@ -30,6 +30,7 @@
 @property (nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
+@property (nonatomic, strong) NSTimer *backgroundEnforcementTimer;
 
 @end
 
@@ -236,10 +237,30 @@
         settings.foreground = foreground;
     }];
     
+    // TODO: Handle spotify playback for example
     if(foreground)
+    {
         [self.presenter activate];
+        
+        // Do it like on iOS, remove time window if applicable
+        if(self.backgroundEnforcementTimer)
+        {
+            [self.backgroundEnforcementTimer invalidate];
+            self.backgroundEnforcementTimer = nil;
+        }
+        
+        // Resume if applicable
+        [self.process resume];
+    }
     else
+    {
         [self.presenter deactivate];
+        
+        // Do it like on iOS, give application time window for background tasks
+        self.backgroundEnforcementTimer = [NSTimer scheduledTimerWithTimeInterval:15.0 repeats:NO block:^(NSTimer *sender){
+            [self.process suspend];
+        }];
+    }
 }
 
 @end
