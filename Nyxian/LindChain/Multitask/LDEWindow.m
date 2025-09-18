@@ -480,22 +480,22 @@ void UIKitFixesInit(void) {
 - (void)appSceneVC:(LDEAppScene*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)baseSettings transitionContext:(id)newContext {
     UIMutableApplicationSceneSettings *newSettings = [vc.presenter.scene.settings mutableCopy];
     newSettings.userInterfaceStyle = baseSettings.userInterfaceStyle;
-    newSettings.interfaceOrientation = baseSettings.interfaceOrientation;
-    newSettings.deviceOrientation = baseSettings.deviceOrientation;
-    newSettings.foreground = YES;
+    //newSettings.interfaceOrientation = baseSettings.interfaceOrientation;
+    //newSettings.deviceOrientation = baseSettings.deviceOrientation;
+    //newSettings.foreground = YES;
     
-    if(self.isMaximized) {
+    /*if(self.isMaximized) {
         [self updateMaximizedFrameWithSettings:newSettings];
     } else {
         [self updateWindowedFrameWithSettings:newSettings];
-    }
-    CGRect newFrame = CGRectMake(0, 0, self.view.frame.size.width/self.scaleRatio, (self.view.frame.size.height - self.navigationBar.frame.size.height)/self.scaleRatio);
+    }*/
+    //CGRect newFrame = CGRectMake(0, 0, self.view.frame.size.width/self.scaleRatio, (self.view.frame.size.height - self.navigationBar.frame.size.height)/self.scaleRatio);
     
-    if(UIInterfaceOrientationIsLandscape(baseSettings.interfaceOrientation)) {
+    /*if(UIInterfaceOrientationIsLandscape(baseSettings.interfaceOrientation)) {
         newSettings.frame = CGRectMake(0, 0, newFrame.size.height, newFrame.size.width);
     } else {
         newSettings.frame = CGRectMake(0, 0, newFrame.size.width, newFrame.size.height);
-    }
+    }*/
     
     [_appSceneVC.presenter.scene updateSettings:newSettings withTransitionContext:newContext completion:nil];
 }
