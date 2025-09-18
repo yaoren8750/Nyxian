@@ -169,4 +169,16 @@
     });
 }
 
+/*
+ Background mode fixup
+ */
+- (void)setAudioBackgroundModeActive:(BOOL)active
+{
+    LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:_processIdentifier];
+    if(process)
+    {
+        process.audioBackgroundModeUsage = active;
+    }
+}
+
 @end

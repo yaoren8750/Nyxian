@@ -243,23 +243,25 @@
         [self.presenter activate];
         
         // Do it like on iOS, remove time window if applicable
-        /*if(self.backgroundEnforcementTimer)
+        if(self.backgroundEnforcementTimer)
         {
             [self.backgroundEnforcementTimer invalidate];
             self.backgroundEnforcementTimer = nil;
         }
         
         // Resume if applicable
-        [self.process resume];*/
+        [self.process resume];
     }
     else
     {
         [self.presenter deactivate];
         
         // Do it like on iOS, give application time window for background tasks
-        /*self.backgroundEnforcementTimer = [NSTimer scheduledTimerWithTimeInterval:15.0 repeats:NO block:^(NSTimer *sender){
-            [self.process suspend];
-        }];*/
+        __typeof(self) weakSelf = self;
+        self.backgroundEnforcementTimer = [NSTimer scheduledTimerWithTimeInterval:15.0 repeats:NO block:^(NSTimer *sender){
+            if(!weakSelf.backgroundEnforcementTimer) return;
+            [weakSelf.process suspend];
+        }];
     }
 }
 

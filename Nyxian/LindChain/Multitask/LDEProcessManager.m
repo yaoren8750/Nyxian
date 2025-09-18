@@ -161,8 +161,15 @@
  */
 - (BOOL)suspend
 {
-    [_extension _kill:SIGSTOP];
-    return YES;
+    if(!_audioBackgroundModeUsage)
+    {
+        [_extension _kill:SIGSTOP];
+        return YES;
+    }
+    else
+    {
+        return NO;
+    }
 }
 
 - (BOOL)resume

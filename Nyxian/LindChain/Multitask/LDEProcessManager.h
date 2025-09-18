@@ -49,6 +49,9 @@
 @property (nonatomic) uid_t uid;
 @property (nonatomic) gid_t gid;
 
+// Background modes suspension fix
+@property (nonatomic) BOOL audioBackgroundModeUsage;
+
 - (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (instancetype)initWithPath:(NSString*)binaryPath

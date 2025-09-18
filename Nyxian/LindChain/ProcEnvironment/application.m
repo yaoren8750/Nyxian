@@ -17,6 +17,8 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/application.h>
@@ -24,6 +26,9 @@
 #import <LindChain/ObjC/Swizzle.h>
 #import <dlfcn.h>
 
+/*
+ UIApplication detection
+ */
 @interface UIApplication (ProcEnvironment)
 @end
 
@@ -44,6 +49,29 @@
 @end
 
 /*
+ Audio background mode fix
+ */
+@interface AVAudioSession (ProcEnvironment)
+@end
+
+@implementation AVAudioSession (ProcEnvironment)
+
+- (BOOL)hook_setActive:(BOOL)active error:(NSError*)outError
+{
+    [hostProcessProxy setAudioBackgroundModeActive:active];
+    return [self hook_setActive:active error:outError];
+}
+
+- (BOOL)hook_setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError **)outError
+{
+    [hostProcessProxy setAudioBackgroundModeActive:active];
+    return [self hook_setActive:active withOptions:options error:outError];
+}
+
+
+@end
+
+/*
  Init
  */
 void environment_application_init(BOOL host)
@@ -53,5 +81,7 @@ void environment_application_init(BOOL host)
         // MARK: GUEST Init
         // MARK: Hooking _run of UIApplication class seems more reliable
         [ObjCSwizzler replaceInstanceAction:@selector(_run) ofClass:UIApplication.class withAction:@selector(hook_run)];
+        [ObjCSwizzler replaceInstanceAction:@selector(setActive:error:) ofClass:AVAudioSession.class withAction:@selector(hook_setActive:error:)];
+        [ObjCSwizzler replaceInstanceAction:@selector(setActive:withOptions:error:) ofClass:AVAudioSession.class withAction:@selector(hook_setActive:withOptions:error:)];
     }
 }

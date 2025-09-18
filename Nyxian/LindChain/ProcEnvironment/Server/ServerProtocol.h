@@ -78,6 +78,11 @@
  */
 - (void)setProcessIdentifier:(pid_t)processIdentifier;
 
+/*
+ Background mode fixup
+ */
+- (void)setAudioBackgroundModeActive:(BOOL)active;
+
 @end
 
 #endif /* PROCENVIRONMENT_SERVER_SERVERPROTOCOL_H */
