@@ -49,7 +49,6 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         {
             // We got machPortObject so insert it into `requestedTask`
             *requestTaskPort = [machPortObject port];
-            mach_port_mod_refs(mach_task_self(), *requestTaskPort, MACH_PORT_RIGHT_SEND, 1);
         }
         else
         {
@@ -80,10 +79,12 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
         }
     }
     
+    // MARK: Possibly fixes the bug we had
+    mach_port_mod_refs(mach_task_self(), *requestTaskPort, MACH_PORT_RIGHT_SEND, 1);
+    
     return KERN_SUCCESS;
 }
 
-// task_policy_get(task, TASK_CATEGORY_POLICY, (task_policy_t)&policy_info, &info_count, &get_default);
 DEFINE_HOOK(task_policy_get, kern_return_t,(task_policy_get_t task,
                                             task_policy_flavor_t flavor,
                                             task_policy_t policy_info,
