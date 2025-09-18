@@ -21,6 +21,7 @@
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Surface/memfd.h>
 #import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/litehook/src/litehook.h>
 #import <mach/mach.h>
 #import <sys/sysctl.h>
 
@@ -115,6 +116,19 @@ NSFileHandle *proc_safety_handoff(void)
 }
 
 /*
+ Experimental hooks
+ */
+int environment_gethostname(char *buf,
+                            size_t bufsize)
+{
+    flock(safety_fd, LOCK_SH);
+    strncpy(buf, surface->hostname, bufsize);
+    flock(safety_fd, LOCK_UN);
+    
+    return 0;
+}
+
+/*
  Init
  */
 void proc_surface_init(BOOL host)
@@ -175,6 +189,14 @@ void proc_surface_init(BOOL host)
     if(host)
     {
         proc_insert_self();
+        
+        NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
+        hostname = hostname ?: @"localhost";
+        strncpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
+    }
+    else
+    {
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, gethostname, environment_gethostname, nil);
     }
     
     return;

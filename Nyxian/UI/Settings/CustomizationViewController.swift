@@ -68,7 +68,7 @@ class CustomizationViewController: UIThemedTableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
-            return 1;
+            return 2;
         case 2:
             return self.icons.count;
         default:
@@ -80,7 +80,11 @@ class CustomizationViewController: UIThemedTableViewController {
         let cell: UITableViewCell
         
         if indexPath.section == 0 {
-            cell = TextFieldTableCell(title: "Username", key: "LDEUsername", defaultValue: "Anonym")
+            if indexPath.row == 0 {
+                cell = TextFieldTableCell(title: "Username", key: "LDEUsername", defaultValue: "Anonym")
+            } else {
+                cell = TextFieldTableCell(title: "Hostname", key: "LDEHostname", defaultValue: "localhost")
+            }
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
                 themePreviewCell = ThemePickerPreviewCell()

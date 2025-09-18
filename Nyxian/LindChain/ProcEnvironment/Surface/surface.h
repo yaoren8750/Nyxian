@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #include <sys/sysctl.h>
+#include <limits.h>
 
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
