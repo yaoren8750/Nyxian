@@ -500,6 +500,11 @@ void UIKitFixesInit(void) {
     [_appSceneVC.presenter.scene updateSettings:newSettings withTransitionContext:newContext completion:nil];
 }
 
+- (void)appSceneVCAppDidExit:(LDEAppScene*)vc
+{
+    // TODO: Cleanup these methods they have no need in Nyxians app lifecycle design
+}
+
 - (void)adjustNavigationBarButtonSpacingWithNegativeSpacing:(CGFloat)spacing rightMargin:(CGFloat)margin {
     if (!self.navigationBar) return;
     [self findAndAdjustButtonBarStackView:self.navigationBar withSpacing:spacing sideMargin:margin];

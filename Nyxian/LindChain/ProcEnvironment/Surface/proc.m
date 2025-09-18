@@ -18,6 +18,21 @@
 */
 
 #import <LindChain/ProcEnvironment/Surface/proc.h>
+#import <pthread.h>
+
+static pthread_mutex_t proc_lock = PTHREAD_MUTEX_INITIALIZER;
+
+void proc_lock_wrt(void)
+{
+    flock(safety_fd, LOCK_EX);
+    pthread_mutex_lock(&proc_lock);
+}
+
+void proc_unlock_wrt(void)
+{
+    pthread_mutex_unlock(&proc_lock);
+    flock(safety_fd, LOCK_UN);
+}
 
 kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
@@ -37,9 +52,8 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 
 void proc_object_remove_for_pid(pid_t pid)
 {
-    flock(safety_fd, LOCK_EX);
+    proc_lock_wrt();
 
-    //uint32_t count = *proc_surface_object_array_count;
     for (uint32_t i = 0; i < surface->proc_count; i++) {
         if (surface->proc_info[i].real.kp_proc.p_pid == pid) {
             if (i < surface->proc_count - 1) {
@@ -52,25 +66,25 @@ void proc_object_remove_for_pid(pid_t pid)
         }
     }
 
-    flock(safety_fd, LOCK_UN);
+    proc_unlock_wrt();
 }
 
 void proc_object_insert(kinfo_info_surface_t object)
 {
-    flock(safety_fd, LOCK_EX);
+    proc_lock_wrt();
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid) {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
-            flock(safety_fd, LOCK_UN);
+            proc_unlock_wrt();
             return;
         }
     }
     
     memcpy(&surface->proc_info[surface->proc_count++], &object, sizeof(kinfo_info_surface_t));
     
-    flock(safety_fd, LOCK_UN);
+    proc_unlock_wrt();
 }
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
@@ -78,7 +92,7 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
     flock(safety_fd, LOCK_SH);
     kinfo_info_surface_t cur = {};
     
-    if(surface->proc_count < index)
+    if(index >= surface->proc_count)
     {
         flock(safety_fd, LOCK_UN);
         return cur;
@@ -106,8 +120,10 @@ void proc_insert_self(void)
     int proc_pidpath(pid_t pid, void *buf, size_t bufsize);
     proc_pidpath(pid, pathbuf, sizeof(pathbuf));
     
-    kinfo_info_surface_t info;
+    kinfo_info_surface_t info = {};
     info.real = kp;
+    info.force_task_role_override = false;
+    info.task_role_override = TASK_UNSPECIFIED;
     strncpy(info.path, pathbuf, sizeof(pathbuf));
     
     proc_object_insert(info);
