@@ -159,11 +159,21 @@
 /*
  Action
  */
+- (void)sendSignal:(int)signal
+{
+    if(signal == SIGSTOP)
+        _isSuspended = YES;
+    else if(signal == SIGCONT)
+        _isSuspended = NO;
+    
+    [self.extension _kill:signal];
+}
+
 - (BOOL)suspend
 {
     if(!_audioBackgroundModeUsage)
     {
-        [_extension _kill:SIGSTOP];
+        [self sendSignal:SIGSTOP];
         return YES;
     }
     else
@@ -174,13 +184,13 @@
 
 - (BOOL)resume
 {
-    [_extension _kill:SIGCONT];
+    [self sendSignal:SIGCONT];
     return YES;
 }
 
 - (BOOL)terminate
 {
-    [_extension _kill:SIGKILL];
+    [self sendSignal:SIGKILL];
     return YES;
 }
 

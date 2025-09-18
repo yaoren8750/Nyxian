@@ -15,6 +15,8 @@
 #import <objc/message.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <LindChain/ProcEnvironment/libproc.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
 
 @interface LDEAppScene()
 
@@ -107,9 +109,19 @@
     [self.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
 }
 
-- (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
+- (void)_performActionsForUIScene:(UIScene *)scene
+              withUpdatedFBSScene:(id)fbsScene
+                     settingsDiff:(FBSSceneSettingsDiff *)diff
+                     fromSettings:(UIApplicationSceneSettings *)settings
+                transitionContext:(id)context
+              lifecycleActionType:(uint32_t)actionType
+{
     if(!self.process.isRunning) {
         [self appTerminationCleanUp:NO];
+    }
+    else if(self.process.isSuspended)
+    {
+        return;
     }
     if(!diff) return;
     
@@ -237,6 +249,14 @@
             self.backgroundEnforcementTimer = nil;
         }
         
+        // See if proc object needs to be altered
+        kinfo_info_surface_t object = proc_object_for_pid(self.process.pid);
+        if(object.force_task_unspecified)
+        {
+            object.force_task_unspecified = false;
+            proc_object_insert(object);
+        }
+        
         // Resume if applicable
         [self.process resume];
     }
@@ -248,7 +268,13 @@
         __typeof(self) weakSelf = self;
         self.backgroundEnforcementTimer = [NSTimer scheduledTimerWithTimeInterval:15.0 repeats:NO block:^(NSTimer *sender){
             if(!weakSelf.backgroundEnforcementTimer) return;
-            [weakSelf.process suspend];
+            if([weakSelf.process suspend])
+            {
+                // On iOS a app that gets suspended gets TASK_UNSPECIFIED assigned as category
+                kinfo_info_surface_t object = proc_object_for_pid(self.process.pid);
+                object.force_task_unspecified = true;
+                proc_object_insert(object);
+            }
         }];
     }
 }

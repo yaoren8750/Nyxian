@@ -52,6 +52,9 @@
 // Background modes suspension fix
 @property (nonatomic) BOOL audioBackgroundModeUsage;
 
+// Other boolean flags
+@property (nonatomic) BOOL isSuspended;
+
 - (instancetype)initWithItems:(NSDictionary*)items;
 - (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (instancetype)initWithPath:(NSString*)binaryPath
@@ -59,6 +62,7 @@
     withEnvironmentVariables:(NSDictionary*)environment
              withFileActions:(PosixSpawnFileActionsObject*)fileActions;
 
+- (void)sendSignal:(int)signal;
 - (BOOL)suspend;
 - (BOOL)resume;
 - (BOOL)terminate;

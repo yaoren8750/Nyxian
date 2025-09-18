@@ -85,7 +85,7 @@
         return;
     }
     
-    [process.extension _kill:signal];
+    [process sendSignal:signal];
     
     reply(0);
 }
