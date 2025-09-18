@@ -155,6 +155,8 @@ void proc_3rdparty_app_endcommitment(NSString *executablePath,
                                      bool force_task_role_override,
                                      task_role_t task_role_override);
 
+void kern_sethostname(NSString *hostname);
+
 void proc_surface_init(BOOL host);
 
 #endif

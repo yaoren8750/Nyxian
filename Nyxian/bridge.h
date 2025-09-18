@@ -33,6 +33,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
 
 /*
  Project

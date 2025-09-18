@@ -116,7 +116,7 @@ NSFileHandle *proc_safety_handoff(void)
 }
 
 /*
- Experimental hooks
+ Experimental hooks & implementations
  */
 int environment_gethostname(char *buf,
                             size_t bufsize)
@@ -126,6 +126,12 @@ int environment_gethostname(char *buf,
     flock(safety_fd, LOCK_UN);
     
     return 0;
+}
+
+void kern_sethostname(NSString *hostname)
+{
+    hostname = hostname ?: @"localhost";
+    strncpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
 }
 
 /*

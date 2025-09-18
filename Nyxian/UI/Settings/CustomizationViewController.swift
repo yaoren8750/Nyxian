@@ -83,7 +83,11 @@ class CustomizationViewController: UIThemedTableViewController {
             if indexPath.row == 0 {
                 cell = TextFieldTableCell(title: "Username", key: "LDEUsername", defaultValue: "Anonym")
             } else {
-                cell = TextFieldTableCell(title: "Hostname", key: "LDEHostname", defaultValue: "localhost")
+                cell = TextFieldTableCellHandler(title: "Hostname", value: UserDefaults.standard.string(forKey: "LDEHostname") ?? "localhost")
+                (cell as! TextFieldTableCellHandler).writeHandler = { text in
+                    UserDefaults.standard.set(text, forKey: "LDEHostname")
+                    kern_sethostname(text)
+                }
             }
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
