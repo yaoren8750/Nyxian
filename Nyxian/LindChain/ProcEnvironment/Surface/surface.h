@@ -96,9 +96,29 @@ struct proc_taskallinfo {
     struct proc_taskinfo  ptinfo;
 };
 
-#define PROC_SURFACE_MAGIC 0xFABCDEFB
-#define PROC_SURFACE_OBJECT_MAX 500
-#define PROC_SURFACE_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * 500
+struct surface_map {
+    /* System */
+    uint32_t magic;
+    char hostname[MAXHOSTNAMELEN];
+    
+    /* Proc */
+    uint32_t proc_count;
+    kinfo_info_surface_t proc_info[500];
+};
+
+typedef struct surface_map surface_map_t;
+
+
+/* Proc Macros */
+#define PROC_MAX 500
+#define SURFACE_PROC_COUNTER_SIZE sizeof(uint32_t)
+#define SURFACE_PROC_OBJECT_MAX PROC_MAX
+#define SURFACE_PROC_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * 500
+
+/* Surface Macros */
+#define SURFACE_MAGIC 0xFABCDEFB
+#define SURFACE_MAGIC_SIZE sizeof(uint32_t)
+#define SURFACE_MAP_SIZE SURFACE_MAGIC_SIZE + SURFACE_PROC_COUNTER_SIZE + SURFACE_PROC_OBJECT_MAX_SIZE
 
 /* api */
 kinfo_info_surface_t proc_object_for_pid(pid_t pid);

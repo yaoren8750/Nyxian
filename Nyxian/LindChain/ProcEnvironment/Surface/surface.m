@@ -24,12 +24,12 @@
 #import <mach/mach.h>
 #import <sys/sysctl.h>
 
+static surface_map_t *surface_start = NULL;
+static uint32_t *proc_surface_object_array_count = NULL;
+static kinfo_info_surface_t *proc_surface_object_array = NULL;
+
 static int sharing_fd = -1;
 static int safety_fd = -1;
-static void *surface_start;
-
-static uint32_t *proc_surface_object_array_count;
-static kinfo_info_surface_t *proc_surface_object_array = NULL;
 
 /*
  Read and Write of process information
@@ -271,11 +271,11 @@ void proc_3rdparty_app_endcommitment(NSString *executablePath,
     proc_object_insert(kinfo);
     
     // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-    kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), TRUE, VM_PROT_READ);
+    kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface_start, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
     if(kr != KERN_SUCCESS)
     {
         // Its not secure, our own sandbox policies got broken, we blind the process
-        munmap(surface_start, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
+        munmap(surface_start, SURFACE_MAP_SIZE);
         return;
     }
 }
@@ -298,59 +298,62 @@ NSFileHandle *proc_safety_handoff(void)
  */
 void proc_surface_init(BOOL host)
 {
+    // Initilize base of mapping
     if(host)
     {
-        // Initilize surface
         sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
         safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDONLY);
-        ftruncate(sharing_fd, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2));
-        surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-        
-        // Prepare to write
-        off_t offset = 0;
-
-        // Write magic
-        *((uint32_t*)surface_start) = PROC_SURFACE_MAGIC;
-        offset += sizeof(uint32_t);
-        
-        // Write count
-        proc_surface_object_array_count = surface_start + offset;
-        offset += sizeof(uint32_t);
-        *proc_surface_object_array_count = 0;
-        
-        // Now were done, except no, we have to write our own process to it
-        proc_surface_object_array = surface_start + offset;
-        
-        // Adding Nyxian
-        proc_insert_self();
+        ftruncate(sharing_fd, SURFACE_MAP_SIZE);
     }
     else
     {
-        // Get file handle
         NSFileHandle *handle;
         NSFileHandle *safety;
         environment_proxy_get_surface_handle(&handle, &safety);
-        if(!(handle && safety)) return;
-        
-        // Now map it!! (but only with max readable)
+        if(!(handle && safety))
+        {
+            if(handle) [handle closeFile];
+            if(safety) [safety closeFile];
+            return;
+        }
         sharing_fd = handle.fileDescriptor;
         safety_fd = handle.fileDescriptor;
-        surface_start = mmap(NULL, PROC_SURFACE_OBJECT_MAX_SIZE + (sizeof(uint32_t) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-        close(sharing_fd);
-        
-        // Is the magic matching
-        off_t offset = 0;
-        uint32_t magic = *((uint32_t*)surface_start);
-        if(magic == PROC_SURFACE_MAGIC)
-            NSLog(@"Successfully mapped proc surface!");
-        offset += sizeof(uint32_t);
-        
-        // Map the count
-        proc_surface_object_array_count = surface_start + offset;
-        offset += sizeof(uint32_t);
-        
-        // Map the array
-        proc_surface_object_array = surface_start + offset;
+    }
+    
+    // Now map it!! (but only with max readable)
+    surface_start = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
+    if(!host || surface_start == MAP_FAILED) close(sharing_fd);
+    if(surface_start == MAP_FAILED)
+    {
+        // Mapping failed
+        close(safety_fd);
+        return;
+    }
+    
+    // After close we come to magic
+    if(host)
+    {
+        // Were the host so we write the magic
+        surface_start->magic = SURFACE_MAGIC;
+    }
+    else
+    {
+        // Were the guest so we check the magic
+        if(surface_start->magic != SURFACE_MAGIC)
+        {
+            munmap(surface_start, SURFACE_MAP_SIZE);
+            return;
+        }
+    }
+    
+    // TODO: Make the function use the modern surface structure
+    proc_surface_object_array = surface_start->proc_info;
+    proc_surface_object_array_count = &(surface_start->proc_count);
+    
+    // Add proc self if were host
+    if(host)
+    {
+        proc_insert_self();
     }
     
     return;
