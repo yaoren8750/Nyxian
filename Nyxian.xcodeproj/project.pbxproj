@@ -793,6 +793,7 @@
 					"$(PROJECT_DIR)/LindDE/LindChain/Synpush",
 					"$(PROJECT_DIR)/Nyxian/LindChain/Dybin",
 					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
+					"$(PROJECT_DIR)/Nyxian",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_CFLAGS = "-DHOST_ENV";
@@ -906,6 +907,7 @@
 					"$(PROJECT_DIR)/LindDE/LindChain/Synpush",
 					"$(PROJECT_DIR)/Nyxian/LindChain/Dybin",
 					"$(PROJECT_DIR)/Nyxian/LindChain/Synpush",
+					"$(PROJECT_DIR)/Nyxian",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_CFLAGS = "-DHOST_ENV";

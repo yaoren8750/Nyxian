@@ -36,11 +36,7 @@ int proc_libproc_pid_rusage(pid_t pid,
         
         task_t task;
         kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &task);
-        if(kr != KERN_SUCCESS)
-        {
-            fprintf(stderr, "task_for_pid(%d) failed: %s\n", pid, mach_error_string(kr));
-            return -1;
-        }
+        if(kr != KERN_SUCCESS) return EPERM;
         
         struct task_absolutetime_info tai2;
         mach_msg_type_number_t count = TASK_ABSOLUTETIME_INFO_COUNT;
