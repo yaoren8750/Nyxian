@@ -138,7 +138,7 @@ void proc_surface_init(BOOL host)
             return;
         }
         sharing_fd = handle.fileDescriptor;
-        safety_fd = handle.fileDescriptor;
+        safety_fd = safety.fileDescriptor;
     }
     
     // Now map it!! (but only with max readable)
