@@ -77,7 +77,8 @@ int proc_libproc_pid_rusage(pid_t pid,
             ri->ri_interrupt_wkups  = tpi.task_interrupt_wakeups;
         }
         
-        mach_port_deallocate(mach_task_self(), task);
+        // FIXME: Causes issues in CocoaTop? Fix retain issues in cycles in task port system
+        //mach_port_deallocate(mach_task_self(), task);
     }
     return 0;
 }
