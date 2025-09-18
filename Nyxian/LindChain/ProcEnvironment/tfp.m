@@ -29,6 +29,7 @@
 #import <dlfcn.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
 
 /*
  Internal Implementation

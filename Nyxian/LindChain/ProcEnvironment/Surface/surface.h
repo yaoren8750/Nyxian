@@ -23,20 +23,6 @@
 #import <Foundation/Foundation.h>
 #include <sys/sysctl.h>
 
-// MARK: The fastest way to exchange process information HAHA
-
-typedef struct {
-    /* Real structure */
-    struct kinfo_proc real;
-    
-    /* Now we come to my other things */
-    /* Because its important */
-    char path[PATH_MAX];
-    
-    /* Storing override flag for TASK_UNSPECIFIED */
-    bool force_task_unspecified;
-} kinfo_info_surface_t;
-
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
 #define PROC_PIDTASKINFO     4
@@ -96,6 +82,20 @@ struct proc_taskallinfo {
     struct proc_taskinfo  ptinfo;
 };
 
+/// Structure that holds process information
+typedef struct {
+    /* Real structure */
+    struct kinfo_proc real;
+    
+    /* Now we come to my other things */
+    /* Because its important */
+    char path[PATH_MAX];
+    
+    /* Storing override flag for TASK_UNSPECIFIED */
+    bool force_task_unspecified;
+} kinfo_info_surface_t;
+
+/// Structure that holds surface information and other structures
 struct surface_map {
     /* System */
     uint32_t magic;
@@ -120,15 +120,20 @@ typedef struct surface_map surface_map_t;
 #define SURFACE_MAGIC_SIZE sizeof(uint32_t)
 #define SURFACE_MAP_SIZE SURFACE_MAGIC_SIZE + SURFACE_PROC_COUNTER_SIZE + SURFACE_PROC_OBJECT_MAX_SIZE
 
-/* api */
-kinfo_info_surface_t proc_object_for_pid(pid_t pid);
-void proc_object_remove_for_pid(pid_t pid);
-void proc_object_insert(kinfo_info_surface_t object);
-kinfo_info_surface_t proc_object_at_index(uint32_t index);
-void proc_insert_self(void);
+/* Shared properties */
 
-/* handoff */
+/// Shared file descriptor used to synchronise read and write operations that happen on the surface mapping
+extern int safety_fd;
+
+/// Shared pointer that points to the surface mapping
+extern surface_map_t *surface;
+
+/* Handoff */
+
+/// Returns a process surface file handle to perform a handoff over XPC
 NSFileHandle *proc_surface_handoff(void);
+
+/// Returns a safety surface file handle to perform a handoff over XPC
 NSFileHandle *proc_safety_handoff(void);
 
 /* libproc */

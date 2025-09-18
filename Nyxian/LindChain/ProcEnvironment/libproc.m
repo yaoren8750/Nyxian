@@ -28,6 +28,94 @@
 
 // MARK: The saviour API of Nyxians modern day proc API performance
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
+
+int proc_libproc_listallpids(void *buffer, int buffersize)
+{
+    if(buffersize < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    flock(safety_fd, LOCK_SH);
+
+    uint32_t count = surface->proc_count;
+    size_t needed_bytes = (size_t)count * sizeof(pid_t);
+
+    if(buffer == NULL || buffersize == 0)
+    {
+        flock(safety_fd, LOCK_UN);
+        return (int)needed_bytes;
+    }
+
+    size_t capacity = (size_t)buffersize / sizeof(pid_t);
+    size_t n = count < capacity ? count : capacity;
+
+    pid_t *pids = (pid_t *)buffer;
+    for(size_t i = 0; i < n; i++) pids[i] = surface->proc_info[i].real.kp_proc.p_pid;
+
+    flock(safety_fd, LOCK_UN);
+
+    return (int)(n * sizeof(pid_t));
+}
+
+int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize)
+{
+    if (buffersize == 0 || buffer == NULL)
+        return 0;
+
+    kinfo_info_surface_t info = proc_object_for_pid(pid);
+    if (info.real.kp_proc.p_pid == 0)
+        return 0;
+
+    strlcpy((char*)buffer, info.real.kp_proc.p_comm, buffersize);
+
+    return (int)strlen((char*)buffer);
+}
+
+int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize)
+{
+    if (buffersize == 0 || buffer == NULL)
+        return 0;
+
+    kinfo_info_surface_t info = proc_object_for_pid(pid);
+    if (info.real.kp_proc.p_pid == 0)
+        return 0;
+
+    strlcpy((char*)buffer, info.path, buffersize);
+    return (int)strlen((char*)buffer);
+}
+
+int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg,
+                 void * buffer, int buffersize)
+{
+    if (buffer == NULL || buffersize <= 0)
+        return 0;
+
+    kinfo_info_surface_t kinfo = proc_object_for_pid(pid);
+    if (kinfo.real.kp_proc.p_pid == 0)
+        return 0;
+
+    switch (flavor) {
+    case PROC_PIDTASKINFO:
+        memset(buffer, 0, buffersize);
+        return sizeof(struct proc_taskinfo);
+
+    case PROC_PIDTASKALLINFO: {
+        if (buffersize < sizeof(struct proc_taskallinfo))
+            return 0;
+        struct proc_taskallinfo *info = (struct proc_taskallinfo*)buffer;
+        memset(info, 0, sizeof(*info));
+        memcpy(&info->pbsd, &kinfo.real, sizeof(kinfo.real) < sizeof(info->pbsd) ? sizeof(kinfo.real) : sizeof(info->pbsd));
+        return sizeof(struct proc_taskallinfo);
+    }
+
+    default:
+        errno = ENOTSUP;
+        return 0;
+    }
+}
 
 /*
  Init

@@ -154,6 +154,7 @@
 				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
 				LindChain/ProcEnvironment/Surface/memfd.c,
+				LindChain/ProcEnvironment/Surface/proc.m,
 				LindChain/ProcEnvironment/Surface/rusage.m,
 				LindChain/ProcEnvironment/Surface/surface.m,
 				LindChain/ProcEnvironment/sysctl.m,
