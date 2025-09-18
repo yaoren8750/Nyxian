@@ -166,7 +166,7 @@ NSString* invokeAppMain(NSString *executablePath,
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:[executablePath stringByDeletingLastPathComponent]];
     
     // Patch LDEProcess info of host app
-    proc_3rdparty_app_endcommitment(realExecutablePath ? realExecutablePath : executablePath, false);
+    proc_3rdparty_app_endcommitment(realExecutablePath ? realExecutablePath : executablePath, false, TASK_UNSPECIFIED);
 
     // Setup directories
     if(homePath && guestMainBundle)

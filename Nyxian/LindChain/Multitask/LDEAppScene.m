@@ -251,9 +251,9 @@
         
         // See if proc object needs to be altered
         kinfo_info_surface_t object = proc_object_for_pid(self.process.pid);
-        if(object.force_task_unspecified)
+        if(object.force_task_role_override)
         {
-            object.force_task_unspecified = false;
+            object.force_task_role_override = false;
             proc_object_insert(object);
         }
         
@@ -265,6 +265,7 @@
         [self.presenter deactivate];
         
         // Do it like on iOS, give application time window for background tasks
+        // TODO: Simulate darwinbg with wakeups and stuff in a certain time frame if the original app registered for it such as push notifications, etc
         __typeof(self) weakSelf = self;
         self.backgroundEnforcementTimer = [NSTimer scheduledTimerWithTimeInterval:15.0 repeats:NO block:^(NSTimer *sender){
             if(!weakSelf.backgroundEnforcementTimer) return;
@@ -272,7 +273,8 @@
             {
                 // On iOS a app that gets suspended gets TASK_UNSPECIFIED assigned as category
                 kinfo_info_surface_t object = proc_object_for_pid(self.process.pid);
-                object.force_task_unspecified = true;
+                object.force_task_role_override = true;
+                object.task_role_override = TASK_DARWINBG_APPLICATION;
                 proc_object_insert(object);
             }
         }];

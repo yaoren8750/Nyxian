@@ -92,7 +92,8 @@ typedef struct {
     char path[PATH_MAX];
     
     /* Storing override flag for TASK_UNSPECIFIED */
-    bool force_task_unspecified;
+    bool force_task_role_override;
+    task_role_t task_role_override;
 } kinfo_info_surface_t;
 
 /// Structure that holds surface information and other structures
@@ -150,7 +151,8 @@ void proc_object_remove_for_pid(pid_t pid);
 
 /// Desgined for 3rd party executables so they cannot alter the surface at runtime
 void proc_3rdparty_app_endcommitment(NSString *executablePath,
-                                     bool force_task_unspecified);
+                                     bool force_task_role_override,
+                                     task_role_t task_role_override);
 
 void proc_surface_init(BOOL host);
 
