@@ -35,10 +35,5 @@
 
 - (BOOL)openWindowForProcessIdentifier:(pid_t)processIdentifier;
 - (BOOL)closeWindowForProcessIdentifier:(pid_t)processIdentifier;
-- (void)deactivateWindowForProcessIdentifier:(pid_t)processIdentifier
-                                    pullDown:(BOOL)pullDown
-                                  completion:(void (^)(void))completion;
-- (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier
-                                  animated:(BOOL)animated;
 
 @end

@@ -32,6 +32,7 @@
 @interface LDEAppScene : UIViewController<_UISceneSettingsDiffAction>
 
 @property (nonatomic) LDEProcess *process;
+@property (nonatomic) NSString *sceneID;
 @property(nonatomic) void(^nextUpdateSettingsBlock)(UIMutableApplicationSceneSettings *settings);
 @property(nonatomic) id<LDEAppSceneDelegate> delegate;
 @property(nonatomic) CGFloat scaleRatio;

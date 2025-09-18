@@ -26,7 +26,6 @@
 @interface LDEAppScene()
 
 @property (nonatomic) UIWindowScene *hostScene;
-@property (nonatomic) NSString *sceneID;
 @property (nonatomic) bool isAppTerminationCleanUpCalled;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
@@ -84,7 +83,7 @@
     settings.peripheryInsets = UIEdgeInsetsMake(0, 0, 0, 0);
     settings.safeAreaInsetsPortrait = UIEdgeInsetsMake(0, 0, 0, 0);
     
-    settings.statusBarDisabled = NO;
+    settings.statusBarDisabled = YES;
     self.settings = settings;
     parameters.settings = settings;
     
@@ -109,7 +108,6 @@
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene withUpdatedFBSScene:(id)fbsScene settingsDiff:(FBSSceneSettingsDiff *)diff fromSettings:(UIApplicationSceneSettings *)settings transitionContext:(id)context lifecycleActionType:(uint32_t)actionType {
-    // MARK: This method gets never fired!? might be the problem for not occuring trait appareance changes
     if(!self.process.isRunning) {
         [self appTerminationCleanUp:NO];
     }
@@ -156,16 +154,6 @@
     } else {
         // Remove UIApplicationDidEnterBackgroundNotification so apps like YouTube can continue playing video
         [NSNotificationCenter.defaultCenter removeObserver:self.process.extension name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
-    }
-}
-
-- (void)viewDidMoveToWindow:(UIWindow *)newWindow shouldAppearOrDisappear:(BOOL)appear {
-    [super viewDidMoveToWindow:newWindow shouldAppearOrDisappear:appear];
-    if(!newWindow) {
-        if(self.sceneID) {
-            [self.view.window.windowScene _unregisterSettingsDiffActionArrayForKey:self.sceneID];
-        }
-        self.delegate = nil;
     }
 }
 

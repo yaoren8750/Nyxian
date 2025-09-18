@@ -99,7 +99,7 @@
     }];
 }
 
-- (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier animated:(BOOL)animated {
+- (void)activateWindowForProcessIdentifier:(pid_t)processIdentifier animated:(BOOL)animated withCompletion:(void (^)(void))completion {
     LDEWindow *window = self.windows[@(processIdentifier)];
     if (!window) return;
 
@@ -124,7 +124,9 @@
                             options:UIViewAnimationOptionCurveEaseInOut
                          animations:^{
             v.transform = CGAffineTransformIdentity;
-        } completion:nil];
+        } completion:^(BOOL done){
+            if(done && completion) completion();
+        }];
     } else {
         v.transform = CGAffineTransformIdentity;
     }
@@ -144,7 +146,7 @@
             LDEWindow *window = [self.windows objectForKey:@(processIdentifier)];
             if(window)
             {
-                [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+                [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES withCompletion:nil];
             }
             else
             {
@@ -159,7 +161,9 @@
                         if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
                         
                         if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-                            [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES];
+                            [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES withCompletion:^{
+                                [self.windowScene _registerSettingsDiffActionArray:@[window.appSceneVC] forKey:window.appSceneVC.sceneID];
+                            }];
                         }
                     }
                 }
@@ -192,6 +196,7 @@
                 self.activeProcessIdentifier = (pid_t)-1;
             }
             [window closeWindow];
+            [self.windowScene _unregisterSettingsDiffActionArrayForKey:window.appSceneVC.sceneID];
             [self.windows removeObjectForKey:@(processIdentifier)];
         }
         if(self.appSwitcherView) [self removeTileForProcess:processIdentifier];
@@ -425,7 +430,7 @@
 {
     UIView *tile = pan.view;
     if(!tile) return;
-
+    
     CGPoint translation = [pan translationInView:tile.superview];
     
     if(pan.state == UIGestureRecognizerStateChanged)
@@ -449,26 +454,26 @@
                                   delay:0
                                 options:UIViewAnimationOptionCurveEaseIn
                              animations:^{
-                                 tile.transform = CGAffineTransformMakeTranslation(0, -tile.superview.bounds.size.height);
-                                 tile.alpha = 0;
-                             }
+                tile.transform = CGAffineTransformMakeTranslation(0, -tile.superview.bounds.size.height);
+                tile.alpha = 0;
+            }
                              completion:^(BOOL finished) {
-                                 pid_t pid = (pid_t)tile.tag;
-                                 LDEWindow *window = self.windows[@(pid)];
-                                 
-                                 if (window) {
-                                     [window.appSceneVC.process terminate];
-                                     [self.windows removeObjectForKey:@(pid)];
-                                 }
-                                 [tile removeFromSuperview];
-                             }];
+                pid_t pid = (pid_t)tile.tag;
+                LDEWindow *window = self.windows[@(pid)];
+                
+                if(window)
+                {
+                    [window.appSceneVC.process terminate];
+                }
+                [tile removeFromSuperview];
+            }];
         }
         else
         {
             [UIView animateWithDuration:0.3
                              animations:^{
-                                 tile.transform = CGAffineTransformIdentity;
-                             }];
+                tile.transform = CGAffineTransformIdentity;
+            }];
         }
     }
 }
@@ -480,7 +485,7 @@
     if (!tile) return;
 
     pid_t pid = (pid_t)tile.tag;
-    [self activateWindowForProcessIdentifier:pid animated:YES];
+    [self activateWindowForProcessIdentifier:pid animated:YES withCompletion:nil];
 }
 
 - (void)showAppSwitcher
