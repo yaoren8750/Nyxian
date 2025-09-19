@@ -26,8 +26,6 @@
 #import <sys/sysctl.h>
 
 surface_map_t *surface = NULL;
-uint32_t *proc_surface_object_array_count = NULL;
-kinfo_info_surface_t *proc_surface_object_array = NULL;
 
 static int sharing_fd = -1;
 int safety_fd = -1;
@@ -37,8 +35,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 {
     flock(safety_fd, LOCK_SH);
 
-    uint32_t count = *proc_surface_object_array_count;
-    size_t needed_bytes = (size_t)count * sizeof(struct kinfo_proc);
+    size_t needed_bytes = (size_t)surface->proc_count * sizeof(struct kinfo_proc);
 
     if(needed_out) *needed_out = needed_bytes;
 
@@ -57,10 +54,10 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     }
 
     struct kinfo_proc *kprocs = buffer;
-    for(uint32_t i = 0; i < count; i++)
+    for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         memset(&kprocs[i], 0, sizeof(struct kinfo_proc));
-        memcpy(&kprocs[i], &proc_surface_object_array[i].real, sizeof(struct kinfo_proc));
+        memcpy(&kprocs[i], &surface->proc_info[i].real, sizeof(struct kinfo_proc));
     }
 
     flock(safety_fd, LOCK_UN);
@@ -186,10 +183,6 @@ void proc_surface_init(BOOL host)
             return;
         }
     }
-    
-    // TODO: Make the function use the modern surface structure
-    proc_surface_object_array = surface->proc_info;
-    proc_surface_object_array_count = &(surface->proc_count);
     
     // Add proc self if were host
     if(host)
