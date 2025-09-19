@@ -17,18 +17,13 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/Multitask/LDEProcessManager.h>
-#import <mach/mach.h>
-#include <mach-o/dyld_images.h>
-#import <LindChain/LiveContainer/Tweaks/libproc.h>
-
-#if __has_include(<Nyxian-Swift.h>)
 #import <Nyxian-Swift.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
+#import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
-#endif
 
 /*
  Process
@@ -39,7 +34,6 @@
 {
     self = [super init];
     
-#if __has_include(<Nyxian-Swift.h>)
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
         return nil;
@@ -87,14 +81,12 @@
     self.displayName = @"LiveProcess";
     self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
     self.executablePath = [liveProcessBundle executablePath];
-#endif
     
     return self;
 }
 
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
 {
-#if __has_include(<Nyxian-Swift.h>)
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
     if(!applicationObject.isLaunchAllowed)
     {
@@ -108,9 +100,6 @@
     self.bundleIdentifier = applicationObject.bundleIdentifier;
     
     return self;
-#else
-    return [self init];
-#endif
 }
 
 - (instancetype)initWithPath:(NSString*)binaryPath
@@ -118,7 +107,6 @@
     withEnvironmentVariables:(NSDictionary*)environment
              withFileActions:(PosixSpawnFileActionsObject*)fileActions
 {
-#if __has_include(<Nyxian-Swift.h>)
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
@@ -134,9 +122,6 @@
     self.fileActions = fileActions;
     
     return self;
-#else
-    return [self init];
-#endif
 }
 
 /*
@@ -307,10 +292,8 @@
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid
 {
     [self.processes removeObjectForKey:@(pid)];
-#if __has_include(<Nyxian-Swift.h>)
     [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:pid];
     proc_object_remove_for_pid(pid);
-#endif
 }
 
 - (BOOL)isExecutingProcessWithBundleIdentifier:(NSString*)bundleIdentifier
