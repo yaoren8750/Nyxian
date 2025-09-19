@@ -73,7 +73,7 @@ void overwriteMainNSBundle(NSBundle *newBundle) {
             }
         }
     }
-
+    
     assert(![NSBundle.mainBundle.executablePath isEqualToString:oldPath]);
     
     // Overwriting the process information from previous main bundle

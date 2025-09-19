@@ -94,7 +94,6 @@
         v.hidden = YES;
         v.alpha = 1.0;
         v.transform = CGAffineTransformIdentity;
-        [window.appSceneVC setForegroundEnabled:NO];
         if (completion) completion();
     }];
 }
@@ -110,9 +109,6 @@
     v.hidden = NO;
     [self bringSubviewToFront:v];
     [v.layer removeAllAnimations];
-    
-    // Tell window to foreground application
-    [window.appSceneVC setForegroundEnabled:YES];
     
     if (animated) {
         v.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height);

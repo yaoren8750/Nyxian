@@ -100,13 +100,16 @@
     [self.presenter modifyPresentationContext:^(UIMutableScenePresentationContext *context) {
         context.appearanceStyle = 2;
     }];
-    [self.presenter activate];
     
     [self.contentView addSubview:self.presenter.presentationView];
     self.contentView.layer.anchorPoint = CGPointMake(0, 0);
     self.contentView.layer.position = CGPointMake(0, 0);
-    
-    [self.view.window.windowScene _registerSettingsDiffActionArray:@[self] forKey:self.sceneID];
+}
+
+- (void)viewDidMoveToWindow:(UIWindow *)window shouldAppearOrDisappear:(BOOL)appear
+{
+    [super viewDidMoveToWindow:window shouldAppearOrDisappear:appear];
+    [self setForegroundEnabled:(window != nil)];
 }
 
 - (void)_performActionsForUIScene:(UIScene *)scene

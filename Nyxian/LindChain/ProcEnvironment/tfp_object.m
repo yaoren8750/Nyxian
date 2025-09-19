@@ -61,13 +61,12 @@
     if([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])
     {
         xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
-        mach_port_mod_refs(mach_task_self(), _port, MACH_PORT_RIGHT_SEND, 1);
-        xpc_dictionary_set_mach_send(dict, "port", _port);
-        [(id)coder encodeXPCObject:dict forKey:@"machPort"];
-    }
-    else
-    {
-        [coder encodeInt32:_port forKey:@"machPortRaw"];
+        kern_return_t kr =  mach_port_mod_refs(mach_task_self(), _port, MACH_PORT_RIGHT_SEND, 1);
+        if(kr == KERN_SUCCESS)
+        {
+            xpc_dictionary_set_mach_send(dict, "port", _port);
+            [(id)coder encodeXPCObject:dict forKey:@"machPort"];
+        }
     }
 }
 
@@ -85,8 +84,7 @@
             return [self initWithPort:port];
         }
     }
-    mach_port_t port = [coder decodeInt32ForKey:@"machPortRaw"];
-    return [self initWithPort:port];
+    return nil;
 }
 
 - (void)dealloc

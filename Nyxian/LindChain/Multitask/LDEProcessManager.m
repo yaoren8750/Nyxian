@@ -274,7 +274,7 @@
     }
     
     LDEProcess *process = nil;
-    pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[] withEnvironmentVariables:@{
+    pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
     } withFileActions:nil process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;

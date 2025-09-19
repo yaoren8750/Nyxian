@@ -114,7 +114,7 @@ DEFINE_HOOK(task_policy_get, kern_return_t,(task_policy_get_t task,
 void environment_host_take_client_task_port(TaskPortObject *machPort)
 {
     if(!environmentIsHost) return;
-    if([machPort isUsable])
+    if([machPort isUsable] && [machPort port] != mach_task_self())
     {
         pid_t pid = 0;
         kern_return_t kr = pid_for_task([machPort port], &pid);
