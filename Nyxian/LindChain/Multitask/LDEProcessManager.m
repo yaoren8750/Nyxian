@@ -85,23 +85,6 @@
     return self;
 }
 
-- (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
-{
-    LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
-    if(!applicationObject.isLaunchAllowed)
-    {
-        [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"\"%@\" Is No Longer Available", applicationObject.displayName] delay:0.0];
-        return nil;
-    }
-    
-    self = [self initWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{@"HOME": applicationObject.containerPath} withFileActions:nil];
-    
-    // I know, I know LDEProcess is on the verge of deprecation of being replaced by proc surface, but... yk... we need to match bundleids for now
-    self.bundleIdentifier = applicationObject.bundleIdentifier;
-    
-    return self;
-}
-
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
@@ -199,20 +182,20 @@
 /*
  Process Manager
  */
-@implementation LDEProcessManager
+@implementation LDEProcessManager {
+    NSTimeInterval _lastSpawnTime;
+    NSTimeInterval _spawnCooldown;
+}
 
 - (instancetype)init
 {
     self = [super init];
     self.processes = [[NSMutableDictionary alloc] init];
     
-    // Adding our own process as the "kernel"
-    LDEProcess *hostApp = [[LDEProcess alloc] init];
-    hostApp.displayName = @"Nyxian";
-    hostApp.bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
-    hostApp.executablePath = [[NSBundle mainBundle] executablePath];
-    hostApp.pid = 0;
-    [self.processes setObject:hostApp forKey:@(0)];
+    mach_timebase_info_data_t timebase;
+    mach_timebase_info(&timebase);
+    _spawnCooldown = (100ull * timebase.denom) / timebase.numer;
+    _lastSpawnTime = 0;
     
     return self;
 }
@@ -227,11 +210,32 @@
     return processManagerSingletone;
 }
 
-/*
- Action
- */
+- (void)enforceSpawnCooldown
+{
+    uint64_t now = mach_absolute_time();
+    uint64_t elapsed = now - _lastSpawnTime;
+
+    if(elapsed < _spawnCooldown)
+    {
+        uint64_t waitTicks = _spawnCooldown - elapsed;
+        
+        mach_timebase_info_data_t timebase;
+        mach_timebase_info(&timebase);
+        uint64_t nsToWait = waitTicks * timebase.numer / timebase.denom;
+
+        struct timespec ts;
+        ts.tv_sec = (time_t)(nsToWait / 1000000000ull);
+        ts.tv_nsec = (long)(nsToWait % 1000000000ull);
+        nanosleep(&ts, NULL);
+    }
+
+    _lastSpawnTime = mach_absolute_time();
+}
+
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items
 {
+    [self enforceSpawnCooldown];
+    
     LDEProcess *process = [[LDEProcess alloc] initWithItems:items];
     if(!process) return 0;
     pid_t pid = process.pid;
@@ -242,6 +246,15 @@
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
                        doRestartIfRunning:(BOOL)doRestartIfRunning
 {
+    LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
+    if(!applicationObject.isLaunchAllowed)
+    {
+        [NotificationServer NotifyUserWithLevel:NotifLevelError notification:[NSString stringWithFormat:@"\"%@\" Is No Longer Available", applicationObject.displayName] delay:0.0];
+        return 0;
+    }
+    
+    [self enforceSpawnCooldown];
+    
     for(NSNumber *key in self.processes)
     {
         LDEProcess *process = self.processes[key];
@@ -260,10 +273,10 @@
         }
     }
     
-    LDEProcess *process = [[LDEProcess alloc] initWithBundleIdentifier:bundleIdentifier];
-    if(!process) return 0;
-    pid_t pid = process.pid;
-    [self.processes setObject:process forKey:@(pid)];
+    pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[] withEnvironmentVariables:@{
+        @"HOME": applicationObject.containerPath
+    } withFileActions:nil];
+    
     return pid;
 }
 
@@ -277,6 +290,7 @@
      withEnvironmentVariables:(NSDictionary*)environment
               withFileActions:(PosixSpawnFileActionsObject*)fileActions
 {
+    [self enforceSpawnCooldown];
     LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions];
     if(!process) return 0;
     pid_t pid = process.pid;

@@ -56,7 +56,6 @@
 @property (nonatomic) BOOL isSuspended;
 
 - (instancetype)initWithItems:(NSDictionary*)items;
-- (instancetype)initWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
