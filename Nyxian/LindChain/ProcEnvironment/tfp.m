@@ -118,7 +118,7 @@ void environment_host_take_client_task_port(TaskPortObject *machPort)
     {
         pid_t pid = 0;
         kern_return_t kr = pid_for_task([machPort port], &pid);
-        if(kr == KERN_SUCCESS) [tfp_userspace_ports setObject:machPort forKey:@(pid)];
+        if(kr == KERN_SUCCESS && pid != getpid()) [tfp_userspace_ports setObject:machPort forKey:@(pid)];
     }
 }
 
