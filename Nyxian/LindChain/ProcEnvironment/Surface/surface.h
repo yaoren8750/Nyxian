@@ -151,9 +151,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);
 void proc_object_remove_for_pid(pid_t pid);
 
 /// Desgined for 3rd party executables so they cannot alter the surface at runtime
-void proc_3rdparty_app_endcommitment(NSString *executablePath,
-                                     bool force_task_role_override,
-                                     task_role_t task_role_override);
+void proc_3rdparty_app_endcommitment(NSString *executablePath);
 
 void kern_sethostname(NSString *hostname);
 

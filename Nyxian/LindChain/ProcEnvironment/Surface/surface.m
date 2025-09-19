@@ -64,9 +64,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     return (int)needed_bytes;
 }
 
-void proc_3rdparty_app_endcommitment(NSString *executablePath,
-                                     bool force_task_role_override,
-                                     task_role_t task_role_override)
+void proc_3rdparty_app_endcommitment(NSString *executablePath)
 {
     // Insert self, before securing it!
     proc_insert_self();
@@ -81,11 +79,8 @@ void proc_3rdparty_app_endcommitment(NSString *executablePath,
         strncpy(kinfo.path, [executablePath UTF8String], PATH_MAX);
     }
     
-    kinfo.force_task_role_override = force_task_role_override;
-    if(kinfo.force_task_role_override)
-    {
-        kinfo.task_role_override = task_role_override;
-    }
+    kinfo.force_task_role_override = true;
+    kinfo.task_role_override = TASK_UNSPECIFIED;
     
     proc_object_insert(kinfo);
     
