@@ -273,10 +273,11 @@
         }
     }
     
+    LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withFileActions:nil];
-    
+    } withFileActions:nil process:&process];
+    process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
 
@@ -289,12 +290,14 @@
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
               withFileActions:(PosixSpawnFileActionsObject*)fileActions
+                      process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
     LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
+    if(processReply) *processReply = process;
     return pid;
 }
 

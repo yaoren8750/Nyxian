@@ -109,7 +109,7 @@
  */
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withFileActions:(PosixSpawnFileActionsObject*)fileActions withReply:(void (^)(pid_t))reply
 {
-    reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions]);
+    reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions process:nil]);
 }
 
 - (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid

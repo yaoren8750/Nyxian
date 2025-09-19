@@ -89,7 +89,8 @@
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
-              withFileActions:(PosixSpawnFileActionsObject*)fileActions;
+              withFileActions:(PosixSpawnFileActionsObject*)fileActions
+                      process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
