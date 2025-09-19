@@ -154,6 +154,8 @@ void kern_sethostname(NSString *hostname);
 
 void proc_surface_init(BOOL host);
 
+void proc_3rdparty_app_endcommitment(NSString *executablePath);
+
 BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
                             NSString *executablePath);
