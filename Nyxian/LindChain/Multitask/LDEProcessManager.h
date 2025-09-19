@@ -28,7 +28,7 @@
 /*
  Process
  */
-@interface LDEProcess : NSObject <NSSecureCoding>
+@interface LDEProcess : NSObject
 
 @property (nonatomic,strong) NSExtension *extension;
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
