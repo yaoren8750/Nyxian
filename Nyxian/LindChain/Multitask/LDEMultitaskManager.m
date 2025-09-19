@@ -146,7 +146,7 @@
             LDEWindow *window = [self.windows objectForKey:@(processIdentifier)];
             if(window)
             {
-                [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES withCompletion:nil];
+                [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:([[UIDevice currentDevice] userInterfaceIdiom] != UIUserInterfaceIdiomPad) withCompletion:nil];
             }
             else
             {
@@ -170,7 +170,7 @@
             }
         };
         
-        if(weakSelf.activeProcessIdentifier != processIdentifier)
+        if(weakSelf.activeProcessIdentifier != processIdentifier && [[UIDevice currentDevice] userInterfaceIdiom] != UIUserInterfaceIdiomPad)
         {
             // close first the old one and wait
             [self deactivateWindowForProcessIdentifier:weakSelf.activeProcessIdentifier pullDown:YES completion:^{
