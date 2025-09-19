@@ -17,8 +17,11 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <pthread.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 static pthread_mutex_t proc_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -104,27 +107,105 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
     return cur;
 }
 
-void proc_insert_self(void)
+// MARK: New and safer approach, NO means execution not granted!
+BOOL proc_create_child_proc(pid_t ppid,
+                            pid_t pid,
+                            NSString *executablePath)
 {
-    pid_t pid = getpid();
-    struct kinfo_proc kp;
-    size_t len = sizeof(kp);
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, pid };
+    struct kinfo_proc childInfoProc = {};
     
-    if (sysctl(mib, 4, &kp, &len, NULL, 0) == -1) {
-        perror("sysctl");
-        return;
-    }
+    // Set start time to now
+    struct timeval tv;
+    if(gettimeofday(&tv, NULL) != 0) return NO;
+    childInfoProc.kp_proc.p_un.__p_starttime.tv_sec = tv.tv_sec;
+    childInfoProc.kp_proc.p_un.__p_starttime.tv_usec = tv.tv_usec;
     
-    char pathbuf[PATH_MAX];
-    int proc_pidpath(pid_t pid, void *buf, size_t bufsize);
-    proc_pidpath(pid, pathbuf, sizeof(pathbuf));
+    // TODO: Make the process a zombie to either get killed or get waited on
+    // Set process flag and stat
+    childInfoProc.kp_proc.p_flag = P_LP64 | P_EXEC | P_DISABLE_ASLR;
+    childInfoProc.kp_proc.p_stat = SRUN;
     
-    kinfo_info_surface_t info = {};
-    info.real = kp;
-    info.force_task_role_override = false;
-    info.task_role_override = TASK_UNSPECIFIED;
-    strncpy(info.path, pathbuf, sizeof(pathbuf));
+    // set process stuff
+    childInfoProc.kp_proc.p_pid = pid;
+    childInfoProc.kp_proc.p_oppid = ppid;
     
-    proc_object_insert(info);
+    // Set dupfd
+    childInfoProc.kp_proc.p_dupfd = 0;
+    
+    // set user stack
+    childInfoProc.kp_proc.user_stack = 0x0;
+    childInfoProc.kp_proc.exit_thread = NULL;
+    
+    // Set otger things
+    childInfoProc.kp_proc.p_debugger = 0;
+    childInfoProc.kp_proc.sigwait = 0;
+    childInfoProc.kp_proc.p_estcpu = 0;
+    childInfoProc.kp_proc.p_cpticks = 0;
+    childInfoProc.kp_proc.p_pctcpu = 0;
+    childInfoProc.kp_proc.p_wchan = NULL;
+    childInfoProc.kp_proc.p_wmesg = NULL;
+    childInfoProc.kp_proc.p_swtime = 0;
+    childInfoProc.kp_proc.p_slptime = 0;
+    childInfoProc.kp_proc.p_realtimer.it_value.tv_sec = 0;
+    childInfoProc.kp_proc.p_realtimer.it_value.tv_usec = 0;
+    childInfoProc.kp_proc.p_realtimer.it_interval.tv_sec = 0;
+    childInfoProc.kp_proc.p_realtimer.it_interval.tv_usec = 0;
+    childInfoProc.kp_proc.p_rtime.tv_sec = 0;
+    childInfoProc.kp_proc.p_rtime.tv_usec = 0;
+    childInfoProc.kp_proc.p_uticks = 0;
+    childInfoProc.kp_proc.p_sticks = 0;
+    childInfoProc.kp_proc.p_iticks = 0;
+    childInfoProc.kp_proc.p_traceflag = 0;
+    childInfoProc.kp_proc.p_tracep = NULL;
+    childInfoProc.kp_proc.p_siglist = 0;
+    childInfoProc.kp_proc.p_textvp = NULL;
+    childInfoProc.kp_proc.p_holdcnt = 0;
+    childInfoProc.kp_proc.p_sigmask = 0;
+    childInfoProc.kp_proc.p_sigignore = 0;
+    childInfoProc.kp_proc.p_sigcatch = 0;
+    childInfoProc.kp_proc.p_priority = PUSER;
+    childInfoProc.kp_proc.p_usrpri = PUSER;
+    childInfoProc.kp_proc.p_nice = 0;
+    strncpy(childInfoProc.kp_proc.p_comm, [[[NSURL fileURLWithPath:executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
+    childInfoProc.kp_proc.p_pgrp = NULL;
+    childInfoProc.kp_proc.p_addr = NULL;
+    childInfoProc.kp_proc.p_xstat = 0;
+    childInfoProc.kp_proc.p_acflag = 2;
+    childInfoProc.kp_proc.p_ru = NULL;
+    
+    childInfoProc.kp_eproc.e_paddr = NULL;
+    childInfoProc.kp_eproc.e_sess = NULL;
+    
+    childInfoProc.kp_eproc.e_pcred.pc_ucred = NULL;
+    childInfoProc.kp_eproc.e_pcred.p_ruid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_svuid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_rgid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_svgid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_refcnt = 0;
+    
+    childInfoProc.kp_eproc.e_ucred.cr_ref = 5;
+    childInfoProc.kp_eproc.e_ucred.cr_uid = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_ngroups = 4;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[0] = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[1] = 250;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[2] = 286;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[3] = 299;
+    
+    childInfoProc.kp_eproc.e_ppid = ppid;
+    childInfoProc.kp_eproc.e_pgid = ppid;
+    
+    childInfoProc.kp_eproc.e_jobc = 0;
+    childInfoProc.kp_eproc.e_tdev = -1;
+    childInfoProc.kp_eproc.e_tpgid = 0;
+    childInfoProc.kp_eproc.e_flag = 2;
+    
+    kinfo_info_surface_t finalObject = {};
+    finalObject.force_task_role_override = true;
+    finalObject.task_role_override = TASK_UNSPECIFIED;
+    finalObject.real = childInfoProc;
+    strncpy(finalObject.path, [[[NSURL fileURLWithPath:executablePath] path] UTF8String], PATH_MAX);
+    
+    proc_object_insert(finalObject);
+    
+    return YES;
 }

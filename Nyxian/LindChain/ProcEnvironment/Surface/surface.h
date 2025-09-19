@@ -150,11 +150,12 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);
 
 void proc_object_remove_for_pid(pid_t pid);
 
-/// Desgined for 3rd party executables so they cannot alter the surface at runtime
-void proc_3rdparty_app_endcommitment(NSString *executablePath);
-
 void kern_sethostname(NSString *hostname);
 
 void proc_surface_init(BOOL host);
+
+BOOL proc_create_child_proc(pid_t ppid,
+                            pid_t pid,
+                            NSString *executablePath);
 
 #endif
