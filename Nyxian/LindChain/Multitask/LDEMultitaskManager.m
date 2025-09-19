@@ -158,12 +158,15 @@
                     {
                         weakSelf.windows[@(processIdentifier)] = window;
                         [weakSelf addSubview:window.view];
-                        if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
-                        
                         if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+                            if (weakSelf.appSwitcherView) [weakSelf addTileForProcess:processIdentifier window:window];
                             [weakSelf activateWindowForProcessIdentifier:processIdentifier animated:YES withCompletion:^{
                                 [self.windowScene _registerSettingsDiffActionArray:@[window.appSceneVC] forKey:window.appSceneVC.sceneID];
                             }];
+                        }
+                        else
+                        {
+                            [self.windowScene _registerSettingsDiffActionArray:@[window.appSceneVC] forKey:window.appSceneVC.sceneID];
                         }
                     }
                 }
