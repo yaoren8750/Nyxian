@@ -58,7 +58,6 @@ void *helper_thread(void *args)
         // Safe thread state
         snapshot->thread_count = ARM_THREAD_STATE64_COUNT;
         thread_act_t thread = snapshot->thread;
-        thread_suspend(snapshot->thread);
         thread_get_state(snapshot->thread, ARM_THREAD_STATE64, (thread_state_t)(&snapshot->thread_state), &snapshot->thread_count); // When ever we set the state back we need to set the PC counter to a other function, it will return normally to the caller, thats for sure.. because we dont create a new stack frame, we dont hit ret in this state for it it looks like its still in helper_thread
         
         // Get stack properties
@@ -81,13 +80,11 @@ void *helper_thread(void *args)
         
         // Unfreeze
         thread_resume(thread);
-        thread_resume(thread);
     }
     else
     {
         // MARK: This means the spawn is happening
         // Restore thread state
-        thread_suspend(snapshot->thread);
         thread_set_state(snapshot->thread, ARM_THREAD_STATE64, (thread_state_t)(&snapshot->thread_state), snapshot->thread_count);
         
         // Copy back
@@ -98,7 +95,6 @@ void *helper_thread(void *args)
         snapshot->fork_flag = 1;
         
         // Unfreeze
-        thread_resume(snapshot->thread);
         thread_resume(snapshot->thread);
     }
     return NULL;
