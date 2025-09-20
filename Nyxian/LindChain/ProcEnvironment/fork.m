@@ -104,6 +104,12 @@ pid_t environment_fork(void)
     local_thread_snapshot->stack_recovery_size = pthread_get_stacksize_np(thread);
     local_thread_snapshot->stack_recovery_buffer = pthread_get_stackaddr_np(thread) - local_thread_snapshot->stack_recovery_size;
     
+    // MARK: While trying to debug my code... it actually worked and did it, this debug print ficed it somehow
+    printf("stackaddr=%p, stacksize=%zu, buffer=%p\n",
+           pthread_get_stackaddr_np(thread),
+           pthread_get_stacksize_np(thread),
+           local_thread_snapshot->stack_recovery_buffer);
+    
     // Create thread and join
     local_thread_snapshot->fork_flag = 1;
     local_thread_snapshot->thread = mach_thread_self();
@@ -132,17 +138,29 @@ int environment_execvpa(const char * __path,
     // TODO: Somehow implement exec family functions without relying on fork()
     if(!local_thread_snapshot) return EFAULT;
     
+    // Create file actions
+    // TODO: Create a copy file descriptors over mechanism
+    environment_posix_spawn_file_actions_t *fileActions;
+    environment_posix_spawn_file_actions_init(&fileActions);
+    environment_posix_spawn_file_actions_adddup2(&fileActions, STDIN_FILENO, STDIN_FILENO);
+    environment_posix_spawn_file_actions_adddup2(&fileActions, STDOUT_FILENO, STDOUT_FILENO);
+    environment_posix_spawn_file_actions_adddup2(&fileActions, STDERR_FILENO, STDERR_FILENO);
+    
     // Spawn using my own posix_spawn() fix
     if(find_binary)
     {
-        environment_posix_spawnp(&local_thread_snapshot->ret_pid, __path, nil, nil, __argv, environ);
+        environment_posix_spawnp(&local_thread_snapshot->ret_pid, __path, (const environment_posix_spawn_file_actions_t**)&fileActions, nil, __argv, __envp);
     }
     else
     {
-        environment_posix_spawn(&local_thread_snapshot->ret_pid, __path, nil, nil, __argv, environ);
+        environment_posix_spawn(&local_thread_snapshot->ret_pid, __path, (const environment_posix_spawn_file_actions_t**)&fileActions, nil, __argv, __envp);
     }
     
-    if(local_thread_snapshot->ret_pid == 0)
+    // Destroy file actions
+    environment_posix_spawn_file_actions_destroy(&fileActions);
+    
+    // TODO: Tf is happening here wrong
+    if(local_thread_snapshot->ret_pid != 0)
     {
         // Create thread and join
         pthread_t nthread;

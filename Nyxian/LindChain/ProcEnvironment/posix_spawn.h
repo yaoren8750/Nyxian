@@ -59,4 +59,10 @@ int environment_posix_spawnp(pid_t *process_identifier,
                              char *const argv[],
                              char *const envp[]);
 
+int environment_posix_spawn_file_actions_init(environment_posix_spawn_file_actions_t **fa);
+int environment_posix_spawn_file_actions_destroy(environment_posix_spawn_file_actions_t **fa);
+
+int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_actions_t **fa, int host_fd, int child_fd);
+int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_actions_t **fa, int child_fd);
+
 #endif /* PROCENVIRONMENT_POSIXSPAWN_H */
