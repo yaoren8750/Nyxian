@@ -23,9 +23,11 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/fork.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/litehook/src/litehook.h>
 #include <mach/mach.h>
 #import <pthread.h>
+#include <stdarg.h>
 
 typedef struct {
     /* Stack properties*/
@@ -118,21 +120,62 @@ pid_t environment_fork(void)
     return pid;
 }
 
+extern char **environ;
 int environment_execl(const char * __path, const char * __arg0, ...)
 {
     // Check if it was even created
     // TODO: Somehow implement execl(3) without relying on fork()
     if(!local_thread_snapshot) return EFAULT;
     
+    // Now create argv
+    va_list ap;
+    int argc = 0;
+    
+    // First pass: count arguments
+    va_start(ap, __arg0);
+    const char *arg = __arg0;
+    while(arg != NULL)
+    {
+        argc++;
+        arg = va_arg(ap, const char *);
+    }
+    va_end(ap);
+    
+    // Allocate argv
+    char **argv = malloc((argc + 1) * sizeof(char *));
+    if(argv == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+    
+    // Stuff argv
+    va_start(ap, __arg0);
+    arg = __arg0;
+    for(int i = 0; i < argc; i++)
+    {
+        argv[i] = (char *)arg;
+        arg = va_arg(ap, const char *);
+    }
+    argv[argc] = NULL;
+    va_end(ap);
+    
+    // Spawn using my own posix_spawn() fix
+    pid_t pid = 0;
+    environment_posix_spawn(&pid, __path, nil, nil, argv, environ);
+    
     // Set ret_pid
     local_thread_snapshot->ret_pid = 1;
     
-    // Create thread and join
-    pthread_t nthread;
-    pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
-    pthread_join(nthread, NULL);
+    if(local_thread_snapshot->ret_pid == 0)
+    {
+        // Create thread and join
+        pthread_t nthread;
+        pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
+        pthread_join(nthread, NULL);
+    }
     
-    return 0;
+    return EFAULT;
 }
 
 void environment_fork_init(BOOL host)

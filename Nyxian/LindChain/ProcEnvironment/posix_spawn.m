@@ -24,7 +24,6 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
-#import <spawn.h>
 #import <sys/sysctl.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 

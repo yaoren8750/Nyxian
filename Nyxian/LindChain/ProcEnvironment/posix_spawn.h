@@ -21,6 +21,7 @@
 #define PROCENVIRONMENT_POSIXSPAWN_H
 
 #import <Foundation/Foundation.h>
+#include <spawn.h>
 
 // MARK: Simple structure to keep track
 typedef struct {
@@ -43,5 +44,19 @@ typedef struct {
 @end
 
 void environment_posix_spawn_init(BOOL host);
+
+int environment_posix_spawn(pid_t *process_identifier,
+                            const char *path,
+                            const environment_posix_spawn_file_actions_t **fa,
+                            const posix_spawnattr_t *spawn_attr,
+                            char *const argv[],
+                            char *const envp[]);
+
+int environment_posix_spawnp(pid_t *process_identifier,
+                             const char *path,
+                             const environment_posix_spawn_file_actions_t **file_actions,
+                             const posix_spawnattr_t *spawn_attr,
+                             char *const argv[],
+                             char *const envp[]);
 
 #endif /* PROCENVIRONMENT_POSIXSPAWN_H */
