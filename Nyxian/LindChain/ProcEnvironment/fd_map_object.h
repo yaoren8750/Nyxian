@@ -22,7 +22,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface FD_MAP_OBJECT : NSObject <NSSecureCoding>
+@interface FDMapObject : NSObject <NSSecureCoding>
 
 @property (nonatomic) NSMutableArray<NSObject<OS_xpc_object>*> *fd_map;
 

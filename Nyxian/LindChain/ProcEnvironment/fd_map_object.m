@@ -21,7 +21,7 @@
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <xpc/xpc.h>
 
-@implementation FD_MAP_OBJECT
+@implementation FDMapObject
 
 - (void)copy_fd_map
 {
