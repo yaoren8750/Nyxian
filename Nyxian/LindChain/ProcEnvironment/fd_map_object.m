@@ -42,7 +42,7 @@
         return;
     }
     
-    _fd_map = [[NSMutableArray alloc] init];
+    _fd_map = xpc_array_create_empty();
     
     int numFDs = count / sizeof(struct proc_fdinfo);
 
@@ -52,7 +52,7 @@
             xpc_object_t dict = xpc_dictionary_create_empty();
             xpc_dictionary_set_fd(dict, "actual_fd", fd);
             xpc_dictionary_set_int64(dict, "wished_fd", fd);
-            [_fd_map addObject:dict];
+            xpc_array_append_value(_fd_map, dict);
         } @catch (__unused NSException *ex) {
             continue;
         }
@@ -65,8 +65,8 @@
 /// Intended for a brand new process, overmapping the fd map
 - (void)apply_fd_map
 {
-    for(xpc_object_t entry in _fd_map)
-    {
+    if (!_fd_map) return;
+    xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry){
         int wished_fd   = (int)xpc_dictionary_get_int64(entry, "wished_fd");
         int incoming_fd = xpc_dictionary_dup_fd(entry, "actual_fd");
 
@@ -81,7 +81,9 @@
                 close(incoming_fd);
             }
         }
-    }
+
+        return true;
+    });
 }
 
 + (BOOL)supportsSecureCoding
@@ -91,22 +93,24 @@
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder
 {
-    [coder encodeObject:_fd_map forKey:@"fd_map"];
+    if([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])
+    {
+        [(id)coder encodeXPCObject:_fd_map forKey:@"fd_map"];
+    }
+    
     return;
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder
 {
     self = [super init];
-    
-    NSArray *array = [coder decodeObjectOfClasses:[NSSet setWithObjects:
-                                                  [NSArray class],
-                                                  [NSObject<OS_xpc_object> class],
-                                                  nil]
-                                           forKey:@"fd_map"];
-    
-    _fd_map = [NSMutableArray arrayWithObject:array];
-    
+    if([coder respondsToSelector:@selector(decodeXPCObjectOfType:forKey:)])
+    {
+        struct _xpc_type_s *arrayType = (struct _xpc_type_s *)XPC_TYPE_ARRAY;
+        NSObject<OS_xpc_object> *obj = [(id)coder decodeXPCObjectOfType:arrayType
+                                                                 forKey:@"fd_map"];
+        if(obj) _fd_map = obj;
+    }
     return self;
 }
 

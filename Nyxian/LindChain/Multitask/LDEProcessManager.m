@@ -24,6 +24,7 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 
 /*
  Process
@@ -90,6 +91,9 @@
     withEnvironmentVariables:(NSDictionary*)environment
              withFileActions:(PosixSpawnFileActionsObject*)fileActions
 {
+    FDMapObject *object = [[FDMapObject alloc] init];
+    [object copy_fd_map];
+    
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
@@ -97,7 +101,8 @@
         @"arguments": arguments,
         @"environment": environment,
         @"fileActions": fileActions ? fileActions : [PosixSpawnFileActionsObject empty],
-        @"outputFD": [NSFileHandle fileHandleWithStandardOutput]
+        @"outputFD": [NSFileHandle fileHandleWithStandardOutput],
+        //@"mapObject": object
     }];
     
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];

@@ -24,7 +24,7 @@
 
 @interface FDMapObject : NSObject <NSSecureCoding>
 
-@property (nonatomic) NSMutableArray<NSObject<OS_xpc_object>*> *fd_map;
+@property (nonatomic) NSObject<OS_xpc_object> *fd_map;
 
 /// Copies the fd map of the current process
 - (void)copy_fd_map;
