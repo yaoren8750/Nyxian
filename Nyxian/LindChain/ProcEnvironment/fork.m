@@ -61,6 +61,14 @@ void *helper_thread(void *args)
         thread_suspend(snapshot->thread);
         thread_get_state(snapshot->thread, ARM_THREAD_STATE64, (thread_state_t)(&snapshot->thread_state), &snapshot->thread_count); // When ever we set the state back we need to set the PC counter to a other function, it will return normally to the caller, thats for sure.. because we dont create a new stack frame, we dont hit ret in this state for it it looks like its still in helper_thread
         
+        // Get stack properties
+        pthread_t pthread = pthread_from_mach_thread_np(snapshot->thread);
+        void *stack_base = pthread_get_stackaddr_np(pthread);
+        size_t stack_size = pthread_get_stacksize_np(pthread);
+
+        snapshot->stack_recovery_size = stack_size;
+        snapshot->stack_recovery_buffer = (uint8_t *)stack_base - stack_size;
+        
         // Allocate
         snapshot->stack_copy_buffer = malloc(snapshot->stack_recovery_size);
         
@@ -72,6 +80,7 @@ void *helper_thread(void *args)
         snapshot->fork_flag = 0;
         
         // Unfreeze
+        thread_resume(thread);
         thread_resume(thread);
     }
     else
@@ -88,6 +97,8 @@ void *helper_thread(void *args)
         // Set flag back
         snapshot->fork_flag = 1;
         
+        // Unfreeze
+        thread_resume(snapshot->thread);
         thread_resume(snapshot->thread);
     }
     return NULL;
@@ -99,24 +110,12 @@ pid_t environment_fork(void)
     // Create local snapshot
     local_thread_snapshot = malloc(sizeof(thread_snapshot_t));
     
-    // Prepare for copy
-    pthread_t thread = pthread_self();
-    local_thread_snapshot->stack_recovery_size = pthread_get_stacksize_np(thread);
-    local_thread_snapshot->stack_recovery_buffer = pthread_get_stackaddr_np(thread) - local_thread_snapshot->stack_recovery_size;
-    
-    // MARK: While trying to debug my code... it actually worked and did it, this debug print fixed it somehow
-    // TODO: I believe it fixed it because the stack was bigger when calling pthread_get_stacksize_np() and pthread_get_stackaddr_np() to make sure its definetly bigger at that time of suspending and resuming and restore we need to use pthread_from_mach_thread_np(1) in order to get the stack properties in the helper thread instead of this unstable condition!
-    printf("stackaddr=%p, stacksize=%zu, buffer=%p\n",
-           pthread_get_stackaddr_np(thread),
-           pthread_get_stacksize_np(thread),
-           local_thread_snapshot->stack_recovery_buffer);
-    
     // Create thread and join
     local_thread_snapshot->fork_flag = 1;
     local_thread_snapshot->thread = mach_thread_self();
     pthread_t nthread;
     pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
-    pthread_join(nthread, NULL);
+    thread_suspend(mach_thread_self());
     
     pid_t pid = local_thread_snapshot->ret_pid;
     if(pid != 0)
@@ -160,13 +159,12 @@ int environment_execvpa(const char * __path,
     // Destroy file actions
     environment_posix_spawn_file_actions_destroy(&fileActions);
     
-    // TODO: Tf is happening here wrong
     if(local_thread_snapshot->ret_pid != 0)
     {
         // Create thread and join
         pthread_t nthread;
         pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
-        pthread_join(nthread, NULL);
+        thread_suspend(mach_thread_self());
     }
     
     return EFAULT;
