@@ -43,11 +43,13 @@
 
 - (BOOL)execute
 {
+    FDMapObject *mapObject = [[FDMapObject alloc] init];
+    [mapObject copy_fd_map];
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"management",
-        @"outputFD": [NSFileHandle fileHandleWithStandardOutput]
+        @"mapObject": mapObject
     }];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;

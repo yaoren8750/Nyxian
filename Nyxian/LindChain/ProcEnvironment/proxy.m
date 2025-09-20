@@ -202,11 +202,11 @@ BOOL environment_proxy_make_window_visible(void)
 pid_t environment_proxy_spawn_process_at_path(NSString *path,
                                               NSArray *arguments,
                                               NSDictionary *environment,
-                                              PosixSpawnFileActionsObject *file_actions)
+                                              FDMapObject *mapObject)
 {
     if(environmentIsHost) return EFAULT;
     pid_t process_identifier = sync_call_with_timeout_pid(PROXY_TYPE_REPLY(pid_t){
-        [hostProcessProxy spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withFileActions:file_actions withReply:reply];
+        [hostProcessProxy spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withReply:reply];
     });
     return process_identifier;
 }

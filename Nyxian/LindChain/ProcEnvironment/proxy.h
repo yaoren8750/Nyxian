@@ -50,7 +50,7 @@ int environment_proxy_proc_kill_process_identifier(pid_t process_identifier, int
 BOOL environment_proxy_make_window_visible(void);
 
 /// Spawns a process using a binary at `path` with `arguments` and `environment` and posix like `file_actions`
-pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments, NSDictionary *environment, PosixSpawnFileActionsObject *file_actions);
+pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments, NSDictionary *environment, FDMapObject *mapObject);
 
 /// Gathers code signature information from the host application environment
 void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword);

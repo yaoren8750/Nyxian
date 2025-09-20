@@ -24,7 +24,6 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
 
 /*
  Process
@@ -89,25 +88,19 @@
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
-             withFileActions:(PosixSpawnFileActionsObject*)fileActions
+               withMapObject:(FDMapObject*)mapObject
 {
-    FDMapObject *object = [[FDMapObject alloc] init];
-    [object copy_fd_map];
-    
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"spawn",
         @"executablePath": binaryPath,
         @"arguments": arguments,
         @"environment": environment,
-        @"fileActions": fileActions ? fileActions : [PosixSpawnFileActionsObject empty],
-        @"outputFD": [NSFileHandle fileHandleWithStandardOutput],
-        //@"mapObject": object
+        @"mapObject": mapObject
     }];
     
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
     self.executablePath = binaryPath;
-    self.fileActions = fileActions;
     
     return self;
 }
@@ -278,10 +271,13 @@
         }
     }
     
+    FDMapObject *mapObject = [[FDMapObject alloc] init];
+    [mapObject copy_fd_map];
+    
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withFileActions:nil process:&process];
+    } withMapObject:mapObject process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
@@ -294,11 +290,11 @@
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
-              withFileActions:(PosixSpawnFileActionsObject*)fileActions
+                withMapObject:(FDMapObject*)mapObject
                       process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withFileActions:fileActions];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];

@@ -243,7 +243,9 @@ int environment_posix_spawn(pid_t *process_identifier,
         }
         
         // Create file actions object
-        PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
+        //PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
+        FDMapObject *mapObject = [[FDMapObject alloc] init];
+        [mapObject copy_fd_map];
         
         // Real exec patch if applicable
         NSDictionary *environ = EnvironmentDictionaryFromEnvp(envp);
@@ -258,7 +260,7 @@ int environment_posix_spawn(pid_t *process_identifier,
         *process_identifier = environment_proxy_spawn_process_at_path([NSString stringWithCString:path encoding:NSUTF8StringEncoding],
                                                                       createNSArrayFromArgv(count, argv),
                                                                       environ,
-                                                                      fileActions);
+                                                                      mapObject);
     }
     
     return 0;

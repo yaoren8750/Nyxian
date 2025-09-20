@@ -28,6 +28,7 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 
 NSString* invokeAppMain(NSString *executablePath,
                         int argc,
@@ -126,15 +127,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSString *mode = appInfo[@"mode"];
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
-    PosixSpawnFileActionsObject *fileActions = appInfo[@"fileActions"];
-    NSFileHandle *outputHandle = appInfo[@"outputFD"];
-    
-    // Handing off standard filefds
-    int server_fd = outputHandle.fileDescriptor;
-    dup2(server_fd, STDOUT_FILENO);
-    dup2(server_fd, STDERR_FILENO);
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
+    FDMapObject *mapObject = appInfo[@"mapObject"];
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
@@ -143,15 +136,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     // TODO: Reimplement first the concept of debugging
     environment_client_attach_debugger();
     
-    // Assign fileActions
-    for(NSNumber *rawFileDescriptor in fileActions.closeActions)
-        close(rawFileDescriptor.intValue);
-    
-    for(NSNumber *rawFileDescriptor in fileActions.dup2Actions)
-    {
-        NSFileHandle *handle = [fileActions.dup2Actions objectForKey:rawFileDescriptor];
-        dup2(handle.fileDescriptor, rawFileDescriptor.intValue);
-    }
+    if(mapObject) [mapObject apply_fd_map];
     
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);

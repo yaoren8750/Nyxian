@@ -24,6 +24,7 @@
 #import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 
 /*
  Process
@@ -59,7 +60,7 @@
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
-             withFileActions:(PosixSpawnFileActionsObject*)fileActions;
+               withMapObject:(FDMapObject*)mapObject;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -89,7 +90,7 @@
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
-              withFileActions:(PosixSpawnFileActionsObject*)fileActions
+                withMapObject:(FDMapObject*)mapObject
                       process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
