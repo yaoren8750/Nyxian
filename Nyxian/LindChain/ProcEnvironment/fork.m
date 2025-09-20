@@ -104,7 +104,8 @@ pid_t environment_fork(void)
     local_thread_snapshot->stack_recovery_size = pthread_get_stacksize_np(thread);
     local_thread_snapshot->stack_recovery_buffer = pthread_get_stackaddr_np(thread) - local_thread_snapshot->stack_recovery_size;
     
-    // MARK: While trying to debug my code... it actually worked and did it, this debug print ficed it somehow
+    // MARK: While trying to debug my code... it actually worked and did it, this debug print fixed it somehow
+    // TODO: I believe it fixed it because the stack was bigger when calling pthread_get_stacksize_np() and pthread_get_stackaddr_np() to make sure its definetly bigger at that time of suspending and resuming and restore we need to use pthread_from_mach_thread_np(1) in order to get the stack properties in the helper thread instead of this unstable condition!
     printf("stackaddr=%p, stacksize=%zu, buffer=%p\n",
            pthread_get_stackaddr_np(thread),
            pthread_get_stacksize_np(thread),
