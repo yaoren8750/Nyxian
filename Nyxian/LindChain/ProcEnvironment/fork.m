@@ -23,76 +23,123 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/fork.h>
+#import <LindChain/litehook/src/litehook.h>
 #include <mach/mach.h>
 #import <pthread.h>
 
-void* environment_rip_wait(void *arg)
-{
-    while(1) {}
-}
+typedef struct {
+    /* Stack properties*/
+    void *stack_recovery_buffer;
+    void *stack_copy_buffer;
+    size_t stack_recovery_size;
+    
+    /* Flags */
+    pid_t ret_pid;
+    uint8_t fork_flag;
+    
+    /* ThreadID */
+    mach_msg_type_number_t thread_count;
+    arm_thread_state64_t thread_state;
+    thread_act_t thread;
+} thread_snapshot_t;
 
-thread_t environment_rip_thread(void)
-{
-    // Letting libc API create a thread for us to then rip the valid thread (Safes ton of time)
-    pthread_t pthread;
-    pthread_create(&pthread, NULL, environment_rip_wait, NULL);
-    thread_t thread = pthread_mach_thread_np(pthread);
-    thread_suspend(thread);
-    return thread;
-}
+__thread thread_snapshot_t *local_thread_snapshot = NULL;
 
-void environment_thread_copy_stack(thread_t dest,
-                                   thread_t src,
-                                   size_t size)
+void *helper_thread(void *args)
 {
-    // Symbol copies stack over with a givven size
-    arm_thread_state64_t dest_state, src_state;
+    // Get snapshot
+    thread_snapshot_t *snapshot = args;
     
-    // Get the thread state
-    
-}
-
-void* environment_thread_dup(void *args)
-{
-    // Give `environment_fork()` time to suspend its own thread
-    usleep(100);
-    
-    // MARK: Target Thread
-    // Now get the transmitted thread port
-    thread_t thread = *((thread_t*)args);
-    
-    // Now get the current thread state
-    arm_thread_state64_t state;
-    mach_msg_type_number_t number = ARM_THREAD_STATE64_COUNT;
-    thread_get_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, &number);
-    
-    // MARK: Child Thread
-    // Now we have the state, now we create a new thread
-    thread_t duplicatedThread = environment_rip_thread();
-    
-    // Now set the thread state
-    thread_set_state(duplicatedThread, ARM_THREAD_STATE64, (thread_state_t)&state, number);
-    
-    // We still cannot just let both run, we have to create a new stack memory
-    
+    if(snapshot->fork_flag != 0)
+    {
+        // MARK: This means the spawn was essentially requested
+        // Safe thread state
+        snapshot->thread_count = ARM_THREAD_STATE64_COUNT;
+        thread_act_t thread = snapshot->thread;
+        thread_suspend(snapshot->thread);
+        thread_get_state(snapshot->thread, ARM_THREAD_STATE64, (thread_state_t)(&snapshot->thread_state), &snapshot->thread_count); // When ever we set the state back we need to set the PC counter to a other function, it will return normally to the caller, thats for sure.. because we dont create a new stack frame, we dont hit ret in this state for it it looks like its still in helper_thread
+        
+        // Allocate
+        snapshot->stack_copy_buffer = malloc(snapshot->stack_recovery_size);
+        
+        // Copy
+        memcpy(snapshot->stack_copy_buffer, snapshot->stack_recovery_buffer, snapshot->stack_recovery_size);
+        
+        // ret_pid to 0 to indicate running as child
+        snapshot->ret_pid = 0;
+        snapshot->fork_flag = 0;
+        
+        // Unfreeze
+        thread_resume(thread);
+    }
+    else
+    {
+        // MARK: This means the spawn is happening
+        // Restore thread state
+        thread_suspend(snapshot->thread);
+        thread_set_state(snapshot->thread, ARM_THREAD_STATE64, (thread_state_t)(&snapshot->thread_state), snapshot->thread_count);
+        
+        // Copy back
+        memcpy(snapshot->stack_recovery_buffer, snapshot->stack_copy_buffer, snapshot->stack_recovery_size);
+        free(snapshot->stack_copy_buffer);
+        
+        // Set flag back
+        snapshot->fork_flag = 1;
+        
+        thread_resume(snapshot->thread);
+    }
     return NULL;
 }
 
-void environment_fork(void)
+// MARK: The first pass returns 0, call to execl() or similar will result in the callers thread being restored
+pid_t environment_fork(void)
 {
-    // MARK: Things are fork has to keep the same process keep spinning, no fork, usually fork is used in combination with execl and execvp so we copy the callers thread
+    // Create local snapshot
+    local_thread_snapshot = malloc(sizeof(thread_snapshot_t));
     
-    // Allocating memory for thread port
-    thread_t *thread = malloc(sizeof(thread_t));
+    // Prepare for copy
+    pthread_t thread = pthread_self();
+    local_thread_snapshot->stack_recovery_size = pthread_get_stacksize_np(thread);
+    local_thread_snapshot->stack_recovery_buffer = pthread_get_stackaddr_np(thread) - local_thread_snapshot->stack_recovery_size;
     
-    // Inserting own thread
-    *thread = mach_thread_self();
+    // Create thread and join
+    local_thread_snapshot->fork_flag = 1;
+    local_thread_snapshot->thread = mach_thread_self();
+    pthread_t nthread;
+    pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
+    pthread_join(nthread, NULL);
     
-    // Now creating pthread
-    pthread_t pthread;
-    pthread_create(&pthread, NULL, environment_thread_dup, thread);
-    pthread_detach(pthread);
+    pid_t pid = local_thread_snapshot->ret_pid;
+    if(pid != 0)
+    {
+        free(local_thread_snapshot);
+    }
     
-    // Suspend our selves
-    thread_suspend(*thread);
+    return pid;
+}
+
+int environment_execl(const char * __path, const char * __arg0, ...)
+{
+    // Check if it was even created
+    // TODO: Somehow implement execl(3) without relying on fork()
+    if(!local_thread_snapshot) return EFAULT;
+    
+    // Set ret_pid
+    local_thread_snapshot->ret_pid = 1;
+    
+    // Create thread and join
+    pthread_t nthread;
+    pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
+    pthread_join(nthread, NULL);
+    
+    return 0;
+}
+
+void environment_fork_init(BOOL host)
+{
+    if(!host)
+    {
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, fork, environment_fork, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execl, environment_execl, nil);
+    }
 }
