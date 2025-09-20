@@ -25,6 +25,7 @@
 #import <LindChain/ProcEnvironment/fork.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/litehook/src/litehook.h>
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 #include <mach/mach.h>
 #import <pthread.h>
 #include <stdarg.h>
@@ -43,6 +44,9 @@ typedef struct {
     mach_msg_type_number_t thread_count;
     arm_thread_state64_t thread_state;
     thread_act_t thread;
+    
+    /* File descriptors */
+    FDMapObject *mapObject;
 } thread_snapshot_t;
 
 __thread thread_snapshot_t *local_thread_snapshot = NULL;
@@ -105,6 +109,8 @@ pid_t environment_fork(void)
 {
     // Create local snapshot
     local_thread_snapshot = malloc(sizeof(thread_snapshot_t));
+    local_thread_snapshot->mapObject = [[FDMapObject alloc] init];
+    [local_thread_snapshot->mapObject copy_fd_map];
     
     // Create thread and join
     local_thread_snapshot->fork_flag = 1;
@@ -117,6 +123,7 @@ pid_t environment_fork(void)
     if(pid != 0)
     {
         free(local_thread_snapshot);
+        local_thread_snapshot = NULL;
     }
     
     return pid;
@@ -136,11 +143,11 @@ int environment_execvpa(const char * __path,
     
     // Create file actions
     // TODO: Create a copy file descriptors over mechanism
-    environment_posix_spawn_file_actions_t *fileActions;
-    environment_posix_spawn_file_actions_init(&fileActions);
-    environment_posix_spawn_file_actions_adddup2(&fileActions, STDIN_FILENO, STDIN_FILENO);
-    environment_posix_spawn_file_actions_adddup2(&fileActions, STDOUT_FILENO, STDOUT_FILENO);
-    environment_posix_spawn_file_actions_adddup2(&fileActions, STDERR_FILENO, STDERR_FILENO);
+    environment_posix_spawn_file_actions_t *fileActions = malloc(sizeof(environment_posix_spawn_file_actions_t));
+    
+    // MARK: AHHH Apple, pls dont hate me for the poor none ARC friendly code here
+    // MARK: Atleast I hope ARC does reference counting on these structs
+    fileActions->mapObject = local_thread_snapshot->mapObject;
     
     // Spawn using my own posix_spawn() fix
     if(find_binary)
@@ -153,7 +160,7 @@ int environment_execvpa(const char * __path,
     }
     
     // Destroy file actions
-    environment_posix_spawn_file_actions_destroy(&fileActions);
+    free(fileActions);
     
     if(local_thread_snapshot->ret_pid != 0)
     {
@@ -309,6 +316,40 @@ int environment_execvp(const char * __file,
     return environment_execvpa(__file, __argv, environ, true);
 }
 
+DEFINE_HOOK(close, int, (int fd))
+{
+    if(local_thread_snapshot)
+        return [local_thread_snapshot->mapObject closeWithFileDescriptor:fd];
+    else
+        return ORIG_FUNC(close)(fd);
+}
+
+DEFINE_HOOK(dup2, int, (int oldFD, int newFD))
+{
+    if(local_thread_snapshot)
+        return [local_thread_snapshot->mapObject dup2WithOldFileDescriptor:oldFD withNewFileDescriptor:newFD];
+    else
+        return ORIG_FUNC(dup2)(oldFD,newFD);
+}
+
+DEFINE_HOOK(_exit, void, (int code))
+{
+    if(local_thread_snapshot)
+    {
+        // Failed?
+        local_thread_snapshot->ret_pid = -1;
+        
+        // Create thread and join
+        pthread_t nthread;
+        pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
+        thread_suspend(mach_thread_self());
+    }
+    else
+    {
+        return ORIG_FUNC(_exit)(code);
+    }
+}
+
 void environment_fork_init(BOOL host)
 {
     if(!host)
@@ -320,5 +361,9 @@ void environment_fork_init(BOOL host)
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execv, environment_execv, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execve, environment_execve, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execvp, environment_execvp, nil);
+        
+        DO_HOOK_GLOBAL(close);
+        DO_HOOK_GLOBAL(dup2);
+        DO_HOOK_GLOBAL(_exit);
     }
 }

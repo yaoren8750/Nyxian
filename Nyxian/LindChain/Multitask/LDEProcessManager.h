@@ -35,9 +35,6 @@
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
 @property (nonatomic,strong) RBSProcessMonitor *processMonitor;
 
-// Posix properties
-@property (nonatomic,strong) PosixSpawnFileActionsObject *fileActions;
-
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;
 @property (nonatomic,strong) NSString *displayName;

@@ -91,6 +91,61 @@
     return YES;
 }
 
+// TODO: Only handle them as xpc dictionaries on encoding and decoding (will save power and time later on)
+- (int)closeWithFileDescriptor:(int)fd
+{
+    if (!_fd_map) return -1;
+    
+    __block int ret = 1;
+    
+    NSObject<OS_xpc_object> *new_fd_map = xpc_array_create_empty();
+    
+    xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry){
+        int wished_fd   = (int)xpc_dictionary_get_int64(entry, "wished_fd");
+        if(wished_fd != fd)
+        {
+            xpc_array_append_value(new_fd_map, entry);
+        }
+        else
+        {
+            // Hit it! so it was in it!
+            ret = 0;
+        }
+        return true;
+    });
+    
+    _fd_map = new_fd_map;
+    
+    return ret;
+}
+
+- (int)dup2WithOldFileDescriptor:(int)oldFd withNewFileDescriptor:(int)newFd
+{
+    if (!_fd_map) return -1;
+
+    __block int ret = 1;
+    xpc_object_t new_fd_map = xpc_array_create(NULL, 0);
+
+    xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry) {
+        int wished_fd = (int)xpc_dictionary_get_int64(entry, "wished_fd");
+        if(wished_fd == oldFd)
+        {
+            xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
+            xpc_dictionary_set_fd(dict, "actual_fd", oldFd);
+            xpc_dictionary_set_int64(dict, "wished_fd", newFd);
+            xpc_array_append_value(new_fd_map, dict);
+            ret = 0;
+        } else {
+            xpc_array_append_value(new_fd_map, entry);
+        }
+        return true;
+    });
+
+    _fd_map = new_fd_map;
+
+    return ret;
+}
+
 - (void)encodeWithCoder:(nonnull NSCoder *)coder
 {
     if([coder respondsToSelector:@selector(encodeXPCObject:forKey:)])

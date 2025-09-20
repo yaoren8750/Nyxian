@@ -27,103 +27,6 @@
 #import <sys/sysctl.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 
-#pragma mark - Horrible code nobody ever wants to read
-
-NSArray<NSFileHandle *> *AllOpenFileHandles(void) {
-    pid_t pid = getpid();
-    int bufferSize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, NULL, 0);
-    if (bufferSize <= 0) return @[];
-
-    struct proc_fdinfo *fdinfo = malloc(bufferSize);
-    if (!fdinfo) return @[];
-
-    int count = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, fdinfo, bufferSize);
-    if (count <= 0) {
-        free(fdinfo);
-        return @[];
-    }
-
-    NSMutableArray<NSFileHandle *> *handles = [NSMutableArray array];
-    int numFDs = count / sizeof(struct proc_fdinfo);
-
-    for (int i = 0; i < numFDs; i++) {
-        int fd = fdinfo[i].proc_fd;
-        @try {
-            NSFileHandle *fh = [[NSFileHandle alloc] initWithFileDescriptor:fd closeOnDealloc:NO];
-            if (fh) [handles addObject:fh];
-        } @catch (__unused NSException *ex) {
-            continue;
-        }
-    }
-
-    free(fdinfo);
-    return [handles copy];
-}
-
-#pragma mark - Sendable objects
-
-@implementation PosixSpawnFileActionsObject
-
-- (instancetype)initWithFileActions:(const environment_posix_spawn_file_actions_t **)fa {
-    self = [super init];
-    if (self) {
-        // First we need to get all file descriptors in our processs
-        
-        NSMutableArray *futureCloseActions = [NSMutableArray array];
-        for (int i = 0; i < (*fa)->close_cnt; i++) {
-            [futureCloseActions addObject:@((*fa)->close_actions[i])];
-        }
-        _closeActions = [futureCloseActions copy];
-
-        NSMutableDictionary<NSNumber *, NSFileHandle *> *futureDup2 = [NSMutableDictionary dictionary];
-        for (int i = 0; i < (*fa)->dup2_cnt; i++) {
-            int *slice = (*fa)->dup2_actions[i];
-            int host_fd = slice[0];
-            int child_fd = slice[1];
-
-            NSFileHandle *handle = [[NSFileHandle alloc] initWithFileDescriptor:host_fd
-                                                                closeOnDealloc:NO];
-            futureDup2[@(child_fd)] = handle;
-        }
-        _dup2Actions = [futureDup2 copy];
-    }
-    return self;
-}
-
-+ (instancetype)empty
-{
-    PosixSpawnFileActionsObject *instance = [[PosixSpawnFileActionsObject alloc] init];
-    instance.closeActions = @[];
-    instance.dup2Actions = @{};
-    return instance;
-}
-
-+ (BOOL)supportsSecureCoding {
-    return YES;
-}
-
-- (void)encodeWithCoder:(nonnull NSCoder *)coder { 
-    [coder encodeObject:_closeActions forKey:@"closeActions"];
-    [coder encodeObject:_dup2Actions forKey:@"dup2Actions"];
-}
-
-- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
-    self = [super init];
-    _closeActions = [coder decodeObjectOfClasses:[NSSet setWithObjects:
-                                                  [NSArray class],
-                                                  [NSNumber class],
-                                                  nil]
-                                          forKey:@"closeActions"];
-    _dup2Actions = [coder decodeObjectOfClasses:[NSSet setWithObjects:
-                                                 [NSDictionary class],
-                                                 [NSNumber class],
-                                                 [NSFileHandle class],
-                                                 nil] forKey:@"dup2Actions"];
-    return self;
-}
-
-@end
-
 #pragma mark - posix_spawn helper
 
 NSArray<NSString *> *createNSArrayFromArgv(int argc, char *const argv[])
@@ -242,10 +145,12 @@ int environment_posix_spawn(pid_t *process_identifier,
             count++;
         }
         
-        // Create file actions object
-        //PosixSpawnFileActionsObject *fileActions = fa ? [[PosixSpawnFileActionsObject alloc] initWithFileActions:fa] : [PosixSpawnFileActionsObject empty];
-        FDMapObject *mapObject = [[FDMapObject alloc] init];
-        [mapObject copy_fd_map];
+        // Create fd map object or take it
+        FDMapObject *mapObject = fa ? (*fa)->mapObject : [[FDMapObject alloc] init];
+        if(!fa)
+        {
+            [mapObject copy_fd_map];
+        }
         
         // Real exec patch if applicable
         NSDictionary *environ = EnvironmentDictionaryFromEnvp(envp);
@@ -285,22 +190,17 @@ int environment_posix_spawn_file_actions_init(environment_posix_spawn_file_actio
 {
     // Allocate structure and return
     *fa = malloc(sizeof(environment_posix_spawn_file_actions_t));
-    (*fa)->dup2_cnt = 0;
-    (*fa)->dup2_actions = NULL;
-    (*fa)->close_cnt = 0;
-    (*fa)->close_actions = NULL;
+    (*fa)->mapObject = [[FDMapObject alloc] init];
+    [(*fa)->mapObject copy_fd_map];
+    
     return 0;
 }
 
 int environment_posix_spawn_file_actions_destroy(environment_posix_spawn_file_actions_t **fa)
 {
-    // Destroy each slices
-    for(int i = 0; i < (*fa)->dup2_cnt; i++)
-        free(((*fa)->dup2_actions)[i]);
-    
-    // Destroy structure and return
-    free((*fa)->dup2_actions);
-    free((*fa)->close_actions);
+    // Destroy hidden mapObject
+    (*fa)->mapObject = nil;
+    free(*fa);
     return 0;
 }
 
@@ -309,28 +209,13 @@ int environment_posix_spawn_file_actions_adddup2(environment_posix_spawn_file_ac
                                                  int host_fd,
                                                  int child_fd)
 {
-    if(!(child_fd != STDIN_FILENO | child_fd != STDOUT_FILENO | child_fd != STDERR_FILENO)) return EFAULT;
-    int *slice = calloc(2, sizeof(int));
-    slice[0] = host_fd;
-    slice[1] = child_fd;
-    
-    (*fa)->dup2_cnt++;
-    (*fa)->dup2_actions = realloc((*fa)->dup2_actions,
-                                  sizeof(int*) * (*fa)->dup2_cnt);
-    (*fa)->dup2_actions[(*fa)->dup2_cnt - 1] = slice;
-
-    return 0;
+    return [(*fa)->mapObject dup2WithOldFileDescriptor:host_fd withNewFileDescriptor:child_fd];;
 }
 
 int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_actions_t **fa,
                                                   int child_fd)
 {
-    if(!(child_fd != STDIN_FILENO | child_fd != STDOUT_FILENO | child_fd != STDERR_FILENO)) return EFAULT;
-    (*fa)->close_cnt++;
-    (*fa)->close_actions = realloc((*fa)->close_actions,
-                                   sizeof(int) * (*fa)->close_cnt);
-    (*fa)->close_actions[(*fa)->close_cnt - 1] = child_fd;
-    return 0;
+    return [(*fa)->mapObject closeWithFileDescriptor:child_fd];
 }
 
 #pragma mark - Initilizer

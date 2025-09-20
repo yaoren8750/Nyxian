@@ -32,6 +32,10 @@
 /// Intended for a brand new process, overmapping the fd map
 - (void)apply_fd_map;
 
+/// Management
+- (int)closeWithFileDescriptor:(int)fd;
+- (int)dup2WithOldFileDescriptor:(int)oldFd withNewFileDescriptor:(int)newFd;
+
 @end
 
 #endif /* FD_MAP_OBJECT_H */
