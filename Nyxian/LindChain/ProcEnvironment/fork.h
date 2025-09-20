@@ -17,5 +17,9 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/// WIP DO NOT TOUCH FORK FIX
-pid_t environment_fork_for_pid(pid_t requestor_process_identifier) API_AVAILABLE(ios(26.0));
+#ifndef PROCENVIRONMENT_FORK_H
+#define PROCENVIRONMENT_FORK_H
+
+void environment_fork_init(BOOL host);
+
+#endif /* PROCENVIRONMENT_FORK_H */
