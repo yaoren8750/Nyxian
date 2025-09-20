@@ -133,7 +133,6 @@ int environment_execvpa(const char * __path,
     if(!local_thread_snapshot) return EFAULT;
     
     // Spawn using my own posix_spawn() fix
-    pid_t pid = 0;
     if(find_binary)
     {
         environment_posix_spawnp(&local_thread_snapshot->ret_pid, __path, nil, nil, __argv, environ);
@@ -238,6 +237,65 @@ int environment_execle(const char *path, const char *arg0, ...)
     return environment_execvpa(path, argv, envp, false);
 }
 
+int environment_execlp(const char * __path,
+                       const char * __arg0,
+                       ...)
+{
+    // Now create argv
+    va_list ap;
+    int argc = 0;
+    
+    // First pass: count arguments
+    va_start(ap, __arg0);
+    const char *arg = __arg0;
+    while(arg != NULL)
+    {
+        argc++;
+        arg = va_arg(ap, const char *);
+    }
+    va_end(ap);
+    
+    // Allocate argv
+    char **argv = malloc((argc + 1) * sizeof(char *));
+    if(argv == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+    
+    // Stuff argv
+    va_start(ap, __arg0);
+    arg = __arg0;
+    for(int i = 0; i < argc; i++)
+    {
+        argv[i] = (char *)arg;
+        arg = va_arg(ap, const char *);
+    }
+    argv[argc] = NULL;
+    va_end(ap);
+    
+    return environment_execvpa(__path, argv, environ, true);
+}
+
+int environment_execv(const char * __path,
+                      char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv)
+{
+    return environment_execvpa(__path, __argv, environ, false);
+}
+
+int environment_execve(const char * __file,
+                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv,
+                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __envp)
+{
+    return environment_execvpa(__file, __argv, __envp, false);
+}
+
+int environment_execvp(const char * __file,
+                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv)
+{
+    return environment_execvpa(__file, __argv, environ, true);
+}
+
 void environment_fork_init(BOOL host)
 {
     if(!host)
@@ -245,5 +303,9 @@ void environment_fork_init(BOOL host)
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, fork, environment_fork, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execl, environment_execl, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execle, environment_execle, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execlp, environment_execlp, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execv, environment_execv, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execve, environment_execve, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execvp, environment_execvp, nil);
     }
 }
