@@ -121,12 +121,43 @@ pid_t environment_fork(void)
 }
 
 extern char **environ;
-int environment_execl(const char * __path, const char * __arg0, ...)
+
+// MARK: Helper for all use cases
+int environment_execvpa(const char * __path,
+                        char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv,
+                        char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __envp,
+                        bool find_binary)
 {
     // Check if it was even created
-    // TODO: Somehow implement execl(3) without relying on fork()
+    // TODO: Somehow implement exec family functions without relying on fork()
     if(!local_thread_snapshot) return EFAULT;
     
+    // Spawn using my own posix_spawn() fix
+    pid_t pid = 0;
+    if(find_binary)
+    {
+        environment_posix_spawnp(&local_thread_snapshot->ret_pid, __path, nil, nil, __argv, environ);
+    }
+    else
+    {
+        environment_posix_spawn(&local_thread_snapshot->ret_pid, __path, nil, nil, __argv, environ);
+    }
+    
+    if(local_thread_snapshot->ret_pid == 0)
+    {
+        // Create thread and join
+        pthread_t nthread;
+        pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
+        pthread_join(nthread, NULL);
+    }
+    
+    return EFAULT;
+}
+
+int environment_execl(const char * __path,
+                      const char * __arg0,
+                      ...)
+{
     // Now create argv
     va_list ap;
     int argc = 0;
@@ -160,22 +191,51 @@ int environment_execl(const char * __path, const char * __arg0, ...)
     argv[argc] = NULL;
     va_end(ap);
     
-    // Spawn using my own posix_spawn() fix
-    pid_t pid = 0;
-    environment_posix_spawn(&pid, __path, nil, nil, argv, environ);
-    
-    // Set ret_pid
-    local_thread_snapshot->ret_pid = 1;
-    
-    if(local_thread_snapshot->ret_pid == 0)
+    return environment_execvpa(__path, argv, environ, false);
+}
+
+int environment_execle(const char *path, const char *arg0, ...)
+{
+    va_list ap;
+    int argc = 0;
+    const char *arg;
+
+    // First pass: count arguments
+    va_start(ap, arg0);
+    arg = arg0;
+    while(arg != NULL)
     {
-        // Create thread and join
-        pthread_t nthread;
-        pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
-        pthread_join(nthread, NULL);
+        argc++;
+        arg = va_arg(ap, const char *);
     }
-    
-    return EFAULT;
+
+    // Get envp
+    char *const *envp = va_arg(ap, char *const *);
+    va_end(ap);
+
+    // Allocate argv
+    char **argv = malloc((argc + 1) * sizeof(char *));
+    if(argv == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+
+    // Stuff argv
+    va_start(ap, arg0);
+    arg = arg0;
+    for(int i = 0; i < argc; i++)
+    {
+        argv[i] = (char *)arg;
+        arg = va_arg(ap, const char *);
+    }
+    argv[argc] = NULL;
+
+    (void)va_arg(ap, char *const *);
+    envp = va_arg(ap, char *const *);
+    va_end(ap);
+
+    return environment_execvpa(path, argv, envp, false);
 }
 
 void environment_fork_init(BOOL host)
@@ -184,5 +244,6 @@ void environment_fork_init(BOOL host)
     {
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, fork, environment_fork, nil);
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execl, environment_execl, nil);
+        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execle, environment_execle, nil);
     }
 }
