@@ -97,12 +97,17 @@
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder
 {
-    _fd_map = [coder decodeObjectOfClasses:[NSSet setWithObjects:
+    self = [super init];
+    
+    NSArray *array = [coder decodeObjectOfClasses:[NSSet setWithObjects:
                                                   [NSArray class],
                                                   [NSObject<OS_xpc_object> class],
                                                   nil]
-                                          forKey:@"fd_map"];
-    return nil;
+                                           forKey:@"fd_map"];
+    
+    _fd_map = [NSMutableArray arrayWithObject:array];
+    
+    return self;
 }
 
 @end
