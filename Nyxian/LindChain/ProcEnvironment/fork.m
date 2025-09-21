@@ -17,8 +17,6 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-// MARK: The craziest thing to prove my skill level ever
-
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/tfp.h>
@@ -29,6 +27,8 @@
 #include <mach/mach.h>
 #import <pthread.h>
 #include <stdarg.h>
+
+#pragma mark - threading black magic
 
 extern char **environ;
 
@@ -83,7 +83,7 @@ void *helper_thread(void *args)
         
         // ret_pid to 0 to indicate running as child
         snapshot->ret_pid = 0;
-        snapshot->fork_flag = 0;
+        snapshot->fork_flag = false;
         
         // Unfreeze
         thread_resume(thread);
@@ -107,6 +107,8 @@ void *helper_thread(void *args)
     return NULL;
 }
 
+#pragma mark - fork() fix
+
 // MARK: The first pass returns 0, call to execl() or similar will result in the callers thread being restored
 DEFINE_HOOK(fork, pid_t, (void))
 {
@@ -116,7 +118,7 @@ DEFINE_HOOK(fork, pid_t, (void))
     [local_thread_snapshot->mapObject copy_fd_map];
     
     // Create thread and join
-    local_thread_snapshot->fork_flag = 1;
+    local_thread_snapshot->fork_flag = true;
     local_thread_snapshot->thread = mach_thread_self();
     pthread_t nthread;
     pthread_create(&nthread, NULL, helper_thread, local_thread_snapshot);
@@ -131,6 +133,8 @@ DEFINE_HOOK(fork, pid_t, (void))
     
     return pid;
 }
+
+#pragma mark - exec*() function family fixes
 
 // MARK: Helper for all use cases
 int environment_execvpa(const char * __path,
@@ -313,6 +317,8 @@ DEFINE_HOOK(execvp, int, (const char * __file,
     return environment_execvpa(__file, __argv, environ, true);
 }
 
+#pragma mark - file descriptor management fixes
+
 DEFINE_HOOK(close, int, (int fd))
 {
     if(local_thread_snapshot && local_thread_snapshot->fork_flag == 0)
@@ -347,6 +353,8 @@ DEFINE_HOOK(_exit, void, (int code))
         return ORIG_FUNC(_exit)(code);
     }
 }
+
+#pragma mark - initilizer
 
 void environment_fork_init(BOOL host)
 {
