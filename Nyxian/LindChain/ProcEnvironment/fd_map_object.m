@@ -123,26 +123,39 @@
 {
     if (!_fd_map) return -1;
 
-    __block int ret = 1;
+    __block int ret = -1;
     xpc_object_t new_fd_map = xpc_array_create(NULL, 0);
 
+    // MARK: Main logic for replacements
     xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry) {
         int wished_fd = (int)xpc_dictionary_get_int64(entry, "wished_fd");
-        if(wished_fd == oldFd)
+
+        if(wished_fd == newFd)
         {
             xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
             xpc_dictionary_set_fd(dict, "actual_fd", oldFd);
             xpc_dictionary_set_int64(dict, "wished_fd", newFd);
             xpc_array_append_value(new_fd_map, dict);
-            ret = 0;
-        } else {
+            ret = newFd;
+        }
+        else
+        {
             xpc_array_append_value(new_fd_map, entry);
         }
         return true;
     });
 
-    _fd_map = new_fd_map;
+    // MARK: Sub logic in case it was never in it, because they we have to add it
+    if(ret == -1)
+    {
+        xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
+        xpc_dictionary_set_fd(dict, "actual_fd", oldFd);
+        xpc_dictionary_set_int64(dict, "wished_fd", newFd);
+        xpc_array_append_value(new_fd_map, dict);
+        ret = newFd;
+    }
 
+    _fd_map = new_fd_map;
     return ret;
 }
 
