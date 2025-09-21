@@ -34,7 +34,10 @@
 #import <LindChain/Decompiler/Decompiler.h>
 
 const char *symbol_for_address(void *addr);
+
 void stack_trace_from_thread_state(arm_thread_state64_t state);
+void stack_trace_from_thread_state_of_task(task_t task,
+                                           arm_thread_state64_t state);
 
 uint64_t get_thread_id_from_port(thread_t thread);
 int get_thread_index_from_port(thread_t target);
