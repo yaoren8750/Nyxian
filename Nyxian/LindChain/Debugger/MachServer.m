@@ -29,15 +29,6 @@
 #include "litehook.h"
 #include "Utils.h"
 
-DEFINE_HOOK(exit, void, (int code))
-{
-    // Causes EXC_BREAKPOINT
-    if(code != 0)
-        __builtin_trap();
-    else
-        ORIG_FUNC(exit)(code);
-}
-
 void signal_handler(int code)
 {
     __builtin_trap();
@@ -87,14 +78,14 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
              state.__cpsr,
              state.__pad);
     
-    for (uint8_t i = 0; i < 29; i++)
+    for(uint8_t i = 0; i < 29; i++)
         printf("\nX%d: 0x%llx",
                 i,
                 state.__x[i]);
     
     stack_trace_from_thread_state(state);
     
-    state.__pc = (uint64_t)ORIG_FUNC(exit);
+    state.__pc = (uint64_t)exit;
     state.__x[0] = 1;
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     
@@ -167,11 +158,11 @@ void* mach_exception_self_server(void *arg)
             
         }
         else if (mr != MACH_MSG_SUCCESS)
-            ORIG_FUNC(exit)(-1);
+            exit(-1);
         
         // Sanity checks
         if (request->Head.msgh_size < sizeof(*request) || request_size - sizeof(*request) < (sizeof(mach_exception_data_type_t) * request->codeCnt))
-            ORIG_FUNC(exit)(-1);
+            exit(-1);
         
         mach_exception_data_type_t *code64 = (mach_exception_data_type_t *) request->code;
         
@@ -193,7 +184,7 @@ void* mach_exception_self_server(void *arg)
         reply.RetCode = kr;
         mr = mach_msg(&reply.Head, MACH_SEND_MSG, reply.Head.msgh_size, 0, MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
         if(mr != KERN_SUCCESS)
-            ORIG_FUNC(exit)(-1);
+            exit(-1);
     }
 }
 
@@ -202,9 +193,6 @@ void machServerInit(void)
     // Dispatching once cuz the mach server shall only be initilized once
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Hooking exit to avoid exiting the process
-        //DO_HOOK_GLOBAL(exit);
-        
         // Setting each signal to be blocked, in order to make the threads stop on fault, in the past it just continued running
         sigset_t set;
         sigfillset(&set);
