@@ -67,10 +67,11 @@ void *helper_thread(void *args)
         // Get stack properties
         pthread_t pthread = pthread_from_mach_thread_np(snapshot->thread);
         void *stack_base = pthread_get_stackaddr_np(pthread);
-        size_t stack_size = pthread_get_stacksize_np(pthread);
-
-        snapshot->stack_recovery_size = stack_size;
-        snapshot->stack_recovery_buffer = (uint8_t *)stack_base - stack_size;
+        void *sp = (void*)snapshot->thread_state.__sp;
+        
+        // Store live portion of the stack (safer and faster)
+        snapshot->stack_recovery_buffer = (uint8_t *)sp;
+        snapshot->stack_recovery_size = (uint8_t *)stack_base - (uint8_t *)sp;
         
         // Allocate
         snapshot->stack_copy_buffer = malloc(snapshot->stack_recovery_size);
