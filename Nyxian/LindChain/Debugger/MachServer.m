@@ -89,9 +89,9 @@ kern_return_t mach_exception_self_server_handler(mach_port_t task,
     state.__x[0] = 1;
     thread_set_state(thread, ARM_THREAD_STATE64, (thread_state_t)&state, count);
     
-    printf("\nRaised SIGSTOP!\n");
+    printf("\nTask suspended!\n");
     fflush(stdout);
-    raise(SIGSTOP);
+    task_suspend(task);
     
     return KERN_SUCCESS;
 }
