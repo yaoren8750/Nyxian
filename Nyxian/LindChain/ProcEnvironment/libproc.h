@@ -25,6 +25,6 @@
 
 int environment_proc_listallpids(void *buffer, int buffersize);
 
-void environment_libproc_init(BOOL host);
+void environment_libproc_init(void);
 
 #endif /* PROCENVIRONMENT_LIBPROC_H */

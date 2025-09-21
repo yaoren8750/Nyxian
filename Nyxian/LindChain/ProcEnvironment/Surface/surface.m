@@ -17,6 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Surface/memfd.h>
@@ -129,10 +130,10 @@ void kern_sethostname(NSString *hostname)
 /*
  Init
  */
-void proc_surface_init(BOOL host)
+void proc_surface_init(void)
 {
     // Initilize base of mapping
-    if(host)
+    if(environment_is_role(EnvironmentRoleHost))
     {
         sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
         safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDONLY);
@@ -155,7 +156,7 @@ void proc_surface_init(BOOL host)
     
     // Now map it!! (but only with max readable)
     surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-    if(!host || surface == MAP_FAILED) close(sharing_fd);
+    if(environment_is_role(EnvironmentRoleGuest) || surface == MAP_FAILED) close(sharing_fd);
     if(surface == MAP_FAILED)
     {
         // Mapping failed
@@ -164,7 +165,7 @@ void proc_surface_init(BOOL host)
     }
     
     // After close we come to magic
-    if(host)
+    if(environment_is_role(EnvironmentRoleHost))
     {
         // Were the host so we write the magic
         surface->magic = SURFACE_MAGIC;
@@ -180,7 +181,7 @@ void proc_surface_init(BOOL host)
     }
     
     // Add proc self if were host
-    if(host)
+    if(environment_is_role(EnvironmentRoleHost))
     {
         proc_insert_self();
         

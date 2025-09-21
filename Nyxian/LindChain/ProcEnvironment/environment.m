@@ -18,42 +18,16 @@
 */
 
 #import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/Debugger/MachServer.h>
 
-#import <LindChain/ProcEnvironment/tfp.h>
-#import <LindChain/ProcEnvironment/libproc.h>
-#import <LindChain/ProcEnvironment/application.h>
-#import <LindChain/ProcEnvironment/posix_spawn.h>
-#import <LindChain/ProcEnvironment/sysctl.h>
-#import <LindChain/ProcEnvironment/fork.h>
-#import <LindChain/ProcEnvironment/Surface/surface.h>
+static EnvironmentRole environmentRole = EnvironmentRoleNone;
 
-BOOL environmentIsHost;
-
-void environment_init(BOOL host)
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        // Set process identifier now
-        [hostProcessProxy setProcessIdentifier:getpid()];
-        
-        // We do proc_surface_init(1) before environment_tfp_init(1), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
-        proc_surface_init(host);
-        
-        environment_tfp_init(host);
-        environment_libproc_init(host);
-        environment_application_init(host);
-        environment_posix_spawn_init(host);
-        environment_fork_init(host);
-        environment_sysctl_init(host);
-        environmentIsHost = host;
-    });
-}
+#pragma mark - Special client extra symbols
 
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint)
 {
-    if(environmentIsHost || hostProcessProxy) return;
+    // FIXME: We cannot check the environment if the environment is not setup yet
+    if(hostProcessProxy) return;
     NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
     connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
     connection.interruptionHandler = ^{
@@ -71,6 +45,49 @@ void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint)
 
 void environment_client_attach_debugger(void)
 {
-    if(environmentIsHost) return;
+    environment_must_be_role(EnvironmentRoleGuest);
     machServerInit();
+}
+
+#pragma mark - Role checkers and enforcers
+
+BOOL environment_is_role(EnvironmentRole role)
+{
+    return (environmentRole == role);
+}
+
+BOOL environment_must_be_role(EnvironmentRole role)
+{
+    if(!environment_is_role(role))
+    {
+        abort();
+    }
+    else
+    {
+        return YES;
+    }
+}
+
+#pragma mark - Initilizer
+
+void environment_init(EnvironmentRole role)
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // Setting environmentIsHost first
+        environmentRole = role;
+        
+        // Set process identifier now
+        [hostProcessProxy setProcessIdentifier:getpid()];
+        
+        // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
+        proc_surface_init();
+        
+        environment_tfp_init();
+        environment_libproc_init();
+        environment_application_init();
+        environment_posix_spawn_init();
+        environment_fork_init();
+        environment_sysctl_init();
+    });
 }

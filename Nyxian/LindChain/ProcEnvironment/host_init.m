@@ -23,5 +23,5 @@
 __attribute__((constructor))
 void hostProcEnvInit(void)
 {
-    environment_init(YES);
+    environment_init(EnvironmentRoleHost);
 }

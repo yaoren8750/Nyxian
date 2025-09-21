@@ -23,6 +23,8 @@
 
 @implementation FDMapObject
 
+#pragma mark - Copying and applying file descriptor map (Unlike NSFileHandle this is used to transfer entire file descriptor maps)
+
 - (void)copy_fd_map
 {
     // Getting our own pid
@@ -86,17 +88,14 @@
     });
 }
 
-+ (BOOL)supportsSecureCoding
-{
-    return YES;
-}
+#pragma mark - Handling file descriptors without affecting host (Used by fork() and posix_spawn() fix for example)
 
 // TODO: Only handle them as xpc dictionaries on encoding and decoding (will save power and time later on)
 - (int)closeWithFileDescriptor:(int)fd
 {
     if (!_fd_map) return -1;
     
-    __block int ret = 1;
+    __block int ret = -1;
     
     NSObject<OS_xpc_object> *new_fd_map = xpc_array_create_empty();
     
@@ -157,6 +156,13 @@
 
     _fd_map = new_fd_map;
     return ret;
+}
+
+#pragma mark - Transmission
+
++ (BOOL)supportsSecureCoding
+{
+    return YES;
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder

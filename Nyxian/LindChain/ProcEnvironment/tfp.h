@@ -23,12 +23,12 @@
 #define PROCENVIRONMENT_TFP_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
 
 kern_return_t environment_task_for_pid(mach_port_name_t taskPort, pid_t pid, mach_port_name_t *requestTaskPort) API_AVAILABLE(ios(26.0));
+
 void environment_host_take_client_task_port(TaskPortObject *machPort) API_AVAILABLE(ios(26.0));
 
-void environment_tfp_init(BOOL host);
+void environment_tfp_init(void);
 
 #endif /* PROCENVIRONMENT_TFP_H */

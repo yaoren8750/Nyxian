@@ -17,18 +17,14 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/proxy.h>
-#import <LindChain/ProcEnvironment/tfp.h>
 #import <LindChain/ProcEnvironment/fork.h>
-#import <LindChain/ProcEnvironment/posix_spawn.h>
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/litehook/src/litehook.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
 #include <mach/mach.h>
 #import <pthread.h>
 #include <stdarg.h>
 
-#pragma mark - threading black magic
+#pragma mark - Threading black magic
 
 extern char **environ;
 
@@ -317,7 +313,7 @@ DEFINE_HOOK(execvp, int, (const char * __file,
     return environment_execvpa(__file, __argv, environ, true);
 }
 
-#pragma mark - file descriptor management fixes
+#pragma mark - File descriptor management fixes
 
 DEFINE_HOOK(close, int, (int fd))
 {
@@ -354,11 +350,11 @@ DEFINE_HOOK(_exit, void, (int code))
     }
 }
 
-#pragma mark - initilizer
+#pragma mark - Initilizer
 
-void environment_fork_init(BOOL host)
+void environment_fork_init(void)
 {
-    if(!host)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         DO_HOOK_GLOBAL(fork);
         DO_HOOK_GLOBAL(execl);

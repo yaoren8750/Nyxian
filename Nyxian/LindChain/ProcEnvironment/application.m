@@ -17,27 +17,21 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/application.h>
+#import <LindChain/ProcEnvironment/environment.h>
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
-#import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/proxy.h>
-#import <LindChain/ProcEnvironment/application.h>
-#import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ObjC/Swizzle.h>
 #import <dlfcn.h>
 
-/*
- UIApplication detection
- */
-@interface UIApplication (ProcEnvironment)
-@end
+#pragma mark - UIApplication entry detection (Used to trigger window apparance, headless processes basically)
 
 @implementation UIApplication (ProcEnvironment)
 
 - (void)hook_run
 {
     // Only allow client processing
-    if(!environmentIsHost)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         // Tell host app to let our process appear
         if(!environment_proxy_make_window_visible()) exit(0);
@@ -48,11 +42,7 @@
 
 @end
 
-/*
- Audio background mode fix
- */
-@interface AVAudioSession (ProcEnvironment)
-@end
+#pragma mark - Audio background mode fix (Fixes playing music in spotify while spotify is not in nyxians foreground)
 
 @implementation AVAudioSession (ProcEnvironment)
 
@@ -71,12 +61,12 @@
 
 @end
 
-/*
- Init
- */
-void environment_application_init(BOOL host)
+
+#pragma mark - Initilizer
+
+void environment_application_init(void)
 {
-    if(!host)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         // MARK: GUEST Init
         // MARK: Hooking _run of UIApplication class seems more reliable

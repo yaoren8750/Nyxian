@@ -117,7 +117,7 @@ int environment_posix_spawn(pid_t *process_identifier,
     realpath(path, resolved);
     path = resolved;
     
-    if(!environmentIsHost)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         // MARK: GUEST Implementation
         
@@ -220,9 +220,9 @@ int environment_posix_spawn_file_actions_addclose(environment_posix_spawn_file_a
 
 #pragma mark - Initilizer
 
-void environment_posix_spawn_init(BOOL host)
+void environment_posix_spawn_init(void)
 {
-    if(!host)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         // MARK: GUEST Init
         

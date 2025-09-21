@@ -17,23 +17,14 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/*
- Header
- */
-#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/tfp.h>
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
-#import <mach/mach.h>
-#import <unistd.h>
 #import <LindChain/litehook/src/litehook.h>
-#import <dlfcn.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
-#import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
+#import <mach/mach.h>
 
-/*
- Internal Implementation
- */
 API_AVAILABLE(ios(26.0))
 static NSMutableDictionary <NSNumber*,TaskPortObject*> *tfp_userspace_ports;
 
@@ -58,7 +49,7 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort,
     }
     else
     {
-        if(environmentIsHost)
+        if(environment_is_role(EnvironmentRoleHost))
         {
             // No machPortObject, so deny
             return KERN_FAILURE;
@@ -113,7 +104,7 @@ DEFINE_HOOK(task_policy_get, kern_return_t,(task_policy_get_t task,
 
 void environment_host_take_client_task_port(TaskPortObject *machPort)
 {
-    if(!environmentIsHost) return;
+    environment_must_be_role(EnvironmentRoleHost);
     if([machPort isUsable] && [machPort port] != mach_task_self())
     {
         pid_t pid = 0;
@@ -125,13 +116,13 @@ void environment_host_take_client_task_port(TaskPortObject *machPort)
 /*
  Init
  */
-void environment_tfp_init(BOOL host)
+void environment_tfp_init(void)
 {
     // MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
     if(@available(iOS 26.0, *)) {
         tfp_userspace_ports = [[NSMutableDictionary alloc] init];
         
-        if(!host)
+        if(environment_is_role(EnvironmentRoleGuest))
         {
             // MARK: Guest Init
             [hostProcessProxy sendPort:[TaskPortObject taskPortSelf]];

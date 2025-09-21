@@ -120,9 +120,9 @@ int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg,
 /*
  Init
  */
-void environment_libproc_init(BOOL host)
+void environment_libproc_init(void)
 {
-    if(!host)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         // MARK: GUEST Init
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, proc_listallpids, proc_libproc_listallpids, nil);

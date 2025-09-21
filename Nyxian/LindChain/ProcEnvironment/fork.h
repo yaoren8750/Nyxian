@@ -20,6 +20,6 @@
 #ifndef PROCENVIRONMENT_FORK_H
 #define PROCENVIRONMENT_FORK_H
 
-void environment_fork_init(BOOL host);
+void environment_fork_init(void);
 
 #endif /* PROCENVIRONMENT_FORK_H */

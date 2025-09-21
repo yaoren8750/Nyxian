@@ -22,6 +22,6 @@
 
 #import <Foundation/Foundation.h>
 
-void environment_sysctl_init(BOOL host);
+void environment_sysctl_init(void);
 
 #endif /* PROCENVIRONMENT_SYSCTL_H */

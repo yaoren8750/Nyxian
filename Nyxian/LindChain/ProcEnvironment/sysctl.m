@@ -17,6 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
@@ -110,9 +111,9 @@ DEFINE_HOOK(sysctl, int, (int *name,
     return ORIG_FUNC(sysctl)(name, namelen, oldp, oldlenp, newp, newlen);
 }
 
-void environment_sysctl_init(BOOL host)
+void environment_sysctl_init(void)
 {
-    if(!host)
+    if(environment_is_role(EnvironmentRoleGuest))
     {
         DO_HOOK_GLOBAL(sysctl)
     }

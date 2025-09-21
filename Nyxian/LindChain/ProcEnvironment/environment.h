@@ -20,19 +20,98 @@
 #ifndef PROCENVIRONMENT_ENVIRONMENT_H
 #define PROCENVIRONMENT_ENVIRONMENT_H
 
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
-/// Boolean value that indicates if the target environment runs at is the host or the guest environment at runtime
-extern BOOL environmentIsHost;
+/* ----------------------------------------------------------------------
+ *  Environment API Headers
+ * -------------------------------------------------------------------- */
+#import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/ProcEnvironment/tfp.h>
+#import <LindChain/ProcEnvironment/libproc.h>
+#import <LindChain/ProcEnvironment/application.h>
+#import <LindChain/ProcEnvironment/posix_spawn.h>
+#import <LindChain/ProcEnvironment/sysctl.h>
+#import <LindChain/ProcEnvironment/fork.h>
+#import <LindChain/ProcEnvironment/tfp_object.h>
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 
-/// Connects client to host environment via its preshipped endpoint
+/* ----------------------------------------------------------------------
+ *  Surface API Headers
+ * -------------------------------------------------------------------- */
+#import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
+
+/*!
+ @enum EnvironmentRole
+ @abstract Defines the role of the current environment.
+ @constant EnvironmentRoleNone
+     No environment role is set.
+ @constant EnvironmentRoleHost
+     The environment is running as the host.
+ @constant EnvironmentRoleGuest
+     The environment is running as a guest.
+ */
+typedef NS_ENUM(NSInteger, EnvironmentRole) {
+    EnvironmentRoleNone,
+    EnvironmentRoleHost,
+    EnvironmentRoleGuest
+};
+
+/*!
+ @function environment_client_connect_to_host
+ @abstract Connects the client to the host environment using a preshipped endpoint.
+ @discussion
+    This function establishes a connection between a guest process and
+    its host environment. The provided endpoint must have been exported
+    by the host.
+
+ @param endpoint
+    An `NSXPCListenerEndpoint` object identifying the host environment.
+ */
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint);
 
-/// Attaches debugger to the guest environment it self, its a self debugger
+/*!
+ @function environment_client_attach_debugger
+ @abstract Attaches a debugger to the guest environment
+ @discussion
+    This function attaches a mach exception handling debugger to the guest environment.
+ */
 void environment_client_attach_debugger(void);
 
-/// Initilizes the environment, the boolean argument the symbol takes indicates if its the host or the client environment
-void environment_init(BOOL host);
+/*!
+ @function environment_is_role
+ @abstract Returns a boolean value representing if it is the given role
+ @discussion
+    This function is used by the modular environment API subsystems to check if certain implementations are applied to the correct role.
+ 
+ @param role
+    An `EnvironmentRole` enum value that is the value that must match the internal `EnvironmentRole` enum value for it to succeed
+ */
+BOOL environment_is_role(EnvironmentRole role);
+
+/*!
+ @function environment_must_be_role
+ @abstract Returns a boolean value representing if it is the given role and crashes the process if its not.
+ @discussion
+    This function is used by the modular environment API subsystems to check if certain implementations are applied to the correct role, and exit from irreversible issues due to that.
+ 
+ @param role
+    An `EnvironmentRole` enum value that is the value that must match the internal `EnvironmentRole` enum value for it to succeed
+ */
+BOOL environment_must_be_role(EnvironmentRole role);
+
+/*!
+ @function environment_init
+ @abstract Initializes the environment with a given role.
+ @discussion
+    This function initializes the environment with the given role. It can and shall only be called once. This function never returns NO!
+ 
+ @param role
+    An `EnvironmentRole` enum value that represents the environment role wished to be initializes as.
+ */
+void environment_init(EnvironmentRole role);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

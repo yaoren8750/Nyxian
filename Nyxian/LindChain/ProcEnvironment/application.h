@@ -20,9 +20,18 @@
 #ifndef PROCENVIRONMENT_APPLICATION_H
 #define PROCENVIRONMENT_APPLICATION_H
 
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-void environment_application_init(BOOL host);
+/*!
+ @function environment_application_init
+ @abstract Initializes application environment.
+ @discussion
+    These fixes are supposed to fix headless programs. So they can choose if they rather wanna run a GUI or a CLI process or a being a background daemon.
+ */
+void environment_application_init(void);
 
 #endif /* PROCENVIRONMENT_APPLICATION_H */

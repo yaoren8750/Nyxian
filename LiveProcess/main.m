@@ -129,17 +129,17 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSArray *argumentDictionary = appInfo[@"arguments"];
     FDMapObject *mapObject = appInfo[@"mapObject"];
     
+    // Setup fd map
+    if(mapObject) [mapObject apply_fd_map];
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    
     // Setting up environment
     environment_client_connect_to_host(endpoint);
-    environment_init(NO);
+    environment_init(EnvironmentRoleGuest);
     
     // TODO: Reimplement first the concept of debugging
     environment_client_attach_debugger();
-    
-    if(mapObject) [mapObject apply_fd_map];
-    
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
     
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
     if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);

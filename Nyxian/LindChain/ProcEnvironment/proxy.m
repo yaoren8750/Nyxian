@@ -123,19 +123,19 @@ sync_call_with_timeout_pid(void (^invoke)(void (^reply)(pid_t)))
 
 void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint)
 {
-    if(environmentIsHost) return;
+    environment_must_be_role(EnvironmentRoleGuest);
     [hostProcessProxy setLDEApplicationWorkspaceEndPoint:endpoint];
 }
 
 void environment_proxy_tfp_send_port_object(TaskPortObject *port)
 {
-    if(environmentIsHost) return;
+    environment_must_be_role(EnvironmentRoleGuest);
     [hostProcessProxy sendPort:port];
 }
 
 TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
 {
-    if(environmentIsHost) return nil;
+    environment_must_be_role(EnvironmentRoleGuest);
     TaskPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(TaskPortObject*){
         [hostProcessProxy getPort:process_identifier withReply:reply];
     });
@@ -144,7 +144,7 @@ TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid
 
 NSSet *environment_proxy_proc_list_all_process_identifier(void)
 {
-    if(environmentIsHost) return nil;
+    environment_must_be_role(EnvironmentRoleGuest);
     NSSet *set = sync_call_with_timeout(PROXY_TYPE_REPLY(NSSet*){
         [hostProcessProxy proc_listallpidsViaReply:reply];
     });
@@ -153,7 +153,7 @@ NSSet *environment_proxy_proc_list_all_process_identifier(void)
 
 LDEProcess *environment_proxy_proc_structure_for_process_identifier(pid_t process_identifier)
 {
-    if(environmentIsHost) return nil;
+    environment_must_be_role(EnvironmentRoleGuest);
     LDEProcess *process = sync_call_with_timeout(PROXY_TYPE_REPLY(LDEProcess*){
         [hostProcessProxy proc_getProcStructureForProcessIdentifier:process_identifier withReply:reply];
     });
@@ -163,11 +163,7 @@ LDEProcess *environment_proxy_proc_structure_for_process_identifier(pid_t proces
 int environment_proxy_proc_kill_process_identifier(pid_t process_identifier,
                                                    int signal)
 {
-    if(environmentIsHost)
-    {
-        errno = EPERM;
-        return -1;
-    }
+    environment_must_be_role(EnvironmentRoleGuest);
 
     if(signal <= 0 || signal >= NSIG)
     {
@@ -192,7 +188,7 @@ int environment_proxy_proc_kill_process_identifier(pid_t process_identifier,
 
 BOOL environment_proxy_make_window_visible(void)
 {
-    if(environmentIsHost) return EFAULT;
+    environment_must_be_role(EnvironmentRoleGuest);
     BOOL appeared = sync_call_with_timeout_bool(PROXY_TYPE_REPLY(BOOL){
         [hostProcessProxy makeWindowVisibleWithReply:reply];
     });
@@ -204,7 +200,7 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path,
                                               NSDictionary *environment,
                                               FDMapObject *mapObject)
 {
-    if(environmentIsHost) return EFAULT;
+    environment_must_be_role(EnvironmentRoleGuest);
     pid_t process_identifier = sync_call_with_timeout_pid(PROXY_TYPE_REPLY(pid_t){
         [hostProcessProxy spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withReply:reply];
     });
@@ -213,7 +209,7 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path,
 
 void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword)
 {
-    if(environmentIsHost) return;
+    environment_must_be_role(EnvironmentRoleGuest);
     NSArray *array = sync_call_with_timeout2(^(void (^reply)(NSData*,NSString*)){
         [hostProcessProxy gatherCodeSignerViaReply:reply];
     });
@@ -224,7 +220,7 @@ void environment_proxy_gather_code_signature_info(NSData **certificateData, NSSt
 
 NSString *environment_proxy_gather_code_signature_extras(void)
 {
-    if(environmentIsHost) return nil;
+    environment_must_be_role(EnvironmentRoleGuest);
     NSString *extra = sync_call_with_timeout(PROXY_TYPE_REPLY(NSString*){
         [hostProcessProxy gatherSignerExtrasViaReply:reply];
     });
@@ -233,7 +229,7 @@ NSString *environment_proxy_gather_code_signature_extras(void)
 
 void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety)
 {
-    if(environmentIsHost || !surface || !safety) return;
+    environment_must_be_role(EnvironmentRoleGuest);
     NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(NSFileHandle*, NSFileHandle*)){
         [hostProcessProxy handinSurfaceFileDescriptorViaReply:reply];
     });
