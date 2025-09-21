@@ -30,6 +30,8 @@
 #import <pthread.h>
 #include <stdarg.h>
 
+extern char **environ;
+
 typedef struct {
     /* Stack properties*/
     void *stack_recovery_buffer;
@@ -38,7 +40,7 @@ typedef struct {
     
     /* Flags */
     pid_t ret_pid;
-    uint8_t fork_flag;
+    BOOL fork_flag;
     
     /* ThreadID */
     mach_msg_type_number_t thread_count;
@@ -56,7 +58,7 @@ void *helper_thread(void *args)
     // Get snapshot
     thread_snapshot_t *snapshot = args;
     
-    if(snapshot->fork_flag != 0)
+    if(snapshot->fork_flag)
     {
         // MARK: This means the spawn was essentially requested
         // Safe thread state
@@ -106,7 +108,7 @@ void *helper_thread(void *args)
 }
 
 // MARK: The first pass returns 0, call to execl() or similar will result in the callers thread being restored
-pid_t environment_fork(void)
+DEFINE_HOOK(fork, pid_t, (void))
 {
     // Create local snapshot
     local_thread_snapshot = malloc(sizeof(thread_snapshot_t));
@@ -130,8 +132,6 @@ pid_t environment_fork(void)
     return pid;
 }
 
-extern char **environ;
-
 // MARK: Helper for all use cases
 int environment_execvpa(const char * __path,
                         char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv,
@@ -143,7 +143,6 @@ int environment_execvpa(const char * __path,
     if(!local_thread_snapshot) return EFAULT;
     
     // Create file actions
-    // TODO: Create a copy file descriptors over mechanism
     environment_posix_spawn_file_actions_t *fileActions = malloc(sizeof(environment_posix_spawn_file_actions_t));
     
     // MARK: AHHH Apple, pls dont hate me for the poor none ARC friendly code here
@@ -152,13 +151,9 @@ int environment_execvpa(const char * __path,
     
     // Spawn using my own posix_spawn() fix
     if(find_binary)
-    {
         environment_posix_spawnp(&local_thread_snapshot->ret_pid, __path, (const environment_posix_spawn_file_actions_t**)&fileActions, nil, __argv, __envp);
-    }
     else
-    {
         environment_posix_spawn(&local_thread_snapshot->ret_pid, __path, (const environment_posix_spawn_file_actions_t**)&fileActions, nil, __argv, __envp);
-    }
     
     // Destroy file actions
     free(fileActions);
@@ -174,9 +169,9 @@ int environment_execvpa(const char * __path,
     return EFAULT;
 }
 
-int environment_execl(const char * __path,
-                      const char * __arg0,
-                      ...)
+DEFINE_HOOK(execl, int, (const char * __path,
+                         const char * __arg0,
+                         ...))
 {
     // Now create argv
     va_list ap;
@@ -214,7 +209,8 @@ int environment_execl(const char * __path,
     return environment_execvpa(__path, argv, environ, false);
 }
 
-int environment_execle(const char *path, const char *arg0, ...)
+DEFINE_HOOK(execle, int, (const char *path,
+                        const char *arg0, ...))
 {
     va_list ap;
     int argc = 0;
@@ -258,9 +254,9 @@ int environment_execle(const char *path, const char *arg0, ...)
     return environment_execvpa(path, argv, envp, false);
 }
 
-int environment_execlp(const char * __path,
-                       const char * __arg0,
-                       ...)
+DEFINE_HOOK(execlp, int, (const char * __path,
+                          const char * __arg0,
+                          ...))
 {
     // Now create argv
     va_list ap;
@@ -298,36 +294,37 @@ int environment_execlp(const char * __path,
     return environment_execvpa(__path, argv, environ, true);
 }
 
-int environment_execv(const char * __path,
-                      char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv)
+DEFINE_HOOK(execv, int, (const char * __path,
+                         char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv))
 {
     return environment_execvpa(__path, __argv, environ, false);
 }
 
-int environment_execve(const char * __file,
-                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv,
-                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __envp)
+DEFINE_HOOK(execve, int, (const char * __file,
+                          char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv,
+                          char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __envp))
 {
     return environment_execvpa(__file, __argv, __envp, false);
 }
 
-int environment_execvp(const char * __file,
-                       char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv)
+DEFINE_HOOK(execvp, int, (const char * __file,
+                          char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv))
 {
     return environment_execvpa(__file, __argv, environ, true);
 }
 
 DEFINE_HOOK(close, int, (int fd))
 {
-    if(local_thread_snapshot)
+    if(local_thread_snapshot && local_thread_snapshot->fork_flag == 0)
         return [local_thread_snapshot->mapObject closeWithFileDescriptor:fd];
     else
         return ORIG_FUNC(close)(fd);
 }
 
-DEFINE_HOOK(dup2, int, (int oldFD, int newFD))
+DEFINE_HOOK(dup2, int, (int oldFD,
+                        int newFD))
 {
-    if(local_thread_snapshot)
+    if(local_thread_snapshot && local_thread_snapshot->fork_flag == 0)
         return [local_thread_snapshot->mapObject dup2WithOldFileDescriptor:oldFD withNewFileDescriptor:newFD];
     else
         return ORIG_FUNC(dup2)(oldFD,newFD);
@@ -335,7 +332,7 @@ DEFINE_HOOK(dup2, int, (int oldFD, int newFD))
 
 DEFINE_HOOK(_exit, void, (int code))
 {
-    if(local_thread_snapshot)
+    if(local_thread_snapshot && local_thread_snapshot->fork_flag == 0)
     {
         // Failed?
         local_thread_snapshot->ret_pid = -1;
@@ -355,14 +352,13 @@ void environment_fork_init(BOOL host)
 {
     if(!host)
     {
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, fork, environment_fork, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execl, environment_execl, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execle, environment_execle, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execlp, environment_execlp, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execv, environment_execv, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execve, environment_execve, nil);
-        litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, execvp, environment_execvp, nil);
-        
+        DO_HOOK_GLOBAL(fork);
+        DO_HOOK_GLOBAL(execl);
+        DO_HOOK_GLOBAL(execle);
+        DO_HOOK_GLOBAL(execlp);
+        DO_HOOK_GLOBAL(execv);
+        DO_HOOK_GLOBAL(execve);
+        DO_HOOK_GLOBAL(execvp);
         DO_HOOK_GLOBAL(close);
         DO_HOOK_GLOBAL(dup2);
         DO_HOOK_GLOBAL(_exit);
