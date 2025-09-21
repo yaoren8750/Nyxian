@@ -20,6 +20,12 @@
 #ifndef PROCENVIRONMENT_FORK_H
 #define PROCENVIRONMENT_FORK_H
 
+/*!
+ @function environment_fork_init
+ @abstract Initializes fork environment.
+ @discussion
+    Fixes fork() and exec*() family symbols.
+ */
 void environment_fork_init(void);
 
 #endif /* PROCENVIRONMENT_FORK_H */

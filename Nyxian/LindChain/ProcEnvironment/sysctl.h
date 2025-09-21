@@ -20,8 +20,6 @@
 #ifndef PROCENVIRONMENT_SYSCTL_H
 #define PROCENVIRONMENT_SYSCTL_H
 
-#import <Foundation/Foundation.h>
-
 void environment_sysctl_init(void);
 
 #endif /* PROCENVIRONMENT_SYSCTL_H */

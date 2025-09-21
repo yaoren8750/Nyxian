@@ -17,16 +17,12 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/*
- Header
- */
+#import <Foundation/Foundation.h>
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
-
-// MARK: The saviour API of Nyxians modern day proc API performance
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 
@@ -117,9 +113,6 @@ int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg,
     }
 }
 
-/*
- Init
- */
 void environment_libproc_init(void)
 {
     if(environment_is_role(EnvironmentRoleGuest))

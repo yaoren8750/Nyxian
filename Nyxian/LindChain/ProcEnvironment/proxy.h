@@ -20,8 +20,15 @@
 #ifndef PROCENVIRONMENT_PROXY_H
 #define PROCENVIRONMENT_PROXY_H
 
-#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
+
+/* ----------------------------------------------------------------------
+ *  Environment API Headers
+ * -------------------------------------------------------------------- */
+#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
 // Applicable for child process
 extern NSObject<ServerProtocol> *hostProcessProxy;

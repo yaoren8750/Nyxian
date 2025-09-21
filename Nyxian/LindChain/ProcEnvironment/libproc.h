@@ -20,11 +20,16 @@
 #ifndef PROCENVIRONMENT_LIBPROC_H
 #define PROCENVIRONMENT_LIBPROC_H
 
-#import <Foundation/Foundation.h>
-#import <unistd.h>
-
+/*!
+ @function environment_proc_listallpids
+ @abstract Takes in a preallocated buffer and writes all pids on it depending on the size that run on proc surface.
+ */
 int environment_proc_listallpids(void *buffer, int buffersize);
 
+/*!
+ @function environment_libproc_init
+ @abstract Initializes the libproc environment
+ */
 void environment_libproc_init(void);
 
 #endif /* PROCENVIRONMENT_LIBPROC_H */

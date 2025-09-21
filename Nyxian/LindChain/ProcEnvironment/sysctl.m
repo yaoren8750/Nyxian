@@ -17,8 +17,8 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #include <sys/sysctl.h>

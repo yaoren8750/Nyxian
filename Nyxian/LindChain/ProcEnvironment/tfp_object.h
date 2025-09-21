@@ -22,8 +22,10 @@
 #ifndef PROCENVIRONMENT_TFPOBJECT
 #define PROCENVIRONMENT_TFPOBJECT
 
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
-#import <xpc/xpc.h>
 #import <mach/mach.h>
 
 API_AVAILABLE(ios(26.0))

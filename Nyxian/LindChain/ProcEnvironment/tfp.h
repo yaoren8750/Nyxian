@@ -22,7 +22,15 @@
 #ifndef PROCENVIRONMENT_TFP_H
 #define PROCENVIRONMENT_TFP_H
 
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
+#import <mach/mach.h>
+
+/* ----------------------------------------------------------------------
+ *  Environment API Headers
+ * -------------------------------------------------------------------- */
 #import <LindChain/ProcEnvironment/tfp_object.h>
 
 kern_return_t environment_task_for_pid(mach_port_name_t taskPort, pid_t pid, mach_port_name_t *requestTaskPort) API_AVAILABLE(ios(26.0));

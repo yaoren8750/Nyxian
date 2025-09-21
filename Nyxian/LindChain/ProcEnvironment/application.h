@@ -20,12 +20,6 @@
 #ifndef PROCENVIRONMENT_APPLICATION_H
 #define PROCENVIRONMENT_APPLICATION_H
 
-/* ----------------------------------------------------------------------
- *  Apple API Headers
- * -------------------------------------------------------------------- */
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-
 /*!
  @function environment_application_init
  @abstract Initializes application environment.

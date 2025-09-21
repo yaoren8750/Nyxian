@@ -37,10 +37,6 @@
 #import <LindChain/ProcEnvironment/fork.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
 #import <LindChain/ProcEnvironment/fd_map_object.h>
-
-/* ----------------------------------------------------------------------
- *  Surface API Headers
- * -------------------------------------------------------------------- */
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 

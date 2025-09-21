@@ -20,9 +20,16 @@
 #ifndef PROCENVIRONMENT_POSIXSPAWN_H
 #define PROCENVIRONMENT_POSIXSPAWN_H
 
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
 #include <spawn.h>
+
+/* ----------------------------------------------------------------------
+ *  Environment API Headers
+ * -------------------------------------------------------------------- */
+#import <LindChain/ProcEnvironment/fd_map_object.h>
 
 // MARK: Simple structure to keep track
 typedef struct {

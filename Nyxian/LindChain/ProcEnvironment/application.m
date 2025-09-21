@@ -17,12 +17,12 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/application.h>
-#import <LindChain/ProcEnvironment/environment.h>
+#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <LindChain/ProcEnvironment/application.h>
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ObjC/Swizzle.h>
-#import <dlfcn.h>
 
 #pragma mark - UIApplication entry detection (Used to trigger window apparance, headless processes basically)
 

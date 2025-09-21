@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/ProcEnvironment/tfp_object.h>
+#import <xpc/xpc.h>
 
 // MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
 @implementation TaskPortObject
