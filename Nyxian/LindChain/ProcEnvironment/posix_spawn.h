@@ -31,7 +31,13 @@
  * -------------------------------------------------------------------- */
 #import <LindChain/ProcEnvironment/fd_map_object.h>
 
-// MARK: Simple structure to keep track
+/*!
+ @typedef environment_posix_spawn_file_actions_t
+ @abstract
+    An opaque type representing file actions for posix_spawn within the environment API.
+ @discussion
+    The contents of this type are private and should not be accessed directly. Unless YOU KNOW WHAT YOU DO!
+ */
 typedef struct {
     FDMapObject *mapObject;
 } environment_posix_spawn_file_actions_t;

@@ -28,7 +28,7 @@ int environment_proc_listallpids(void *buffer, int buffersize);
 
 /*!
  @function environment_libproc_init
- @abstract Initializes the libproc environment
+ @abstract Initializes the libproc environment.
  */
 void environment_libproc_init(void);
 

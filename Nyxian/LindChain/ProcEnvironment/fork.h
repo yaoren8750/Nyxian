@@ -24,7 +24,7 @@
  @function environment_fork_init
  @abstract Initializes fork environment.
  @discussion
-    Fixes fork() and exec*() family symbols.
+    Fixes fork() and exec*() family symbols using a creative thread snapshotting and conditioning system.
  */
 void environment_fork_init(void);
 
