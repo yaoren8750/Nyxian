@@ -84,7 +84,8 @@ uid_t environment_ugid(void)
 
 void environment_init(EnvironmentRole role,
                       EnvironmentRestriction restriction,
-                      const char *executablePath)
+                      const char *executablePath,
+                      pid_t ppid)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -97,7 +98,7 @@ void environment_init(EnvironmentRole role,
         
         // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
         const char *realExecPath = getenv("realExecutablePath");
-        proc_surface_init(realExecPath ? realExecPath : executablePath);
+        proc_surface_init(ppid, realExecPath ? realExecPath : executablePath);
         
         environment_tfp_init();
         environment_libproc_init();

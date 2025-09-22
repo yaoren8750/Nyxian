@@ -57,7 +57,8 @@
 - (instancetype)initWithPath:(NSString*)binaryPath
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
-               withMapObject:(FDMapObject*)mapObject;
+               withMapObject:(FDMapObject*)mapObject
+ withParentProcessIdentifier:(pid_t)pid;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -88,6 +89,7 @@
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
                 withMapObject:(FDMapObject*)mapObject
+  withParentProcessIdentifier:(pid_t)ppid
                       process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;

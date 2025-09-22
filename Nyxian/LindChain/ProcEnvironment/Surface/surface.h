@@ -158,6 +158,7 @@ BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
                             NSString *executablePath);
 
-void proc_surface_init(const char *executablePath);
+void proc_surface_init(pid_t ppid,
+                       const char *executablePath);
 
 #endif

@@ -57,26 +57,17 @@ class CodeEditorViewController: UIViewController {
             self.database = DebugDatabase.getDatabase(ofPath: "\(cachePath)/debug.json")
             
             let suffix = self.path.URLGet().pathExtension
-            if suffix == "c" || suffix == "m" || suffix == "cpp" || suffix == "mm" || suffix == "h" {
-                var genericCompilerFlags: [String] = [
-                    "-isysroot",
-                    Bootstrap.shared.bootstrapPath("/SDK/iPhoneOS16.5.sdk"),
-                    "-I\(Bootstrap.shared.bootstrapPath("/Include/include"))"
-                ]
+            if ["c", "m", "cpp", "mm", "h", "hpp"].contains(suffix) {
+                project.projectConfig.reloadIfNeeded()
+                var flags = project.projectConfig.generateCompilerFlags() as! [String]
                 
-                // TODO: Analyse the includations of the .m files in the project to generate the right kinds fo flags, one example: u wrote c++ code and make a c++ header but then objective-c typechecking shouldnt happen! or the file is not included in the first place by any .m file then it shall be ignored and not typechecked
                 if suffix == "h" {
-                    genericCompilerFlags.append(contentsOf: [
-                        "-x",
-                        "objective-c",
-                    ])
+                    flags.append(contentsOf: ["-x", "objective-c"])
+                } else if ["hpp","hh"].contains(suffix) {
+                    flags.append(contentsOf: ["-x", "c++"])
                 }
                 
-                project.projectConfig.reloadIfNeeded()
-                let flags: [String] = project.projectConfig.generateCompilerFlags() as! [String]
-                genericCompilerFlags.append(contentsOf: flags)
-                
-                self.synpushServer = SynpushServer(self.path, args: genericCompilerFlags)
+                self.synpushServer = SynpushServer(self.path, args: flags)
             }
         }
         

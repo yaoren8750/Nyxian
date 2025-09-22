@@ -146,6 +146,6 @@ uid_t environment_ugid(void);
  @param executablePath
     An character buffer that represents the executable path
  */
-void environment_init(EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath);
+void environment_init(EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath, pid_t ppid);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

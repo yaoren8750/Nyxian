@@ -49,7 +49,8 @@
     pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
         @"mode": @"management",
-        @"mapObject": mapObject
+        @"mapObject": mapObject,
+        @"ppid": @(getpid())
     }];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;

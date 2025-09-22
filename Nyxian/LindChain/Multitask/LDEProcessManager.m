@@ -89,6 +89,7 @@
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
                withMapObject:(FDMapObject*)mapObject
+ withParentProcessIdentifier:(pid_t)pid
 {
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
@@ -96,7 +97,8 @@
         @"executablePath": binaryPath,
         @"arguments": arguments,
         @"environment": environment,
-        @"mapObject": mapObject
+        @"mapObject": mapObject,
+        @"ppid": @(pid)
     }];
     
     self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
@@ -277,7 +279,7 @@
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withMapObject:mapObject process:&process];
+    } withMapObject:mapObject withParentProcessIdentifier:getpid() process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
@@ -291,10 +293,11 @@
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
                 withMapObject:(FDMapObject*)mapObject
+  withParentProcessIdentifier:(pid_t)ppid
                       process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:ppid];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];

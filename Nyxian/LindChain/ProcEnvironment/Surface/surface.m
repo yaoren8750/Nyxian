@@ -118,7 +118,8 @@ void kern_sethostname(NSString *hostname)
 /*
  Init
  */
-void proc_surface_init(const char *executablePath)
+void proc_surface_init(pid_t ppid,
+                       const char *executablePath)
 {
     // Initilize base of mapping
     if(environment_is_role(EnvironmentRoleHost))
@@ -223,6 +224,8 @@ void proc_surface_init(const char *executablePath)
     kinfo.real.kp_eproc.e_pcred.p_rgid = userIdentifier;
     kinfo.real.kp_eproc.e_pcred.p_svuid = userIdentifier;
     kinfo.real.kp_eproc.e_pcred.p_svgid = userIdentifier;
+    kinfo.real.kp_proc.p_oppid = ppid;
+    kinfo.real.kp_eproc.e_ppid = ppid;
     
     kinfo.force_task_role_override = true;
     kinfo.task_role_override = TASK_UNSPECIFIED;

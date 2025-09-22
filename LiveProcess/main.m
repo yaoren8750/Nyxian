@@ -128,6 +128,8 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
     FDMapObject *mapObject = appInfo[@"mapObject"];
+    NSNumber *ppid = appInfo[@"ppid"];
+    if(!ppid) ppid = @(0);
     
     // Setup fd map
     if(mapObject) [mapObject apply_fd_map];
@@ -142,14 +144,14 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     if([mode isEqualToString:@"management"])
     {
-        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionSystem, [[NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()] UTF8String]);
+        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionSystem, [[NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()] UTF8String], ppid.intValue);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionUser, [executablePath UTF8String]);
+        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionUser, [executablePath UTF8String], ppid.intValue);
         invokeAppMain(executablePath, argc, argv);
     }
     
