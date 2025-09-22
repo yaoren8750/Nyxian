@@ -69,7 +69,7 @@ typedef NS_ENUM(NSInteger, EnvironmentRole) {
 typedef NS_ENUM(NSInteger, EnvironmentRestriction) {
     EnvironmentRestrictionNone   = 0, /* Nothing */
     EnvironmentRestrictionUser   = 1, /* Level 1 */
-    EnvironmentRestrictionSystem = 2, /* Level 2 TODO: In the future processes that run under EnvironmentRestrictionUser shall not be able to use tfp on processes with EnvironmentRestrictionSystem to ensure security */
+    EnvironmentRestrictionSystem = 2, /* Level 2 */
     EnvironmentRestrictionKernel = 3  /* Level 3: Highest permitives */
 };
 
