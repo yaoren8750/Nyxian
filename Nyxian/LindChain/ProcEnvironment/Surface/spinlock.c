@@ -35,11 +35,11 @@ static inline void cpu_relax(void) {
 
 void spinlock_lock(spinlock_t *s)
 {
-    __atomic_add_fetch(&s->seq, 1, __ATOMIC_RELEASE);
     while(__atomic_exchange_n(&s->lock, 1, __ATOMIC_ACQUIRE) == 1)
     {
         cpu_relax();
     }
+    __atomic_add_fetch(&s->seq, 1, __ATOMIC_RELEASE);
 }
 
 void spinlock_unlock(spinlock_t *s)
@@ -59,23 +59,28 @@ void spinlock_wait_for_unlock(const spinlock_t *s)
 unsigned long spinlock_read_begin(const spinlock_t *s)
 {
     unsigned long seq;
-    do
+
+    while(1)
     {
         seq = __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE);
-        
-        // Spin if writer active
-        while(seq & 1)
+        if (seq & 1)
         {
-            cpu_relax();
-            seq = __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE);
+            do
+            {
+                cpu_relax();
+                seq = __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE);
+            }
+            while (seq & 1);
         }
+
+        if (__atomic_load_n(&s->seq, __ATOMIC_ACQUIRE) == seq)
+            return seq;
     }
-    while (0);
-    return seq;
 }
+
 
 bool spinlock_read_retry(const spinlock_t *s, unsigned long start_seq)
 {
-    __sync_synchronize();
+    __atomic_thread_fence(__ATOMIC_ACQUIRE);
     return __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE) != start_seq;
 }
