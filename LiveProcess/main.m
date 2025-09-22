@@ -136,24 +136,20 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     // Setting up environment
     environment_client_connect_to_host(endpoint);
-    environment_init(EnvironmentRoleGuest);
-    
-    // TODO: Reimplement first the concept of debugging
-    environment_client_attach_debugger();
     
     if(environmentDictionary && environmentDictionary.count > 0) overwriteEnvironmentProperties(environmentDictionary);
     if(argumentDictionary && argumentDictionary.count > 0) createArgv(argumentDictionary, &argc, &argv);
     
     if([mode isEqualToString:@"management"])
     {
-        proc_3rdparty_app_endcommitment([NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()]);
-        
+        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionSystem, [[NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()] UTF8String]);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
+        environment_init(EnvironmentRoleGuest, EnvironmentRestrictionUser, [executablePath UTF8String]);
         invokeAppMain(executablePath, argc, argv);
     }
     

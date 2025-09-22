@@ -57,26 +57,6 @@
 __BEGIN_DECLS
 
 int proc_listpids(uint32_t type, uint32_t typeinfo, void *buffer, int buffersize);
-
-/*!
-    @function proc_listpidspath
-    @discussion A function which will search through the current
-        processes looking for open file references which match
-        a specified path or volume.
-    @param type types of processes to be searched (see proc_listpids)
-    @param typeinfo adjunct information for type
-    @param path file or volume path
-    @param pathflags flags to control which files should be considered
-        during the process search.
-    @param buffer a C array of int-sized values to be filled with
-        process identifiers that hold an open file reference
-        matching the specified path or volume.  Pass NULL to
-        obtain the minimum buffer size needed to hold the
-        currently active processes.
-    @param buffersize the size (in bytes) of the provided buffer.
-    @result the number of bytes of data returned in the provided buffer;
-        -1 if an error was encountered;
- */
 int proc_listallpids(void * buffer, int buffersize);
 int proc_listpidspath(uint32_t    type, uint32_t    typeinfo, const char    *path, uint32_t    pathflags, void        *buffer, int        buffersize);
 int proc_pidinfo(int pid, int flavor, uint64_t arg,  void *buffer, int buffersize);

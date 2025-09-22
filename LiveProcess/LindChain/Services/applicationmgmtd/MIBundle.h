@@ -15,7 +15,6 @@
 
 @property (nonatomic, readonly) bool allowsAppleAppExtensionsNotInExtensionCache;
 @property (nonatomic, readonly, copy) NSString *bundleName;
-@property (nonatomic, copy) NSURL *bundleParentDirectoryURL;
 @property (nonatomic, readonly, copy) NSString *bundleParentSubdirectory;
 @property (nonatomic, readonly, copy) NSString *bundleShortVersion;
 @property (nonatomic, readonly) unsigned char bundleType;
@@ -24,9 +23,6 @@
 @property (nonatomic, readonly, copy) NSString *bundleVersion;
 @property (nonatomic, readonly, copy) NSArray *deviceFamilies;
 @property (nonatomic, readonly, copy) NSString *displayName;
-@property (nonatomic, retain) NSArray *driverKitExtensionBundles;
-@property (nonatomic, retain) NSArray *extensionKitBundles;
-@property (nonatomic, retain) NSArray *frameworkBundles;
 @property (nonatomic, readonly, copy) NSString *identifier;
 @property (nonatomic, readonly, copy) NSDictionary *infoPlistSubset;
 @property (nonatomic, readonly) bool isAppTypeBundle;
@@ -44,12 +40,10 @@
 @property (nonatomic, readonly) bool needsDataContainer;
 @property (nonatomic, readonly) MIBundle *parentBundle;
 @property (nonatomic, readonly, copy) NSString *parentBundleID;
-@property (nonatomic, retain) NSArray *pluginKitBundles;
 @property (nonatomic, readonly, copy) NSString *relativePath;
 @property (nonatomic, readonly, copy) NSString *sdkBuildVersion;
 @property (nonatomic, readonly) NSSet *siriIntents;
 @property (nonatomic, readonly, copy) NSArray *supportedDevices;
-@property (nonatomic, retain) NSArray *xpcServiceBundles;
 
 + (id)_URLOfFirstBundleInDirectory:(id)arg1 withExtension:(id)arg2 error:(id*)arg3;
 + (id)bundleForURL:(id)arg1 error:(id*)arg2;
@@ -149,7 +143,6 @@
 
 @property (nonatomic, readonly) struct __CFBundle { }*cfBundle;
 @property (nonatomic, readonly) unsigned long long codeSignatureVerificationState;
-@property (nonatomic, retain) NSError *codeSigningInfoError;
 @property (nonatomic, readonly, copy) NSString *companionAppIdentifier;
 @property (nonatomic, readonly) unsigned long long compatibilityState;
 @property (nonatomic, readonly, copy) NSArray *counterpartIdentifiers;
@@ -157,7 +150,6 @@
 @property (nonatomic, readonly) unsigned long long dataContainerContentClass;
 @property (nonatomic, readonly) int dataProtectionClass;
 @property (nonatomic, readonly) unsigned long long estimatedMemoryUsageToValidate;
-@property (nonatomic, retain) NSArray *executableImageSlices;
 @property (nonatomic, readonly, copy) NSString *executableName;
 @property (nonatomic, readonly) NSURL *executableURL;
 @property (nonatomic, readonly) bool hasSinf;
@@ -176,9 +168,7 @@
 @property (nonatomic, readonly) NSURL *rootSuppURL;
 @property (nonatomic) unsigned int sinfDataType;
 @property (nonatomic) bool sinfDataTypeIsSet;
-@property (nonatomic, retain) NSString *watchKitAppExecutableHash;
 @property (nonatomic, readonly) bool watchKitAppRunsIndependentlyOfCompanion;
-@property (nonatomic, retain) NSError *wk2AppBundleError;
 
 + (id)bundlesInParentBundle:(id)arg1 subDirectory:(id)arg2 matchingPredicate:(id /* block */)arg3 error:(id*)arg4;
 + (bool)isGrandfatheredNonContainerizedForSigningInfo:(id)arg1;

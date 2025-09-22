@@ -51,9 +51,26 @@
      The environment is running as a guest.
  */
 typedef NS_ENUM(NSInteger, EnvironmentRole) {
-    EnvironmentRoleNone,
-    EnvironmentRoleHost,
-    EnvironmentRoleGuest
+    EnvironmentRoleNone  = 0,
+    EnvironmentRoleHost  = 1,
+    EnvironmentRoleGuest = 2
+};
+
+/*!
+ @enum EnvironmentRestriction
+ @abstract Defines the restriction of the current environment.
+ @constant EnvironmentRestrictionNone
+     No environment restriction is set.
+ @constant EnvironmentRestrictionSystem
+     The environment is running with system restrictions.
+ @constant EnvironmentRestrictionUser
+     The environment with user restrictions.
+ */
+typedef NS_ENUM(NSInteger, EnvironmentRestriction) {
+    EnvironmentRestrictionNone   = 0, /* Nothing */
+    EnvironmentRestrictionUser   = 1, /* Level 1 */
+    EnvironmentRestrictionSystem = 2, /* Level 2 TODO: In the future processes that run under EnvironmentRestrictionUser shall not be able to use tfp on processes with EnvironmentRestrictionSystem to ensure security */
+    EnvironmentRestrictionKernel = 3  /* Level 3: Highest permitives */
 };
 
 /*!
@@ -100,6 +117,25 @@ BOOL environment_is_role(EnvironmentRole role);
 BOOL environment_must_be_role(EnvironmentRole role);
 
 /*!
+ @function environment_has_restriction_level
+ @abstract Returns a boolean value representing if it is the given or higher restriction level.
+ @discussion
+    This function is used by the modular environment API to decide what to allow and what not.
+ 
+ @param restriction
+    An `EnvironmentRestriction` enum value that is the value that must match or be higher than the internal `EnvironmentRestriction` enum value for it to succeed
+ */
+BOOL environment_has_restriction_level(EnvironmentRestriction restriction);
+
+/*!
+ @function environment_ugid
+ @abstract Returns a user identifier based on the environments restriction level
+ @discussion
+    This function is used by the modular environment API to decide what to allow and what not.
+ */
+uid_t environment_ugid(void);
+
+/*!
  @function environment_init
  @abstract Initializes the environment with a given role.
  @discussion
@@ -107,7 +143,9 @@ BOOL environment_must_be_role(EnvironmentRole role);
  
  @param role
     An `EnvironmentRole` enum value that represents the environment role wished to be initializes as.
+ @param executablePath
+    An character buffer that represents the executable path
  */
-void environment_init(EnvironmentRole role);
+void environment_init(EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

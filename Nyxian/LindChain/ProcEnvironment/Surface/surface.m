@@ -25,6 +25,7 @@
 #import <LindChain/litehook/src/litehook.h>
 #import <mach/mach.h>
 #import <sys/sysctl.h>
+#import <mach-o/dyld.h>
 
 surface_map_t *surface = NULL;
 
@@ -65,36 +66,6 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     return (int)needed_bytes;
 }
 
-void proc_3rdparty_app_endcommitment(NSString *executablePath)
-{
-    // Insert self, before securing it!
-    proc_insert_self();
-    
-    // Overwrite some info if process is passed
-    kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
-    
-    if(executablePath)
-    {
-        // Modifying self
-        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:executablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
-        strncpy(kinfo.path, [executablePath UTF8String], PATH_MAX);
-    }
-    
-    kinfo.force_task_role_override = true;
-    kinfo.task_role_override = TASK_UNSPECIFIED;
-    
-    proc_object_insert(kinfo);
-    
-    // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-    kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
-    if(kr != KERN_SUCCESS)
-    {
-        // Its not secure, our own sandbox policies got broken, we blind the process
-        munmap(surface, SURFACE_MAP_SIZE);
-        return;
-    }
-}
-
 /*
  Management
  */
@@ -130,7 +101,7 @@ void kern_sethostname(NSString *hostname)
 /*
  Init
  */
-void proc_surface_init(void)
+void proc_surface_init(const char *executablePath)
 {
     // Initilize base of mapping
     if(environment_is_role(EnvironmentRoleHost))
@@ -181,17 +152,70 @@ void proc_surface_init(void)
     }
     
     // Add proc self if were host
-    if(environment_is_role(EnvironmentRoleHost))
+    if(environment_is_role(EnvironmentRoleHost) && environment_has_restriction_level(EnvironmentRestrictionKernel))
     {
-        proc_insert_self();
-        
+        // Setup hostname
         NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
         hostname = hostname ?: @"localhost";
         strncpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
     }
     else
     {
+        // Rebind hostname symbol
         litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, gethostname, environment_gethostname, nil);
+    }
+    
+    // Insert self
+    proc_insert_self();
+    
+    // Overwrite some info if process is passed
+    kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
+    
+    // Create a nsExecutablePath
+    char *executablePathNew = NULL;
+    if(!executablePath)
+    {
+        // Create new path if not available
+        uint32_t size = PATH_MAX;
+        executablePathNew = malloc(size);
+        _NSGetExecutablePath(executablePathNew, &size);
+        
+        // Set executablePath to point to executablePathNew
+        executablePath = executablePathNew;
+    }
+    NSString *nsExecutablePath = [NSString stringWithCString:executablePath encoding:NSUTF8StringEncoding];
+    if(executablePathNew) free(executablePathNew);
+    
+    if(nsExecutablePath)
+    {
+        // Modifying self
+        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:nsExecutablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
+        strncpy(kinfo.path, [nsExecutablePath UTF8String], PATH_MAX);
+    }
+    
+    uid_t userIdentifier = environment_ugid();
+    kinfo.real.kp_eproc.e_ucred.cr_uid = userIdentifier;
+    kinfo.real.kp_eproc.e_pcred.p_ruid = userIdentifier;
+    kinfo.real.kp_eproc.e_pcred.p_rgid = userIdentifier;
+    kinfo.real.kp_eproc.e_pcred.p_svuid = userIdentifier;
+    kinfo.real.kp_eproc.e_pcred.p_svgid = userIdentifier;
+    
+    kinfo.force_task_role_override = true;
+    kinfo.task_role_override = TASK_UNSPECIFIED;
+    
+    proc_object_insert(kinfo);
+    
+    
+    if(!environment_has_restriction_level(EnvironmentRestrictionSystem))
+    {
+        // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
+        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
+        if(kr != KERN_SUCCESS)
+        {
+            // Its not secure, our own sandbox policies got broken, we blind the process
+            munmap(surface, SURFACE_MAP_SIZE);
+            return;
+        }
     }
     
     return;

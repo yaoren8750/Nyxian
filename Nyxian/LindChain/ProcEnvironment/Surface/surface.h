@@ -152,12 +152,10 @@ void proc_object_remove_for_pid(pid_t pid);
 
 void kern_sethostname(NSString *hostname);
 
-void proc_3rdparty_app_endcommitment(NSString *executablePath);
-
 BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
                             NSString *executablePath);
 
-void proc_surface_init(void);
+void proc_surface_init(const char *executablePath);
 
 #endif

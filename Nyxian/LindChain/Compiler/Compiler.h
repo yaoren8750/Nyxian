@@ -26,12 +26,12 @@
 /// Class (intended to be single-instanced) to provide LLVM C++ service to Swift front-end
 @interface Compiler : NSObject
 
-- (nonnull instancetype)init:(nonnull NSArray*)flags;
+- (instancetype)init:(NSArray*)flags;
 
-- (int)compileObject:(nonnull NSString*)filePath
+- (int)compileObject:(NSString*)filePath
           outputFile:(NSString*)outputFilePath
       platformTriple:(NSString*)platformTriple
-              issues:(NSArray<Synitem*> * * _Nonnull)issues;
+              issues:(NSArray<Synitem*>**)issues;
 
 @end
 

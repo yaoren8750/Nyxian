@@ -21,6 +21,7 @@
 #import <LindChain/Debugger/MachServer.h>
 
 static EnvironmentRole environmentRole = EnvironmentRoleNone;
+static EnvironmentRestriction environmentRestriction = EnvironmentRestrictionNone;
 
 #pragma mark - Special client extra symbols
 
@@ -49,7 +50,7 @@ void environment_client_attach_debugger(void)
     machServerInit();
 }
 
-#pragma mark - Role checkers and enforcers
+#pragma mark - Role/Restriction checkers and enforcers
 
 BOOL environment_is_role(EnvironmentRole role)
 {
@@ -59,29 +60,44 @@ BOOL environment_is_role(EnvironmentRole role)
 BOOL environment_must_be_role(EnvironmentRole role)
 {
     if(!environment_is_role(role))
-    {
         abort();
-    }
     else
-    {
         return YES;
+}
+
+BOOL environment_has_restriction_level(EnvironmentRestriction restriction)
+{
+    return (environmentRestriction >= restriction);
+}
+
+uid_t environment_ugid(void)
+{
+    uid_t uid = 501;
+    if(environment_has_restriction_level(EnvironmentRestrictionSystem))
+    {
+        uid = 0;
     }
+    return uid;
 }
 
 #pragma mark - Initilizer
 
-void environment_init(EnvironmentRole role)
+void environment_init(EnvironmentRole role,
+                      EnvironmentRestriction restriction,
+                      const char *executablePath)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Setting environmentIsHost first
+        // Setting environment properties
         environmentRole = role;
+        environmentRestriction = restriction;
         
         // Set process identifier now
         [hostProcessProxy setProcessIdentifier:getpid()];
         
         // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
-        proc_surface_init();
+        const char *realExecPath = getenv("realExecutablePath");
+        proc_surface_init(realExecPath ? realExecPath : executablePath);
         
         environment_tfp_init();
         environment_libproc_init();

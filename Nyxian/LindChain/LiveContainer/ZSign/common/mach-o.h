@@ -1,3 +1,6 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+
 #pragma once
 
 typedef int cpu_type_t;
@@ -583,3 +586,5 @@ struct CS_Scatter {
 };
 
 #pragma pack(pop)
+
+#pragma clang diagnostic pop
