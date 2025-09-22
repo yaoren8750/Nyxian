@@ -24,3 +24,4 @@ void* getGuestAppHeader(void);
 void* dlopenBypassingLock(const char *path, int mode);
 void initDead10ccFix(void);
 void UIKitGuestHooksInit(void);
+void StoreKitHooks_init(void);

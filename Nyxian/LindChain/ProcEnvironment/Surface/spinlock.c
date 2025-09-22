@@ -63,14 +63,14 @@ unsigned long spinlock_read_begin(const spinlock_t *s)
     while(1)
     {
         seq = __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE);
-        if (seq & 1)
+        if(seq & 1)
         {
             do
             {
                 cpu_relax();
                 seq = __atomic_load_n(&s->seq, __ATOMIC_ACQUIRE);
             }
-            while (seq & 1);
+            while(seq & 1);
         }
 
         if (__atomic_load_n(&s->seq, __ATOMIC_ACQUIRE) == seq)

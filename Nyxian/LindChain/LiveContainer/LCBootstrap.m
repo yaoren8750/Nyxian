@@ -202,12 +202,11 @@ NSString* invokeAppMain(NSString *executablePath,
         return @"dlopen: an unknown error occurred";
     }
     
-    // Before execution setup
-    // TODO: Hook NSExecption handler thingy again
     NUDGuestHooksInit();
     SecItemGuestHooksInit();
     NSFMGuestHooksInit();
     UIKitGuestHooksInit();
+    StoreKitHooks_init();
     initDead10ccFix();
     DyldHooksInit();
 
