@@ -20,7 +20,7 @@
 #ifndef PROCENVIRONMENT_SPINLOCK
 #define PROCENVIRONMENT_SPINLOCK
 
-#import <Foundation/Foundation.h>
+#import <stdbool.h>
 
 typedef struct {
     volatile int lock;

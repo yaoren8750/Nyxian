@@ -19,6 +19,7 @@
 
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
+#include <LindChain/ProcEnvironment/Surface/spinlock.h>
 #import <pthread.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -27,29 +28,34 @@ static pthread_mutex_t proc_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void proc_lock_wrt(void)
 {
-    flock(safety_fd, LOCK_EX);
+    spinlock_lock(spinface);
     pthread_mutex_lock(&proc_lock);
 }
 
 void proc_unlock_wrt(void)
 {
     pthread_mutex_unlock(&proc_lock);
-    flock(safety_fd, LOCK_UN);
+    spinlock_unlock(spinface);
 }
 
 kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
-    flock(safety_fd, LOCK_SH);
     kinfo_info_surface_t cur = {};
-    for(uint32_t i = 0; i < surface->proc_count; i++)
+    unsigned long seq;
+    do
     {
-        kinfo_info_surface_t object = surface->proc_info[i];
-        if(object.real.kp_proc.p_pid == pid) {
-            cur = object;
-            break;
+        seq = spinlock_read_begin(spinface);
+        for(uint32_t i = 0; i < surface->proc_count; i++)
+        {
+            kinfo_info_surface_t object = surface->proc_info[i];
+            if(object.real.kp_proc.p_pid == pid)
+            {
+                cur = object;
+                break;
+            }
         }
     }
-    flock(safety_fd, LOCK_UN);
+    while (spinlock_read_retry(spinface, seq));
     return cur;
 }
 
@@ -57,9 +63,12 @@ void proc_object_remove_for_pid(pid_t pid)
 {
     proc_lock_wrt();
 
-    for (uint32_t i = 0; i < surface->proc_count; i++) {
-        if (surface->proc_info[i].real.kp_proc.p_pid == pid) {
-            if (i < surface->proc_count - 1) {
+    for(uint32_t i = 0; i < surface->proc_count; i++)
+    {
+        if(surface->proc_info[i].real.kp_proc.p_pid == pid)
+        {
+            if(i < surface->proc_count - 1)
+            {
                 memmove(&surface->proc_info[i],
                         &surface->proc_info[i + 1],
                         (surface->proc_count - i - 1) * sizeof(kinfo_info_surface_t));
@@ -78,7 +87,8 @@ void proc_object_insert(kinfo_info_surface_t object)
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
-        if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid) {
+        if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid)
+        {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
             proc_unlock_wrt();
             return;
@@ -92,18 +102,15 @@ void proc_object_insert(kinfo_info_surface_t object)
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
 {
-    flock(safety_fd, LOCK_SH);
     kinfo_info_surface_t cur = {};
-    
-    if(index >= surface->proc_count)
+    unsigned long seq;
+    do
     {
-        flock(safety_fd, LOCK_UN);
-        return cur;
+        seq = spinlock_read_begin(spinface);
+        if(index < surface->proc_count)
+            cur = surface->proc_info[index];
     }
-    
-    cur = surface->proc_info[index];
-    
-    flock(safety_fd, LOCK_UN);
+    while (spinlock_read_retry(spinface, seq));
     return cur;
 }
 

@@ -157,7 +157,7 @@
 				LindChain/ProcEnvironment/Surface/memfd.c,
 				LindChain/ProcEnvironment/Surface/proc.m,
 				LindChain/ProcEnvironment/Surface/rusage.m,
-				LindChain/ProcEnvironment/Surface/spinlock.m,
+				LindChain/ProcEnvironment/Surface/spinlock.c,
 				LindChain/ProcEnvironment/Surface/surface.m,
 				LindChain/ProcEnvironment/sysctl.m,
 				LindChain/ProcEnvironment/tfp_object.m,

@@ -28,6 +28,7 @@
 #import <mach-o/dyld.h>
 
 surface_map_t *surface = NULL;
+spinlock_t *spinface = NULL;
 
 static int sharing_fd = -1;
 int safety_fd = -1;
@@ -35,35 +36,46 @@ int safety_fd = -1;
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 {
-    flock(safety_fd, LOCK_SH);
+    size_t needed_bytes = 0;
+    int ret = 0;
+    unsigned long seq;
 
-    size_t needed_bytes = (size_t)surface->proc_count * sizeof(struct kinfo_proc);
+    do {
+        seq = spinlock_read_begin(spinface);
 
-    if(needed_out) *needed_out = needed_bytes;
+        uint32_t count = surface->proc_count;
+        needed_bytes = (size_t)count * sizeof(struct kinfo_proc);
 
-    if(buffer == NULL || buffersize == 0)
-    {
-        flock(safety_fd, LOCK_UN);
-        return (int)needed_bytes;
-    }
+        if(needed_out)
+            *needed_out = needed_bytes;
 
-    if(buffersize < needed_bytes)
-    {
-        flock(safety_fd, LOCK_UN);
-        errno = ENOMEM;
-        if(needed_out) *needed_out = needed_bytes;
-        return -1;
-    }
+        if(buffer == NULL || buffersize == 0)
+        {
+            ret = (int)needed_bytes;
+            break;
+        }
 
-    struct kinfo_proc *kprocs = buffer;
-    for(uint32_t i = 0; i < surface->proc_count; i++)
-    {
-        memset(&kprocs[i], 0, sizeof(struct kinfo_proc));
-        memcpy(&kprocs[i], &surface->proc_info[i].real, sizeof(struct kinfo_proc));
-    }
+        if(buffersize < needed_bytes)
+        {
+            errno = ENOMEM;
+            ret = -1;
+            break;
+        }
 
-    flock(safety_fd, LOCK_UN);
-    return (int)needed_bytes;
+        struct kinfo_proc *kprocs = buffer;
+        for(uint32_t i = 0; i < count; i++)
+        {
+            memset(&kprocs[i], 0, sizeof(struct kinfo_proc));
+            memcpy(&kprocs[i],
+                   &surface->proc_info[i].real,
+                   sizeof(struct kinfo_proc));
+        }
+
+        ret = (int)needed_bytes;
+
+    } while (spinlock_read_retry(spinface, seq));
+
+    return ret;
 }
 
 /*
@@ -85,9 +97,14 @@ NSFileHandle *proc_safety_handoff(void)
 int environment_gethostname(char *buf,
                             size_t bufsize)
 {
-    flock(safety_fd, LOCK_SH);
-    strncpy(buf, surface->hostname, bufsize);
-    flock(safety_fd, LOCK_UN);
+    unsigned long seq;
+
+    do
+    {
+        seq = spinlock_read_begin(spinface);
+        strncpy(buf, surface->hostname, bufsize);
+    }
+    while(spinlock_read_retry(spinface, seq));
     
     return 0;
 }
@@ -107,8 +124,9 @@ void proc_surface_init(const char *executablePath)
     if(environment_is_role(EnvironmentRoleHost))
     {
         sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
-        safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDONLY);
+        safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDWR);
         ftruncate(sharing_fd, SURFACE_MAP_SIZE);
+        ftruncate(safety_fd, sizeof(spinlock_t));
     }
     else
     {
@@ -127,12 +145,14 @@ void proc_surface_init(const char *executablePath)
     
     // Now map it!! (but only with max readable)
     surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-    if(environment_is_role(EnvironmentRoleGuest) || surface == MAP_FAILED) close(sharing_fd);
-    if(surface == MAP_FAILED)
+    spinface = mmap(NULL, sizeof(spinlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, safety_fd, 0);
+    if(environment_is_role(EnvironmentRoleGuest) || surface == MAP_FAILED)
     {
         // Mapping failed
         close(safety_fd);
-        return;
+        close(sharing_fd);
+        if(environment_is_role(EnvironmentRoleHost))
+            return;
     }
     
     // After close we come to magic
@@ -140,6 +160,10 @@ void proc_surface_init(const char *executablePath)
     {
         // Were the host so we write the magic
         surface->magic = SURFACE_MAGIC;
+        
+        // Setup spinface
+        spinface->lock = 0;
+        spinface->seq = 0;
     }
     else
     {
@@ -214,6 +238,14 @@ void proc_surface_init(const char *executablePath)
         {
             // Its not secure, our own sandbox policies got broken, we blind the process
             munmap(surface, SURFACE_MAP_SIZE);
+            return;
+        }
+        
+        kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)spinface, sizeof(spinlock_t), TRUE, VM_PROT_READ);
+        if(kr != KERN_SUCCESS)
+        {
+            // Its not secure, our own sandbox policies got broken, we blind the process
+            munmap(spinface, SURFACE_MAP_SIZE);
             return;
         }
     }

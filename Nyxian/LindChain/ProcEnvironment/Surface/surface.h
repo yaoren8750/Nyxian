@@ -23,6 +23,7 @@
 #import <Foundation/Foundation.h>
 #include <sys/sysctl.h>
 #include <limits.h>
+#include <LindChain/ProcEnvironment/Surface/spinlock.h>
 
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
@@ -129,6 +130,7 @@ extern int safety_fd;
 
 /// Shared pointer that points to the surface mapping
 extern surface_map_t *surface;
+extern spinlock_t *spinface;
 
 /* Handoff */
 

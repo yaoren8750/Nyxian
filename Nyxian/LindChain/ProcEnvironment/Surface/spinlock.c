@@ -52,7 +52,6 @@ void spinlock_wait_for_unlock(const spinlock_t *s)
 {
     while(__atomic_load_n(&s->lock, __ATOMIC_ACQUIRE) != 0)
     {
-        __asm__ volatile("pause");
         cpu_relax();
     }
 }

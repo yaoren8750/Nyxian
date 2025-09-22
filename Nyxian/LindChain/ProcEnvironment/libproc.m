@@ -33,26 +33,36 @@ int proc_libproc_listallpids(void *buffer, int buffersize)
         errno = EINVAL;
         return -1;
     }
+    
+    size_t n = 0;
+    size_t needed_bytes = 0;
+    unsigned long seq;
 
-    flock(safety_fd, LOCK_SH);
+    do
+    {
+        seq = spinlock_read_begin(spinface);
 
-    uint32_t count = surface->proc_count;
-    size_t needed_bytes = (size_t)count * sizeof(pid_t);
+        uint32_t count = surface->proc_count;
+        needed_bytes = (size_t)count * sizeof(pid_t);
 
+        if (buffer != NULL && buffersize > 0) {
+            size_t capacity = (size_t)buffersize / sizeof(pid_t);
+            n = count < capacity ? count : capacity;
+
+            pid_t *pids = (pid_t *)buffer;
+            for (size_t i = 0; i < n; i++) {
+                pids[i] = surface->proc_info[i].real.kp_proc.p_pid;
+            }
+        }
+
+    }
+    while (spinlock_read_retry(spinface, seq));
+    
     if(buffer == NULL || buffersize == 0)
     {
-        flock(safety_fd, LOCK_UN);
         return (int)needed_bytes;
     }
-
-    size_t capacity = (size_t)buffersize / sizeof(pid_t);
-    size_t n = count < capacity ? count : capacity;
-
-    pid_t *pids = (pid_t *)buffer;
-    for(size_t i = 0; i < n; i++) pids[i] = surface->proc_info[i].real.kp_proc.p_pid;
-
-    flock(safety_fd, LOCK_UN);
-
+    
     return (int)(n * sizeof(pid_t));
 }
 
@@ -60,13 +70,13 @@ int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize)
 {
     if (buffersize == 0 || buffer == NULL)
         return 0;
-
+    
     kinfo_info_surface_t info = proc_object_for_pid(pid);
     if (info.real.kp_proc.p_pid == 0)
         return 0;
-
+    
     strlcpy((char*)buffer, info.real.kp_proc.p_comm, buffersize);
-
+    
     return (int)strlen((char*)buffer);
 }
 
