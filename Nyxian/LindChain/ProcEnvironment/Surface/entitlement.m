@@ -30,3 +30,10 @@ bool proc_got_entitlement(pid_t pid,
     // Now check entitlements
     return(object.entitlements & entitlement) == entitlement;
 }
+
+bool entitlement_got_entitlement(PEEntitlement present,
+                                 PEEntitlement needed)
+{
+    // Check entitlements
+    return(present & needed) == needed;
+}

@@ -47,8 +47,12 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     PEEntitlementSpawnProc     =             1ull << 9  // Grants spawning processes
 };
 
+#define PEEntitlementNone 0
 #define PEEntitlementDefault PEEntitlementTaskForPid | PEEntitlementSurfaceRD | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
+#define PEEntitlementAll PEEntitlementTaskForPid | PEEntitlementTaskForPidSpecial | PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidAll | PEEntitlementSurfaceRW | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSpawnProc
 
 bool proc_got_entitlement(pid_t pid, PEEntitlement entitlement);
+
+bool entitlement_got_entitlement(PEEntitlement present, PEEntitlement needed);
 
 #endif /* PROC_ENTITLEMENT_H */

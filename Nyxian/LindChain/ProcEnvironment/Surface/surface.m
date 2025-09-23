@@ -36,6 +36,9 @@ int safety_fd = -1;
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 {
+    // Dont use if uninitilized
+    if(surface == NULL) return 0;
+    
     size_t needed_bytes = 0;
     int ret = 0;
     unsigned long seq;
@@ -132,6 +135,7 @@ void proc_surface_init(pid_t ppid,
     }
     else
     {
+        // Setup
         NSFileHandle *handle;
         NSFileHandle *safety;
         environment_proxy_get_surface_handle(&handle, &safety);
@@ -234,20 +238,53 @@ void proc_surface_init(pid_t ppid,
     kinfo.force_task_role_override = true;
     kinfo.task_role_override = TASK_UNSPECIFIED;
     
-    kinfo.entitlements = PEEntitlementDefault;
+    kinfo.entitlements = exposed_entitlement;
     
     proc_object_insert(kinfo);
     
     
     if(!environment_has_restriction_level(EnvironmentRestrictionKernel))
     {
+        // Entitlement enforcement!
+        vm_prot_t surface_prot_set = VM_PROT_NONE;
+        vm_prot_t spinlock_prot_set = VM_PROT_NONE;
+        
+        // Translate entitlements to prot level
+        if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRD))
+        {
+            surface_prot_set = surface_prot_set | VM_PROT_READ;
+            spinlock_prot_set = spinlock_prot_set | VM_PROT_READ;
+        }
+        
+        if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRW))
+        {
+            surface_prot_set = surface_prot_set | VM_PROT_WRITE;
+            
+            // Needs to aquire lock so read is always needed when having some sort of surface permitives
+            spinlock_prot_set = spinlock_prot_set | VM_PROT_READ | VM_PROT_WRITE;
+        }
+        
+        if(surface_prot_set == VM_PROT_NONE)
+        {
+            if(munmap(surface, SURFACE_MAP_SIZE) != 0)
+                exit(1);
+            else
+                surface = NULL;
+            if(munmap(spinface, sizeof(spinlock_t)) != 0)
+                exit(1);
+            else
+                spinface = NULL;
+        }
+        
         // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
+        kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, surface_prot_set);
         if(kr != KERN_SUCCESS)
         {
             // Its not secure, our own sandbox policies got broken, we blind the process
             if(munmap(surface, SURFACE_MAP_SIZE) != 0)
                 exit(1);
+            else
+                surface = NULL;
             return;
         }
         
@@ -257,6 +294,8 @@ void proc_surface_init(pid_t ppid,
             // Its not secure, our own sandbox policies got broken, we blind the process
             if(munmap(spinface, sizeof(spinlock_t)) != 0)
                 exit(1);
+            else
+                spinface = NULL;
             return;
         }
     }

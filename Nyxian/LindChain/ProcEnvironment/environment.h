@@ -39,6 +39,10 @@
 #import <LindChain/ProcEnvironment/fd_map_object.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
+#import <LindChain/ProcEnvironment/Surface/permit.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
+
+extern PEEntitlement exposed_entitlement;
 
 /*!
  @enum EnvironmentRole
@@ -146,6 +150,6 @@ uid_t environment_ugid(void);
  @param executablePath
     An character buffer that represents the executable path
  */
-void environment_init(EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath, pid_t ppid);
+void environment_init(PEEntitlement entitlement, EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath, pid_t ppid);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

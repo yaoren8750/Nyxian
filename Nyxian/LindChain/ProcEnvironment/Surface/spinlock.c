@@ -17,7 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/Surface/spinlock.h>
+#include <LindChain/ProcEnvironment/Surface/spinlock.h>
 
 #pragma mark - spinlock helper
 
