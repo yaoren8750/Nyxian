@@ -126,6 +126,7 @@ void proc_surface_init(pid_t ppid,
     {
         sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
         safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDWR);
+        if(sharing_fd == -1 || safety_fd == -1) return;
         ftruncate(sharing_fd, SURFACE_MAP_SIZE);
         ftruncate(safety_fd, sizeof(spinlock_t));
     }

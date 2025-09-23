@@ -23,5 +23,5 @@
 __attribute__((constructor))
 void hostProcEnvInit(void)
 {
-    environment_init(EnvironmentRoleHost, EnvironmentRestrictionKernel, NULL, 0);
+    environment_init(EnvironmentRoleHost, EnvironmentRestrictionKernel, NULL, getppid());
 }
