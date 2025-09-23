@@ -102,6 +102,8 @@ typedef struct {
     PEEntitlement entitlements;
 } kinfo_info_surface_t;
 
+#define PROC_MAX 5000
+
 /// Structure that holds surface information and other structures
 struct surface_map {
     /* System */
@@ -110,17 +112,16 @@ struct surface_map {
     
     /* Proc */
     uint32_t proc_count;
-    kinfo_info_surface_t proc_info[500];
+    kinfo_info_surface_t proc_info[PROC_MAX];
 };
 
 typedef struct surface_map surface_map_t;
 
 
 /* Proc Macros */
-#define PROC_MAX 500
 #define SURFACE_PROC_COUNTER_SIZE sizeof(uint32_t)
 #define SURFACE_PROC_OBJECT_MAX PROC_MAX
-#define SURFACE_PROC_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * 500
+#define SURFACE_PROC_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * SURFACE_PROC_OBJECT_MAX
 
 /* Surface Macros */
 #define SURFACE_MAGIC 0xFABCDEFB

@@ -81,6 +81,11 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     return ret;
 }
 
+bool proc_allowed_to_spawn(void)
+{
+    return true;
+}
+
 /*
  Management
  */
@@ -261,18 +266,10 @@ void proc_surface_init(pid_t ppid,
             vm_prot_t spinlock_prot_set = VM_PROT_NONE;
             
             // Translate entitlements to prot level
-            if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRD))
+            if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRead))
             {
                 surface_prot_set = surface_prot_set | VM_PROT_READ;
                 spinlock_prot_set = spinlock_prot_set | VM_PROT_READ;
-            }
-            
-            if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRW))
-            {
-                surface_prot_set = surface_prot_set | VM_PROT_WRITE;
-                
-                // Needs to aquire lock so read is always needed when having some sort of surface permitives
-                spinlock_prot_set = spinlock_prot_set | VM_PROT_READ | VM_PROT_WRITE;
             }
             
             if(surface_prot_set == VM_PROT_NONE)

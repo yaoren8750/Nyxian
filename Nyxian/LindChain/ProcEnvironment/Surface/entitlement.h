@@ -25,32 +25,30 @@
 
 typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     /* Task port system*/
-    PEEntitlementTaskForPid =                1ull << 1, // Grants getting task ports of other processes either with the same main priveleges or lower
-    PEEntitlementTaskForPidPrvt =            1ull << 2, // Grants getting task ports of all other processes also processes with higher priveleges, but not host task port (needs PEEntitlementTaskForPid to work)
-    PEEntitlementGetHostTaskPort =           1ull << 3, // Grants getting host task port (needs PEEntitlementTaskForPid to work)
+    PEEntitlementTaskForPid =                1ull << 0, // Grants getting task ports of other processes either with the same main priveleges or lower
+    PEEntitlementTaskForPidPrvt =            1ull << 1, // Grants getting task ports of all other processes also processes with higher priveleges, but not host task port (needs PEEntitlementTaskForPid to work)
+    PEEntitlementGetHostTaskPort =           1ull << 2, // Grants getting host task port (needs PEEntitlementTaskForPid to work)
     PEEntitlementTaskForPidAll =             (PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidPrvt | PEEntitlementTaskForPid),
     
     /* Surface system */
-    PEEntitlementSurfaceWR =                 1ull << 3, // Grants write access onto the surface
-    PEEntitlementSurfaceRD =                 1ull << 4, // Grants read access onto the surface (Note: rapid changes at runtime require iOS 26 because this is the only way to safely ensure these entitlements can be dropped when lost)
-    PEEntitlementSurfaceRW     =             (PEEntitlementSurfaceWR | PEEntitlementSurfaceRD),
+    PEEntitlementSurfaceRead =               1ull << 3, // Grants read access onto the surface (Note: rapid changes at runtime require iOS 26 because this is the only way to safely ensure these entitlements can be dropped when lost)
     
     /* Main privilege system*/
-    PEEntitlementSetUidAllowed =             1ull << 5, // Grants setting uid
-    PEEntitlementSetGidAllowed =             1ull << 6, // Grants setting gid
+    PEEntitlementSetUidAllowed =             1ull << 4, // Grants setting uid
+    PEEntitlementSetGidAllowed =             1ull << 5, // Grants setting gid
     
     /* Signal system */
-    PEEntitlementRecvSignal    =             1ull << 7, // Grants receiving signals
-    PEEntitlementSendSignal    =             1ull << 8, // Grants sending signals
-    PEEntitlementSendSignalPrvt =            1ull << 9, // Grants sending signals to processes that dont have PEEntitlementRecvSignal and processes that have more main permitives
+    PEEntitlementRecvSignal    =             1ull << 6, // Grants receiving signals
+    PEEntitlementSendSignal    =             1ull << 7, // Grants sending signals
+    PEEntitlementSendSignalPrvt =            1ull << 8, // Grants sending signals to processes that dont have PEEntitlementRecvSignal and processes that have more main permitives
     
     /* Spawn system */
-    PEEntitlementSpawnProc     =             1ull << 10  // Grants spawning processes
+    PEEntitlementSpawnProc     =             1ull << 9  // Grants spawning processes
 };
 
 #define PEEntitlementNone 0
-#define PEEntitlementDefault PEEntitlementTaskForPid | PEEntitlementSurfaceRD | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
-#define PEEntitlementAll PEEntitlementTaskForPid | PEEntitlementTaskForPidPrvt | PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidAll | PEEntitlementSurfaceRW | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSpawnProc
+#define PEEntitlementDefault PEEntitlementTaskForPid | PEEntitlementSurfaceRead | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
+#define PEEntitlementAll PEEntitlementTaskForPid | PEEntitlementTaskForPidPrvt | PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidAll | PEEntitlementSurfaceRead | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSpawnProc
 
 bool proc_got_entitlement(pid_t pid, PEEntitlement entitlement);
 
