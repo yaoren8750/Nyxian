@@ -26,9 +26,9 @@
 typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     /* Task port system*/
     PEEntitlementTaskForPid =                1ull << 1, // Grants getting task ports of other processes either with the same main priveleges or lower
-    PEEntitlementTaskForPidSpecial =         1ull << 2, // Grants getting task ports of all other processes also processes with higher priveleges, but not host task port (needs PEEntitlementTaskForPid to work)
+    PEEntitlementTaskForPidPrvt =            1ull << 2, // Grants getting task ports of all other processes also processes with higher priveleges, but not host task port (needs PEEntitlementTaskForPid to work)
     PEEntitlementGetHostTaskPort =           1ull << 3, // Grants getting host task port (needs PEEntitlementTaskForPid to work)
-    PEEntitlementTaskForPidAll =             (PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidSpecial | PEEntitlementTaskForPid),
+    PEEntitlementTaskForPidAll =             (PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidPrvt | PEEntitlementTaskForPid),
     
     /* Surface system */
     PEEntitlementSurfaceWR =                 1ull << 3, // Grants write access onto the surface
@@ -42,14 +42,15 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     /* Signal system */
     PEEntitlementRecvSignal    =             1ull << 7, // Grants receiving signals
     PEEntitlementSendSignal    =             1ull << 8, // Grants sending signals
+    PEEntitlementSendSignalPrvt =            1ull << 9, // Grants sending signals to processes that dont have PEEntitlementRecvSignal and processes that have more main permitives
     
     /* Spawn system */
-    PEEntitlementSpawnProc     =             1ull << 9  // Grants spawning processes
+    PEEntitlementSpawnProc     =             1ull << 10  // Grants spawning processes
 };
 
 #define PEEntitlementNone 0
 #define PEEntitlementDefault PEEntitlementTaskForPid | PEEntitlementSurfaceRD | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
-#define PEEntitlementAll PEEntitlementTaskForPid | PEEntitlementTaskForPidSpecial | PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidAll | PEEntitlementSurfaceRW | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSpawnProc
+#define PEEntitlementAll PEEntitlementTaskForPid | PEEntitlementTaskForPidPrvt | PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidAll | PEEntitlementSurfaceRW | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSpawnProc
 
 bool proc_got_entitlement(pid_t pid, PEEntitlement entitlement);
 
