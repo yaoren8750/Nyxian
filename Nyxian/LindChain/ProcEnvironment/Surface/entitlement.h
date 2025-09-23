@@ -17,6 +17,9 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef PROC_ENTITLEMENT_H
+#define PROC_ENTITLEMENT_H
+
 #import <Foundation/Foundation.h>
 #include <stdint.h>
 
@@ -34,3 +37,7 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
 };
 
 #define PEEntitlementDefault PEEntitlementTaskForPidAllowed | PEEntitlementSurfaceRDOnly | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
+
+bool proc_got_entitlement(pid_t pid, PEEntitlement entitlement);
+
+#endif /* PROC_ENTITLEMENT_H */

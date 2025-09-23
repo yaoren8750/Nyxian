@@ -18,3 +18,15 @@
 */
 
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
+
+bool proc_got_entitlement(pid_t pid,
+                          PEEntitlement entitlement)
+{
+    // TODO: Check if proc exists
+    // Get proc
+    kinfo_info_surface_t object = proc_object_for_pid(pid);
+    
+    // Now check entitlements
+    return(object.entitlements & entitlement) == entitlement;
+}
