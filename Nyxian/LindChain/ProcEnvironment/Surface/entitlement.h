@@ -31,9 +31,9 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     PEEntitlementTaskForPidAll =             (PEEntitlementGetHostTaskPort | PEEntitlementTaskForPidSpecial | PEEntitlementTaskForPid),
     
     /* Surface system */
-    PEEntitlementSurfaceWROnly =             1ull << 3, // Grants write access onto the surface
-    PEEntitlementSurfaceRDOnly =             1ull << 4, // Grants read access onto the surface (Note: rapid changes at runtime require iOS 26 because this is the only way to safely ensure these entitlements can be dropped when lost)
-    PEEntitlementSurfaceRW     =             (PEEntitlementSurfaceWROnly | PEEntitlementSurfaceRDOnly),
+    PEEntitlementSurfaceWR =                 1ull << 3, // Grants write access onto the surface
+    PEEntitlementSurfaceRD =                 1ull << 4, // Grants read access onto the surface (Note: rapid changes at runtime require iOS 26 because this is the only way to safely ensure these entitlements can be dropped when lost)
+    PEEntitlementSurfaceRW     =             (PEEntitlementSurfaceWR | PEEntitlementSurfaceRD),
     
     /* Main privilege system*/
     PEEntitlementSetUidAllowed =             1ull << 5, // Grants setting uid
@@ -47,7 +47,7 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     PEEntitlementSpawnProc     =             1ull << 9  // Grants spawning processes
 };
 
-#define PEEntitlementDefault PEEntitlementTaskForPidAllowed | PEEntitlementSurfaceRDOnly | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
+#define PEEntitlementDefault PEEntitlementTaskForPid | PEEntitlementSurfaceRD | PEEntitlementSendSignal | PEEntitlementRecvSignal | PEEntitlementSpawnProc
 
 bool proc_got_entitlement(pid_t pid, PEEntitlement entitlement);
 
