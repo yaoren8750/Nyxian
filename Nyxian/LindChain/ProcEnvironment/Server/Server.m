@@ -163,7 +163,14 @@
  */
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withMapObject:(FDMapObject*)mapObject withReply:(void (^)(pid_t))reply
 {
-    reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+    if(path && arguments && environment && mapObject)
+    {
+        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+    }
+    else
+    {
+        reply(0);
+    }
 }
 
 - (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid
