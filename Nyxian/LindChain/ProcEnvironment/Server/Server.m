@@ -24,6 +24,7 @@
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/ProcEnvironment/Surface/permit.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
 #import <mach/mach.h>
 
 @implementation Server
@@ -58,16 +59,35 @@
 - (void)getPort:(pid_t)pid
       withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
 {
-    if(permitive_over_process_allowed(_processIdentifier, pid))
-    {
-        mach_port_t port;
-        kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
-        reply((kr == KERN_SUCCESS) ? [[TaskPortObject alloc] initWithPort:port] : nil);
-    }
-    else
+    // Does the process requesting even have the entitlement
+    if(!proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPid))
     {
         reply(nil);
+        return;
     }
+    
+    // Special or host
+    bool special = proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPidSpecial);
+    bool host = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
+    
+    // Is the request pid the host app
+    if(pid == getpid() && !host)
+    {
+        reply(nil);
+        return;
+    }
+    
+    // Needs special?
+    if(!permitive_over_process_allowed(_processIdentifier, pid) && !special)
+    {
+        reply(nil);
+        return;
+    }
+    
+    // Send requested task port
+    mach_port_t port;
+    kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
+    reply((kr == KERN_SUCCESS) ? [[TaskPortObject alloc] initWithPort:port] : nil);
 }
 
 /*
