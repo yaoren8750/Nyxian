@@ -234,6 +234,8 @@ void proc_surface_init(pid_t ppid,
     kinfo.force_task_role_override = true;
     kinfo.task_role_override = TASK_UNSPECIFIED;
     
+    kinfo.entitlements = PEEntitlementDefault;
+    
     proc_object_insert(kinfo);
     
     

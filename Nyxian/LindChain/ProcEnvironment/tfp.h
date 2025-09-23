@@ -37,8 +37,6 @@ kern_return_t environment_task_for_pid(mach_port_name_t taskPort, pid_t pid, mac
 
 void environment_host_take_client_task_port(TaskPortObject *machPort) API_AVAILABLE(ios(26.0));
 
-BOOL environment_is_tfp_allowed(pid_t callerPid, pid_t targetPid);
-
 void environment_tfp_init(void);
 
 #endif /* PROCENVIRONMENT_TFP_H */

@@ -113,16 +113,6 @@ void environment_host_take_client_task_port(TaskPortObject *machPort)
     }
 }
 
-BOOL environment_is_tfp_allowed(pid_t callerPid,
-                                pid_t targetPid)
-{
-    // Get the objects of both pids
-    kinfo_info_surface_t callerObj = proc_object_for_pid(callerPid);
-    kinfo_info_surface_t targetObj = proc_object_for_pid(targetPid);
-    
-    return (callerObj.real.kp_eproc.e_ucred.cr_uid <= targetObj.real.kp_eproc.e_ucred.cr_uid);
-}
-
 /*
  Init
  */
@@ -138,6 +128,11 @@ void environment_tfp_init(void)
             [hostProcessProxy sendPort:[TaskPortObject taskPortSelf]];
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
             DO_HOOK_GLOBAL(task_policy_get);
+        }
+        else
+        {
+            // MARK: Host Init
+            [tfp_userspace_ports setObject:[TaskPortObject taskPortSelf] forKey:@(getpid())];
         }
     }
 }
