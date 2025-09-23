@@ -102,7 +102,7 @@ int environment_gethostname(char *buf,
     do
     {
         seq = spinlock_read_begin(spinface);
-        strncpy(buf, surface->hostname, bufsize);
+        strlcpy(buf, surface->hostname, bufsize);
     }
     while(spinlock_read_retry(spinface, seq));
     
@@ -112,7 +112,7 @@ int environment_gethostname(char *buf,
 void kern_sethostname(NSString *hostname)
 {
     hostname = hostname ?: @"localhost";
-    strncpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
+    strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
 }
 
 /*
@@ -147,7 +147,9 @@ void proc_surface_init(pid_t ppid,
     // Now map it!! (but only with max readable)
     surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
     spinface = mmap(NULL, sizeof(spinlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, safety_fd, 0);
-    if(environment_is_role(EnvironmentRoleGuest) || surface == MAP_FAILED)
+    if(environment_is_role(EnvironmentRoleGuest) ||
+       surface == MAP_FAILED ||
+       spinface == MAP_FAILED)
     {
         // Mapping failed
         close(safety_fd);
@@ -172,6 +174,7 @@ void proc_surface_init(pid_t ppid,
         if(surface->magic != SURFACE_MAGIC)
         {
             munmap(surface, SURFACE_MAP_SIZE);
+            munmap(spinface, SURFACE_MAP_SIZE);
             return;
         }
     }
@@ -182,7 +185,7 @@ void proc_surface_init(pid_t ppid,
         // Setup hostname
         NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
         hostname = hostname ?: @"localhost";
-        strncpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
+        strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
     }
     else
     {
@@ -214,8 +217,8 @@ void proc_surface_init(pid_t ppid,
     if(nsExecutablePath)
     {
         // Modifying self
-        strncpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:nsExecutablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
-        strncpy(kinfo.path, [nsExecutablePath UTF8String], PATH_MAX);
+        strlcpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:nsExecutablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
+        strlcpy(kinfo.path, [nsExecutablePath UTF8String], PATH_MAX);
     }
     
     uid_t userIdentifier = environment_ugid();
@@ -233,14 +236,15 @@ void proc_surface_init(pid_t ppid,
     proc_object_insert(kinfo);
     
     
-    if(!environment_has_restriction_level(EnvironmentRestrictionSystem))
+    if(!environment_has_restriction_level(EnvironmentRestrictionKernel))
     {
         // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
         kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
         if(kr != KERN_SUCCESS)
         {
             // Its not secure, our own sandbox policies got broken, we blind the process
-            munmap(surface, SURFACE_MAP_SIZE);
+            if(munmap(surface, SURFACE_MAP_SIZE) != 0)
+                exit(1);
             return;
         }
         
@@ -248,7 +252,8 @@ void proc_surface_init(pid_t ppid,
         if(kr != KERN_SUCCESS)
         {
             // Its not secure, our own sandbox policies got broken, we blind the process
-            munmap(spinface, SURFACE_MAP_SIZE);
+            if(munmap(spinface, sizeof(spinlock_t)) != 0)
+                exit(1);
             return;
         }
     }
