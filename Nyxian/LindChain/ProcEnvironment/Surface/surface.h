@@ -24,6 +24,7 @@
 #include <sys/sysctl.h>
 #include <limits.h>
 #include <LindChain/ProcEnvironment/Surface/spinlock.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
@@ -96,6 +97,9 @@ typedef struct {
     /* Storing override flag for TASK_UNSPECIFIED */
     bool force_task_role_override;
     task_role_t task_role_override;
+    
+    /* Entitlements*/
+    PEEntitlement entitlements;
 } kinfo_info_surface_t;
 
 /// Structure that holds surface information and other structures

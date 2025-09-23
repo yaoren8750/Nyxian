@@ -23,6 +23,7 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/Debugger/Logger.h>
 #import <LindChain/LiveContainer/LCUtils.h>
+#import <LindChain/ProcEnvironment/Surface/permit.h>
 #import <mach/mach.h>
 
 @implementation Server
@@ -57,7 +58,7 @@
 - (void)getPort:(pid_t)pid
       withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
 {
-    if(environment_is_tfp_allowed(_processIdentifier, pid))
+    if(permitive_over_process_allowed(_processIdentifier, pid))
     {
         mach_port_t port;
         kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
