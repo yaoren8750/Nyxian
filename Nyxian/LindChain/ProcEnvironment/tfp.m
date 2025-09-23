@@ -129,5 +129,10 @@ void environment_tfp_init(void)
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, task_for_pid, environment_task_for_pid, nil);
             DO_HOOK_GLOBAL(task_policy_get);
         }
+        else
+        {
+            // MARK: Host Init
+            [tfp_userspace_ports setObject:[TaskPortObject taskPortSelf] forKey:@(getpid())];
+        }
     }
 }
