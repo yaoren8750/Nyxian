@@ -129,11 +129,6 @@ typedef struct surface_map surface_map_t;
 #define SURFACE_MAP_SIZE SURFACE_MAGIC_SIZE + SURFACE_PROC_COUNTER_SIZE + SURFACE_PROC_OBJECT_MAX_SIZE
 
 /* Shared properties */
-
-/// Shared file descriptor used to synchronise read and write operations that happen on the surface mapping
-extern int safety_fd;
-
-/// Shared pointer that points to the surface mapping
 extern surface_map_t *surface;
 extern spinlock_t *spinface;
 
