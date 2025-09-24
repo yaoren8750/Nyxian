@@ -45,22 +45,31 @@
 /*!
  @enum EnvironmentRole
  @abstract Defines the role of the current environment.
- @constant EnvironmentRoleNone
-     No environment role is set.
- @constant EnvironmentRoleHost
-     The environment is running as the host.
- @constant EnvironmentRoleGuest
-     The environment is running as a guest.
  */
 typedef NS_ENUM(NSInteger, EnvironmentRole) {
+    /*! No environment role is set. */
     EnvironmentRoleNone  = 0,
+    
+    /*! The environment is running as the host. */
     EnvironmentRoleHost  = 1,
+    
+    /*! The environment is running as a guest. */
     EnvironmentRoleGuest = 2
 };
 
+/*!
+ @enum EnvironmentExec
+ @abstract Defines how the environment shall be executed.
+ */
 typedef NS_ENUM(NSInteger, EnvironmentExec) {
-    EnvironmentExecLiveContainer = 0,
-    EnvironmentExecCustom  = 1,
+    /*! No environment execution type set */
+    EnvironmentExecNone = 0,
+    
+    /*! The environment will execute after init using LiveContainer and wont return from `environment_init(5)` */
+    EnvironmentExecLiveContainer = 1,
+    
+    /*! The environment wont execute anything and will straightup return for a custom execution method `environment_init(5)` */
+    EnvironmentExecCustom  = 2,
 };
 
 /*!
@@ -72,7 +81,7 @@ typedef NS_ENUM(NSInteger, EnvironmentExec) {
     by the host.
 
  @param endpoint
-    An `NSXPCListenerEndpoint` object identifying the host environment.
+    Endpoint send by the host environment to the guest to connect to.
  */
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint);
 
@@ -121,9 +130,15 @@ uid_t environment_ugid(void);
     This function initializes the environment with the given role. It can and shall only be called once. This function never returns NO!
  
  @param role
-    An `EnvironmentRole` enum value that represents the environment role wished to be initializes as.
+    Represents the environment role wished to be init as.
+ @param exec
+    Represents how the environment shall act after init.
  @param executablePath
-    An character buffer that represents the executable path
+    Executable path of the target binary.
+ @param argc
+    Item count of argv array.
+ @param argv
+    Arguments used for the binary.
  */
 void environment_init(EnvironmentRole role, EnvironmentExec exec, const char *executablePath, int argc, char *argv[]);
 

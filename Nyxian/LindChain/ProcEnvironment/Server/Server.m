@@ -169,7 +169,8 @@
        && mapObject
        && proc_got_entitlement(_processIdentifier, PEEntitlementSpawnProc))
     {
-        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+        // TODO: Inherit entitlements across calls, with the power to drop entitlements, but not getting more entitlements
+        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier withEntitlement:PEEntitlementDefaultUserApplication process:nil]);
         return;
     }
     

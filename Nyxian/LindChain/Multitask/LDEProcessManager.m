@@ -32,6 +32,8 @@
 @implementation LDEProcess
 
 - (instancetype)initWithItems:(NSDictionary*)items
+                     withPpid:(pid_t)ppid
+             withEntitlements:(PEEntitlement)entitlement
 {
     self = [super init];
     
@@ -40,9 +42,7 @@
     if(self.executablePath == nil) return nil;
     else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
     
-    NSNumber *num = items[@"ppid"];
-    if(num == nil) return nil;
-    else self.ppid = num.intValue;
+    self.ppid = ppid;
     
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
@@ -89,7 +89,7 @@
             strongSelf.pid = [strongSelf.extension pidForRequestIdentifier:strongSelf.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
             strongSelf.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
-            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath);
+            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, entitlement);
         }
         dispatch_semaphore_signal(sema);
     }];
@@ -102,7 +102,8 @@
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
                withMapObject:(FDMapObject*)mapObject
- withParentProcessIdentifier:(pid_t)pid
+ withParentProcessIdentifier:(pid_t)ppid
+             withEntitlement:(PEEntitlement)entitlement
 {
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
@@ -110,9 +111,8 @@
         @"executablePath": binaryPath,
         @"arguments": arguments,
         @"environment": environment,
-        @"mapObject": mapObject,
-        @"ppid": @(pid)
-    }];
+        @"mapObject": mapObject
+    } withPpid:ppid withEntitlements:entitlement];
     
     return self;
 }
@@ -226,10 +226,12 @@
 }
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items
+                      withPpid:(pid_t)ppid
+              withEntitlements:(PEEntitlement)entitlement
 {
     [self enforceSpawnCooldown];
     
-    LDEProcess *process = [[LDEProcess alloc] initWithItems:items];
+    LDEProcess *process = [[LDEProcess alloc] initWithItems:items withPpid:ppid withEntitlements:entitlement];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
@@ -272,7 +274,7 @@
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withMapObject:mapObject withParentProcessIdentifier:getpid() process:&process];
+    } withMapObject:mapObject withParentProcessIdentifier:getpid() withEntitlement:PEEntitlementDefaultUserApplication process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
@@ -287,10 +289,11 @@
      withEnvironmentVariables:(NSDictionary*)environment
                 withMapObject:(FDMapObject*)mapObject
   withParentProcessIdentifier:(pid_t)ppid
+              withEntitlement:(PEEntitlement)entitlement
                       process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:ppid];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:ppid withEntitlement:entitlement];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];

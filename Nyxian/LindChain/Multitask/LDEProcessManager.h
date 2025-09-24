@@ -25,6 +25,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
 /*
  Process
@@ -58,8 +59,8 @@
 @property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
 @property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
 
-- (instancetype)initWithItems:(NSDictionary*)items;
-- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)pid;
+- (instancetype)initWithItems:(NSDictionary*)items withPpid:(pid_t)ppid withEntitlements:(PEEntitlement)entitlement;
+- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid withEntitlement:(PEEntitlement)entitlement;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -82,10 +83,10 @@
 - (instancetype)init;
 + (instancetype)shared;
 
-- (pid_t)spawnProcessWithItems:(NSDictionary*)items;
+- (pid_t)spawnProcessWithItems:(NSDictionary*)items withPpid:(pid_t)ppid withEntitlements:(PEEntitlement)entitlement;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier doRestartIfRunning:(BOOL)doRestartIfRunning;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
-- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid process:(LDEProcess**)processReply;
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid withEntitlement:(PEEntitlement)entitlement process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;

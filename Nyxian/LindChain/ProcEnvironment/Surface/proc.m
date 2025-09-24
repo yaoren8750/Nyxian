@@ -148,7 +148,8 @@ BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
                             uid_t uid,
                             gid_t gid,
-                            NSString *executablePath)
+                            NSString *executablePath,
+                            PEEntitlement entitlement)
 {
     struct kinfo_proc childInfoProc = {};
     
@@ -243,8 +244,7 @@ BOOL proc_create_child_proc(pid_t ppid,
     finalObject.real = childInfoProc;
     strncpy(finalObject.path, [[[NSURL fileURLWithPath:executablePath] path] UTF8String], PATH_MAX);
     
-    // MARK: ONLY FOR TEST PURPOSES
-    finalObject.entitlements = PEEntitlementAll;
+    finalObject.entitlements = entitlement;
     
     proc_object_insert(finalObject);
     

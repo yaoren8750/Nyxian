@@ -125,10 +125,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
     FDMapObject *mapObject = appInfo[@"mapObject"];
-    NSNumber *ppid = appInfo[@"ppid"];
-    
-    // If no ppid was passed then we stop execution out of security reasons
-    if(ppid == nil) exit(0);
     
     // Setup fd map
     if(mapObject) [mapObject apply_fd_map];

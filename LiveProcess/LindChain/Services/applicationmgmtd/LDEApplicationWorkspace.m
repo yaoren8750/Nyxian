@@ -50,9 +50,8 @@
         @"endpoint": [ServerDelegate getEndpoint],
         @"executablePath": @"/usr/libexec/applicationmgmtd",
         @"mode": @"management",
-        @"mapObject": mapObject,
-        @"ppid": @(getpid())
-    }];
+        @"mapObject": mapObject
+    } withPpid:getpid() withEntitlements:PEEntitlementDefaultApplicationManagementDaemon];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     
