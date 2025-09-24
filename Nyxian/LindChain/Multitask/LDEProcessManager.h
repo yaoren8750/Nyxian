@@ -27,6 +27,18 @@
 #import <LindChain/ProcEnvironment/fd_map_object.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
+@interface LDEProcessConfiguration : NSObject
+
+@property (nonatomic) pid_t ppid;
+@property (nonatomic) uid_t uid;
+@property (nonatomic) gid_t gid;
+@property (nonatomic) PEEntitlement entitlements;
+
+- (instancetype)initWithParentProcessIdentifier:(pid_t)ppid withUserIdentifier:(uid_t)uid withGroupIdentifier:(gid_t)gid withEntitlements:(PEEntitlement)entitlements;
++ (instancetype)inheriteConfigurationUsingProcessIdentifier:(pid_t)pid;
+
+@end
+
 /*
  Process
  */
@@ -59,8 +71,8 @@
 @property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
 @property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
 
-- (instancetype)initWithItems:(NSDictionary*)items withPpid:(pid_t)ppid withEntitlements:(PEEntitlement)entitlement;
-- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid withEntitlement:(PEEntitlement)entitlement;
+- (instancetype)initWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
+- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -83,10 +95,10 @@
 - (instancetype)init;
 + (instancetype)shared;
 
-- (pid_t)spawnProcessWithItems:(NSDictionary*)items withPpid:(pid_t)ppid withEntitlements:(PEEntitlement)entitlement;
+- (pid_t)spawnProcessWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier doRestartIfRunning:(BOOL)doRestartIfRunning;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
-- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid withEntitlement:(PEEntitlement)entitlement process:(LDEProcess**)processReply;
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;

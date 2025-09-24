@@ -51,7 +51,7 @@
         @"executablePath": @"/usr/libexec/applicationmgmtd",
         @"mode": @"management",
         @"mapObject": mapObject
-    } withPpid:getpid() withEntitlements:PEEntitlementDefaultApplicationManagementDaemon];
+    } withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:0 withGroupIdentifier:0 withEntitlements:PEEntitlementDefaultApplicationManagementDaemon]];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     

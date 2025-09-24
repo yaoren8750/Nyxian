@@ -26,14 +26,38 @@
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 
+@implementation LDEProcessConfiguration
+
+- (instancetype)initWithParentProcessIdentifier:(pid_t)ppid
+                             withUserIdentifier:(uid_t)uid
+                            withGroupIdentifier:(gid_t)gid
+                               withEntitlements:(PEEntitlement)entitlements
+{
+    self = [super init];
+    
+    self.ppid = ppid;
+    self.uid = uid;
+    self.gid = gid;
+    self.entitlements = entitlements;
+    
+    return self;
+}
+
++ (instancetype)inheriteConfigurationUsingProcessIdentifier:(pid_t)pid
+{
+    kinfo_info_surface_t object = proc_object_for_pid(pid);
+    return [[self alloc] initWithParentProcessIdentifier:object.real.kp_proc.p_pid withUserIdentifier:object.real.kp_eproc.e_pcred.p_ruid withGroupIdentifier:object.real.kp_eproc.e_pcred.p_rgid withEntitlements:object.entitlements];
+}
+
+@end
+
 /*
  Process
  */
 @implementation LDEProcess
 
 - (instancetype)initWithItems:(NSDictionary*)items
-                     withPpid:(pid_t)ppid
-             withEntitlements:(PEEntitlement)entitlement
+            withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [super init];
     
@@ -42,7 +66,9 @@
     if(self.executablePath == nil) return nil;
     else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
     
-    self.ppid = ppid;
+    self.ppid = configuration.ppid;
+    self.uid = configuration.uid;
+    self.gid = configuration.gid;
     
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
@@ -89,7 +115,7 @@
             strongSelf.pid = [strongSelf.extension pidForRequestIdentifier:strongSelf.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
             strongSelf.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
-            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, entitlement);
+            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, configuration.entitlements);
         }
         dispatch_semaphore_signal(sema);
     }];
@@ -102,8 +128,7 @@
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
                withMapObject:(FDMapObject*)mapObject
- withParentProcessIdentifier:(pid_t)ppid
-             withEntitlement:(PEEntitlement)entitlement
+           withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
@@ -112,7 +137,7 @@
         @"arguments": arguments,
         @"environment": environment,
         @"mapObject": mapObject
-    } withPpid:ppid withEntitlements:entitlement];
+    } withConfiguration:configuration];
     
     return self;
 }
@@ -226,12 +251,11 @@
 }
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items
-                      withPpid:(pid_t)ppid
-              withEntitlements:(PEEntitlement)entitlement
+             withConfiguration:(LDEProcessConfiguration*)configuration
 {
     [self enforceSpawnCooldown];
     
-    LDEProcess *process = [[LDEProcess alloc] initWithItems:items withPpid:ppid withEntitlements:entitlement];
+    LDEProcess *process = [[LDEProcess alloc] initWithItems:items withConfiguration:configuration];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
@@ -274,7 +298,7 @@
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withMapObject:mapObject withParentProcessIdentifier:getpid() withEntitlement:PEEntitlementDefaultUserApplication process:&process];
+    } withMapObject:mapObject withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultUserApplication] process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
@@ -288,12 +312,11 @@
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
                 withMapObject:(FDMapObject*)mapObject
-  withParentProcessIdentifier:(pid_t)ppid
-              withEntitlement:(PEEntitlement)entitlement
+            withConfiguration:(LDEProcessConfiguration*)configuration
                       process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:ppid withEntitlement:entitlement];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withConfiguration:configuration];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
