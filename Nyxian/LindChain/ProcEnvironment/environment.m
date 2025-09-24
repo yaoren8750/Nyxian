@@ -102,8 +102,7 @@ void environment_init(PEEntitlement entitlement,
         [hostProcessProxy setProcessIdentifier:getpid()];
         
         // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
-        const char *realExecPath = getenv("realExecutablePath");
-        proc_surface_init(ppid, realExecPath ? realExecPath : executablePath);
+        proc_surface_init(ppid, executablePath);
         
         environment_tfp_init();
         environment_libproc_init();

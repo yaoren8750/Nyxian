@@ -158,6 +158,7 @@ NSString* invokeAppMain(NSString *executablePath,
     
     // Getting guestMainBundle, if applicable
     // Now trying to get bundle
+    // MARK: For some very stupid reason it returns a bundle eitherway, a none null value
     guestMainBundle = [[NSBundle alloc] initWithPathForMainBundle:[executablePath stringByDeletingLastPathComponent]];
     
     // Setup directories
@@ -165,7 +166,7 @@ NSString* invokeAppMain(NSString *executablePath,
     {
         NSString *homePath = [NSString stringWithCString:home encoding:NSUTF8StringEncoding];
         
-        if(guestMainBundle)
+        if(guestMainBundle.bundleIdentifier)
         {
             NSArray *dirList = @[@"Library/Caches", @"Documents", @"SystemData", @"Tmp"];
             for (NSString *dir in dirList)
@@ -182,7 +183,7 @@ NSString* invokeAppMain(NSString *executablePath,
     overwriteExecPath(executablePath.fileSystemRepresentation);
     
     // Overwriting guests main bundle if applicable
-    if(guestMainBundle)
+    if(guestMainBundle.bundleIdentifier)
     {
         overwriteMainNSBundle(guestMainBundle);
         overwriteMainCFBundle();
