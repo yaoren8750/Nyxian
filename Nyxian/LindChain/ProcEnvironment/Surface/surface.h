@@ -154,11 +154,6 @@ void proc_object_remove_for_pid(pid_t pid);
 
 void kern_sethostname(NSString *hostname);
 
-BOOL proc_create_child_proc(pid_t ppid,
-                            pid_t pid,
-                            NSString *executablePath);
-
-void proc_surface_init(pid_t ppid,
-                       const char *executablePath);
+void proc_surface_init(void);
 
 #endif

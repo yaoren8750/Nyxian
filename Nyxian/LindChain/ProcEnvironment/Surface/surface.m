@@ -139,10 +139,8 @@ void proc_surface_unmap(void)
         spinface = NULL;
 }
 
-void proc_surface_init(pid_t ppid,
-                       const char *executablePath)
+void proc_surface_init(void)
 {
-    __block const char *executablePathBlock = executablePath;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // Initilize base of mapping
@@ -171,8 +169,24 @@ void proc_surface_init(pid_t ppid,
         }
         
         // Now map it!! (but only with max readable)
-        surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-        spinface = mmap(NULL, sizeof(spinlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, safety_fd, 0);
+        // MARK: Will likely deprecate after making shared mapping objects which will transfer a maximum read only memport instead
+        int prot = PROT_READ;
+        if(environment_is_role(EnvironmentRoleHost)) prot = prot | PROT_WRITE;
+        surface = mmap(NULL, SURFACE_MAP_SIZE, prot, MAP_SHARED, sharing_fd, 0);
+        spinface = mmap(NULL, sizeof(spinlock_t), prot, MAP_SHARED, safety_fd, 0);
+        
+        if(environment_is_role(EnvironmentRoleGuest))
+        {
+            kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, VM_PROT_READ);
+            if(kr == KERN_SUCCESS) kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)spinface, sizeof(spinlock_t), TRUE, VM_PROT_READ);
+            if(kr != KERN_SUCCESS)
+            {
+                // Sandbox violation!
+                proc_surface_unmap();
+                return;
+            }
+        }
+        
         if(environment_is_role(EnvironmentRoleGuest) ||
            surface == MAP_FAILED ||
            spinface == MAP_FAILED)
@@ -205,8 +219,10 @@ void proc_surface_init(pid_t ppid,
         }
         
         // Add proc self if were host
-        if(environment_is_role(EnvironmentRoleHost) && environment_has_restriction_level(EnvironmentRestrictionKernel))
+        if(environment_is_role(EnvironmentRoleHost))
         {
+            proc_create_child_proc(getppid(), getpid(), 0, 0, [[NSBundle mainBundle] executablePath]);
+            
             // Setup hostname
             NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
             hostname = hostname ?: @"localhost";
@@ -217,89 +233,5 @@ void proc_surface_init(pid_t ppid,
             // Rebind hostname symbol
             litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, gethostname, environment_gethostname, nil);
         }
-        
-        // Insert self
-        proc_insert_self();
-        
-        // Overwrite some info if process is passed
-        kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
-        
-        // Create a nsExecutablePath
-        char *executablePathNew = NULL;
-        if(!executablePathBlock)
-        {
-            // Create new path if not available
-            uint32_t size = PATH_MAX;
-            executablePathNew = malloc(size);
-            _NSGetExecutablePath(executablePathNew, &size);
-            
-            // Set executablePath to point to executablePathNew
-            executablePathBlock = executablePathNew;
-        }
-        NSString *nsExecutablePath = [NSString stringWithCString:executablePathBlock encoding:NSUTF8StringEncoding];
-        if(executablePathNew) free(executablePathNew);
-        
-        if(nsExecutablePath)
-        {
-            // Modifying self
-            strlcpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:nsExecutablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
-            strlcpy(kinfo.path, [nsExecutablePath UTF8String], PATH_MAX);
-        }
-        
-        uid_t userIdentifier = environment_ugid();
-        kinfo.real.kp_eproc.e_ucred.cr_uid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_ruid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_rgid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_svuid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_svgid = userIdentifier;
-        kinfo.real.kp_proc.p_oppid = ppid;
-        kinfo.real.kp_eproc.e_ppid = ppid;
-        
-        kinfo.force_task_role_override = true;
-        kinfo.task_role_override = TASK_UNSPECIFIED;
-        
-        kinfo.entitlements = exposed_entitlement;
-        
-        proc_object_insert(kinfo);
-        
-        
-        if(!environment_has_restriction_level(EnvironmentRestrictionKernel))
-        {
-            // Entitlement enforcement!
-            vm_prot_t surface_prot_set = VM_PROT_NONE;
-            vm_prot_t spinlock_prot_set = VM_PROT_NONE;
-            
-            // Translate entitlements to prot level
-            if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRead))
-            {
-                surface_prot_set = surface_prot_set | VM_PROT_READ;
-                spinlock_prot_set = spinlock_prot_set | VM_PROT_READ;
-            }
-            
-            if(surface_prot_set == VM_PROT_NONE)
-            {
-                proc_surface_unmap();
-                return;
-            }
-            
-            // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-            kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, surface_prot_set);
-            if(kr != KERN_SUCCESS)
-            {
-                // Its not secure, our own sandbox policies got broken, we blind the process
-                proc_surface_unmap();
-                return;
-            }
-            
-            kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)spinface, sizeof(spinlock_t), TRUE, VM_PROT_READ);
-            if(kr != KERN_SUCCESS)
-            {
-                // Its not secure, our own sandbox policies got broken, we blind the process
-                proc_surface_unmap();
-                return;
-            }
-        }
-        
-        return;
     });
 }

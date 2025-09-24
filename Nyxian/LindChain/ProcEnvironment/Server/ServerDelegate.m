@@ -18,6 +18,8 @@
 */
 
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
 
 @implementation ServerDelegate
 
@@ -46,6 +48,8 @@
     
     // Set exported object to the created server session
     newConnection.exportedObject = serverSession;
+    
+    // Resume connection
     [newConnection resume];
     
     return YES;

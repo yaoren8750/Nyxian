@@ -30,9 +30,6 @@
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/fd_map_object.h>
 
-NSString* invokeAppMain(NSString *executablePath,
-                        int argc,
-                        char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
 @interface LiveProcessHandler : NSObject<NSExtensionRequestHandling>
@@ -146,15 +143,14 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     if([mode isEqualToString:@"management"])
     {
-        environment_init(PEEntitlementDefault, EnvironmentRoleGuest, EnvironmentRestrictionSystem, [[NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()] UTF8String], ppid.intValue);
+        environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        environment_init(PEEntitlementDefault, EnvironmentRoleGuest, EnvironmentRestrictionUser, [executablePath UTF8String], ppid.intValue);
-        invokeAppMain(executablePath, argc, argv);
+        environment_init(EnvironmentRoleGuest, EnvironmentExecLiveContainer, [executablePath UTF8String], argc, argv);
     }
     
     exit(0);

@@ -203,14 +203,6 @@
 }
 
 /*
- fork
- */
-- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply
-{
-    reply([[LDEProcessManager shared] spawnProcessWithItems:@{ @"mode": @"fork" }]);
-}
-
-/*
  surface
  */
 - (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply

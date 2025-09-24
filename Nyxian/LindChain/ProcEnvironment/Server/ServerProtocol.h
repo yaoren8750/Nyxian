@@ -64,11 +64,6 @@
 - (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply;
 
 /*
- fork
- */
-- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply;
-
-/*
  surface
  */
 - (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;

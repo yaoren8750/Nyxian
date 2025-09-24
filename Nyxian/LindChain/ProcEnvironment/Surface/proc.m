@@ -146,6 +146,8 @@ void proc_insert_self(void)
 // MARK: New and safer approach, NO means execution not granted!
 BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
+                            uid_t uid,
+                            gid_t gid,
                             NSString *executablePath)
 {
     struct kinfo_proc childInfoProc = {};
@@ -213,16 +215,16 @@ BOOL proc_create_child_proc(pid_t ppid,
     childInfoProc.kp_eproc.e_sess = NULL;
     
     childInfoProc.kp_eproc.e_pcred.pc_ucred = NULL;
-    childInfoProc.kp_eproc.e_pcred.p_ruid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_svuid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_rgid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_svgid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_ruid = uid;
+    childInfoProc.kp_eproc.e_pcred.p_svuid = uid;
+    childInfoProc.kp_eproc.e_pcred.p_rgid = gid;
+    childInfoProc.kp_eproc.e_pcred.p_svgid = gid;
     childInfoProc.kp_eproc.e_pcred.p_refcnt = 0;
     
     childInfoProc.kp_eproc.e_ucred.cr_ref = 5;
-    childInfoProc.kp_eproc.e_ucred.cr_uid = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_uid = uid;
     childInfoProc.kp_eproc.e_ucred.cr_ngroups = 4;
-    childInfoProc.kp_eproc.e_ucred.cr_groups[0] = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[0] = gid;
     childInfoProc.kp_eproc.e_ucred.cr_groups[1] = 250;
     childInfoProc.kp_eproc.e_ucred.cr_groups[2] = 286;
     childInfoProc.kp_eproc.e_ucred.cr_groups[3] = 299;
@@ -240,6 +242,9 @@ BOOL proc_create_child_proc(pid_t ppid,
     finalObject.task_role_override = TASK_UNSPECIFIED;
     finalObject.real = childInfoProc;
     strncpy(finalObject.path, [[[NSURL fileURLWithPath:executablePath] path] UTF8String], PATH_MAX);
+    
+    // MARK: ONLY FOR TEST PURPOSES
+    finalObject.entitlements = PEEntitlementAll;
     
     proc_object_insert(finalObject);
     

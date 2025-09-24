@@ -48,6 +48,7 @@
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
+        @"executablePath": @"/usr/libexec/applicationmgmtd",
         @"mode": @"management",
         @"mapObject": mapObject,
         @"ppid": @(getpid())

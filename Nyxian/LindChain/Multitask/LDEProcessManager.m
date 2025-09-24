@@ -24,6 +24,7 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
 
 /*
  Process
@@ -33,6 +34,15 @@
 - (instancetype)initWithItems:(NSDictionary*)items
 {
     self = [super init];
+    
+    self.displayName = @"LiveProcess";
+    self.executablePath = items[@"executablePath"];
+    if(self.executablePath == nil) return nil;
+    else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
+    
+    NSNumber *num = items[@"ppid"];
+    if(num == nil) return nil;
+    else self.ppid = num.intValue;
     
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
@@ -49,38 +59,41 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = items;
     
-    __typeof(self) weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     
-    // FIXME: Executing LDEApplicationWorkspace twice causes deadlock in this block
+    [_extension setRequestCancellationBlock:^(NSUUID *identifier, NSError *error){
+        if(weakSelf == nil) return;
+        __typeof(self) strongSelf = weakSelf;
+        
+        proc_object_remove_for_pid(strongSelf.pid);
+        
+        if(strongSelf.cancellationCallback != nil) strongSelf.cancellationCallback(identifier, error);
+    }];
+    
+    [_extension setRequestInterruptionBlock:^(NSUUID *identifier){
+        if(weakSelf == nil) return;
+        __typeof(self) strongSelf = weakSelf;
+        
+        proc_object_remove_for_pid(strongSelf.pid);
+        
+        if(strongSelf.interruptionCallback != nil) strongSelf.interruptionCallback(identifier);
+    }];
+    
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
+        if(weakSelf == nil) return;
+        __typeof(self) strongSelf = weakSelf;
+        
         if(identifier) {
-            weakSelf.identifier = identifier;
-            weakSelf.pid = [self.extension pidForRequestIdentifier:self.identifier];
+            strongSelf.identifier = identifier;
+            strongSelf.pid = [strongSelf.extension pidForRequestIdentifier:strongSelf.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
-            weakSelf.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
-                                                                                                               RBSProcessHandle *handle,
-                                                                                                               RBSProcessStateUpdate *update)
-                                   {
-                // Setting process handle directly from process monitor
-                weakSelf.processHandle = handle;
-                
-                // Interestingly, when a process exits, the process monitor says that there is no state, so we can use that as a logic check
-                NSArray<RBSProcessState *> *states = [monitor states];
-                if([states count] == 0)
-                {
-                    // Process dead!
-                    [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
-                }
-            }];
+            strongSelf.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
+            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath);
         }
         dispatch_semaphore_signal(sema);
     }];
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-    
-    self.displayName = @"LiveProcess";
-    self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
-    self.executablePath = [liveProcessBundle executablePath];
     
     return self;
 }
@@ -101,27 +114,7 @@
         @"ppid": @(pid)
     }];
     
-    self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
-    self.executablePath = binaryPath;
-    
     return self;
-}
-
-/*
- Information
- */
-- (uid_t)uid
-{
-    // TODO: Implement it, currently returning mobile user
-    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
-    return getuid();
-}
-
-- (gid_t)gid
-{
-    // TODO: Implement it, currently returning mobile user
-    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
-    return getgid();
 }
 
 /*
@@ -169,12 +162,12 @@
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
-    [_extension setRequestCancellationBlock:callback];
+    _cancellationCallback = callback;
 }
 
-- (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback
+- (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback
 {
-    [_extension setRequestInterruptionBlock:callback];
+    _interruptionCallback = callback;
 }
 
 @end

@@ -33,7 +33,6 @@
 
 @property (nonatomic,strong) NSExtension *extension;
 @property (nonatomic,strong) RBSProcessHandle *processHandle;
-@property (nonatomic,strong) RBSProcessMonitor *processMonitor;
 
 // Process properties
 @property (nonatomic,strong) NSUUID *identifier;
@@ -43,6 +42,8 @@
 
 @property (nonatomic,strong) UIImage *icon;
 
+// Info properties used to create child process on surface
+@property (nonatomic) pid_t ppid;
 @property (nonatomic) pid_t pid;
 @property (nonatomic) uid_t uid;
 @property (nonatomic) gid_t gid;
@@ -53,12 +54,12 @@
 // Other boolean flags
 @property (nonatomic) BOOL isSuspended;
 
+// Callback
+@property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
+@property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
+
 - (instancetype)initWithItems:(NSDictionary*)items;
-- (instancetype)initWithPath:(NSString*)binaryPath
-               withArguments:(NSArray *)arguments
-    withEnvironmentVariables:(NSDictionary*)environment
-               withMapObject:(FDMapObject*)mapObject
- withParentProcessIdentifier:(pid_t)pid;
+- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)pid;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -67,7 +68,7 @@
 - (BOOL)isRunning;
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback;
-- (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback;
+- (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback;
 
 @end
 
@@ -82,15 +83,9 @@
 + (instancetype)shared;
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items;
-- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
-                       doRestartIfRunning:(BOOL)doRestartIfRunning;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier doRestartIfRunning:(BOOL)doRestartIfRunning;
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
-- (pid_t)spawnProcessWithPath:(NSString*)binaryPath
-                withArguments:(NSArray *)arguments
-     withEnvironmentVariables:(NSDictionary*)environment
-                withMapObject:(FDMapObject*)mapObject
-  withParentProcessIdentifier:(pid_t)ppid
-                      process:(LDEProcess**)processReply;
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withParentProcessIdentifier:(pid_t)ppid process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
