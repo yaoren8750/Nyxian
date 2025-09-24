@@ -41,6 +41,10 @@ void proc_unlock_wrt(void)
 kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
     kinfo_info_surface_t cur = {};
+    
+    // Dont use if uninitilized
+    if(surface == NULL) return cur;
+    
     unsigned long seq;
     do
     {
@@ -61,6 +65,9 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 
 void proc_object_remove_for_pid(pid_t pid)
 {
+    // Dont use if uninitilized
+    if(surface == NULL) return;
+    
     proc_lock_wrt();
 
     for(uint32_t i = 0; i < surface->proc_count; i++)
@@ -83,6 +90,9 @@ void proc_object_remove_for_pid(pid_t pid)
 
 void proc_object_insert(kinfo_info_surface_t object)
 {
+    // Dont use if uninitilized
+    if(surface == NULL) return;
+    
     proc_lock_wrt();
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
@@ -103,6 +113,10 @@ void proc_object_insert(kinfo_info_surface_t object)
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
 {
     kinfo_info_surface_t cur = {};
+    
+    // Dont use if uninitilized
+    if(surface == NULL) return cur;
+    
     unsigned long seq;
     do
     {
@@ -117,6 +131,9 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
 // MARK: We need to deprecate this
 void proc_insert_self(void)
 {
+    // Dont use if uninitilized
+    if(surface == NULL) return;
+    
     pid_t pid = getpid();
     struct kinfo_proc kp;
     size_t len = sizeof(kp);

@@ -20,6 +20,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/Debugger/MachServer.h>
 
+PEEntitlement exposed_entitlement = PEEntitlementNone;
 static EnvironmentRole environmentRole = EnvironmentRoleNone;
 static EnvironmentRestriction environmentRestriction = EnvironmentRestrictionNone;
 
@@ -82,13 +83,17 @@ uid_t environment_ugid(void)
 
 #pragma mark - Initilizer
 
-void environment_init(EnvironmentRole role,
+void environment_init(PEEntitlement entitlement,
+                      EnvironmentRole role,
                       EnvironmentRestriction restriction,
                       const char *executablePath,
                       pid_t ppid)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        // Setting entitlement
+        exposed_entitlement = entitlement;
+        
         // Setting environment properties
         environmentRole = role;
         environmentRestriction = restriction;

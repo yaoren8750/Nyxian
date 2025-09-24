@@ -67,7 +67,7 @@
     }
     
     // Special or host
-    bool special = proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPidSpecial);
+    bool prvt = proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPidPrvt);
     bool host = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
     
     // Is the request pid the host app
@@ -78,7 +78,7 @@
     }
     
     // Needs special?
-    if(!permitive_over_process_allowed(_processIdentifier, pid) && !special)
+    if(!permitive_over_process_allowed(_processIdentifier, pid) && !prvt)
     {
         reply(nil);
         return;
@@ -105,6 +105,32 @@
 
 - (void)proc_kill:(pid_t)pid withSignal:(int)signal withReply:(void (^)(int))reply
 {
+    // Check
+    bool send_signal = proc_got_entitlement(_processIdentifier, PEEntitlementSendSignal);
+    bool recv_signal = proc_got_entitlement(_processIdentifier, PEEntitlementRecvSignal);
+    bool send_signal_prvt = proc_got_entitlement(_processIdentifier, PEEntitlementSendSignalPrvt);
+    
+    // Check if process is priveleged enough to send signals
+    if(!send_signal)
+    {
+        reply(1);
+        return;
+    }
+    
+    // Check if process is priveleged enough to receive signals
+    if(!recv_signal && !send_signal_prvt)
+    {
+        reply(1);
+        return;
+    }
+    
+    // Check if process is permited essentially
+    if(!send_signal_prvt && !permitive_over_process_allowed(_processIdentifier, pid))
+    {
+        reply(1);
+        return;
+    }
+
     // Other target, lets look for it!
     LDEProcess *process = [[LDEProcessManager shared] processForProcessIdentifier:pid];
     if(!process)
@@ -137,7 +163,17 @@
  */
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withMapObject:(FDMapObject*)mapObject withReply:(void (^)(pid_t))reply
 {
-    reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+    if(path
+       && arguments
+       && environment
+       && mapObject
+       && proc_got_entitlement(_processIdentifier, PEEntitlementSpawnProc))
+    {
+        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+        return;
+    }
+    
+    reply(-1);
 }
 
 - (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid

@@ -21,8 +21,18 @@
 
 @implementation ServerDelegate
 
+- (instancetype)init
+{
+    self = [super init];
+    _connectionBackTrace = [[NSMutableSet alloc] init];
+    return self;
+}
+
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
+    pid_t requestorPid = newConnection.processIdentifier;
+    if(requestorPid == 0 || [_connectionBackTrace containsObject:@(requestorPid)]) return NO;
+    [_connectionBackTrace addObject:@(requestorPid)];
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
     newConnection.exportedObject = [[Server alloc] init];
     [newConnection resume];

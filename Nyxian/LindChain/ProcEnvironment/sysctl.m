@@ -36,7 +36,7 @@ DEFINE_HOOK(sysctl, int, (int *name,
     {
         if(oldp && oldlenp && *oldlenp >= sizeof(int))
         {
-            *(int *)oldp = 500;
+            *(int *)oldp = PROC_MAX;
             *oldlenp = sizeof(int);
             return 0;
         }
