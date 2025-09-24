@@ -24,20 +24,6 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-static pthread_mutex_t proc_lock = PTHREAD_MUTEX_INITIALIZER;
-
-void proc_lock_wrt(void)
-{
-    spinlock_lock(spinface);
-    pthread_mutex_lock(&proc_lock);
-}
-
-void proc_unlock_wrt(void)
-{
-    pthread_mutex_unlock(&proc_lock);
-    spinlock_unlock(spinface);
-}
-
 kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
     kinfo_info_surface_t cur = {};
@@ -68,7 +54,7 @@ void proc_object_remove_for_pid(pid_t pid)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    proc_lock_wrt();
+    spinlock_lock(spinface);
 
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
@@ -85,7 +71,7 @@ void proc_object_remove_for_pid(pid_t pid)
         }
     }
 
-    proc_unlock_wrt();
+    spinlock_unlock(spinface);
 }
 
 void proc_object_insert(kinfo_info_surface_t object)
@@ -93,21 +79,21 @@ void proc_object_insert(kinfo_info_surface_t object)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    proc_lock_wrt();
+    spinlock_lock(spinface);
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid)
         {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
-            proc_unlock_wrt();
+            spinlock_unlock(spinface);
             return;
         }
     }
     
     memcpy(&surface->proc_info[surface->proc_count++], &object, sizeof(kinfo_info_surface_t));
     
-    proc_unlock_wrt();
+    spinlock_unlock(spinface);
 }
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)

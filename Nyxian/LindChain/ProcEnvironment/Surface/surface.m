@@ -31,7 +31,7 @@ surface_map_t *surface = NULL;
 spinlock_t *spinface = NULL;
 
 static int sharing_fd = -1;
-int safety_fd = -1;
+static int safety_fd = -1;
 
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
@@ -91,11 +91,13 @@ bool proc_allowed_to_spawn(void)
  */
 NSFileHandle* proc_surface_handoff(void)
 {
+    environment_must_be_role(EnvironmentRoleHost);
     return [[NSFileHandle alloc] initWithFileDescriptor:sharing_fd];
 }
 
 NSFileHandle *proc_safety_handoff(void)
 {
+    environment_must_be_role(EnvironmentRoleHost);
     return [[NSFileHandle alloc] initWithFileDescriptor:safety_fd];
 }
 
@@ -119,8 +121,10 @@ int environment_gethostname(char *buf,
 
 void kern_sethostname(NSString *hostname)
 {
+    spinlock_lock(spinface);
     hostname = hostname ?: @"localhost";
     strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
+    spinlock_unlock(spinface);
 }
 
 void proc_surface_unmap(void)
