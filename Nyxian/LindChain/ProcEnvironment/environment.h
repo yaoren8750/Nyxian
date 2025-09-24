@@ -116,14 +116,6 @@ BOOL environment_is_role(EnvironmentRole role);
 BOOL environment_must_be_role(EnvironmentRole role);
 
 /*!
- @function environment_ugid
- @abstract Returns a user identifier based on the environments restriction level
- @discussion
-    This function is used by the modular environment API to decide what to allow and what not.
- */
-uid_t environment_ugid(void);
-
-/*!
  @function environment_init
  @abstract Initializes the environment with a given role.
  @discussion
