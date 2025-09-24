@@ -160,7 +160,7 @@ BOOL proc_create_child_proc(pid_t ppid,
     
     // TODO: Make the process a zombie to either get killed or get waited on
     // Set process flag and stat
-    childInfoProc.kp_proc.p_flag = P_LP64 | P_EXEC | P_DISABLE_ASLR;
+    childInfoProc.kp_proc.p_flag = P_LP64 | P_EXEC;
     childInfoProc.kp_proc.p_stat = SRUN;
     
     // set process stuff
