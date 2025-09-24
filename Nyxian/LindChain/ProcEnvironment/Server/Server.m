@@ -224,16 +224,6 @@
 }
 
 /*
- Internal
- */
-- (void)setProcessIdentifier:(pid_t)processIdentifier
-{
-    dispatch_once(&_handoffProcessIdentifierOnce, ^{
-        _processIdentifier = processIdentifier;
-    });
-}
-
-/*
  Background mode fixup
  */
 - (void)setAudioBackgroundModeActive:(BOOL)active

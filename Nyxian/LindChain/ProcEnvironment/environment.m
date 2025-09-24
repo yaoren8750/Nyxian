@@ -98,9 +98,6 @@ void environment_init(PEEntitlement entitlement,
         environmentRole = role;
         environmentRestriction = restriction;
         
-        // Set process identifier now
-        [hostProcessProxy setProcessIdentifier:getpid()];
-        
         // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
         proc_surface_init(ppid, executablePath);
         

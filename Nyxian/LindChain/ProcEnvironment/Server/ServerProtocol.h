@@ -74,11 +74,6 @@
 - (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;
 
 /*
- Internal
- */
-- (void)setProcessIdentifier:(pid_t)processIdentifier;
-
-/*
  Background mode fixup
  */
 - (void)setAudioBackgroundModeActive:(BOOL)active;

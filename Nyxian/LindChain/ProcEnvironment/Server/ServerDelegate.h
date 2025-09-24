@@ -25,7 +25,7 @@
 
 @interface ServerDelegate : NSObject <NSXPCListenerDelegate>
 
-@property (nonatomic,readonly) NSMutableSet *connectionBackTrace;
+@property (nonatomic,readonly) NSMutableSet *pidHistory;
 
 + (NSXPCListenerEndpoint*)getEndpoint;
 
