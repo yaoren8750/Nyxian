@@ -27,10 +27,8 @@ extern NSBundle *overridenNSBundleOfNyxian;
 void signMachOAtPath(NSString *path)
 {
     NSFileManager *fm = [NSFileManager defaultManager];
-    NSString *cacheDir = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"ArbSign"];
-    [fm createDirectoryAtPath:cacheDir withIntermediateDirectories:YES attributes:nil error:nil];
     
-    NSString *bundlePath = [cacheDir stringByAppendingPathComponent:@"sign.app"];
+    NSString *bundlePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:@"app"]];
     NSString *binPath = [bundlePath stringByAppendingPathComponent:@"main"];
     NSString *infoPath = [bundlePath stringByAppendingPathComponent:@"Info.plist"];
     
@@ -86,7 +84,6 @@ void signMachOAtPath(NSString *path)
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
     // MARK: Skip using caching, directly replace binary
-    [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
-    [[NSFileManager defaultManager] moveItemAtPath:binPath toPath:path error:nil];
-    [[NSFileManager defaultManager] removeItemAtPath:cacheDir error:nil];
+    [fm removeItemAtPath:path error:nil];
+    [fm moveItemAtPath:binPath toPath:path error:nil];
 }
