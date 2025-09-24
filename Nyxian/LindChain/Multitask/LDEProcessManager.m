@@ -87,21 +87,27 @@
     
     __weak typeof(self) weakSelf = self;
     
+    void (^removalBlock)(void) = ^{
+        if(weakSelf == nil) return;
+        __typeof(self) strongSelf = weakSelf;
+        dispatch_once(&strongSelf->_removeOnce, ^{
+            proc_object_remove_for_pid(strongSelf.pid);
+            [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:strongSelf.pid];
+            [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:strongSelf.pid];
+        });
+    };
+    
     [_extension setRequestCancellationBlock:^(NSUUID *identifier, NSError *error){
         if(weakSelf == nil) return;
         __typeof(self) strongSelf = weakSelf;
-        
-        proc_object_remove_for_pid(strongSelf.pid);
-        
+        removalBlock();
         if(strongSelf.cancellationCallback != nil) strongSelf.cancellationCallback(identifier, error);
     }];
     
     [_extension setRequestInterruptionBlock:^(NSUUID *identifier){
         if(weakSelf == nil) return;
         __typeof(self) strongSelf = weakSelf;
-        
-        proc_object_remove_for_pid(strongSelf.pid);
-        
+        removalBlock();
         if(strongSelf.interruptionCallback != nil) strongSelf.interruptionCallback(identifier);
     }];
     

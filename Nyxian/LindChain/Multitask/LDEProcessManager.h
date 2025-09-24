@@ -67,6 +67,8 @@
 // Other boolean flags
 @property (nonatomic) BOOL isSuspended;
 
+@property (nonatomic) dispatch_once_t removeOnce;
+
 // Callback
 @property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
 @property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
