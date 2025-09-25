@@ -37,6 +37,9 @@
 - (instancetype)initWithParentProcessIdentifier:(pid_t)ppid withUserIdentifier:(uid_t)uid withGroupIdentifier:(gid_t)gid withEntitlements:(PEEntitlement)entitlements;
 + (instancetype)inheriteConfigurationUsingProcessIdentifier:(pid_t)pid;
 
++ (instancetype)userApplicationConfiguration;
++ (instancetype)systemApplicationConfiguration;
+
 @end
 
 /*
@@ -98,8 +101,8 @@
 + (instancetype)shared;
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
-- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier doRestartIfRunning:(BOOL)doRestartIfRunning;
-- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier withConfiguration:(LDEProcessConfiguration*)configuration doRestartIfRunning:(BOOL)doRestartIfRunning;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier withConfiguration:(LDEProcessConfiguration*)configuration;
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration process:(LDEProcess**)processReply;
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;

@@ -49,6 +49,16 @@
     return [[self alloc] initWithParentProcessIdentifier:object.real.kp_proc.p_pid withUserIdentifier:object.real.kp_eproc.e_pcred.p_ruid withGroupIdentifier:object.real.kp_eproc.e_pcred.p_rgid withEntitlements:object.entitlements];
 }
 
++ (instancetype)userApplicationConfiguration
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultUserApplication];
+}
+
++ (instancetype)systemApplicationConfiguration
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultSystemApplication];
+}
+
 @end
 
 /*
@@ -269,6 +279,7 @@
 }
 
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                        withConfiguration:(LDEProcessConfiguration*)configuration
                        doRestartIfRunning:(BOOL)doRestartIfRunning
 {
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
@@ -304,14 +315,15 @@
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withMapObject:mapObject withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultUserApplication] process:&process];
+    } withMapObject:mapObject withConfiguration:configuration process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
 
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                        withConfiguration:(LDEProcessConfiguration*)configuration
 {
-    return [self spawnProcessWithBundleIdentifier:bundleIdentifier doRestartIfRunning:NO];
+    return [self spawnProcessWithBundleIdentifier:bundleIdentifier withConfiguration:configuration doRestartIfRunning:NO];
 }
 
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath

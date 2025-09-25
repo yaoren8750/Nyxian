@@ -56,14 +56,14 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         let application = ApplicationManagementViewController.applications[indexPath.row]
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak application] _ in
-            let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
+            let openAction = UIAction(title: "As User", image: UIImage(systemName: "person.fill")) { _ in
                 guard let application = application else { return }
-                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
+                LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier, with: LDEProcessConfiguration.userApplication())
             }
             
-            let openActionDebug = UIAction(title: "Debug", image: UIImage(systemName: "ant.fill")) { _ in
+            let openActionDebug = UIAction(title: "As System", image: UIImage(systemName: "person.badge.key.fill")) { _ in
                 guard let application = application else { return }
-                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
+                LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier, with: LDEProcessConfiguration.systemApplication())
             }
 
             let openMenu: UIMenu = UIMenu(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill"), children: [openAction,openActionDebug])
@@ -93,7 +93,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let application = ApplicationManagementViewController.applications[indexPath.row]
-        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier)
+        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier, with: LDEProcessConfiguration.userApplication())
     }
     
     @objc func plusButtonPressed() {
@@ -128,7 +128,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     let bundleId = lcapp!.bundleIdentifier()
                     if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
                         DispatchQueue.main.async {
-                            LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId)
+                            LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId, with: LDEProcessConfiguration.userApplication())
                             let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
                             ApplicationManagementViewController.applications.append(appObject)
                             self.tableView.reloadData()
