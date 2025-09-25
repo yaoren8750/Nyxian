@@ -68,17 +68,18 @@
     
     // Special or host
     bool prvt = proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPidPrvt);
-    bool host = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
+    bool hostPriveleged = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
+    bool isHost = (pid == getpid());
     
     // Is the request pid the host app
-    if(pid == getpid() && !host)
+    if(isHost && !hostPriveleged)
     {
         reply(nil);
         return;
     }
     
     // Needs special?
-    if(!permitive_over_process_allowed(_processIdentifier, pid) && !prvt)
+    if(!isHost && !permitive_over_process_allowed(_processIdentifier, pid) && !prvt)
     {
         reply(nil);
         return;
