@@ -25,6 +25,7 @@
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
+#import <LindChain/ProcEnvironment/Server/Trust.h>
 
 @implementation LDEProcessConfiguration
 
@@ -57,6 +58,11 @@
 + (instancetype)systemApplicationConfiguration
 {
     return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultSystemApplication];
+}
+
++ (instancetype)configurationForHash:(NSString*)hash
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:[[TrustCache shared] getEntitlementsForHash:hash]];
 }
 
 @end
@@ -340,6 +346,19 @@
     [self.processes setObject:process forKey:@(pid)];
     if(processReply) *processReply = process;
     return pid;
+}
+
+- (void)closeIfRunningUsingBundleIdentifier:(NSString*)bundleIdentifier
+{
+    for(NSNumber *key in self.processes)
+    {
+        LDEProcess *process = self.processes[key];
+        if(!process || ![process.bundleIdentifier isEqualToString:bundleIdentifier]) continue;
+        else
+        {
+            [process terminate];
+        }
+    }
 }
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid

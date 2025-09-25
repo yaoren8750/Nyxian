@@ -39,6 +39,7 @@
 
 + (instancetype)userApplicationConfiguration;
 + (instancetype)systemApplicationConfiguration;
++ (instancetype)configurationForHash:(NSString*)hash;
 
 @end
 
@@ -105,6 +106,7 @@
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier withConfiguration:(LDEProcessConfiguration*)configuration;
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration process:(LDEProcess**)processReply;
 
+- (void)closeIfRunningUsingBundleIdentifier:(NSString*)bundleIdentifier;
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
 - (BOOL)isExecutingProcessWithBundleIdentifier:(NSString*)bundleIdentifier;
