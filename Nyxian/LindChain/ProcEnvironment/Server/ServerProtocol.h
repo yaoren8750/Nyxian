@@ -27,6 +27,16 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 
+typedef NS_OPTIONS(uint64_t, CredentialSet) {
+    CredentialSetUID = 0,
+    CredentialSetEUID = 1,
+    CredentialSetRUID = 2,
+    CredentialSetGID = 3,
+    CredentialSetEGID = 4,
+    CredentialSetRGID = 5,
+    CredentialSetMAX = 6,
+};
+
 @protocol ServerProtocol
 
 /*
@@ -72,6 +82,11 @@
  Background mode fixup
  */
 - (void)setAudioBackgroundModeActive:(BOOL)active;
+
+/*
+ Set credentials
+ */
+- (void)setCredentialWithOption:(CredentialSet)option withIdentifier:(uid_t)uid withReply:(void (^)(int result))reply;
 
 @end
 

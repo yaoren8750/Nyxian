@@ -35,6 +35,7 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
 #import <LindChain/ProcEnvironment/fork.h>
+#import <LindChain/ProcEnvironment/cred.h>
 #import <LindChain/ProcEnvironment/tfp_object.h>
 #import <LindChain/ProcEnvironment/fd_map_object.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>

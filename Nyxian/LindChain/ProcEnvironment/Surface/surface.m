@@ -221,7 +221,7 @@ void proc_surface_init(void)
         // Add proc self if were host
         if(environment_is_role(EnvironmentRoleHost))
         {
-            proc_insert_self();
+            proc_create_child_proc(getppid(), getpid(), 0, 0, [[NSBundle mainBundle] executablePath], PEEntitlementAll);
             
             // Setup hostname
             NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];

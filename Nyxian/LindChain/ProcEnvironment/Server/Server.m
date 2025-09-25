@@ -229,4 +229,75 @@
     }
 }
 
+/*
+ Set credentials
+ */
+- (void)setCredentialWithOption:(CredentialSet)option withIdentifier:(uid_t)uid withReply:(void (^)(int result))reply
+{
+    // Check if option is valid
+    if(option < 0 ||
+       option >= CredentialSetMAX)
+    {
+        reply(-1);
+        return;
+    }
+    
+    // Check for setuid entitlement if applicable
+    if ((option == CredentialSetUID ||
+         option == CredentialSetEUID ||
+         option == CredentialSetRUID) &&
+        !proc_got_entitlement(_processIdentifier, PEEntitlementSetUidAllowed))
+    {
+        reply(-1);
+        return;
+    }
+    
+    // Check for setgid entitlement if applicable
+    if ((option == CredentialSetGID ||
+         option == CredentialSetEGID ||
+         option == CredentialSetRGID) &&
+        !proc_got_entitlement(_processIdentifier, PEEntitlementSetGidAllowed))
+    {
+        reply(-1);
+        return;
+    }
+    
+    // Now change uid
+    kinfo_info_surface_t object = proc_object_for_pid(_processIdentifier);
+    
+    switch(option)
+    {
+        case CredentialSetUID:
+            object.real.kp_eproc.e_ucred.cr_uid = uid;
+            object.real.kp_eproc.e_pcred.p_ruid = uid;
+            object.real.kp_eproc.e_pcred.p_svuid = uid;
+            break;
+        case CredentialSetRUID:
+            object.real.kp_eproc.e_pcred.p_ruid = uid;
+            break;
+        case CredentialSetEUID:
+            object.real.kp_eproc.e_ucred.cr_uid = uid;
+            break;
+        case CredentialSetGID:
+            object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+            object.real.kp_eproc.e_pcred.p_rgid = uid;
+            object.real.kp_eproc.e_pcred.p_svgid = uid;
+            break;
+        case CredentialSetEGID:
+            object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+            break;
+        case CredentialSetRGID:
+            object.real.kp_eproc.e_pcred.p_rgid = uid;
+            break;
+        default:
+            reply(-1);
+            return;
+    }
+    
+    proc_object_insert(object);
+    
+    reply(0);
+    return;
+}
+
 @end

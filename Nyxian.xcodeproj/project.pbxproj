@@ -149,6 +149,7 @@
 				LindChain/OpenSSL.xcframework,
 				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/arbitary_signer.m,
+				LindChain/ProcEnvironment/cred.m,
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/fd_map_object.m,
 				LindChain/ProcEnvironment/fork.m,

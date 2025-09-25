@@ -68,4 +68,22 @@ NSString *environment_proxy_gather_code_signature_extras(void);
 /// Returns the proc surfaces handle
 void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety);
 
+/// Sets user identifier
+int environment_proxy_setuid(uid_t uid);
+
+/// Sets group identifier
+int environment_proxy_setgid(gid_t gid);
+
+/// Sets effective user identifier
+int environment_proxy_seteuid(uid_t uid);
+
+/// Sets effective group identifier
+int environment_proxy_setegid(gid_t gid);
+
+/// Sets real user identifier
+int environment_proxy_setruid(uid_t uid);
+
+/// Sets real group identifier
+int environment_proxy_setrgid(gid_t gid);
+
 #endif /* PROCENVIRONMENT_PROXY_H */
