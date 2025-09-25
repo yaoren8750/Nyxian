@@ -61,6 +61,12 @@ typedef NS_OPTIONS(uint64_t, PEEntitlement) {
     /*! Grants all permissions over a child process. */
     PEEntitlementChildSupervisor =  1ull << 10,
     
+    /*! Grants permissions to read from the trustcache */
+    PEEntitlementTrustCacheRead = 1ull << 11,
+    
+    /*! Grants permissions to write to the trustcache */
+    PEEntitlementTrustCacheWrite = 1ull << 12,
+    
     /*! Grants all entitlements */
     PEEntitlementAll = (PEEntitlementTaskForPid | PEEntitlementTaskForPidPrvt | PEEntitlementGetHostTaskPort | PEEntitlementSurfaceRead | PEEntitlementSetUidAllowed | PEEntitlementSetGidAllowed | PEEntitlementRecvSignal | PEEntitlementSendSignal | PEEntitlementSendSignalPrvt | PEEntitlementSpawnProc | PEEntitlementChildSupervisor),
     
