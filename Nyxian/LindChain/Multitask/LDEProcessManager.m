@@ -103,41 +103,35 @@
     
     __weak typeof(self) weakSelf = self;
     
-    void (^removalBlock)(void) = ^{
-        if(weakSelf == nil) return;
-        __typeof(self) strongSelf = weakSelf;
-        dispatch_once(&strongSelf->_removeOnce, ^{
-            proc_object_remove_for_pid(strongSelf.pid);
-            [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:strongSelf.pid];
-            [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:strongSelf.pid];
-        });
-    };
-    
-    [_extension setRequestCancellationBlock:^(NSUUID *identifier, NSError *error){
-        if(weakSelf == nil) return;
-        __typeof(self) strongSelf = weakSelf;
-        removalBlock();
-        if(strongSelf.cancellationCallback != nil) strongSelf.cancellationCallback(identifier, error);
-    }];
-    
-    [_extension setRequestInterruptionBlock:^(NSUUID *identifier){
-        if(weakSelf == nil) return;
-        __typeof(self) strongSelf = weakSelf;
-        removalBlock();
-        if(strongSelf.interruptionCallback != nil) strongSelf.interruptionCallback(identifier);
-    }];
-    
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
-        if(weakSelf == nil) return;
-        __typeof(self) strongSelf = weakSelf;
-        
         if(identifier) {
-            strongSelf.identifier = identifier;
-            strongSelf.pid = [strongSelf.extension pidForRequestIdentifier:strongSelf.identifier];
+            if(weakSelf == nil) return;
+            __typeof(self) strongSelf = weakSelf;
+            
+            weakSelf.identifier = identifier;
+            weakSelf.pid = [self.extension pidForRequestIdentifier:self.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
-            strongSelf.processHandle = [PrivClass(RBSProcessHandle) handleForPredicate:predicate error:nil];
-            proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, configuration.entitlements);
+            weakSelf.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
+                                                                                                                   RBSProcessHandle *handle,
+                                                                                                                   RBSProcessStateUpdate *update)
+                                       {
+                // Setting process handle directly from process monitor
+                weakSelf.processHandle = handle;
+                proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, configuration.entitlements);
+                
+                // Interestingly, when a process exits, the process monitor says that there is no state, so we can use that as a logic check
+                NSArray<RBSProcessState *> *states = [monitor states];
+                if([states count] == 0)
+                {
+                    // Process dead!
+                    dispatch_once(&strongSelf->_removeOnce, ^{
+                        proc_object_remove_for_pid(strongSelf.pid);
+                        [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:strongSelf.pid];
+                        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:strongSelf.pid];
+                    });
+                }
+            }];
         }
         dispatch_semaphore_signal(sema);
     }];
@@ -209,12 +203,12 @@
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
-    _cancellationCallback = callback;
+    [_extension setRequestCancellationBlock:callback];
 }
 
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback
 {
-    _interruptionCallback = callback;
+    [_extension setRequestInterruptionBlock:callback];
 }
 
 @end

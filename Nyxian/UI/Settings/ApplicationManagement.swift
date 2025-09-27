@@ -145,7 +145,12 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
             guard ((try? fileManager.createDirectory(atPath: unzipRoot, withIntermediateDirectories: true)) != nil) else { return }
             guard unzipArchiveAtPath(selectedURL.path, unzipRoot) else { return }
             var miError: AnyObject?
-            guard let miBundle = MIBundle(bundleInDirectory: URL(fileURLWithPath: payloadDir), withExtension: "app", error: &miError) else { return }
+            guard let miBundle = MIBundle(bundleInDirectory: URL(fileURLWithPath: payloadDir), withExtension: "app", error: &miError) else {
+                if let error: NSError = miError as? NSError {
+                    NotificationServer.NotifyUser(level: .error, notification: "Failed to install application: \(error.localizedDescription)")
+                }
+                return
+            }
             
             let bundleURL = miBundle.bundleURL!
             let lcapp = LCAppInfo(bundlePath: bundleURL.path)
