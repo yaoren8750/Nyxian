@@ -36,8 +36,8 @@
 #import <LindChain/ProcEnvironment/sysctl.h>
 #import <LindChain/ProcEnvironment/fork.h>
 #import <LindChain/ProcEnvironment/cred.h>
-#import <LindChain/ProcEnvironment/tfp_object.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/MachPortObject.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Surface/permit.h>

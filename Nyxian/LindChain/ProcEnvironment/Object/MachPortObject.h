@@ -19,8 +19,8 @@
 
 // MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
 
-#ifndef PROCENVIRONMENT_TFPOBJECT
-#define PROCENVIRONMENT_TFPOBJECT
+#ifndef PROCENVIRONMENT_MACHPORT_OBJECT
+#define PROCENVIRONMENT_MACHPORT_OBJECT
 
 /* ----------------------------------------------------------------------
  *  Apple API Headers
@@ -28,17 +28,16 @@
 #import <Foundation/Foundation.h>
 #import <mach/mach.h>
 
-API_AVAILABLE(ios(26.0))
-@interface TaskPortObject : NSObject <NSSecureCoding>
+@interface MachPortObject : NSObject <NSSecureCoding>
 
 @property (nonatomic, readonly) mach_port_t port;
 
 - (instancetype)initWithPort:(mach_port_t)port;
 
-+ (instancetype)taskPortSelf;
++ (instancetype)taskPortSelf API_AVAILABLE(ios(26.0));
 
 - (BOOL)isUsable;
 
 @end
 
-#endif /* PROCENVIRONMENT_TFPOBJECT */
+#endif /* PROCENVIRONMENT_MACHPORT_OBJECT */

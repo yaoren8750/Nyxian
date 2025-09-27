@@ -29,7 +29,7 @@
 /* ----------------------------------------------------------------------
  *  Environment API Headers
  * -------------------------------------------------------------------- */
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 
 /*!
  @typedef environment_posix_spawn_file_actions_t

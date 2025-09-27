@@ -17,11 +17,10 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/tfp_object.h>
+#import <LindChain/ProcEnvironment/Object/MachPortObject.h>
 #import <xpc/xpc.h>
 
-// MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
-@implementation TaskPortObject
+@implementation MachPortObject
 
 - (instancetype)initWithPort:(mach_port_t)port
 {
@@ -30,9 +29,10 @@
     return self;
 }
 
+// MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
 + (instancetype)taskPortSelf
 {
-    return [[TaskPortObject alloc] initWithPort:mach_task_self()];
+    return [[MachPortObject alloc] initWithPort:mach_task_self()];
 }
 
 + (BOOL)supportsSecureCoding

@@ -127,16 +127,16 @@ void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoin
     [hostProcessProxy setLDEApplicationWorkspaceEndPoint:endpoint];
 }
 
-void environment_proxy_tfp_send_port_object(TaskPortObject *port)
+void environment_proxy_tfp_send_port_object(MachPortObject *port)
 {
     environment_must_be_role(EnvironmentRoleGuest);
     [hostProcessProxy sendPort:port];
 }
 
-TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
+MachPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
 {
     environment_must_be_role(EnvironmentRoleGuest);
-    TaskPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(TaskPortObject*){
+    MachPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(MachPortObject*){
         [hostProcessProxy getPort:process_identifier withReply:reply];
     });
     return object;

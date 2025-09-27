@@ -24,7 +24,7 @@
 #import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
 @interface LDEProcessConfiguration : NSObject
