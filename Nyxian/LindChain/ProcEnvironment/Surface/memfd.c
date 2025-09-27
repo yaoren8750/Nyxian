@@ -25,6 +25,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/syslimits.h>
 
 int memfd_create(const char *name,
                  unsigned int flags)
