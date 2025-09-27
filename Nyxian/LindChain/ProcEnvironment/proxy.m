@@ -227,11 +227,11 @@ NSString *environment_proxy_gather_code_signature_extras(void)
     return extra;
 }
 
-void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety)
+void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety)
 {
     environment_must_be_role(EnvironmentRoleGuest);
-    NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(NSFileHandle*, NSFileHandle*)){
-        [hostProcessProxy handinSurfaceFileDescriptorViaReply:reply];
+    NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(MappingPortObject*, MappingPortObject*)){
+        [hostProcessProxy handinSurfaceMappingPortObjectsViaReply:reply];
     });
     if(!objectArray) return;
     *surface = objectArray[0];

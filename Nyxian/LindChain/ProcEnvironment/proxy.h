@@ -66,7 +66,7 @@ void environment_proxy_gather_code_signature_info(NSData **certificateData, NSSt
 NSString *environment_proxy_gather_code_signature_extras(void);
 
 /// Returns the proc surfaces handle
-void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety);
+void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety);
 
 /// Sets user identifier
 int environment_proxy_setuid(uid_t uid);

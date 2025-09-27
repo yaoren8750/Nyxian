@@ -208,10 +208,10 @@
 /*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply
+- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply
 {
     dispatch_once(&_handoffSurfaceOnce, ^{
-        reply(proc_surface_handoff(), proc_safety_handoff());
+        reply(proc_surface_handoff(), proc_spinface_handoff());
         return;
     });
     

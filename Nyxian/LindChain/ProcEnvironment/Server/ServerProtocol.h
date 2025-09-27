@@ -24,6 +24,7 @@
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/ProcEnvironment/Object/MachPortObject.h>
+#import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 
@@ -76,7 +77,7 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
 /*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;
+- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply;
 
 /*
  Background mode fixup

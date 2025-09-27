@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <LindChain/ProcEnvironment/Surface/spinlock.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
+#import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
 
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
@@ -135,10 +136,10 @@ extern spinlock_t *spinface;
 /* Handoff */
 
 /// Returns a process surface file handle to perform a handoff over XPC
-NSFileHandle *proc_surface_handoff(void);
+MappingPortObject *proc_surface_handoff(void);
 
 /// Returns a safety surface file handle to perform a handoff over XPC
-NSFileHandle *proc_safety_handoff(void);
+MappingPortObject *proc_spinface_handoff(void);
 
 /* libproc */
 int proc_libproc_listallpids(void *buffer, int buffersize);
