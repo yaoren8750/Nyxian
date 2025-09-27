@@ -244,6 +244,7 @@ int environment_proxy_setuid(uid_t uid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetUID withIdentifier:uid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }
 
@@ -253,6 +254,7 @@ int environment_proxy_setgid(gid_t gid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetGID withIdentifier:gid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }
 
@@ -262,6 +264,7 @@ int environment_proxy_seteuid(uid_t uid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetEUID withIdentifier:uid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }
 
@@ -271,6 +274,7 @@ int environment_proxy_setegid(gid_t gid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetEGID withIdentifier:gid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }
 
@@ -280,6 +284,7 @@ int environment_proxy_setruid(uid_t uid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetRUID withIdentifier:uid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }
 
@@ -289,5 +294,6 @@ int environment_proxy_setrgid(gid_t gid)
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
         [hostProcessProxy setCredentialWithOption:CredentialSetRGID withIdentifier:gid withReply:reply];
     });
+    if(ret == -1) errno = EPERM;
     return ret;
 }

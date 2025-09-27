@@ -243,14 +243,15 @@
         return;
     }
     
+    BOOL isAlteringAllowed = YES;
+    
     // Check for setuid entitlement if applicable
     if ((option == CredentialSetUID ||
          option == CredentialSetEUID ||
          option == CredentialSetRUID) &&
         !proc_got_entitlement(_processIdentifier, PEEntitlementSetUidAllowed))
     {
-        reply(-1);
-        return;
+        isAlteringAllowed = NO;
     }
     
     // Check for setgid entitlement if applicable
@@ -259,45 +260,109 @@
          option == CredentialSetRGID) &&
         !proc_got_entitlement(_processIdentifier, PEEntitlementSetGidAllowed))
     {
-        reply(-1);
-        return;
+        isAlteringAllowed = NO;
     }
     
     // Now change uid
     kinfo_info_surface_t object = proc_object_for_pid(_processIdentifier);
     
+    int repl = 0;
+    
     switch(option)
     {
         case CredentialSetUID:
-            object.real.kp_eproc.e_ucred.cr_uid = uid;
-            object.real.kp_eproc.e_pcred.p_ruid = uid;
-            object.real.kp_eproc.e_pcred.p_svuid = uid;
+            if(object.real.kp_eproc.e_ucred.cr_uid != uid &&
+               object.real.kp_eproc.e_pcred.p_ruid != uid &&
+               object.real.kp_eproc.e_pcred.p_svuid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_uid = uid;
+                    object.real.kp_eproc.e_pcred.p_ruid = uid;
+                    object.real.kp_eproc.e_pcred.p_svuid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         case CredentialSetRUID:
-            object.real.kp_eproc.e_pcred.p_ruid = uid;
+            if(object.real.kp_eproc.e_pcred.p_ruid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_pcred.p_ruid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         case CredentialSetEUID:
-            object.real.kp_eproc.e_ucred.cr_uid = uid;
+            if(object.real.kp_eproc.e_ucred.cr_uid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_uid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         case CredentialSetGID:
-            object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
-            object.real.kp_eproc.e_pcred.p_rgid = uid;
-            object.real.kp_eproc.e_pcred.p_svgid = uid;
+            if(object.real.kp_eproc.e_ucred.cr_groups[0] != uid &&
+               object.real.kp_eproc.e_pcred.p_rgid != uid &&
+               object.real.kp_eproc.e_pcred.p_svgid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+                    object.real.kp_eproc.e_pcred.p_rgid = uid;
+                    object.real.kp_eproc.e_pcred.p_svgid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         case CredentialSetEGID:
-            object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+            if(object.real.kp_eproc.e_ucred.cr_groups[0] != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         case CredentialSetRGID:
-            object.real.kp_eproc.e_pcred.p_rgid = uid;
+            if(object.real.kp_eproc.e_pcred.p_rgid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_pcred.p_rgid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
             break;
         default:
-            reply(-1);
-            return;
+            repl = -1;
     }
     
     proc_object_insert(object);
     
-    reply(0);
+    reply(repl);
     return;
 }
 
