@@ -35,46 +35,42 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/sysctl.h>
 #import <LindChain/ProcEnvironment/fork.h>
-#import <LindChain/ProcEnvironment/tfp_object.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/cred.h>
+#import <LindChain/ProcEnvironment/Object/MachPortObject.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Surface/permit.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
-extern PEEntitlement exposed_entitlement;
-
 /*!
  @enum EnvironmentRole
  @abstract Defines the role of the current environment.
- @constant EnvironmentRoleNone
-     No environment role is set.
- @constant EnvironmentRoleHost
-     The environment is running as the host.
- @constant EnvironmentRoleGuest
-     The environment is running as a guest.
  */
 typedef NS_ENUM(NSInteger, EnvironmentRole) {
+    /*! No environment role is set. */
     EnvironmentRoleNone  = 0,
+    
+    /*! The environment is running as the host. */
     EnvironmentRoleHost  = 1,
+    
+    /*! The environment is running as a guest. */
     EnvironmentRoleGuest = 2
 };
 
 /*!
- @enum EnvironmentRestriction
- @abstract Defines the restriction of the current environment.
- @constant EnvironmentRestrictionNone
-     No environment restriction is set.
- @constant EnvironmentRestrictionSystem
-     The environment is running with system restrictions.
- @constant EnvironmentRestrictionUser
-     The environment with user restrictions.
+ @enum EnvironmentExec
+ @abstract Defines how the environment shall be executed.
  */
-typedef NS_ENUM(NSInteger, EnvironmentRestriction) {
-    EnvironmentRestrictionNone   = 0, /* Nothing */
-    EnvironmentRestrictionUser   = 1, /* Level 1 */
-    EnvironmentRestrictionSystem = 2, /* Level 2 */
-    EnvironmentRestrictionKernel = 3  /* Level 3: Highest permitives */
+typedef NS_ENUM(NSInteger, EnvironmentExec) {
+    /*! No environment execution type set */
+    EnvironmentExecNone = 0,
+    
+    /*! The environment will execute after init using LiveContainer and wont return from `environment_init(5)` */
+    EnvironmentExecLiveContainer = 1,
+    
+    /*! The environment wont execute anything and will straightup return for a custom execution method `environment_init(5)` */
+    EnvironmentExecCustom  = 2,
 };
 
 /*!
@@ -86,7 +82,7 @@ typedef NS_ENUM(NSInteger, EnvironmentRestriction) {
     by the host.
 
  @param endpoint
-    An `NSXPCListenerEndpoint` object identifying the host environment.
+    Endpoint send by the host environment to the guest to connect to.
  */
 void environment_client_connect_to_host(NSXPCListenerEndpoint *endpoint);
 
@@ -121,35 +117,22 @@ BOOL environment_is_role(EnvironmentRole role);
 BOOL environment_must_be_role(EnvironmentRole role);
 
 /*!
- @function environment_has_restriction_level
- @abstract Returns a boolean value representing if it is the given or higher restriction level.
- @discussion
-    This function is used by the modular environment API to decide what to allow and what not.
- 
- @param restriction
-    An `EnvironmentRestriction` enum value that is the value that must match or be higher than the internal `EnvironmentRestriction` enum value for it to succeed
- */
-BOOL environment_has_restriction_level(EnvironmentRestriction restriction);
-
-/*!
- @function environment_ugid
- @abstract Returns a user identifier based on the environments restriction level
- @discussion
-    This function is used by the modular environment API to decide what to allow and what not.
- */
-uid_t environment_ugid(void);
-
-/*!
  @function environment_init
  @abstract Initializes the environment with a given role.
  @discussion
     This function initializes the environment with the given role. It can and shall only be called once. This function never returns NO!
  
  @param role
-    An `EnvironmentRole` enum value that represents the environment role wished to be initializes as.
+    Represents the environment role wished to be init as.
+ @param exec
+    Represents how the environment shall act after init.
  @param executablePath
-    An character buffer that represents the executable path
+    Executable path of the target binary.
+ @param argc
+    Item count of argv array.
+ @param argv
+    Arguments used for the binary.
  */
-void environment_init(PEEntitlement entitlement, EnvironmentRole role, EnvironmentRestriction restriction, const char *executablePath, pid_t ppid);
+void environment_init(EnvironmentRole role, EnvironmentExec exec, const char *executablePath, int argc, char *argv[]);
 
 #endif /* PROCENVIRONMENT_ENVIRONMENT_H */

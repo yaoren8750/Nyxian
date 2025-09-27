@@ -17,18 +17,24 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#ifndef PROCENVIRONMENT_MAPPINGPORTOBJECT_H
+#define PROCENVIRONMENT_MAPPINGPORTOBJECT_H
 
-#import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
+/* ----------------------------------------------------------------------
+ *  Environment API Headers
+ * -------------------------------------------------------------------- */
+#import <LindChain/ProcEnvironment/Object/MachPortObject.h>
 
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+@interface MappingPortObject : MachPortObject
 
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
+@property (nonatomic) vm_prot_t prot;
+@property (nonatomic) size_t size;
 
-+ (NSXPCListenerEndpoint*)getEndpoint;
+- (instancetype)initWithAddr:(void*)addr withSize:(size_t)size withProt:(vm_prot_t)prot;
+
+- (void*)map;
+- (void*)mapAndDestroy;
 
 @end
 
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+#endif /* PROCENVIRONMENT_MAPPINGPORTOBJECT_H */

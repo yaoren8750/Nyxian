@@ -206,7 +206,11 @@ DEFINE_HOOK(execl, int, (const char * __path,
     argv[argc] = NULL;
     va_end(ap);
     
-    return environment_execvpa(__path, argv, environ, false);
+    int result = environment_execvpa(__path, argv, environ, false);
+    
+    free(argv);
+    
+    return result;
 }
 
 DEFINE_HOOK(execle, int, (const char *path,

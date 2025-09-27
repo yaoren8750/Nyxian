@@ -18,24 +18,40 @@
 */
 
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
 
 @implementation ServerDelegate
 
 - (instancetype)init
 {
     self = [super init];
-    _connectionBackTrace = [[NSMutableSet alloc] init];
+    _pidHistory = [[NSMutableSet alloc] init];
     return self;
 }
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
+    // Getting requestors pid
     pid_t requestorPid = newConnection.processIdentifier;
-    if(requestorPid == 0 || [_connectionBackTrace containsObject:@(requestorPid)]) return NO;
-    [_connectionBackTrace addObject:@(requestorPid)];
+    
+    // Checking if valid, if it is adding it to the pid history
+    if(requestorPid == 0 || [_pidHistory containsObject:@(requestorPid)]) return NO;
+    [_pidHistory addObject:@(requestorPid)];
+    
+    // Setting protocol interface
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ServerProtocol)];
-    newConnection.exportedObject = [[Server alloc] init];
+    
+    // Setting up server session
+    Server *serverSession = [[Server alloc] init];
+    serverSession.processIdentifier = requestorPid;
+    
+    // Set exported object to the created server session
+    newConnection.exportedObject = serverSession;
+    
+    // Resume connection
     [newConnection resume];
+    
     return YES;
 }
 

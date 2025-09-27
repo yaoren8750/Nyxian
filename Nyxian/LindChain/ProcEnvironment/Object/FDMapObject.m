@@ -17,7 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <xpc/xpc.h>
 

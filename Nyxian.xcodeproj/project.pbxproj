@@ -149,10 +149,13 @@
 				LindChain/OpenSSL.xcframework,
 				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/arbitary_signer.m,
+				LindChain/ProcEnvironment/cred.m,
 				LindChain/ProcEnvironment/environment.m,
-				LindChain/ProcEnvironment/fd_map_object.m,
 				LindChain/ProcEnvironment/fork.m,
 				LindChain/ProcEnvironment/libproc.m,
+				LindChain/ProcEnvironment/Object/FDMapObject.m,
+				LindChain/ProcEnvironment/Object/MachPortObject.m,
+				LindChain/ProcEnvironment/Object/MappingPortObject.m,
 				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
 				LindChain/ProcEnvironment/Surface/entitlement.m,
@@ -163,7 +166,6 @@
 				LindChain/ProcEnvironment/Surface/spinlock.c,
 				LindChain/ProcEnvironment/Surface/surface.m,
 				LindChain/ProcEnvironment/sysctl.m,
-				LindChain/ProcEnvironment/tfp_object.m,
 				LindChain/ProcEnvironment/tfp.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;

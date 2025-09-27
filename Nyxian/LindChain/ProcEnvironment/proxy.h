@@ -39,10 +39,10 @@ extern NSObject<ServerProtocol> *hostProcessProxy;
 void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint);
 
 /// Sends a task port to the host application to hand it to other requesting processes
-void environment_proxy_tfp_send_port_object(TaskPortObject *port) API_AVAILABLE(ios(26.0));
+void environment_proxy_tfp_send_port_object(MachPortObject *port) API_AVAILABLE(ios(26.0));
 
 /// Get a task port from the host application that a other process has handed in using `environment_proxy_tfp_send_port_object(TaskPortObject *port)`
-TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier) API_AVAILABLE(ios(26.0));
+MachPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier) API_AVAILABLE(ios(26.0));
 
 /// Gets the list of all process identifiers running
 NSSet *environment_proxy_proc_list_all_process_identifier(void);
@@ -66,6 +66,24 @@ void environment_proxy_gather_code_signature_info(NSData **certificateData, NSSt
 NSString *environment_proxy_gather_code_signature_extras(void);
 
 /// Returns the proc surfaces handle
-void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety);
+void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety);
+
+/// Sets user identifier
+int environment_proxy_setuid(uid_t uid);
+
+/// Sets group identifier
+int environment_proxy_setgid(gid_t gid);
+
+/// Sets effective user identifier
+int environment_proxy_seteuid(uid_t uid);
+
+/// Sets effective group identifier
+int environment_proxy_setegid(gid_t gid);
+
+/// Sets real user identifier
+int environment_proxy_setruid(uid_t uid);
+
+/// Sets real group identifier
+int environment_proxy_setrgid(gid_t gid);
 
 #endif /* PROCENVIRONMENT_PROXY_H */

@@ -30,9 +30,6 @@
 surface_map_t *surface = NULL;
 spinlock_t *spinface = NULL;
 
-static int sharing_fd = -1;
-int safety_fd = -1;
-
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 {
@@ -89,14 +86,16 @@ bool proc_allowed_to_spawn(void)
 /*
  Management
  */
-NSFileHandle* proc_surface_handoff(void)
+/// Returns a process surface file handle to perform a handoff over XPC
+MappingPortObject *proc_surface_handoff(void)
 {
-    return [[NSFileHandle alloc] initWithFileDescriptor:sharing_fd];
+    return [[MappingPortObject alloc] initWithAddr:surface withSize:SURFACE_MAP_SIZE withProt:VM_PROT_READ];
 }
 
-NSFileHandle *proc_safety_handoff(void)
+/// Returns a safety surface file handle to perform a handoff over XPC
+MappingPortObject *proc_spinface_handoff(void)
 {
-    return [[NSFileHandle alloc] initWithFileDescriptor:safety_fd];
+    return [[MappingPortObject alloc] initWithAddr:spinface withSize:sizeof(spinlock_t) withProt:VM_PROT_READ];
 }
 
 /*
@@ -119,8 +118,10 @@ int environment_gethostname(char *buf,
 
 void kern_sethostname(NSString *hostname)
 {
+    spinlock_lock(spinface);
     hostname = hostname ?: @"localhost";
     strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
+    spinlock_unlock(spinface);
 }
 
 void proc_surface_unmap(void)
@@ -135,167 +136,42 @@ void proc_surface_unmap(void)
         spinface = NULL;
 }
 
-void proc_surface_init(pid_t ppid,
-                       const char *executablePath)
+void proc_surface_init(void)
 {
-    __block const char *executablePathBlock = executablePath;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Initilize base of mapping
         if(environment_is_role(EnvironmentRoleHost))
         {
-            sharing_fd = memfd_create("proc_surface_memfd", O_CREAT | O_RDWR);
-            safety_fd = memfd_create("proc_surface_safefd", O_CREAT | O_RDWR);
-            if(sharing_fd == -1 || safety_fd == -1) return;
-            ftruncate(sharing_fd, SURFACE_MAP_SIZE);
-            ftruncate(safety_fd, sizeof(spinlock_t));
-        }
-        else
-        {
-            // Setup
-            NSFileHandle *handle;
-            NSFileHandle *safety;
-            environment_proxy_get_surface_handle(&handle, &safety);
-            if(!(handle && safety))
-            {
-                if(handle) [handle closeFile];
-                if(safety) [safety closeFile];
-                return;
-            }
-            sharing_fd = handle.fileDescriptor;
-            safety_fd = safety.fileDescriptor;
-        }
-        
-        // Now map it!! (but only with max readable)
-        surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharing_fd, 0);
-        spinface = mmap(NULL, sizeof(spinlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, safety_fd, 0);
-        if(environment_is_role(EnvironmentRoleGuest) ||
-           surface == MAP_FAILED ||
-           spinface == MAP_FAILED)
-        {
-            // Mapping failed
-            close(safety_fd);
-            close(sharing_fd);
-            if(environment_is_role(EnvironmentRoleHost))
-                return;
-        }
-        
-        // After close we come to magic
-        if(environment_is_role(EnvironmentRoleHost))
-        {
-            // Were the host so we write the magic
+            // Allocate surface and spinface
+            surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+            spinface = mmap(NULL, sizeof(spinlock_t), PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+            
+            // Setup surface
             surface->magic = SURFACE_MAGIC;
+            NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
+            if(hostname == nil) hostname = @"localhost";
+            strlcpy(surface->hostname, hostname.UTF8String, MAXHOSTNAMELEN);
+            surface->proc_count = 0;
+            proc_create_child_proc(getppid(), getpid(), 0, 0, [[NSBundle mainBundle] bundlePath], PEEntitlementAll);
+            
             
             // Setup spinface
-            spinface->lock = 0;
+            spinface->lock = false;
             spinface->seq = 0;
         }
         else
         {
-            // Were the guest so we check the magic
-            if(surface->magic != SURFACE_MAGIC)
-            {
-                proc_surface_unmap();
-                return;
-            }
-        }
-        
-        // Add proc self if were host
-        if(environment_is_role(EnvironmentRoleHost) && environment_has_restriction_level(EnvironmentRestrictionKernel))
-        {
-            // Setup hostname
-            NSString *hostname = [[NSUserDefaults standardUserDefaults] stringForKey:@"LDEHostname"];
-            hostname = hostname ?: @"localhost";
-            strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
-        }
-        else
-        {
-            // Rebind hostname symbol
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, gethostname, environment_gethostname, nil);
-        }
-        
-        // Insert self
-        proc_insert_self();
-        
-        // Overwrite some info if process is passed
-        kinfo_info_surface_t kinfo = proc_object_for_pid(getpid());
-        
-        // Create a nsExecutablePath
-        char *executablePathNew = NULL;
-        if(!executablePathBlock)
-        {
-            // Create new path if not available
-            uint32_t size = PATH_MAX;
-            executablePathNew = malloc(size);
-            _NSGetExecutablePath(executablePathNew, &size);
+            // Get surface objects
+            MappingPortObject *surfaceMapObject = nil;
+            MappingPortObject *spinfaceMapObject = nil;
             
-            // Set executablePath to point to executablePathNew
-            executablePathBlock = executablePathNew;
+            environment_proxy_get_surface_mappings(&surfaceMapObject, &spinfaceMapObject);
+            
+            // Now map em
+            surface = [surfaceMapObject mapAndDestroy];
+            spinface = [spinfaceMapObject mapAndDestroy];
+            
+            // Thats it
         }
-        NSString *nsExecutablePath = [NSString stringWithCString:executablePathBlock encoding:NSUTF8StringEncoding];
-        if(executablePathNew) free(executablePathNew);
-        
-        if(nsExecutablePath)
-        {
-            // Modifying self
-            strlcpy(kinfo.real.kp_proc.p_comm, [[[NSURL fileURLWithPath:nsExecutablePath] lastPathComponent] UTF8String], MAXCOMLEN + 1);
-            strlcpy(kinfo.path, [nsExecutablePath UTF8String], PATH_MAX);
-        }
-        
-        uid_t userIdentifier = environment_ugid();
-        kinfo.real.kp_eproc.e_ucred.cr_uid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_ruid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_rgid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_svuid = userIdentifier;
-        kinfo.real.kp_eproc.e_pcred.p_svgid = userIdentifier;
-        kinfo.real.kp_proc.p_oppid = ppid;
-        kinfo.real.kp_eproc.e_ppid = ppid;
-        
-        kinfo.force_task_role_override = true;
-        kinfo.task_role_override = TASK_UNSPECIFIED;
-        
-        kinfo.entitlements = exposed_entitlement;
-        
-        proc_object_insert(kinfo);
-        
-        
-        if(!environment_has_restriction_level(EnvironmentRestrictionKernel))
-        {
-            // Entitlement enforcement!
-            vm_prot_t surface_prot_set = VM_PROT_NONE;
-            vm_prot_t spinlock_prot_set = VM_PROT_NONE;
-            
-            // Translate entitlements to prot level
-            if(entitlement_got_entitlement(exposed_entitlement, PEEntitlementSurfaceRead))
-            {
-                surface_prot_set = surface_prot_set | VM_PROT_READ;
-                spinlock_prot_set = spinlock_prot_set | VM_PROT_READ;
-            }
-            
-            if(surface_prot_set == VM_PROT_NONE)
-            {
-                proc_surface_unmap();
-                return;
-            }
-            
-            // Thank you Duy Tran for the mach symbol notice in dyld_bypass_validation
-            kern_return_t kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)surface, SURFACE_MAP_SIZE, TRUE, surface_prot_set);
-            if(kr != KERN_SUCCESS)
-            {
-                // Its not secure, our own sandbox policies got broken, we blind the process
-                proc_surface_unmap();
-                return;
-            }
-            
-            kr = _kernelrpc_mach_vm_protect_trap(mach_task_self(), (mach_vm_address_t)spinface, sizeof(spinlock_t), TRUE, VM_PROT_READ);
-            if(kr != KERN_SUCCESS)
-            {
-                // Its not secure, our own sandbox policies got broken, we blind the process
-                proc_surface_unmap();
-                return;
-            }
-        }
-        
-        return;
     });
 }

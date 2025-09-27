@@ -25,6 +25,8 @@ typedef struct {
 
 uint32_t lcImageIndex = 0;
 uint32_t appMainImageIndex = 0;
+uint32_t guestAppSdkVersion = 0;
+uint32_t guestAppSdkVersionSet = 0;
 
 void* appExecutableHandle = 0;
 const char* lcMainBundlePath = NULL;
@@ -100,6 +102,25 @@ DEFINE_HOOK(dlopen, void *, (const char * __path, int __mode))
     return ORIG_FUNC(dlopen)(__path, __mode);
 }
 
+bool hook_dyld_program_sdk_at_least(void* dyldApiInstancePtr, dyld_build_version_t version)
+{
+    // we are targeting ios, so we hard code 2
+    switch(version.platform)
+    {
+        case 0xffffffff:
+            return version.version <= guestAppSdkVersionSet;
+        case 2:
+            return version.version <= guestAppSdkVersion;
+        default:
+            return false;
+    }
+}
+
+uint32_t hook_dyld_get_program_sdk_version(void* dyldApiInstancePtr)
+{
+    return guestAppSdkVersion;
+}
+
 // Rewrite End
 
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction)
@@ -140,7 +161,8 @@ bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** or
     }
     kern_return_t ret = builtin_vm_protect(mach_task_self(), (mach_vm_address_t)vtableFunctionPtr, sizeof(uintptr_t), false, PROT_READ | PROT_WRITE | VM_PROT_COPY);
     assert(ret == KERN_SUCCESS);
-    *origFunction = (void*)*(void**)vtableFunctionPtr;
+    if(origFunction != NULL)
+        *origFunction = (void*)*(void**)vtableFunctionPtr;
     *(uint64_t*)vtableFunctionPtr = (uint64_t)hookFunction;
     builtin_vm_protect(mach_task_self(), (mach_vm_address_t)vtableFunctionPtr, sizeof(uintptr_t), false, PROT_READ);
     return true;
@@ -160,6 +182,57 @@ void overwriteAppExecutableFileType(void)
     });
 }
 // Rewritten END
+
+bool initGuestSDKVersionInfo(void)
+{
+    void* dyldBase = getDyldBase();
+    // it seems Apple is constantly changing findVersionSetEquivalent's signature so we directly search sVersionMap instead
+    const char* dyldPath = "/usr/lib/dyld";
+    uint64_t offset = LCFindSymbolOffset(dyldPath, "__ZN5dyld3L11sVersionMapE");
+    uint32_t *versionMapPtr = dyldBase + offset;
+    
+    assert(versionMapPtr);
+    // however sVersionMap's struct size is also unknown, but we can figure it out
+    // we assume the size is 10K so we won't need to change this line until maybe iOS 40
+    uint32_t* versionMapEnd = versionMapPtr + 2560;
+    // ensure the first is versionSet and the third is iOS version (5.0.0)
+    assert(versionMapPtr[0] == 0x07db0901 && versionMapPtr[2] == 0x00050000);
+    // get struct size. we assume size is smaller then 128. appearently Apple won't have so many platforms
+    uint32_t size = 0;
+    for(int i = 1; i < 128; ++i)
+    {
+        // find the next versionSet (for 6.0.0)
+        if(versionMapPtr[i] == 0x07dc0901) {
+            size = i;
+            break;
+        }
+    }
+    assert(size);
+    
+    NSOperatingSystemVersion currentVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+    uint32_t maxVersion = ((uint32_t)currentVersion.majorVersion << 16) | ((uint32_t)currentVersion.minorVersion << 8);
+    
+    uint32_t candidateVersion = 0;
+    uint32_t candidateVersionEquivalent = 0;
+    uint32_t newVersionSetVersion = 0;
+    for(uint32_t* nowVersionMapItem = versionMapPtr; nowVersionMapItem < versionMapEnd; nowVersionMapItem += size)
+    {
+        newVersionSetVersion = nowVersionMapItem[2];
+        if (newVersionSetVersion > guestAppSdkVersion) { break; }
+        candidateVersion = newVersionSetVersion;
+        candidateVersionEquivalent = nowVersionMapItem[0];
+        if(newVersionSetVersion >= maxVersion) { break; }
+    }
+    
+    if(newVersionSetVersion == 0xffffffff && candidateVersion == 0)
+    {
+        candidateVersionEquivalent = newVersionSetVersion;
+    }
+
+    guestAppSdkVersionSet = candidateVersionEquivalent;
+    
+    return true;
+}
 
 void DyldHooksInit(void)
 {
@@ -183,6 +256,15 @@ void DyldHooksInit(void)
         DO_HOOK_GLOBAL(_dyld_get_image_vmaddr_slide)
         DO_HOOK_GLOBAL(_dyld_get_image_name)
         DO_HOOK_GLOBAL(dlopen);
+        
+        // Hack remove iOS 26 UI support (for now)
+        guestAppSdkVersion = 1179648; // Is 18.0
+        if(!initGuestSDKVersionInfo() ||
+           !performHookDyldApi("dyld_program_sdk_at_least", 1, NULL, hook_dyld_program_sdk_at_least) ||
+           !performHookDyldApi("dyld_get_program_sdk_version", 0, NULL, hook_dyld_get_program_sdk_version))
+        {
+            return;
+        }
     });
 }
 

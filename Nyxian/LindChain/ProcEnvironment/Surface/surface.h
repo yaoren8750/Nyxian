@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <LindChain/ProcEnvironment/Surface/spinlock.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
+#import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
 
 // Minimal stubs if <libproc.h> is not available
 #ifndef PROC_PIDTASKINFO
@@ -129,21 +130,16 @@ typedef struct surface_map surface_map_t;
 #define SURFACE_MAP_SIZE SURFACE_MAGIC_SIZE + SURFACE_PROC_COUNTER_SIZE + SURFACE_PROC_OBJECT_MAX_SIZE
 
 /* Shared properties */
-
-/// Shared file descriptor used to synchronise read and write operations that happen on the surface mapping
-extern int safety_fd;
-
-/// Shared pointer that points to the surface mapping
 extern surface_map_t *surface;
 extern spinlock_t *spinface;
 
 /* Handoff */
 
 /// Returns a process surface file handle to perform a handoff over XPC
-NSFileHandle *proc_surface_handoff(void);
+MappingPortObject *proc_surface_handoff(void);
 
 /// Returns a safety surface file handle to perform a handoff over XPC
-NSFileHandle *proc_safety_handoff(void);
+MappingPortObject *proc_spinface_handoff(void);
 
 /* libproc */
 int proc_libproc_listallpids(void *buffer, int buffersize);
@@ -159,11 +155,6 @@ void proc_object_remove_for_pid(pid_t pid);
 
 void kern_sethostname(NSString *hostname);
 
-BOOL proc_create_child_proc(pid_t ppid,
-                            pid_t pid,
-                            NSString *executablePath);
-
-void proc_surface_init(pid_t ppid,
-                       const char *executablePath);
+void proc_surface_init(void);
 
 #endif

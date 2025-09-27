@@ -20,9 +20,7 @@
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/Debugger/MachServer.h>
 
-PEEntitlement exposed_entitlement = PEEntitlementNone;
 static EnvironmentRole environmentRole = EnvironmentRoleNone;
-static EnvironmentRestriction environmentRestriction = EnvironmentRestrictionNone;
 
 #pragma mark - Special client extra symbols
 
@@ -66,50 +64,37 @@ BOOL environment_must_be_role(EnvironmentRole role)
         return YES;
 }
 
-BOOL environment_has_restriction_level(EnvironmentRestriction restriction)
-{
-    return (environmentRestriction >= restriction);
-}
-
-uid_t environment_ugid(void)
-{
-    uid_t uid = 501;
-    if(environment_has_restriction_level(EnvironmentRestrictionSystem))
-    {
-        uid = 0;
-    }
-    return uid;
-}
-
 #pragma mark - Initilizer
+NSString* invokeAppMain(NSString *executablePath,
+                        int argc,
+                        char *argv[]);
 
-void environment_init(PEEntitlement entitlement,
-                      EnvironmentRole role,
-                      EnvironmentRestriction restriction,
+void environment_init(EnvironmentRole role,
+                      EnvironmentExec exec,
                       const char *executablePath,
-                      pid_t ppid)
+                      int argc,
+                      char *argv[])
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Setting entitlement
-        exposed_entitlement = entitlement;
-        
         // Setting environment properties
         environmentRole = role;
-        environmentRestriction = restriction;
-        
-        // Set process identifier now
-        [hostProcessProxy setProcessIdentifier:getpid()];
         
         // We do proc_surface_init() before environment_tfp_init(), because otherwise a other process could get the task port of this process and suspend it and abuse its NSXPCConnection to gather write access to the proc surface
-        const char *realExecPath = getenv("realExecutablePath");
-        proc_surface_init(ppid, realExecPath ? realExecPath : executablePath);
+        proc_surface_init();
         
-        environment_tfp_init();
         environment_libproc_init();
         environment_application_init();
         environment_posix_spawn_init();
         environment_fork_init();
         environment_sysctl_init();
+        environment_cred_init();
+        environment_tfp_init();
+        
+        // Now execution
+        if(exec == EnvironmentExecLiveContainer)
+        {
+            invokeAppMain([NSString stringWithCString:executablePath encoding:NSUTF8StringEncoding], argc, argv);
+        }
     });
 }

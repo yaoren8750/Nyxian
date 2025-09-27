@@ -56,28 +56,57 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
         let application = ApplicationManagementViewController.applications[indexPath.row]
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak application] _ in
-            let openAction = UIAction(title: "Normal", image: UIImage(systemName: "play.fill")) { _ in
+            let entitlement: PEEntitlement = TrustCache.shared().getEntitlementsForHash(application?.entHash)
+            
+            // MARK: Open Menu
+            let openMenu: UIMenuElement = UIAction(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill")) { _ in
                 guard let application = application else { return }
-                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: false)
+                LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier, with: LDEProcessConfiguration(forHash: application.entHash))
             }
             
-            let openActionDebug = UIAction(title: "Debug", image: UIImage(systemName: "ant.fill")) { _ in
-                guard let application = application else { return }
-                //LDEMultitaskManager.shared().openApplication(withBundleIdentifier: application.bundleIdentifier, terminateIfRunning: true, enableDebugging: true)
+            // MARK: Entitlement Menu
+            
+            var entMenuItems: [UIMenu] = []
+            
+            // Task Port
+            if #available(iOS 26.0, *) {
+                let tfp = self.createEntitlementButton(title: "Task For Pid", entitlement: entitlement, targetEntitlement: PEEntitlement.taskForPid, application: application)
+                let prvtTfp = self.createEntitlementButton(title: "Task For Pid (Private)", entitlement: entitlement, targetEntitlement: PEEntitlement.taskForPidPrvt, application: application)
+                let hostTfp = self.createEntitlementButton(title: "Get Host Task Port", entitlement: entitlement, targetEntitlement: PEEntitlement.getHostTaskPort, application: application)
+                entMenuItems.append(UIMenu(title: "Task Port", image: UIImage(systemName: "powerplug.portrait.fill"), children: [tfp, prvtTfp, hostTfp]))
             }
-
-            let openMenu: UIMenu = UIMenu(title: "Open", image: UIImage(systemName: "arrow.up.right.square.fill"), children: [openAction,openActionDebug])
+            
+            // Credentials
+            let credentialSetUID = self.createEntitlementButton(title: "Set UID", entitlement: entitlement, targetEntitlement: PEEntitlement.setUidAllowed, application: application)
+            let credentialSetGID = self.createEntitlementButton(title: "Set GID", entitlement: entitlement, targetEntitlement: PEEntitlement.setGidAllowed, application: application)
+            
+            entMenuItems.append(UIMenu(title: "Credentials", image: UIImage(systemName: "key.2.on.ring.fill"), children: [credentialSetUID, credentialSetGID]))
+            
+            // Inter Process
+            let sendSignal = self.createEntitlementButton(title: "Send Signal", entitlement: entitlement, targetEntitlement: PEEntitlement.sendSignal, application: application)
+            let sendSignalPrvt = self.createEntitlementButton(title: "Send Signal (Private)", entitlement: entitlement, targetEntitlement: PEEntitlement.sendSignalPrvt, application: application)
+            let recvSignal = self.createEntitlementButton(title: "Receive Signal", entitlement: entitlement, targetEntitlement: PEEntitlement.recvSignal, application: application)
+            
+            entMenuItems.append(UIMenu(title: "Inter Process", image: UIImage(systemName: "cable.coaxial"), children: [sendSignal, sendSignalPrvt, recvSignal]))
+            
+            // Process
+            let spawnProc = self.createEntitlementButton(title: "Spawn Process", entitlement: entitlement, targetEntitlement: PEEntitlement.spawnProc, application: application)
+            let childSuperv = self.createEntitlementButton(title: "Child Supervisor", entitlement: entitlement, targetEntitlement: PEEntitlement.childSupervisor, application: application)
+            
+            entMenuItems.append(UIMenu(title: "Process", image: UIImage(systemName: "apple.terminal.fill"), children: [spawnProc, childSuperv]))
+            
+            let entMent: UIMenu = UIMenu(title: "Entitlements", image: UIImage(systemName: "checkmark.seal.text.page.fill"), children: entMenuItems)
             
             let clearContainerAction = UIAction(title: "Clear Data Container", image: UIImage(systemName: "arrow.up.trash.fill")) { _ in
                 guard let application = application else { return }
-                //LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
+                LDEProcessManager.shared().closeIfRunning(usingBundleIdentifier: application.bundleIdentifier)
                 LDEApplicationWorkspace.shared().clearContainer(forBundleID: application.bundleIdentifier)
             }
             
             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { [weak self] _ in
                 guard let self = self,
                       let application = application else { return }
-                //LDEMultitaskManager.shared().closeApplication(withBundleIdentifier: application.bundleIdentifier)
+                LDEProcessManager.shared().closeIfRunning(usingBundleIdentifier: application.bundleIdentifier)
                 if(LDEApplicationWorkspace.shared().deleteApplication(withBundleID: application.bundleIdentifier)) {
                     if let index = ApplicationManagementViewController.applications.firstIndex(where: { $0.bundleIdentifier == application.bundleIdentifier }) {
                         ApplicationManagementViewController.applications.remove(at: index)
@@ -86,14 +115,14 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                 }
             }
             
-            return UIMenu(title: "", children: [openMenu, clearContainerAction, deleteAction])
+            return UIMenu(title: "", children: [openMenu, entMent, clearContainerAction, deleteAction])
         }
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let application = ApplicationManagementViewController.applications[indexPath.row]
-        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier)
+        LDEProcessManager.shared().spawnProcess(withBundleIdentifier: application.bundleIdentifier, with: LDEProcessConfiguration(forHash: application.entHash))
     }
     
     @objc func plusButtonPressed() {
@@ -116,7 +145,12 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
             guard ((try? fileManager.createDirectory(atPath: unzipRoot, withIntermediateDirectories: true)) != nil) else { return }
             guard unzipArchiveAtPath(selectedURL.path, unzipRoot) else { return }
             var miError: AnyObject?
-            guard let miBundle = MIBundle(bundleInDirectory: URL(fileURLWithPath: payloadDir), withExtension: "app", error: &miError) else { return }
+            guard let miBundle = MIBundle(bundleInDirectory: URL(fileURLWithPath: payloadDir), withExtension: "app", error: &miError) else {
+                if let error: NSError = miError as? NSError {
+                    NotificationServer.NotifyUser(level: .error, notification: "Failed to install application: \(error.localizedDescription)")
+                }
+                return
+            }
             
             let bundleURL = miBundle.bundleURL!
             let lcapp = LCAppInfo(bundlePath: bundleURL.path)
@@ -128,7 +162,7 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     let bundleId = lcapp!.bundleIdentifier()
                     if LDEApplicationWorkspace.shared().installApplication(atBundlePath: bundlePath) {
                         DispatchQueue.main.async {
-                            LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId)
+                            LDEProcessManager.shared().spawnProcess(withBundleIdentifier: bundleId, with: LDEProcessConfiguration.userApplication())
                             let appObject: LDEApplicationObject = LDEApplicationWorkspace.shared().applicationObject(forBundleID: miBundle.identifier)
                             ApplicationManagementViewController.applications.append(appObject)
                             self.tableView.reloadData()
@@ -141,6 +175,20 @@ class ApplicationManagementViewController: UIThemedTableViewController, UITextFi
                     NotificationServer.NotifyUser(level: .error, notification: "Failed to sign application.")
                 }
             }, progressHandler: { _ in }, forceSign: false)
+        }
+    }
+    
+    private func createEntitlementButton(title: String, entitlement: PEEntitlement, targetEntitlement: PEEntitlement, application: LDEApplicationObject?) -> UIAction {
+        var entitlement: PEEntitlement = entitlement
+        return UIAction(title: title, image: UIImage(systemName: entitlement.contains(targetEntitlement) ? "checkmark.circle.fill" : "circle")) { [weak application] _ in
+            guard let application = application else { return }
+            if entitlement.contains(targetEntitlement) {
+                entitlement.remove(targetEntitlement)
+            } else {
+                entitlement.insert(targetEntitlement)
+            }
+            TrustCache.shared().setEntitlementsForHash(application.entHash, usingEntitlements: entitlement)
+            LDEProcessManager.shared().closeIfRunning(usingBundleIdentifier: application.bundleIdentifier)
         }
     }
 }

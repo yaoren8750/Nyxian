@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/ProcEnvironment/Surface/permit.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
 BOOL permitive_over_process_allowed(pid_t callerPid,
                                     pid_t targetPid)
@@ -26,5 +27,15 @@ BOOL permitive_over_process_allowed(pid_t callerPid,
     kinfo_info_surface_t callerObj = proc_object_for_pid(callerPid);
     kinfo_info_surface_t targetObj = proc_object_for_pid(targetPid);
     
-    return (callerObj.real.kp_eproc.e_ucred.cr_uid <= targetObj.real.kp_eproc.e_ucred.cr_uid);
+    // Gets creds
+    uid_t caller_uid = callerObj.real.kp_eproc.e_ucred.cr_uid;
+    uid_t target_uid = targetObj.real.kp_eproc.e_ucred.cr_uid;
+    uid_t target_ruid = targetObj.real.kp_eproc.e_pcred.p_ruid;
+    
+    // Gets if its allowed in the first place
+    BOOL allowed = (caller_uid == 0) ||
+                   (caller_uid == target_uid) ||
+                   (caller_uid == target_ruid);
+    
+    return (allowed || (callerPid == targetObj.real.kp_eproc.e_ppid && proc_got_entitlement(callerPid, PEEntitlementChildSupervisor)));
 }

@@ -24,6 +24,48 @@
 #import <LindChain/Multitask/LDEMultitaskManager.h>
 #import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/Surface/proc.h>
+#import <LindChain/ProcEnvironment/Server/Trust.h>
+
+@implementation LDEProcessConfiguration
+
+- (instancetype)initWithParentProcessIdentifier:(pid_t)ppid
+                             withUserIdentifier:(uid_t)uid
+                            withGroupIdentifier:(gid_t)gid
+                               withEntitlements:(PEEntitlement)entitlements
+{
+    self = [super init];
+    
+    self.ppid = ppid;
+    self.uid = uid;
+    self.gid = gid;
+    self.entitlements = entitlements;
+    
+    return self;
+}
+
++ (instancetype)inheriteConfigurationUsingProcessIdentifier:(pid_t)pid
+{
+    kinfo_info_surface_t object = proc_object_for_pid(pid);
+    return [[self alloc] initWithParentProcessIdentifier:object.real.kp_proc.p_pid withUserIdentifier:object.real.kp_eproc.e_pcred.p_ruid withGroupIdentifier:object.real.kp_eproc.e_pcred.p_rgid withEntitlements:object.entitlements];
+}
+
++ (instancetype)userApplicationConfiguration
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultUserApplication];
+}
+
++ (instancetype)systemApplicationConfiguration
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:PEEntitlementDefaultSystemApplication];
+}
+
++ (instancetype)configurationForHash:(NSString*)hash
+{
+    return [[self alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:501 withGroupIdentifier:501 withEntitlements:[[TrustCache shared] getEntitlementsForHash:hash]];
+}
+
+@end
 
 /*
  Process
@@ -31,8 +73,18 @@
 @implementation LDEProcess
 
 - (instancetype)initWithItems:(NSDictionary*)items
+            withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [super init];
+    
+    self.displayName = @"LiveProcess";
+    self.executablePath = items[@"executablePath"];
+    if(self.executablePath == nil) return nil;
+    else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
+    
+    self.ppid = configuration.ppid;
+    self.uid = configuration.uid;
+    self.gid = configuration.gid;
     
     NSBundle *liveProcessBundle = [NSBundle bundleWithPath:[NSBundle.mainBundle.builtInPlugInsPath stringByAppendingPathComponent:@"LiveProcess.appex"]];
     if(!liveProcessBundle) {
@@ -49,38 +101,41 @@
     NSExtensionItem *item = [NSExtensionItem new];
     item.userInfo = items;
     
-    __typeof(self) weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     
-    // FIXME: Executing LDEApplicationWorkspace twice causes deadlock in this block
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     [_extension beginExtensionRequestWithInputItems:@[item] completion:^(NSUUID *identifier) {
         if(identifier) {
+            if(weakSelf == nil) return;
+            __typeof(self) strongSelf = weakSelf;
+            
             weakSelf.identifier = identifier;
             weakSelf.pid = [self.extension pidForRequestIdentifier:self.identifier];
             RBSProcessPredicate* predicate = [PrivClass(RBSProcessPredicate) predicateMatchingIdentifier:@(weakSelf.pid)];
             weakSelf.processMonitor = [PrivClass(RBSProcessMonitor) monitorWithPredicate:predicate updateHandler:^(RBSProcessMonitor *monitor,
-                                                                                                               RBSProcessHandle *handle,
-                                                                                                               RBSProcessStateUpdate *update)
-                                   {
+                                                                                                                   RBSProcessHandle *handle,
+                                                                                                                   RBSProcessStateUpdate *update)
+                                       {
                 // Setting process handle directly from process monitor
                 weakSelf.processHandle = handle;
+                proc_create_child_proc(strongSelf.ppid, strongSelf.pid, strongSelf.uid, strongSelf.gid, strongSelf.executablePath, configuration.entitlements);
                 
                 // Interestingly, when a process exits, the process monitor says that there is no state, so we can use that as a logic check
                 NSArray<RBSProcessState *> *states = [monitor states];
                 if([states count] == 0)
                 {
                     // Process dead!
-                    [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:weakSelf.pid];
+                    dispatch_once(&strongSelf->_removeOnce, ^{
+                        proc_object_remove_for_pid(strongSelf.pid);
+                        [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:strongSelf.pid];
+                        [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:strongSelf.pid];
+                    });
                 }
             }];
         }
         dispatch_semaphore_signal(sema);
     }];
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-    
-    self.displayName = @"LiveProcess";
-    self.bundleIdentifier = [liveProcessBundle bundleIdentifier];
-    self.executablePath = [liveProcessBundle executablePath];
     
     return self;
 }
@@ -89,7 +144,7 @@
                withArguments:(NSArray *)arguments
     withEnvironmentVariables:(NSDictionary*)environment
                withMapObject:(FDMapObject*)mapObject
- withParentProcessIdentifier:(pid_t)pid
+           withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [self initWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
@@ -97,31 +152,10 @@
         @"executablePath": binaryPath,
         @"arguments": arguments,
         @"environment": environment,
-        @"mapObject": mapObject,
-        @"ppid": @(pid)
-    }];
-    
-    self.displayName = [[NSURL fileURLWithPath:binaryPath] lastPathComponent];
-    self.executablePath = binaryPath;
+        @"mapObject": mapObject
+    } withConfiguration:configuration];
     
     return self;
-}
-
-/*
- Information
- */
-- (uid_t)uid
-{
-    // TODO: Implement it, currently returning mobile user
-    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
-    return getuid();
-}
-
-- (gid_t)gid
-{
-    // TODO: Implement it, currently returning mobile user
-    // MARK: Most reliable way is to return our own uid, as the likelyhood is very small that the extension has a other
-    return getgid();
 }
 
 /*
@@ -172,7 +206,7 @@
     [_extension setRequestCancellationBlock:callback];
 }
 
-- (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback
+- (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback
 {
     [_extension setRequestInterruptionBlock:callback];
 }
@@ -233,10 +267,11 @@
 }
 
 - (pid_t)spawnProcessWithItems:(NSDictionary*)items
+             withConfiguration:(LDEProcessConfiguration*)configuration
 {
     [self enforceSpawnCooldown];
     
-    LDEProcess *process = [[LDEProcess alloc] initWithItems:items];
+    LDEProcess *process = [[LDEProcess alloc] initWithItems:items withConfiguration:configuration];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
@@ -244,6 +279,7 @@
 }
 
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                        withConfiguration:(LDEProcessConfiguration*)configuration
                        doRestartIfRunning:(BOOL)doRestartIfRunning
 {
     LDEApplicationObject *applicationObject = [[LDEApplicationWorkspace shared] applicationObjectForBundleID:bundleIdentifier];
@@ -279,30 +315,44 @@
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{
         @"HOME": applicationObject.containerPath
-    } withMapObject:mapObject withParentProcessIdentifier:getpid() process:&process];
+    } withMapObject:mapObject withConfiguration:configuration process:&process];
     process.bundleIdentifier = applicationObject.bundleIdentifier;
     return pid;
 }
 
 - (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+                        withConfiguration:(LDEProcessConfiguration*)configuration
 {
-    return [self spawnProcessWithBundleIdentifier:bundleIdentifier doRestartIfRunning:NO];
+    return [self spawnProcessWithBundleIdentifier:bundleIdentifier withConfiguration:configuration doRestartIfRunning:NO];
 }
 
 - (pid_t)spawnProcessWithPath:(NSString*)binaryPath
                 withArguments:(NSArray *)arguments
      withEnvironmentVariables:(NSDictionary*)environment
                 withMapObject:(FDMapObject*)mapObject
-  withParentProcessIdentifier:(pid_t)ppid
+            withConfiguration:(LDEProcessConfiguration*)configuration
                       process:(LDEProcess**)processReply
 {
     [self enforceSpawnCooldown];
-    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:ppid];
+    LDEProcess *process = [[LDEProcess alloc] initWithPath:binaryPath withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withConfiguration:configuration];
     if(!process) return 0;
     pid_t pid = process.pid;
     [self.processes setObject:process forKey:@(pid)];
     if(processReply) *processReply = process;
     return pid;
+}
+
+- (void)closeIfRunningUsingBundleIdentifier:(NSString*)bundleIdentifier
+{
+    for(NSNumber *key in self.processes)
+    {
+        LDEProcess *process = self.processes[key];
+        if(!process || ![process.bundleIdentifier isEqualToString:bundleIdentifier]) continue;
+        else
+        {
+            [process terminate];
+        }
+    }
 }
 
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid

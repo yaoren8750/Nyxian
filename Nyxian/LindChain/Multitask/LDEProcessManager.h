@@ -24,7 +24,24 @@
 #import <LindChain/Private/FoundationPrivate.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
+#import <LindChain/ProcEnvironment/Surface/entitlement.h>
+
+@interface LDEProcessConfiguration : NSObject
+
+@property (nonatomic) pid_t ppid;
+@property (nonatomic) uid_t uid;
+@property (nonatomic) gid_t gid;
+@property (nonatomic) PEEntitlement entitlements;
+
+- (instancetype)initWithParentProcessIdentifier:(pid_t)ppid withUserIdentifier:(uid_t)uid withGroupIdentifier:(gid_t)gid withEntitlements:(PEEntitlement)entitlements;
++ (instancetype)inheriteConfigurationUsingProcessIdentifier:(pid_t)pid;
+
++ (instancetype)userApplicationConfiguration;
++ (instancetype)systemApplicationConfiguration;
++ (instancetype)configurationForHash:(NSString*)hash;
+
+@end
 
 /*
  Process
@@ -43,6 +60,8 @@
 
 @property (nonatomic,strong) UIImage *icon;
 
+// Info properties used to create child process on surface
+@property (nonatomic) pid_t ppid;
 @property (nonatomic) pid_t pid;
 @property (nonatomic) uid_t uid;
 @property (nonatomic) gid_t gid;
@@ -53,12 +72,14 @@
 // Other boolean flags
 @property (nonatomic) BOOL isSuspended;
 
-- (instancetype)initWithItems:(NSDictionary*)items;
-- (instancetype)initWithPath:(NSString*)binaryPath
-               withArguments:(NSArray *)arguments
-    withEnvironmentVariables:(NSDictionary*)environment
-               withMapObject:(FDMapObject*)mapObject
- withParentProcessIdentifier:(pid_t)pid;
+@property (nonatomic) dispatch_once_t removeOnce;
+
+// Callback
+@property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
+@property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
+
+- (instancetype)initWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
+- (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration;
 
 - (void)sendSignal:(int)signal;
 - (BOOL)suspend;
@@ -67,7 +88,7 @@
 - (BOOL)isRunning;
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback;
-- (void)setRequestInterruptionBlock:(void(^)(NSUUID *))callback;
+- (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback;
 
 @end
 
@@ -81,17 +102,12 @@
 - (instancetype)init;
 + (instancetype)shared;
 
-- (pid_t)spawnProcessWithItems:(NSDictionary*)items;
-- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier
-                       doRestartIfRunning:(BOOL)doRestartIfRunning;
-- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier;
-- (pid_t)spawnProcessWithPath:(NSString*)binaryPath
-                withArguments:(NSArray *)arguments
-     withEnvironmentVariables:(NSDictionary*)environment
-                withMapObject:(FDMapObject*)mapObject
-  withParentProcessIdentifier:(pid_t)ppid
-                      process:(LDEProcess**)processReply;
+- (pid_t)spawnProcessWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier withConfiguration:(LDEProcessConfiguration*)configuration doRestartIfRunning:(BOOL)doRestartIfRunning;
+- (pid_t)spawnProcessWithBundleIdentifier:(NSString *)bundleIdentifier withConfiguration:(LDEProcessConfiguration*)configuration;
+- (pid_t)spawnProcessWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration process:(LDEProcess**)processReply;
 
+- (void)closeIfRunningUsingBundleIdentifier:(NSString*)bundleIdentifier;
 - (LDEProcess*)processForProcessIdentifier:(pid_t)pid;
 - (void)unregisterProcessWithProcessIdentifier:(pid_t)pid;
 - (BOOL)isExecutingProcessWithBundleIdentifier:(NSString*)bundleIdentifier;

@@ -17,18 +17,26 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#import <LindChain/Private/mach/fileport.h>
+#include <unistd.h>
+#include <errno.h>
 
-#import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
-
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
-
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
-
-+ (NSXPCListenerEndpoint*)getEndpoint;
-
-@end
-
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+int fileport_dup2(fileport_t port,
+                  int fd)
+{
+    // Get new file descriptor
+    int newFd = fileport_makefd(port);
+    
+    // Check if newFd is valid
+    if(newFd == 0)
+    {
+        errno = EFAULT;
+        return -1;
+    }
+    
+    // Now its duped but now overbind the target
+    if(newFd == fd) return newFd;
+    if(dup2(fd, newFd) != 0) return -1;
+    if(close(newFd) != 0) return -1;
+    return 0;
+}

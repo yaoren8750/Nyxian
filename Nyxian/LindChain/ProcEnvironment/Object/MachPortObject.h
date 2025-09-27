@@ -17,18 +17,26 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+// MARK: Apple seems to have implemented mach port transmission into iOS 26, as in iOS 18.7 RC and below it crashes but on iOS 26.0 RC it actually transmitts the task port
 
+#ifndef PROCENVIRONMENT_MACHPORT_OBJECT
+#define PROCENVIRONMENT_MACHPORT_OBJECT
+
+/* ----------------------------------------------------------------------
+ *  Apple API Headers
+ * -------------------------------------------------------------------- */
 #import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
+#import <mach/mach.h>
 
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+@interface MachPortObject : NSObject <NSSecureCoding>
 
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
+@property (nonatomic, readonly) mach_port_t port;
 
-+ (NSXPCListenerEndpoint*)getEndpoint;
+- (instancetype)initWithPort:(mach_port_t)port;
++ (instancetype)taskPortSelf API_AVAILABLE(ios(26.0));
+
+- (BOOL)isUsable;
 
 @end
 
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+#endif /* PROCENVIRONMENT_MACHPORT_OBJECT */

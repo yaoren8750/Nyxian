@@ -51,13 +51,13 @@
 /*
  tfp_userspace
  */
-- (void)sendPort:(TaskPortObject*)machPort API_AVAILABLE(ios(26.0));
+- (void)sendPort:(MachPortObject*)machPort API_AVAILABLE(ios(26.0));
 {
     environment_host_take_client_task_port(machPort);
 }
 
 - (void)getPort:(pid_t)pid
-      withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
+      withReply:(void (^)(MachPortObject*))reply API_AVAILABLE(ios(26.0));
 {
     // Does the process requesting even have the entitlement
     if(!proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPid))
@@ -68,17 +68,18 @@
     
     // Special or host
     bool prvt = proc_got_entitlement(_processIdentifier, PEEntitlementTaskForPidPrvt);
-    bool host = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
+    bool hostPriveleged = proc_got_entitlement(_processIdentifier, PEEntitlementGetHostTaskPort);
+    bool isHost = (pid == getpid());
     
     // Is the request pid the host app
-    if(pid == getpid() && !host)
+    if(isHost && !hostPriveleged)
     {
         reply(nil);
         return;
     }
     
     // Needs special?
-    if(!permitive_over_process_allowed(_processIdentifier, pid) && !prvt)
+    if(!isHost && !permitive_over_process_allowed(_processIdentifier, pid) && !prvt)
     {
         reply(nil);
         return;
@@ -87,7 +88,7 @@
     // Send requested task port
     mach_port_t port;
     kern_return_t kr = environment_task_for_pid(mach_task_self(), pid, &port);
-    reply((kr == KERN_SUCCESS) ? [[TaskPortObject alloc] initWithPort:port] : nil);
+    reply((kr == KERN_SUCCESS) ? [[MachPortObject alloc] initWithPort:port] : nil);
 }
 
 /*
@@ -169,7 +170,9 @@
        && mapObject
        && proc_got_entitlement(_processIdentifier, PEEntitlementSpawnProc))
     {
-        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withParentProcessIdentifier:_processIdentifier process:nil]);
+        // TODO: Inherit entitlements across calls, with the power to drop entitlements, but not getting more entitlements
+        LDEProcessConfiguration *processConfig = [LDEProcessConfiguration inheriteConfigurationUsingProcessIdentifier:_processIdentifier];
+        reply([[LDEProcessManager shared] spawnProcessWithPath:path withArguments:arguments withEnvironmentVariables:environment withMapObject:mapObject withConfiguration:processConfig process:nil]);
         return;
     }
     
@@ -203,34 +206,16 @@
 }
 
 /*
- fork
- */
-- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply
-{
-    reply([[LDEProcessManager shared] spawnProcessWithItems:@{ @"mode": @"fork" }]);
-}
-
-/*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply
+- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply
 {
     dispatch_once(&_handoffSurfaceOnce, ^{
-        reply(proc_surface_handoff(), proc_safety_handoff());
+        reply(proc_surface_handoff(), proc_spinface_handoff());
         return;
     });
     
     if(_handoffSurfaceOnce != 0) reply(nil,nil);
-}
-
-/*
- Internal
- */
-- (void)setProcessIdentifier:(pid_t)processIdentifier
-{
-    dispatch_once(&_handoffProcessIdentifierOnce, ^{
-        _processIdentifier = processIdentifier;
-    });
 }
 
 /*
@@ -243,6 +228,142 @@
     {
         process.audioBackgroundModeUsage = active;
     }
+}
+
+/*
+ Set credentials
+ */
+- (void)setCredentialWithOption:(CredentialSet)option withIdentifier:(uid_t)uid withReply:(void (^)(int result))reply
+{
+    // Check if option is valid
+    if(option < 0 ||
+       option >= CredentialSetMAX)
+    {
+        reply(-1);
+        return;
+    }
+    
+    BOOL isAlteringAllowed = YES;
+    
+    // Check for setuid entitlement if applicable
+    if ((option == CredentialSetUID ||
+         option == CredentialSetEUID ||
+         option == CredentialSetRUID) &&
+        !proc_got_entitlement(_processIdentifier, PEEntitlementSetUidAllowed))
+    {
+        isAlteringAllowed = NO;
+    }
+    
+    // Check for setgid entitlement if applicable
+    if ((option == CredentialSetGID ||
+         option == CredentialSetEGID ||
+         option == CredentialSetRGID) &&
+        !proc_got_entitlement(_processIdentifier, PEEntitlementSetGidAllowed))
+    {
+        isAlteringAllowed = NO;
+    }
+    
+    // Now change uid
+    kinfo_info_surface_t object = proc_object_for_pid(_processIdentifier);
+    
+    int repl = 0;
+    
+    switch(option)
+    {
+        case CredentialSetUID:
+            if(object.real.kp_eproc.e_ucred.cr_uid != uid &&
+               object.real.kp_eproc.e_pcred.p_ruid != uid &&
+               object.real.kp_eproc.e_pcred.p_svuid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_uid = uid;
+                    object.real.kp_eproc.e_pcred.p_ruid = uid;
+                    object.real.kp_eproc.e_pcred.p_svuid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        case CredentialSetRUID:
+            if(object.real.kp_eproc.e_pcred.p_ruid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_pcred.p_ruid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        case CredentialSetEUID:
+            if(object.real.kp_eproc.e_ucred.cr_uid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_uid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        case CredentialSetGID:
+            if(object.real.kp_eproc.e_ucred.cr_groups[0] != uid &&
+               object.real.kp_eproc.e_pcred.p_rgid != uid &&
+               object.real.kp_eproc.e_pcred.p_svgid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+                    object.real.kp_eproc.e_pcred.p_rgid = uid;
+                    object.real.kp_eproc.e_pcred.p_svgid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        case CredentialSetEGID:
+            if(object.real.kp_eproc.e_ucred.cr_groups[0] != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_ucred.cr_groups[0] = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        case CredentialSetRGID:
+            if(object.real.kp_eproc.e_pcred.p_rgid != uid)
+            {
+                if(isAlteringAllowed)
+                {
+                    object.real.kp_eproc.e_pcred.p_rgid = uid;
+                }
+                else
+                {
+                    repl = -1;
+                }
+            }
+            break;
+        default:
+            repl = -1;
+    }
+    
+    proc_object_insert(object);
+    
+    reply(repl);
+    return;
 }
 
 @end

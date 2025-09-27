@@ -2,6 +2,7 @@
 #import <sys/stat.h>
 #import <libgen.h>
 #import "litehook_internal.h"
+#import <LindChain/litehook/src/litehook.h>
 #import "LCUtils.h"
 
 static uint32_t rnd32(uint32_t v,
@@ -249,6 +250,76 @@ mach_header_u *LCGetLoadedImageHeader(int i0, const char* name) {
     }
     return NULL;
 }
+
+struct dyld_all_image_infos *_alt_dyld_get_all_image_infos(void) {
+    static struct dyld_all_image_infos *result;
+    if (result) {
+        return result;
+    }
+    struct task_dyld_info dyld_info;
+    mach_vm_address_t image_infos;
+    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+    kern_return_t ret;
+    ret = task_info(mach_task_self_,
+                    TASK_DYLD_INFO,
+                    (task_info_t)&dyld_info,
+                    &count);
+    if (ret != KERN_SUCCESS) {
+        return NULL;
+    }
+    image_infos = dyld_info.all_image_info_addr;
+    result = (struct dyld_all_image_infos *)image_infos;
+    return result;
+}
+
+#if TARGET_OS_SIMULATOR
+// Make it init first on simulator to find dyld_sim
+__attribute__((constructor))
+#endif
+void *getDyldBase(void) {
+    void *dyldBase = (void *)_alt_dyld_get_all_image_infos()->dyldImageLoadAddress;
+#if !TARGET_OS_SIMULATOR
+    return dyldBase;
+#else
+    static void *dyldSimBase = NULL;
+    if(!dyldSimBase) {
+        __block size_t textSize = 0;
+        LCParseMachO("/usr/lib/dyld", true, ^(const char *path, struct mach_header_64 *header, int fd, void *filePtr) {
+            if(header->cputype != CPU_TYPE_ARM64) return;
+            getsegmentdata(header, SEG_TEXT, &textSize);
+        });
+        NSArray *callStack = [NSThread callStackReturnAddresses];
+        for(NSNumber *addr in callStack.reverseObjectEnumerator) {
+            // the first addresss outside of dyld's text is dyld_sim
+            uintptr_t addrValue = addr.unsignedLongLongValue;
+            if(addrValue < (uintptr_t)dyldBase || addrValue >= (uintptr_t)dyldBase + textSize) {
+                dyldSimBase = (void *)(addrValue & ~PAGE_MASK);
+                break;
+            }
+        }
+    }
+    return dyldSimBase;
+#endif
+}
+
+uint64_t LCFindSymbolOffset(const char *basePath, const char *symbol) {
+#if !TARGET_OS_SIMULATOR
+    const char *path = basePath;
+#else
+    char path[PATH_MAX];
+    const char *rootPath = getenv("DYLD_ROOT_PATH") ?: "";
+    snprintf(path, sizeof(path), "%s%s", rootPath, basePath);
+#endif
+    __block uint64_t offset = 0;
+    LCParseMachO(path, true, ^(const char *path, struct mach_header_64 *header, int fd, void *filePtr) {
+        if(header->cputype != CPU_TYPE_ARM64) return;
+        void *result = litehook_find_symbol_file(header, symbol);
+        offset = (uint64_t)result - (uint64_t)header;
+    });
+    NSCAssert(offset != 0, @"Failed to find symbol %s in %s", symbol, path);
+    return offset;
+}
+
 
 struct code_signature_command {
     uint32_t    cmd;

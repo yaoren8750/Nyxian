@@ -28,11 +28,8 @@
 #import <LindChain/ProcEnvironment/proxy.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
-#import <LindChain/ProcEnvironment/fd_map_object.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 
-NSString* invokeAppMain(NSString *executablePath,
-                        int argc,
-                        char *argv[]);
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
 @interface LiveProcessHandler : NSObject<NSExtensionRequestHandling>
@@ -128,10 +125,6 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *environmentDictionary = appInfo[@"environment"];
     NSArray *argumentDictionary = appInfo[@"arguments"];
     FDMapObject *mapObject = appInfo[@"mapObject"];
-    NSNumber *ppid = appInfo[@"ppid"];
-    
-    // If no ppid was passed then we stop execution out of security reasons
-    if(ppid == nil) exit(0);
     
     // Setup fd map
     if(mapObject) [mapObject apply_fd_map];
@@ -146,15 +139,14 @@ int LiveProcessMain(int argc, char *argv[]) {
     
     if([mode isEqualToString:@"management"])
     {
-        environment_init(PEEntitlementDefault, EnvironmentRoleGuest, EnvironmentRestrictionSystem, [[NSString stringWithFormat:@"%@/Documents/usr/libexec/applicationmgmtd", NSHomeDirectory()] UTF8String], ppid.intValue);
+        environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
     }
     else if([mode isEqualToString:@"spawn"])
     {
         // posix_spawn and similar implementation
-        environment_init(PEEntitlementDefault, EnvironmentRoleGuest, EnvironmentRestrictionUser, [executablePath UTF8String], ppid.intValue);
-        invokeAppMain(executablePath, argc, argv);
+        environment_init(EnvironmentRoleGuest, EnvironmentExecLiveContainer, [executablePath UTF8String], argc, argv);
     }
     
     exit(0);

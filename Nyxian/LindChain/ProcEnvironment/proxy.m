@@ -127,16 +127,16 @@ void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoin
     [hostProcessProxy setLDEApplicationWorkspaceEndPoint:endpoint];
 }
 
-void environment_proxy_tfp_send_port_object(TaskPortObject *port)
+void environment_proxy_tfp_send_port_object(MachPortObject *port)
 {
     environment_must_be_role(EnvironmentRoleGuest);
     [hostProcessProxy sendPort:port];
 }
 
-TaskPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
+MachPortObject *environment_proxy_tfp_get_port_object_for_process_identifier(pid_t process_identifier)
 {
     environment_must_be_role(EnvironmentRoleGuest);
-    TaskPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(TaskPortObject*){
+    MachPortObject *object = sync_call_with_timeout(PROXY_TYPE_REPLY(MachPortObject*){
         [hostProcessProxy getPort:process_identifier withReply:reply];
     });
     return object;
@@ -227,13 +227,73 @@ NSString *environment_proxy_gather_code_signature_extras(void)
     return extra;
 }
 
-void environment_proxy_get_surface_handle(NSFileHandle **surface, NSFileHandle **safety)
+void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety)
 {
     environment_must_be_role(EnvironmentRoleGuest);
-    NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(NSFileHandle*, NSFileHandle*)){
-        [hostProcessProxy handinSurfaceFileDescriptorViaReply:reply];
+    NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(MappingPortObject*, MappingPortObject*)){
+        [hostProcessProxy handinSurfaceMappingPortObjectsViaReply:reply];
     });
     if(!objectArray) return;
     *surface = objectArray[0];
     *safety = objectArray[1];
+}
+
+int environment_proxy_setuid(uid_t uid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetUID withIdentifier:uid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
+}
+
+int environment_proxy_setgid(gid_t gid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetGID withIdentifier:gid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
+}
+
+int environment_proxy_seteuid(uid_t uid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetEUID withIdentifier:uid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
+}
+
+int environment_proxy_setegid(gid_t gid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetEGID withIdentifier:gid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
+}
+
+int environment_proxy_setruid(uid_t uid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetRUID withIdentifier:uid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
+}
+
+int environment_proxy_setrgid(gid_t gid)
+{
+    environment_must_be_role(EnvironmentRoleGuest);
+    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
+        [hostProcessProxy setCredentialWithOption:CredentialSetRGID withIdentifier:gid withReply:reply];
+    });
+    if(ret == -1) errno = EPERM;
+    return ret;
 }

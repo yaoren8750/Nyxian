@@ -17,18 +17,9 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#ifndef PROCENVIRONMENT_CRED_H
+#define PROCENVIRONMENT_CRED_H
 
-#import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
+void environment_cred_init(void);
 
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
-
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
-
-+ (NSXPCListenerEndpoint*)getEndpoint;
-
-@end
-
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+#endif /* PROCENVIRONMENT_CRED_H */

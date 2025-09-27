@@ -23,9 +23,20 @@
 #import <Foundation/Foundation.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
-#import <LindChain/ProcEnvironment/tfp_object.h>
+#import <LindChain/ProcEnvironment/Object/MachPortObject.h>
+#import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+
+typedef NS_OPTIONS(uint64_t, CredentialSet) {
+    CredentialSetUID = 0,
+    CredentialSetEUID = 1,
+    CredentialSetRUID = 2,
+    CredentialSetGID = 3,
+    CredentialSetEGID = 4,
+    CredentialSetRGID = 5,
+    CredentialSetMAX = 6,
+};
 
 @protocol ServerProtocol
 
@@ -37,8 +48,8 @@
 /*
  tfp_userspace
  */
-- (void)sendPort:(TaskPortObject*)machPort API_AVAILABLE(ios(26.0));
-- (void)getPort:(pid_t)pid withReply:(void (^)(TaskPortObject*))reply API_AVAILABLE(ios(26.0));
+- (void)sendPort:(MachPortObject*)machPort API_AVAILABLE(ios(26.0));
+- (void)getPort:(pid_t)pid withReply:(void (^)(MachPortObject*))reply API_AVAILABLE(ios(26.0));
 
 /*
  libproc_userspace
@@ -64,24 +75,19 @@
 - (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply;
 
 /*
- fork
- */
-- (void)createForkingStageProcessViaReply:(void (^)(pid_t))reply;
-
-/*
  surface
  */
-- (void)handinSurfaceFileDescriptorViaReply:(void (^)(NSFileHandle *, NSFileHandle *))reply;
-
-/*
- Internal
- */
-- (void)setProcessIdentifier:(pid_t)processIdentifier;
+- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply;
 
 /*
  Background mode fixup
  */
 - (void)setAudioBackgroundModeActive:(BOOL)active;
+
+/*
+ Set credentials
+ */
+- (void)setCredentialWithOption:(CredentialSet)option withIdentifier:(uid_t)uid withReply:(void (^)(int result))reply;
 
 @end
 

@@ -48,10 +48,10 @@
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [ServerDelegate getEndpoint],
+        @"executablePath": @"/usr/libexec/applicationmgmtd",
         @"mode": @"management",
-        @"mapObject": mapObject,
-        @"ppid": @(getpid())
-    }];
+        @"mapObject": mapObject
+    } withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:0 withGroupIdentifier:0 withEntitlements:PEEntitlementDefaultApplicationManagementDaemon]];
     LDEProcess *process = [processManager processForProcessIdentifier:pid];
     if(!process) return NO;
     

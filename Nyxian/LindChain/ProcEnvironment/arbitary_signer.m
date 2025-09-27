@@ -24,48 +24,15 @@
 
 extern NSBundle *overridenNSBundleOfNyxian;
 
-NSString *hashOfFileAtPath(NSString *path) {
-    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:path];
-    if (!fileHandle) {
-        return nil;
-    }
-    
-    CC_SHA256_CTX ctx;
-    CC_SHA256_Init(&ctx);
-    
-    while (true) {
-        @autoreleasepool {
-            NSData *data = [fileHandle readDataOfLength:4096];
-            if (data.length == 0) break;
-            CC_SHA256_Update(&ctx, data.bytes, (CC_LONG)data.length);
-        }
-    }
-    [fileHandle closeFile];
-    
-    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
-    CC_SHA256_Final(digest, &ctx);
-    
-    NSMutableString *hex = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
-    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
-        [hex appendFormat:@"%02x", digest[i]];
-    }
-    return hex;
-}
-
-NSString* signMachOAtPath(NSString *path)
+void signMachOAtPath(NSString *path)
 {
-    NSString *hash = hashOfFileAtPath(path);
-    if(!hash) return nil;
-    
     NSFileManager *fm = [NSFileManager defaultManager];
-    NSString *cacheDir = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"ArbSign"];
-    [fm createDirectoryAtPath:cacheDir withIntermediateDirectories:YES attributes:nil error:nil];
     
-    NSString *bundlePath = [cacheDir stringByAppendingPathComponent:[hash stringByAppendingPathExtension:@"app"]];
+    NSString *bundlePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:@"app"]];
     NSString *binPath = [bundlePath stringByAppendingPathComponent:@"main"];
     NSString *infoPath = [bundlePath stringByAppendingPathComponent:@"Info.plist"];
     
-    if([fm fileExistsAtPath:bundlePath]) return binPath;
+    if([fm fileExistsAtPath:bundlePath]) return;
     
     // Gather signing info
     NSData *certificateData = nil;
@@ -73,7 +40,7 @@ NSString* signMachOAtPath(NSString *path)
     NSString *extras = nil;
     environment_proxy_gather_code_signature_info(&certificateData, &certificatePassword);
     extras = environment_proxy_gather_code_signature_extras();
-    if(!(certificateData && certificatePassword && extras)) return nil;
+    if(!(certificateData && certificatePassword && extras)) return;
     
     NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
     if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
@@ -90,15 +57,14 @@ NSString* signMachOAtPath(NSString *path)
     
     // Copy binary into bundle
     if (![fm copyItemAtPath:path toPath:binPath error:nil]) {
-        return nil;
+        return;
     }
     
     // Write Info.plist with hash marker
     NSDictionary *plistDict = @{
         @"CFBundleIdentifier" : overridenNSBundleOfNyxian.bundleIdentifier ?: @"com.nyxian.unsigned",
         @"CFBundleExecutable" : @"main",
-        @"CFBundleVersion"    : @"1.0.0",
-        @"NyxianOriginalHash" : hash
+        @"CFBundleVersion"    : @"1.0.0"
     };
     NSData *plistData = [NSPropertyListSerialization dataWithPropertyList:plistDict
                                                                    format:NSPropertyListXMLFormat_v1_0
@@ -117,5 +83,7 @@ NSString* signMachOAtPath(NSString *path)
     });
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
-    return binPath;
+    // MARK: Skip using caching, directly replace binary
+    [fm removeItemAtPath:path error:nil];
+    [fm moveItemAtPath:binPath toPath:path error:nil];
 }

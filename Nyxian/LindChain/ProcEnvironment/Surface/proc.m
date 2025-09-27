@@ -24,20 +24,6 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-static pthread_mutex_t proc_lock = PTHREAD_MUTEX_INITIALIZER;
-
-void proc_lock_wrt(void)
-{
-    spinlock_lock(spinface);
-    pthread_mutex_lock(&proc_lock);
-}
-
-void proc_unlock_wrt(void)
-{
-    pthread_mutex_unlock(&proc_lock);
-    spinlock_unlock(spinface);
-}
-
 kinfo_info_surface_t proc_object_for_pid(pid_t pid)
 {
     kinfo_info_surface_t cur = {};
@@ -68,7 +54,7 @@ void proc_object_remove_for_pid(pid_t pid)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    proc_lock_wrt();
+    spinlock_lock(spinface);
 
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
@@ -85,7 +71,7 @@ void proc_object_remove_for_pid(pid_t pid)
         }
     }
 
-    proc_unlock_wrt();
+    spinlock_unlock(spinface);
 }
 
 void proc_object_insert(kinfo_info_surface_t object)
@@ -93,21 +79,21 @@ void proc_object_insert(kinfo_info_surface_t object)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    proc_lock_wrt();
+    spinlock_lock(spinface);
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid)
         {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
-            proc_unlock_wrt();
+            spinlock_unlock(spinface);
             return;
         }
     }
     
     memcpy(&surface->proc_info[surface->proc_count++], &object, sizeof(kinfo_info_surface_t));
     
-    proc_unlock_wrt();
+    spinlock_unlock(spinface);
 }
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
@@ -160,7 +146,10 @@ void proc_insert_self(void)
 // MARK: New and safer approach, NO means execution not granted!
 BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,
-                            NSString *executablePath)
+                            uid_t uid,
+                            gid_t gid,
+                            NSString *executablePath,
+                            PEEntitlement entitlement)
 {
     struct kinfo_proc childInfoProc = {};
     
@@ -172,7 +161,7 @@ BOOL proc_create_child_proc(pid_t ppid,
     
     // TODO: Make the process a zombie to either get killed or get waited on
     // Set process flag and stat
-    childInfoProc.kp_proc.p_flag = P_LP64 | P_EXEC | P_DISABLE_ASLR;
+    childInfoProc.kp_proc.p_flag = P_LP64 | P_EXEC;
     childInfoProc.kp_proc.p_stat = SRUN;
     
     // set process stuff
@@ -227,16 +216,16 @@ BOOL proc_create_child_proc(pid_t ppid,
     childInfoProc.kp_eproc.e_sess = NULL;
     
     childInfoProc.kp_eproc.e_pcred.pc_ucred = NULL;
-    childInfoProc.kp_eproc.e_pcred.p_ruid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_svuid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_rgid = 501;
-    childInfoProc.kp_eproc.e_pcred.p_svgid = 501;
+    childInfoProc.kp_eproc.e_pcred.p_ruid = uid;
+    childInfoProc.kp_eproc.e_pcred.p_svuid = uid;
+    childInfoProc.kp_eproc.e_pcred.p_rgid = gid;
+    childInfoProc.kp_eproc.e_pcred.p_svgid = gid;
     childInfoProc.kp_eproc.e_pcred.p_refcnt = 0;
     
     childInfoProc.kp_eproc.e_ucred.cr_ref = 5;
-    childInfoProc.kp_eproc.e_ucred.cr_uid = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_uid = uid;
     childInfoProc.kp_eproc.e_ucred.cr_ngroups = 4;
-    childInfoProc.kp_eproc.e_ucred.cr_groups[0] = 501;
+    childInfoProc.kp_eproc.e_ucred.cr_groups[0] = gid;
     childInfoProc.kp_eproc.e_ucred.cr_groups[1] = 250;
     childInfoProc.kp_eproc.e_ucred.cr_groups[2] = 286;
     childInfoProc.kp_eproc.e_ucred.cr_groups[3] = 299;
@@ -254,6 +243,8 @@ BOOL proc_create_child_proc(pid_t ppid,
     finalObject.task_role_override = TASK_UNSPECIFIED;
     finalObject.real = childInfoProc;
     strncpy(finalObject.path, [[[NSURL fileURLWithPath:executablePath] path] UTF8String], PATH_MAX);
+    
+    finalObject.entitlements = entitlement;
     
     proc_object_insert(finalObject);
     
