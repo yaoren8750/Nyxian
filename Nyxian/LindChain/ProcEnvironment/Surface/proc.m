@@ -114,35 +114,6 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
     return cur;
 }
 
-// MARK: We need to deprecate this
-void proc_insert_self(void)
-{
-    // Dont use if uninitilized
-    if(surface == NULL) return;
-    
-    pid_t pid = getpid();
-    struct kinfo_proc kp;
-    size_t len = sizeof(kp);
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, pid };
-    
-    if (sysctl(mib, 4, &kp, &len, NULL, 0) == -1) {
-        perror("sysctl");
-        return;
-    }
-    
-    char pathbuf[PATH_MAX];
-    int proc_pidpath(pid_t pid, void *buf, size_t bufsize);
-    proc_pidpath(pid, pathbuf, sizeof(pathbuf));
-    
-    kinfo_info_surface_t info = {};
-    info.real = kp;
-    info.force_task_role_override = false;
-    info.task_role_override = TASK_UNSPECIFIED;
-    strncpy(info.path, pathbuf, sizeof(pathbuf));
-    
-    proc_object_insert(info);
-}
-
 // MARK: New and safer approach, NO means execution not granted!
 BOOL proc_create_child_proc(pid_t ppid,
                             pid_t pid,

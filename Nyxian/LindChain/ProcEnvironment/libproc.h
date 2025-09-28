@@ -20,11 +20,12 @@
 #ifndef PROCENVIRONMENT_LIBPROC_H
 #define PROCENVIRONMENT_LIBPROC_H
 
-/*!
- @function environment_proc_listallpids
- @abstract Takes in a preallocated buffer and writes all pids on it depending on the size that run on proc surface.
- */
-int environment_proc_listallpids(void *buffer, int buffersize);
+/* libproc */
+int proc_libproc_listallpids(void *buffer, int buffersize);
+int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize);
+int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize);
+int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg, void * buffer, int buffersize);
+int proc_libproc_pid_rusage(pid_t pid, int flavor, struct rusage_info_v2 *ri);
 
 /*!
  @function environment_libproc_init

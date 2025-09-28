@@ -78,11 +78,6 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     return ret;
 }
 
-bool proc_allowed_to_spawn(void)
-{
-    return true;
-}
-
 /*
  Management
  */
@@ -124,18 +119,6 @@ void kern_sethostname(NSString *hostname)
     spinlock_unlock(spinface);
 }
 
-void proc_surface_unmap(void)
-{
-    if(munmap(surface, SURFACE_MAP_SIZE) != 0)
-        exit(1);
-    else
-        surface = NULL;
-    if(munmap(spinface, sizeof(spinlock_t)) != 0)
-        exit(1);
-    else
-        spinface = NULL;
-}
-
 void proc_surface_init(void)
 {
     static dispatch_once_t onceToken;
@@ -152,7 +135,7 @@ void proc_surface_init(void)
             if(hostname == nil) hostname = @"localhost";
             strlcpy(surface->hostname, hostname.UTF8String, MAXHOSTNAMELEN);
             surface->proc_count = 0;
-            proc_create_child_proc(getppid(), getpid(), 0, 0, [[NSBundle mainBundle] bundlePath], PEEntitlementAll);
+            proc_create_child_proc(getppid(), getpid(), 0, 0, [[NSBundle mainBundle] executablePath], PEEntitlementAll);
             
             
             // Setup spinface
