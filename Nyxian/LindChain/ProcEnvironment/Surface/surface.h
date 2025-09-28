@@ -141,13 +141,6 @@ MappingPortObject *proc_surface_handoff(void);
 /// Returns a safety surface file handle to perform a handoff over XPC
 MappingPortObject *proc_spinface_handoff(void);
 
-/* libproc */
-int proc_libproc_listallpids(void *buffer, int buffersize);
-int proc_libproc_name(pid_t pid, void * buffer, uint32_t buffersize);
-int proc_libproc_pidpath(pid_t pid, void * buffer, uint32_t buffersize);
-int proc_libproc_pidinfo(pid_t pid, int flavor, uint64_t arg, void * buffer, int buffersize);
-int proc_libproc_pid_rusage(pid_t pid, int flavor, struct rusage_info_v2 *ri);
-
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);
 
@@ -157,4 +150,4 @@ void kern_sethostname(NSString *hostname);
 
 void proc_surface_init(void);
 
-#endif
+#endif /* PROCENVIRONMENT_SURFACE_H */

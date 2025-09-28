@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/ProcEnvironment/Surface/surface.h>
+#import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/ProcEnvironment/tfp.h>
 #include <stdio.h>
 #include <stdlib.h>

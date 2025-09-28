@@ -179,19 +179,6 @@
     reply(-1);
 }
 
-- (void)assignProcessInfo:(LDEProcess*)process withProcessIdentfier:(pid_t)pid
-{
-    // Get process
-    LDEProcess *targetProcess = [[LDEProcessManager shared] processForProcessIdentifier:pid];
-    if(targetProcess)
-    {
-        targetProcess.executablePath = process.executablePath;
-        targetProcess.bundleIdentifier = process.bundleIdentifier;
-        targetProcess.displayName = process.displayName;
-        targetProcess.icon = process.icon;
-    }
-}
-
 /*
  Code signer
  */
