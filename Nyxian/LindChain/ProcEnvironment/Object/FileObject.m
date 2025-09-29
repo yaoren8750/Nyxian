@@ -28,38 +28,94 @@
 {
     self = [super init];
     _fd = open([path UTF8String], O_RDWR);
+    NSLog(@"Opened: %d\n", _fd);
     return self;
 }
 
 - (BOOL)writeOut:(NSString *)path
 {
-    // Create destination or truncate it
-    int dstFd = open([path UTF8String], O_RDWR | O_TRUNC | O_CREAT, 0777);
+    // Create destination (truncate if exists)
+    int dstFd = open([path UTF8String], O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if(dstFd == -1) return NO;
-    
-    // Now write
-    int ret = fcopyfile(_fd, dstFd, NULL, COPYFILE_DATA);
-    if(ret == -1) return NO;
-    
-    // And close dstFd
-    ret = close(dstFd);
-    if(ret == -1) return NO;
+
+    char buffer[16384]; // 16KB buffer
+    ssize_t bytesRead;
+    off_t offset = 0;
+
+    // Reset source fd to beginning
+    if(lseek(_fd, 0, SEEK_SET) == -1)
+    {
+        close(dstFd);
+        return NO;
+    }
+
+    while((bytesRead = read(_fd, buffer, sizeof(buffer))) > 0)
+    {
+        ssize_t bytesWritten = 0;
+        while(bytesWritten < bytesRead)
+        {
+            ssize_t w = write(dstFd, buffer + bytesWritten, bytesRead - bytesWritten);
+            if (w == -1) {
+                close(dstFd);
+                return NO;
+            }
+            bytesWritten += w;
+        }
+        offset += bytesRead;
+    }
+
+    if (bytesRead == -1) {
+        close(dstFd);
+        return NO;
+    }
+
+    if (close(dstFd) == -1) return NO;
     return YES;
 }
 
 - (BOOL)writeIn:(NSString *)path
 {
-    // Open up src
-    int srcFd = open([path UTF8String], O_RDWR);
-    if(srcFd == -1) return NO;
-    
-    // Now write
-    int ret = fcopyfile(srcFd, _fd, NULL, COPYFILE_DATA);
-    if(ret == -1) return NO;
-    
-    // And close srcFd
-    ret = close(srcFd);
-    if(ret == -1) return NO;
+    // Open source file
+    int srcFd = open([path UTF8String], O_RDONLY);
+    if (srcFd == -1) return NO;
+
+    char buffer[16384];
+    ssize_t bytesRead;
+
+    if(lseek(_fd, 0, SEEK_SET) == -1)
+    {
+        close(srcFd);
+        return NO;
+    }
+
+    if(ftruncate(_fd, 0) == -1)
+    {
+        close(srcFd);
+        return NO;
+    }
+
+    while((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0)
+    {
+        ssize_t bytesWritten = 0;
+        while(bytesWritten < bytesRead)
+        {
+            ssize_t w = write(_fd, buffer + bytesWritten, bytesRead - bytesWritten);
+            if(w == -1)
+            {
+                close(srcFd);
+                return NO;
+            }
+            bytesWritten += w;
+        }
+    }
+
+    if(bytesRead == -1)
+    {
+        close(srcFd);
+        return NO;
+    }
+
+    if(close(srcFd) == -1) return NO;
     return YES;
 }
 
@@ -89,8 +145,19 @@
         if(obj)
         {
             _fd = xpc_dictionary_dup_fd(obj, "fd");
+            
+            struct stat st;
+            if (fstat(_fd, &st) == -1)
+            {
+                close(_fd);
+                return nil;
+            }
+            if(!S_ISREG(st.st_mode))
+            {
+                close(_fd);
+                return nil;
+            }
         }
-        
     }
     return self;
 }

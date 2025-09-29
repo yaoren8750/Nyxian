@@ -207,26 +207,6 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path,
     return process_identifier;
 }
 
-void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    NSArray *array = sync_call_with_timeout2(^(void (^reply)(NSData*,NSString*)){
-        [hostProcessProxy gatherCodeSignerViaReply:reply];
-    });
-    if(!array) return;
-    *certificateData = array[0];
-    *certificatePassword = array[1];
-}
-
-NSString *environment_proxy_gather_code_signature_extras(void)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    NSString *extra = sync_call_with_timeout(PROXY_TYPE_REPLY(NSString*){
-        [hostProcessProxy gatherSignerExtrasViaReply:reply];
-    });
-    return extra;
-}
-
 void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety)
 {
     environment_must_be_role(EnvironmentRoleGuest);
@@ -296,4 +276,13 @@ int environment_proxy_setrgid(gid_t gid)
     });
     if(ret == -1) errno = EPERM;
     return ret;
+}
+
+void environment_proxy_sign_macho(NSString *path)
+{
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    [hostProcessProxy signMachO:[[MachOObject alloc] initWithPath:path] withReply:^{
+        dispatch_semaphore_signal(sema);
+    }];
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
 }

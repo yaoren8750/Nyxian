@@ -17,13 +17,16 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Object/MachOObject.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
+#import <LindChain/LiveContainer/LCMachOUtils.h>
 
 @implementation MachOObject
 
 - (void)signAndWriteBack
 {
+    environment_must_be_role(EnvironmentRoleHost);
     NSFileManager *fm = [NSFileManager defaultManager];
     
     NSString *bundlePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:@"app"]];
@@ -32,9 +35,6 @@
     
     // Create bundle structure
     [fm createDirectoryAtPath:bundlePath withIntermediateDirectories:YES attributes:nil error:nil];
-    
-    // Write out transmitted file descriptor
-    [self writeOut:binPath];
     
     // Write Info.plist with hash marker
     NSDictionary *plistDict = @{
@@ -47,6 +47,8 @@
                                                                   options:0
                                                                     error:nil];
     [plistData writeToFile:infoPath atomically:YES];
+    if(![self writeOut:binPath]) return;
+    NSLog(@"Signed: %d", checkCodeSignature([binPath UTF8String]));
     
     // Run signer
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
@@ -59,7 +61,9 @@
     });
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
-    [self writeIn:binPath];
+    NSLog(@"Signed: %d", checkCodeSignature([binPath UTF8String]));
+    
+    if(![self writeIn:binPath]) return;
     [fm removeItemAtPath:bundlePath error:nil];
 }
 

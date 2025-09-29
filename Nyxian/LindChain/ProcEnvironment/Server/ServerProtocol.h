@@ -25,6 +25,7 @@
 #import <LindChain/Multitask/LDEProcessManager.h>
 #import <LindChain/ProcEnvironment/Object/MachPortObject.h>
 #import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
+#import <LindChain/ProcEnvironment/Object/MachOObject.h>
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 
@@ -69,12 +70,6 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
 - (void)spawnProcessWithPath:(NSString*)path withArguments:(NSArray*)arguments withEnvironmentVariables:(NSDictionary *)environment withMapObject:(FDMapObject*)mapObject withReply:(void (^)(pid_t))reply;
 
 /*
- CS
- */
-- (void)gatherCodeSignerViaReply:(void (^)(NSData*,NSString*))reply;
-- (void)gatherSignerExtrasViaReply:(void (^)(NSString*))reply;
-
-/*
  surface
  */
 - (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply;
@@ -88,6 +83,11 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
  Set credentials
  */
 - (void)setCredentialWithOption:(CredentialSet)option withIdentifier:(uid_t)uid withReply:(void (^)(int result))reply;
+
+/*
+ Signer
+ */
+- (void)signMachO:(MachOObject*)object withReply:(void (^)(void))reply;
 
 @end
 

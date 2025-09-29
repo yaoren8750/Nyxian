@@ -26,6 +26,7 @@
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
 #import <sys/sysctl.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
+#import <LindChain/ProcEnvironment/Object/MachOObject.h>
 
 #pragma mark - posix_spawn helper
 
@@ -125,9 +126,8 @@ int environment_posix_spawn(pid_t *process_identifier,
         if(!path) return 1;
         if(!checkCodeSignature(path))
         {
-            // Is not valid
-            void signMachOAtPath(NSString *path);
-            signMachOAtPath([NSString stringWithCString:path encoding:NSUTF8StringEncoding]);
+            // Is not valid, sign it by asking the host to sign it
+            environment_proxy_sign_macho([NSString stringWithCString:path encoding:NSUTF8StringEncoding]);
             if(!checkCodeSignature(path)) return -1;
         }
         

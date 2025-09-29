@@ -13,7 +13,7 @@
 #import "litehook_internal.h"
 #import "LCMachOUtils.h"
 #import "../utils.h"
-#import <LindChain/ProcEnvironment/application.h>
+#import <LindChain/ProcEnvironment/environment.h>
 
 NSString* signMachOAtPath(NSString *path);
 extern NSBundle *lcMainBundle;
@@ -95,7 +95,7 @@ DEFINE_HOOK(dlopen, void *, (const char * __path, int __mode))
     if(!checkCodeSignature(__path))
     {
         // Sign if invalid
-        signMachOAtPath([NSString stringWithCString:__path encoding:NSUTF8StringEncoding]);
+        environment_proxy_sign_macho([NSString stringWithCString:__path encoding:NSUTF8StringEncoding]);
     }
     
     // Continue with opening

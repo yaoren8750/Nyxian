@@ -148,7 +148,6 @@
 				LindChain/ObjC/Swizzle.m,
 				LindChain/OpenSSL.xcframework,
 				LindChain/ProcEnvironment/application.m,
-				LindChain/ProcEnvironment/arbitary_signer.m,
 				LindChain/ProcEnvironment/cred.m,
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/fork.m,

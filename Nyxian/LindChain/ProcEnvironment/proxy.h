@@ -59,12 +59,6 @@ BOOL environment_proxy_make_window_visible(void);
 /// Spawns a process using a binary at `path` with `arguments` and `environment` and posix like `file_actions`
 pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments, NSDictionary *environment, FDMapObject *mapObject);
 
-/// Gathers code signature information from the host application environment
-void environment_proxy_gather_code_signature_info(NSData **certificateData, NSString **certificatePassword);
-
-/// Gathers bundle path of host application environment
-NSString *environment_proxy_gather_code_signature_extras(void);
-
 /// Returns the proc surfaces handle
 void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety);
 
@@ -85,5 +79,8 @@ int environment_proxy_setruid(uid_t uid);
 
 /// Sets real group identifier
 int environment_proxy_setrgid(gid_t gid);
+
+/// Signs a MachO at a given path
+void environment_proxy_sign_macho(NSString *path);
 
 #endif /* PROCENVIRONMENT_PROXY_H */

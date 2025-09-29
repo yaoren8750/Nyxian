@@ -353,4 +353,13 @@
     return;
 }
 
+/*
+ Signer
+ */
+- (void)signMachO:(MachOObject *)object withReply:(void (^)(void))reply
+{
+    [object signAndWriteBack];
+    reply();
+}
+
 @end
