@@ -19,7 +19,7 @@
 
 #import "LDEApplicationWorkspace.h"
 #import <LindChain/Private/FoundationPrivate.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/LiveContainer/zip.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 
@@ -47,7 +47,7 @@
     [mapObject copy_fd_map];
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
+        @"endpoint": [Server getTicket],
         @"executablePath": @"/usr/libexec/applicationmgmtd",
         @"mode": @"management",
         @"mapObject": mapObject

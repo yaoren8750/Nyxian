@@ -9,7 +9,7 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import "PiPManager.h"
 #import "Localization.h"
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/Private/UIKitPrivate.h>
 #import <dlfcn.h>
 #import <objc/message.h>

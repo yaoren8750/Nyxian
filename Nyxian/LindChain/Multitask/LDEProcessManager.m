@@ -22,7 +22,7 @@
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Server/Trust.h>
@@ -147,7 +147,7 @@
            withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [self initWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
+        @"endpoint": [Server getTicket],
         @"mode": @"spawn",
         @"executablePath": binaryPath,
         @"arguments": arguments,

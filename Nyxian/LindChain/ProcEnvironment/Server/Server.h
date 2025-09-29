@@ -21,16 +21,12 @@
 #define PROCENVIRONMENT_SERVER_SERVER_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/Private/UIKitPrivate.h>
-#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
-@interface Server: NSObject <ServerProtocol>
+@interface Server : NSObject <NSXPCListenerDelegate>
 
-@property (nonatomic) pid_t processIdentifier;
-@property (nonatomic) dispatch_once_t handoffProcessIdentifierOnce;
-@property (nonatomic) dispatch_once_t handoffSurfaceOnce;
-@property (nonatomic) dispatch_once_t makeWindowVisibleOnce;
-@property (nonatomic) dispatch_once_t sendPortOnce;
+@property (nonatomic,readonly) NSMutableSet<xpc_endpoint_t> *canConnectTable;
+
++ (NSXPCListenerEndpoint*)getTicket;
 
 @end
 

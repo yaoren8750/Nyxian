@@ -8,7 +8,7 @@
 #import "utils.h"
 #import <objc/runtime.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/Debugger/Logger.h>
 
 @implementation RBSTarget(hook)

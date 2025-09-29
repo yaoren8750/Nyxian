@@ -17,18 +17,21 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#ifndef PROCENVIRONMENT_SERVER_SERVERSESSION_H
+#define PROCENVIRONMENT_SERVER_SERVERSESSION_H
 
 #import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
+#import <LindChain/Private/UIKitPrivate.h>
+#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+@interface ServerSession: NSObject <ServerProtocol>
 
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
-
-+ (NSXPCListenerEndpoint*)getEndpoint;
+@property (nonatomic) pid_t processIdentifier;
+@property (nonatomic) dispatch_once_t handoffProcessIdentifierOnce;
+@property (nonatomic) dispatch_once_t handoffSurfaceOnce;
+@property (nonatomic) dispatch_once_t makeWindowVisibleOnce;
+@property (nonatomic) dispatch_once_t sendPortOnce;
 
 @end
 
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+#endif /* PROCENVIRONMENT_SERVER_SERVERSESSION_H */

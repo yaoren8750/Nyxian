@@ -21,7 +21,6 @@
 #import <UIKit/UIKit.h>
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
-#import "serverDelegate.h"
 #import "LindChain/Services/applicationmgmtd/LDEApplicationWorkspaceInternal.h"
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/environment.h>
