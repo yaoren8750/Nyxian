@@ -95,4 +95,9 @@
     return self;
 }
 
+- (void)dealloc
+{
+    close(_fd);
+}
+
 @end
