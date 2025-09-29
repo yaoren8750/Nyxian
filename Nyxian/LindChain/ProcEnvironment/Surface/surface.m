@@ -153,8 +153,6 @@ void proc_surface_init(void)
             // Now map em
             surface = [surfaceMapObject mapAndDestroy];
             spinface = [spinfaceMapObject mapAndDestroy];
-            
-            // Thats it
         }
     });
 }

@@ -154,6 +154,8 @@
 				LindChain/ProcEnvironment/fork.m,
 				LindChain/ProcEnvironment/libproc.m,
 				LindChain/ProcEnvironment/Object/FDMapObject.m,
+				LindChain/ProcEnvironment/Object/FileObject.m,
+				LindChain/ProcEnvironment/Object/MachOObject.m,
 				LindChain/ProcEnvironment/Object/MachPortObject.m,
 				LindChain/ProcEnvironment/Object/MappingPortObject.m,
 				LindChain/ProcEnvironment/posix_spawn.m,

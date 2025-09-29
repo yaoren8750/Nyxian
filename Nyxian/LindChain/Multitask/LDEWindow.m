@@ -118,7 +118,8 @@ void UIKitFixesInit(void) {
     return self;
 }
 
-- (void)handlePullDown:(UIPanGestureRecognizer *)gesture {
+- (void)handlePullDown:(UIPanGestureRecognizer *)gesture
+{
     UIView *windowView = self.view;
     CGPoint translation = [gesture translationInView:windowView.superview];
     CGFloat offsetY = MAX(translation.y, 0); // never allow negative
@@ -320,9 +321,10 @@ void UIKitFixesInit(void) {
     [self.appSceneVC resizeActionEnd];
 }
 
-- (void)closeWindow {
+- (void)closeWindow
+{
     dispatch_once(&_closeWindowOnce, ^{
-        if([self.appSceneVC.process isRunning]) [self.appSceneVC.process terminate];
+        if([self.appSceneVC.process.processHandle isValid]) [self.appSceneVC.process terminate];
         self.view.layer.masksToBounds = NO;
         [UIView transitionWithView:self.view.window
                           duration:0.2

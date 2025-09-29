@@ -28,7 +28,7 @@
 @interface LDEAppScene()
 
 @property (nonatomic) UIWindowScene *hostScene;
-@property (nonatomic) bool isAppTerminationCleanUpCalled;
+@property (nonatomic) dispatch_once_t cleanUpOnce;
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
 @property (nonatomic, strong) NSTimer *backgroundEnforcementTimer;
@@ -46,7 +46,6 @@
     [self.view addSubview:_contentView];
     self.delegate = delegate;
     self.scaleRatio = 1.0;
-    self.isAppTerminationCleanUpCalled = false;
     self.process = process;
     [self setUpAppPresenter];
     return self;
@@ -119,14 +118,15 @@
                 transitionContext:(id)context
               lifecycleActionType:(uint32_t)actionType
 {
-    if(!self.process.isRunning) {
-        [self appTerminationCleanUp:NO];
+    if(![self.process.processHandle isValid])
+    {
+        [self terminationCleanUp];
+        return;
     }
-    else if(self.process.isSuspended)
+    else if(self.process.isSuspended || !diff)
     {
         return;
     }
-    if(!diff) return;
     
     UIMutableApplicationSceneSettings *baseSettings = [diff settingsByApplyingToMutableCopyOfSettings:settings];
     UIApplicationSceneTransitionContext *newContext = [context copy];
@@ -139,50 +139,50 @@
     self.nextUpdateSettingsBlock = nil;
 }
 
-- (void)appTerminationCleanUp:(BOOL)restarts {
-    if (_isAppTerminationCleanUpCalled) return;
-    _isAppTerminationCleanUpCalled = YES;
-    void (^cleanupBlock)(void) = ^{
-        if (self.sceneID) {
-            [[PrivClass(FBSceneManager) sharedInstance] destroyScene:self.sceneID withTransitionContext:nil];
+- (void)terminationCleanUp
+{
+    dispatch_once(&_cleanUpOnce, ^{
+        void (^cleanupBlock)(void) = ^{
+            if (self.sceneID) {
+                [[PrivClass(FBSceneManager) sharedInstance] destroyScene:self.sceneID withTransitionContext:nil];
+            }
+            if (self.presenter) {
+                [self.presenter deactivate];
+                [self.presenter invalidate];
+                self.presenter = nil;
+            }
+            
+            [self.delegate appSceneVCAppDidExit:self];
+        };
+        
+        if ([NSThread isMainThread]) {
+            cleanupBlock();
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), cleanupBlock);
         }
-        if (self.presenter) {
-            [self.presenter deactivate];
-            [self.presenter invalidate];
-            self.presenter = nil;
-        }
-
-        if(!restarts) [self.delegate appSceneVCAppDidExit:self];
-    };
-
-    if ([NSThread isMainThread]) {
-        cleanupBlock();
-    } else {
-        dispatch_sync(dispatch_get_main_queue(), cleanupBlock);
-    }
+    });
 }
 
 - (void)setBackgroundNotificationEnabled:(bool)enabled {
-    if(enabled) {
-        // Re-add UIApplicationDidEnterBackgroundNotification
+    if(enabled)
         [NSNotificationCenter.defaultCenter addObserver:self.process.extension selector:@selector(_hostDidEnterBackgroundNote:) name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
-    } else {
-        // Remove UIApplicationDidEnterBackgroundNotification so apps like YouTube can continue playing video
+    else
         [NSNotificationCenter.defaultCenter removeObserver:self.process.extension name:UIApplicationDidEnterBackgroundNotification object:UIApplication.sharedApplication];
-    }
 }
 
 - (void)startLiveResizeWithSettingsBlock:(void (^)(UIMutableApplicationSceneSettings *settings))block {
     self.pendingSettingsBlock = block;
     
-    if (!self.resizeDisplayLink) {
+    if (!self.resizeDisplayLink)
+    {
         self.resizeDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateSceneFrame)];
         [self.resizeDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
         self.resizeDisplayLink.paused = YES;
     }
 }
 
-- (void)updateSceneFrame {
+- (void)updateSceneFrame
+{
     if (!self.presenter || !self.presenter.scene) return;
 
     CGRect frame = CGRectMake(
@@ -213,19 +213,22 @@
     [self endLiveResize];
 }
 
-- (void)endLiveResize {
+- (void)endLiveResize
+{
     [self.resizeDisplayLink invalidate];
     self.resizeDisplayLink = nil;
     self.pendingSettingsBlock = nil;
 }
 
-- (void)resizeActionStart {
+- (void)resizeActionStart
+{
     [self.resizeEndDebounceTimer invalidate];
     self.resizeEndDebounceTimer = nil;
     self.resizeDisplayLink.paused = NO;
 }
 
-- (void)resizeActionEnd {
+- (void)resizeActionEnd
+{
     [self.resizeEndDebounceTimer invalidate];
     __weak typeof(self) weakSelf = self;
     self.resizeEndDebounceTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:NO block:^(NSTimer * _Nonnull timer) {

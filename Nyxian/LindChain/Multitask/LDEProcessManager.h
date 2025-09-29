@@ -85,7 +85,6 @@
 - (BOOL)suspend;
 - (BOOL)resume;
 - (BOOL)terminate;
-- (BOOL)isRunning;
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback;
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback;

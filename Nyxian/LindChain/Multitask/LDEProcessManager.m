@@ -196,11 +196,6 @@
     return YES;
 }
 
-- (BOOL)isRunning
-{
-    return [self.processHandle isValid];
-}
-
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
 {
     [_extension setRequestCancellationBlock:callback];
