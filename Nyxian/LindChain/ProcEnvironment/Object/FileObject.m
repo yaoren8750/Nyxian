@@ -28,8 +28,7 @@
 {
     self = [super init];
     _fd = open([path UTF8String], O_RDWR);
-    NSLog(@"Opened: %d\n", _fd);
-    return self;
+    return (_fd == -1) ? nil : self;
 }
 
 - (BOOL)writeOut:(NSString *)path

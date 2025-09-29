@@ -280,9 +280,13 @@ int environment_proxy_setrgid(gid_t gid)
 
 void environment_proxy_sign_macho(NSString *path)
 {
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    [hostProcessProxy signMachO:[[MachOObject alloc] initWithPath:path] withReply:^{
-        dispatch_semaphore_signal(sema);
-    }];
-    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    MachOObject *obj = [[MachOObject alloc] initWithPath:path];
+    if(obj != nil)
+    {
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [hostProcessProxy signMachO:obj withReply:^{
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    }
 }
