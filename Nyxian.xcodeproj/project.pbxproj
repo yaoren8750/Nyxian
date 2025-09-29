@@ -114,10 +114,8 @@
 				LindChain/Init.mm,
 				LindChain/litehook/src/litehook.c,
 				LindChain/LiveContainer/dyld_bypass_validation.m,
-				LindChain/LiveContainer/LCAppInfo.m,
 				LindChain/LiveContainer/LCBootstrap.m,
 				LindChain/LiveContainer/LCMachOUtils.m,
-				LindChain/LiveContainer/LCUtils.m,
 				LindChain/LiveContainer/Localization.m,
 				LindChain/LiveContainer/main.c,
 				LindChain/LiveContainer/Tweaks/Dead10ccFix.m,
@@ -129,24 +127,8 @@
 				LindChain/LiveContainer/Tweaks/StoreKitHooks.m,
 				"LindChain/LiveContainer/Tweaks/UIKit+GuestHooksInit.m",
 				LindChain/LiveContainer/utils.m,
-				LindChain/LiveContainer/ZSign/archo.cpp,
-				LindChain/LiveContainer/ZSign/bundle.cpp,
-				LindChain/LiveContainer/ZSign/common/base64.cpp,
-				LindChain/LiveContainer/ZSign/common/fs.cpp,
-				LindChain/LiveContainer/ZSign/common/json.cpp,
-				LindChain/LiveContainer/ZSign/common/log.cpp,
-				LindChain/LiveContainer/ZSign/common/sha.cpp,
-				LindChain/LiveContainer/ZSign/common/timer.cpp,
-				LindChain/LiveContainer/ZSign/common/util.cpp,
-				LindChain/LiveContainer/ZSign/macho.cpp,
-				LindChain/LiveContainer/ZSign/openssl.cpp,
-				LindChain/LiveContainer/ZSign/signing.cpp,
-				LindChain/LiveContainer/ZSign/Utils.mm,
-				LindChain/LiveContainer/ZSign/zsign.mm,
-				LindChain/LiveContainer/ZSign/zsigner.m,
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
-				LindChain/OpenSSL.xcframework,
 				LindChain/ProcEnvironment/application.m,
 				LindChain/ProcEnvironment/cred.m,
 				LindChain/ProcEnvironment/environment.m,
@@ -178,12 +160,10 @@
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
 				LindChain/LLVM.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				LindChain/OpenSSL.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = 79BF9AC92E62BC2200C60D4C /* Embed Frameworks */;
 			membershipExceptions = (
 				LindChain/LLVM.xcframework,
-				LindChain/OpenSSL.xcframework,
 			);
 		};
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {

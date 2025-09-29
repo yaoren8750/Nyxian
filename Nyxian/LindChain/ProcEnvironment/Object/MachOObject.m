@@ -53,7 +53,7 @@
     // Run signer
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     dispatch_async(dispatch_queue_create("sign-queue", DISPATCH_QUEUE_CONCURRENT), ^{
-    LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
+    LCAppInfo *appInfo = [[PrivClass(LCAppInfo) alloc] initWithBundlePath:bundlePath];
         [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL succeeded, NSString *errorDescription){
             dispatch_semaphore_signal(sema);
         } progressHandler:^(NSProgress *progress) {
