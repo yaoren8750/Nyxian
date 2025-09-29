@@ -150,9 +150,20 @@ void proc_surface_init(void)
             
             environment_proxy_get_surface_mappings(&surfaceMapObject, &spinfaceMapObject);
             
-            // Now map em
-            surface = [surfaceMapObject mapAndDestroy];
-            spinface = [spinfaceMapObject mapAndDestroy];
+            if(surfaceMapObject != nil &&
+               spinfaceMapObject != nil)
+            {
+                // Now map em
+                void *surfacePtr = [surfaceMapObject mapAndDestroy];
+                void *spinfacePtr = [spinfaceMapObject mapAndDestroy];
+                
+                if(surfacePtr != MAP_FAILED &&
+                   spinfacePtr != MAP_FAILED)
+                {
+                    surface = surfacePtr;
+                    spinface = spinfacePtr;
+                }
+            }
         }
     });
 }
