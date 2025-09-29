@@ -77,6 +77,8 @@
 {
     self = [super init];
     
+    if(!proc_can_spawn()) return nil;
+    
     self.displayName = @"LiveProcess";
     self.executablePath = items[@"executablePath"];
     if(self.executablePath == nil) return nil;

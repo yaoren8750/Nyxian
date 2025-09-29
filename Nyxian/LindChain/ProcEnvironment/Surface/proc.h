@@ -34,6 +34,9 @@ void proc_object_insert(kinfo_info_surface_t object);
 /// Returns a process structure at a given index
 kinfo_info_surface_t proc_object_at_index(uint32_t index);
 
+/// Returns if any process is allowed to spawn
+BOOL proc_can_spawn(void);
+
 /// Creates child process
 BOOL proc_create_child_proc(pid_t ppid, pid_t pid, uid_t uid, gid_t gid, NSString *executablePath, PEEntitlement entitlement);
 

@@ -83,7 +83,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 /// Returns a process surface file handle to perform a handoff over XPC
 MappingPortObject *proc_surface_handoff(void)
 {
-    return [[MappingPortObject alloc] initWithAddr:surface withSize:SURFACE_MAP_SIZE withProt:VM_PROT_READ];
+    return [[MappingPortObject alloc] initWithAddr:surface withSize:sizeof(surface_map_t) withProt:VM_PROT_READ];
 }
 
 /*
@@ -119,7 +119,7 @@ void proc_surface_init(void)
         if(environment_is_role(EnvironmentRoleHost))
         {
             // Allocate surface and spinface
-            surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+            surface = mmap(NULL, sizeof(surface_map_t), PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
             
             // Setup surface
             surface->magic = SURFACE_MAGIC;

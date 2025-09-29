@@ -103,7 +103,8 @@ typedef struct {
     PEEntitlement entitlements;
 } kinfo_info_surface_t;
 
-#define PROC_MAX 5000
+/* Interestingly launchd only allows us to have 1000 extensions to execute, which is still unsafe, so i reduced it to 750 */
+#define PROC_MAX 750
 
 /// Structure that holds surface information and other structures
 struct surface_map {
@@ -122,15 +123,8 @@ struct surface_map {
 typedef struct surface_map surface_map_t;
 
 
-/* Proc Macros */
-#define SURFACE_PROC_COUNTER_SIZE sizeof(uint32_t)
-#define SURFACE_PROC_OBJECT_MAX PROC_MAX
-#define SURFACE_PROC_OBJECT_MAX_SIZE sizeof(kinfo_info_surface_t) * SURFACE_PROC_OBJECT_MAX
-
 /* Surface Macros */
 #define SURFACE_MAGIC 0xFABCDEFB
-#define SURFACE_MAGIC_SIZE sizeof(uint32_t)
-#define SURFACE_MAP_SIZE SURFACE_MAGIC_SIZE + SURFACE_PROC_COUNTER_SIZE + SURFACE_PROC_OBJECT_MAX_SIZE
 
 /* Shared properties */
 extern surface_map_t *surface;

@@ -74,6 +74,22 @@ void proc_object_remove_for_pid(pid_t pid)
     spinlock_unlock(&(surface->spinlock));
 }
 
+BOOL proc_can_spawn(void)
+{
+    BOOL result = NO;
+    
+    // Dont use if uninitilized
+    if(surface == NULL) return result;
+    
+    spinlock_lock(&(surface->spinlock));
+    
+    result = (surface->proc_count < PROC_MAX);
+    
+    spinlock_unlock(&(surface->spinlock));
+    
+    return result;
+}
+
 void proc_object_insert(kinfo_info_surface_t object)
 {
     // Dont use if uninitilized
