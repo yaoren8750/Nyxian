@@ -107,6 +107,9 @@ typedef struct {
 
 /// Structure that holds surface information and other structures
 struct surface_map {
+    /* Spinlock */
+    spinlock_t spinlock;
+    
     /* System */
     uint32_t magic;
     char hostname[MAXHOSTNAMELEN];
@@ -131,15 +134,11 @@ typedef struct surface_map surface_map_t;
 
 /* Shared properties */
 extern surface_map_t *surface;
-extern spinlock_t *spinface;
 
 /* Handoff */
 
 /// Returns a process surface file handle to perform a handoff over XPC
 MappingPortObject *proc_surface_handoff(void);
-
-/// Returns a safety surface file handle to perform a handoff over XPC
-MappingPortObject *proc_spinface_handoff(void);
 
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out);

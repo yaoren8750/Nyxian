@@ -197,14 +197,14 @@
 /*
  surface
  */
-- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply
+- (void)handinSurfaceMappingPortObjectViaReply:(void (^)(MappingPortObject *))reply
 {
     dispatch_once(&_handoffSurfaceOnce, ^{
-        reply(proc_surface_handoff(), proc_spinface_handoff());
+        reply(proc_surface_handoff());
         return;
     });
     
-    if(_handoffSurfaceOnce != 0) reply(nil,nil);
+    if(_handoffSurfaceOnce != 0) reply(nil);
 }
 
 /*

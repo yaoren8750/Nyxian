@@ -207,15 +207,13 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path,
     return process_identifier;
 }
 
-void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety)
+MappingPortObject *environment_proxy_get_surface_mapping(void)
 {
     environment_must_be_role(EnvironmentRoleGuest);
-    NSArray *objectArray = sync_call_with_timeout2(^(void (^reply)(MappingPortObject*, MappingPortObject*)){
-        [hostProcessProxy handinSurfaceMappingPortObjectsViaReply:reply];
+    MappingPortObject *mappingPortObject = sync_call_with_timeout(PROXY_TYPE_REPLY(MappingPortObject*){
+        [hostProcessProxy handinSurfaceMappingPortObjectViaReply:reply];
     });
-    if(!objectArray) return;
-    *surface = objectArray[0];
-    *safety = objectArray[1];
+    return mappingPortObject;
 }
 
 int environment_proxy_setuid(uid_t uid)

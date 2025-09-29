@@ -40,7 +40,7 @@ int proc_libproc_listallpids(void *buffer, int buffersize)
 
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seq = spinlock_read_begin(&(surface->spinlock));
 
         uint32_t count = surface->proc_count;
         needed_bytes = (size_t)count * sizeof(pid_t);
@@ -56,7 +56,7 @@ int proc_libproc_listallpids(void *buffer, int buffersize)
         }
 
     }
-    while (spinlock_read_retry(spinface, seq));
+    while (spinlock_read_retry(&(surface->spinlock), seq));
     
     if(buffer == NULL || buffersize == 0)
     {

@@ -34,7 +34,7 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
     unsigned long seq;
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seq = spinlock_read_begin(&(surface->spinlock));
         for(uint32_t i = 0; i < surface->proc_count; i++)
         {
             kinfo_info_surface_t object = surface->proc_info[i];
@@ -45,7 +45,7 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
             }
         }
     }
-    while (spinlock_read_retry(spinface, seq));
+    while (spinlock_read_retry(&(surface->spinlock), seq));
     return cur;
 }
 
@@ -54,7 +54,7 @@ void proc_object_remove_for_pid(pid_t pid)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    spinlock_lock(spinface);
+    spinlock_lock(&(surface->spinlock));
 
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
@@ -71,7 +71,7 @@ void proc_object_remove_for_pid(pid_t pid)
         }
     }
 
-    spinlock_unlock(spinface);
+    spinlock_unlock(&(surface->spinlock));
 }
 
 void proc_object_insert(kinfo_info_surface_t object)
@@ -79,21 +79,21 @@ void proc_object_insert(kinfo_info_surface_t object)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    spinlock_lock(spinface);
+    spinlock_lock(&(surface->spinlock));
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid)
         {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
-            spinlock_unlock(spinface);
+            spinlock_unlock(&(surface->spinlock));
             return;
         }
     }
     
     memcpy(&surface->proc_info[surface->proc_count++], &object, sizeof(kinfo_info_surface_t));
     
-    spinlock_unlock(spinface);
+    spinlock_unlock(&(surface->spinlock));
 }
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
@@ -106,11 +106,11 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
     unsigned long seq;
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seq = spinlock_read_begin(&(surface->spinlock));
         if(index < surface->proc_count)
             cur = surface->proc_info[index];
     }
-    while (spinlock_read_retry(spinface, seq));
+    while (spinlock_read_retry(&(surface->spinlock), seq));
     return cur;
 }
 

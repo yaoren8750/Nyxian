@@ -60,7 +60,7 @@ BOOL environment_proxy_make_window_visible(void);
 pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments, NSDictionary *environment, FDMapObject *mapObject);
 
 /// Returns the proc surfaces handle
-void environment_proxy_get_surface_mappings(MappingPortObject **surface, MappingPortObject **safety);
+MappingPortObject *environment_proxy_get_surface_mapping(void);
 
 /// Sets user identifier
 int environment_proxy_setuid(uid_t uid);

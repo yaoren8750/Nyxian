@@ -72,7 +72,7 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
 /*
  surface
  */
-- (void)handinSurfaceMappingPortObjectsViaReply:(void (^)(MappingPortObject *, MappingPortObject *))reply;
+- (void)handinSurfaceMappingPortObjectViaReply:(void (^)(MappingPortObject *))reply;
 
 /*
  Background mode fixup

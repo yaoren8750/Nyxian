@@ -28,7 +28,6 @@
 #import <mach-o/dyld.h>
 
 surface_map_t *surface = NULL;
-spinlock_t *spinface = NULL;
 
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
@@ -41,7 +40,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     unsigned long seq;
 
     do {
-        seq = spinlock_read_begin(spinface);
+        seq = spinlock_read_begin(&(surface->spinlock));
 
         uint32_t count = surface->proc_count;
         needed_bytes = (size_t)count * sizeof(struct kinfo_proc);
@@ -73,7 +72,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 
         ret = (int)needed_bytes;
 
-    } while (spinlock_read_retry(spinface, seq));
+    } while (spinlock_read_retry(&(surface->spinlock), seq));
 
     return ret;
 }
@@ -87,12 +86,6 @@ MappingPortObject *proc_surface_handoff(void)
     return [[MappingPortObject alloc] initWithAddr:surface withSize:SURFACE_MAP_SIZE withProt:VM_PROT_READ];
 }
 
-/// Returns a safety surface file handle to perform a handoff over XPC
-MappingPortObject *proc_spinface_handoff(void)
-{
-    return [[MappingPortObject alloc] initWithAddr:spinface withSize:sizeof(spinlock_t) withProt:VM_PROT_READ];
-}
-
 /*
  Experimental hooks & implementations
  */
@@ -103,20 +96,20 @@ int environment_gethostname(char *buf,
 
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seq = spinlock_read_begin(&(surface->spinlock));
         strlcpy(buf, surface->hostname, bufsize);
     }
-    while(spinlock_read_retry(spinface, seq));
+    while(spinlock_read_retry(&(surface->spinlock), seq));
     
     return 0;
 }
 
 void kern_sethostname(NSString *hostname)
 {
-    spinlock_lock(spinface);
+    spinlock_lock(&(surface->spinlock));
     hostname = hostname ?: @"localhost";
     strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
-    spinlock_unlock(spinface);
+    spinlock_unlock(&(surface->spinlock));
 }
 
 void proc_surface_init(void)
@@ -127,7 +120,6 @@ void proc_surface_init(void)
         {
             // Allocate surface and spinface
             surface = mmap(NULL, SURFACE_MAP_SIZE, PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-            spinface = mmap(NULL, sizeof(spinlock_t), PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
             
             // Setup surface
             surface->magic = SURFACE_MAGIC;
@@ -139,29 +131,22 @@ void proc_surface_init(void)
             
             
             // Setup spinface
-            spinface->lock = false;
-            spinface->seq = 0;
+            surface->spinlock.lock = false;
+            surface->spinlock.seq = 0;
         }
         else
         {
-            // Get surface objects
-            MappingPortObject *surfaceMapObject = nil;
-            MappingPortObject *spinfaceMapObject = nil;
+            // Get surface object
+            MappingPortObject *surfaceMapObject = environment_proxy_get_surface_mapping();
             
-            environment_proxy_get_surface_mappings(&surfaceMapObject, &spinfaceMapObject);
-            
-            if(surfaceMapObject != nil &&
-               spinfaceMapObject != nil)
+            if(surfaceMapObject != nil)
             {
                 // Now map em
                 void *surfacePtr = [surfaceMapObject mapAndDestroy];
-                void *spinfacePtr = [spinfaceMapObject mapAndDestroy];
                 
-                if(surfacePtr != MAP_FAILED &&
-                   spinfacePtr != MAP_FAILED)
+                if(surfacePtr != MAP_FAILED)
                 {
                     surface = surfacePtr;
-                    spinface = spinfacePtr;
                 }
             }
         }
