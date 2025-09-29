@@ -30,6 +30,7 @@
 @property (nonatomic) dispatch_once_t handoffProcessIdentifierOnce;
 @property (nonatomic) dispatch_once_t handoffSurfaceOnce;
 @property (nonatomic) dispatch_once_t makeWindowVisibleOnce;
+@property (nonatomic) dispatch_once_t sendPortOnce;
 
 @end
 

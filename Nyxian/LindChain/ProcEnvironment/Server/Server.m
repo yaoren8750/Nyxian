@@ -53,7 +53,9 @@
  */
 - (void)sendPort:(MachPortObject*)machPort API_AVAILABLE(ios(26.0));
 {
-    environment_host_take_client_task_port(machPort);
+    dispatch_once(&_sendPortOnce, ^{
+        environment_host_take_client_task_port(machPort);
+    });
 }
 
 - (void)getPort:(pid_t)pid
