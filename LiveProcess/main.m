@@ -122,6 +122,7 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSXPCListenerEndpoint* endpoint = appInfo[@"LSEndpoint"];
     NSString* executablePath = appInfo[@"LSExecutablePath"];
     NSString *mode = appInfo[@"LSServiceMode"];
+    NSString *service = appInfo[@"LSIntegratedServiceName"];
     NSDictionary *environmentDictionary = appInfo[@"LSEnvironment"];
     NSArray *argumentDictionary = appInfo[@"LSArguments"];
     FDMapObject *mapObject = appInfo[@"LSMapObject"];
@@ -140,13 +141,15 @@ int LiveProcessMain(int argc, char *argv[]) {
     if([mode isEqualToString:@"management"])
     {
         environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
-        [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
-        CFRunLoopRun();
-    }
-    else if([mode isEqualToString:@"fdsnapshotd"])
-    {
-        environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
-        FDSnapshotDaemonEntry();
+        if([service isEqualToString:@"appmanagementd"])
+        {
+            [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
+            CFRunLoopRun();
+        }
+        else if([service isEqualToString:@"fdsnapshotd"])
+        {
+            FDSnapshotDaemonEntry();
+        }
     }
     else if([mode isEqualToString:@"spawn"])
     {
