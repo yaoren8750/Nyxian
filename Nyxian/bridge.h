@@ -35,6 +35,7 @@
 #import <LindChain/LiveContainer/ZSign/zsigner.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Server/Trust.h>
+#import <LindChain/LaunchServices/LaunchService.h>
 
 /*
  Project

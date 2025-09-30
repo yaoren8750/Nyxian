@@ -20,33 +20,27 @@
 #import <LindChain/ProcEnvironment/Object/FDMapObject.h>
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <xpc/xpc.h>
+#include <LindChain/ProcEnvironment/Utils/fd.h>
 
 @implementation FDMapObject
+
++ (instancetype)currentMap
+{
+    FDMapObject *map = [[FDMapObject alloc] init];
+    [map copy_fd_map];
+    return map;
+}
 
 #pragma mark - Copying and applying file descriptor map (Unlike NSFileHandle this is used to transfer entire file descriptor maps)
 
 - (void)copy_fd_map
 {
-    // Getting our own pid
-    pid_t pid = getpid();
-    int bufferSize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, NULL, 0);
-    if (bufferSize <= 0) return;
-
-    // Allocating request buffer
-    struct proc_fdinfo *fdinfo = malloc(bufferSize);
-    if (!fdinfo) return;
-
-    // Getting process identifier information
-    int count = proc_pidinfo(pid, PROC_PIDLISTFDS, 0, fdinfo, bufferSize);
-    if (count <= 0)
-    {
-        free(fdinfo);
-        return;
-    }
-    
     _fd_map = xpc_array_create_empty();
     
-    int numFDs = count / sizeof(struct proc_fdinfo);
+    int numFDs = 0;
+    struct proc_fdinfo *fdinfo = NULL;
+    
+    get_all_fds(&numFDs, &fdinfo);
 
     for (int i = 0; i < numFDs; i++) {
         int fd = fdinfo[i].proc_fd;
@@ -67,6 +61,7 @@
 /// Intended for a brand new process, overmapping the fd map
 - (void)apply_fd_map
 {
+    close_all_fd();
     if (!_fd_map) return;
     xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry){
         int wished_fd   = (int)xpc_dictionary_get_int64(entry, "wished_fd");

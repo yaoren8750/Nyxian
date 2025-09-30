@@ -19,7 +19,7 @@
 
 #import "LDEApplicationWorkspace.h"
 #import <LindChain/Private/FoundationPrivate.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/LiveContainer/zip.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
 
@@ -35,41 +35,8 @@
 - (instancetype)init
 {
     self = [super init];
-    
     _sema = dispatch_semaphore_create(0);
-    
-    return [self execute] ? self : nil;
-}
-
-- (BOOL)execute
-{
-    FDMapObject *mapObject = [[FDMapObject alloc] init];
-    [mapObject copy_fd_map];
-    LDEProcessManager *processManager = [LDEProcessManager shared];
-    pid_t pid = [processManager spawnProcessWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
-        @"executablePath": @"/usr/libexec/applicationmgmtd",
-        @"mode": @"management",
-        @"mapObject": mapObject
-    } withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:0 withGroupIdentifier:0 withEntitlements:PEEntitlementDefaultApplicationManagementDaemon]];
-    LDEProcess *process = [processManager processForProcessIdentifier:pid];
-    if(!process) return NO;
-    
-    process.displayName = @"applicationmgmtd";
-    
-    __weak typeof(self) weakSelf = self;
-    [process setRequestInterruptionBlock:^(NSUUID *uuid) {
-        dispatch_semaphore_signal(weakSelf.sema);
-        weakSelf.sema = dispatch_semaphore_create(0);
-        weakSelf.proxy = nil;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [weakSelf execute];
-        });
-    }];
-    
-    self.process = process;
-    
-    return YES;
+    return self;
 }
 
 + (LDEApplicationWorkspace*)shared

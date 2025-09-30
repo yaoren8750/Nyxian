@@ -49,6 +49,8 @@ kern_return_t mach_vm_map(
                                                  &memport,
                                                  MACH_PORT_NULL);
     
+    if(kr != KERN_SUCCESS) return nil;
+    
     self = [super initWithPort:memport];
     self.prot = prot;
     self.size = size;
@@ -69,6 +71,7 @@ kern_return_t mach_vm_map(
                                    self.prot,
                                    self.prot,
                                    VM_INHERIT_NONE);
+    if(kr != KERN_SUCCESS) return MAP_FAILED;
     return (void*)addr;
 }
 

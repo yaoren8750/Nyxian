@@ -110,8 +110,7 @@ DEFINE_HOOK(fork, pid_t, (void))
 {
     // Create local snapshot
     local_thread_snapshot = malloc(sizeof(thread_snapshot_t));
-    local_thread_snapshot->mapObject = [[FDMapObject alloc] init];
-    [local_thread_snapshot->mapObject copy_fd_map];
+    local_thread_snapshot->mapObject = [FDMapObject currentMap];
     
     // Create thread and join
     local_thread_snapshot->fork_flag = true;

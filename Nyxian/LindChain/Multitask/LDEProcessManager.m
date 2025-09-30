@@ -22,7 +22,7 @@
 #import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <LindChain/Services/applicationmgmtd/LDEApplicationWorkspace.h>
 #import <LindChain/Multitask/LDEMultitaskManager.h>
-#import <LindChain/ProcEnvironment/Server/ServerDelegate.h>
+#import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
 #import <LindChain/ProcEnvironment/Server/Trust.h>
@@ -77,8 +77,10 @@
 {
     self = [super init];
     
+    if(!proc_can_spawn()) return nil;
+    
     self.displayName = @"LiveProcess";
-    self.executablePath = items[@"executablePath"];
+    self.executablePath = items[@"LSExecutablePath"];
     if(self.executablePath == nil) return nil;
     else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
     
@@ -147,12 +149,12 @@
            withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [self initWithItems:@{
-        @"endpoint": [ServerDelegate getEndpoint],
-        @"mode": @"spawn",
-        @"executablePath": binaryPath,
-        @"arguments": arguments,
-        @"environment": environment,
-        @"mapObject": mapObject
+        @"LSEndpoint": [Server getTicket],
+        @"LSServiceMode": @"spawn",
+        @"LSExecutablePath": binaryPath,
+        @"LSArguments": arguments,
+        @"LSEnvironment": environment,
+        @"LSMapObject": mapObject
     } withConfiguration:configuration];
     
     return self;
@@ -194,11 +196,6 @@
 {
     [self sendSignal:SIGKILL];
     return YES;
-}
-
-- (BOOL)isRunning
-{
-    return [self.processHandle isValid];
 }
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback
@@ -309,8 +306,7 @@
         }
     }
     
-    FDMapObject *mapObject = [[FDMapObject alloc] init];
-    [mapObject copy_fd_map];
+    FDMapObject *mapObject = [FDMapObject currentMap];
     
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{

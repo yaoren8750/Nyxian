@@ -18,51 +18,27 @@
 */
 
 #import <LindChain/ProcEnvironment/environment.h>
-#import <LindChain/ProcEnvironment/proxy.h>
+#import <LindChain/ProcEnvironment/Object/MachOObject.h>
 #import <LindChain/LiveContainer/LCAppInfo.h>
-#import <CommonCrypto/CommonDigest.h>
+#import <LindChain/LiveContainer/LCMachOUtils.h>
 
-extern NSBundle *overridenNSBundleOfNyxian;
+@implementation MachOObject
 
-void signMachOAtPath(NSString *path)
+- (void)signAndWriteBack
 {
+    environment_must_be_role(EnvironmentRoleHost);
     NSFileManager *fm = [NSFileManager defaultManager];
     
     NSString *bundlePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:@"app"]];
     NSString *binPath = [bundlePath stringByAppendingPathComponent:@"main"];
     NSString *infoPath = [bundlePath stringByAppendingPathComponent:@"Info.plist"];
     
-    if([fm fileExistsAtPath:bundlePath]) return;
-    
-    // Gather signing info
-    NSData *certificateData = nil;
-    NSString *certificatePassword = nil;
-    NSString *extras = nil;
-    environment_proxy_gather_code_signature_info(&certificateData, &certificatePassword);
-    extras = environment_proxy_gather_code_signature_extras();
-    if(!(certificateData && certificatePassword && extras)) return;
-    
-    NSUserDefaults *appGroupUserDefault = [[NSUserDefaults alloc] initWithSuiteName:LCUtils.appGroupID];
-    if(!appGroupUserDefault) appGroupUserDefault = [NSUserDefaults standardUserDefaults];
-    [appGroupUserDefault setObject:certificateData forKey:@"LCCertificateData"];
-    [appGroupUserDefault setObject:certificatePassword forKey:@"LCCertificatePassword"];
-    [appGroupUserDefault setObject:[NSDate now] forKey:@"LCCertificateUpdateDate"];
-    [[NSUserDefaults standardUserDefaults] setObject:LCUtils.appGroupID forKey:@"LCAppGroupID"];
-    
-    // Override signer bundle
-    overridenNSBundleOfNyxian = [NSBundle bundleWithPath:extras];
-    
     // Create bundle structure
     [fm createDirectoryAtPath:bundlePath withIntermediateDirectories:YES attributes:nil error:nil];
     
-    // Copy binary into bundle
-    if (![fm copyItemAtPath:path toPath:binPath error:nil]) {
-        return;
-    }
-    
     // Write Info.plist with hash marker
     NSDictionary *plistDict = @{
-        @"CFBundleIdentifier" : overridenNSBundleOfNyxian.bundleIdentifier ?: @"com.nyxian.unsigned",
+        @"CFBundleIdentifier" : [[NSBundle mainBundle] bundleIdentifier],
         @"CFBundleExecutable" : @"main",
         @"CFBundleVersion"    : @"1.0.0"
     };
@@ -71,11 +47,13 @@ void signMachOAtPath(NSString *path)
                                                                   options:0
                                                                     error:nil];
     [plistData writeToFile:infoPath atomically:YES];
+    if(![self writeOut:binPath]) return;
+    NSLog(@"Signed: %d", checkCodeSignature([binPath UTF8String]));
     
     // Run signer
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     dispatch_async(dispatch_queue_create("sign-queue", DISPATCH_QUEUE_CONCURRENT), ^{
-    LCAppInfo *appInfo = [[LCAppInfo alloc] initWithBundlePath:bundlePath];
+    LCAppInfo *appInfo = [[PrivClass(LCAppInfo) alloc] initWithBundlePath:bundlePath];
         [appInfo patchExecAndSignIfNeedWithCompletionHandler:^(BOOL succeeded, NSString *errorDescription){
             dispatch_semaphore_signal(sema);
         } progressHandler:^(NSProgress *progress) {
@@ -83,7 +61,10 @@ void signMachOAtPath(NSString *path)
     });
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     
-    // MARK: Skip using caching, directly replace binary
-    [fm removeItemAtPath:path error:nil];
-    [fm moveItemAtPath:binPath toPath:path error:nil];
+    NSLog(@"Signed: %d", checkCodeSignature([binPath UTF8String]));
+    
+    if(![self writeIn:binPath]) return;
+    [fm removeItemAtPath:bundlePath error:nil];
 }
+
+@end

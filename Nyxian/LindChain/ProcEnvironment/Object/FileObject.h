@@ -17,18 +17,20 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVER_H
-#define PROCENVIRONMENT_SERVER_SERVER_H
+#ifndef PROCENVIRONMENT_FILEOBJECT_H
+#define PROCENVIRONMENT_FILEOBJECT_H
 
 #import <Foundation/Foundation.h>
 
-@interface Server : NSObject <NSXPCListenerDelegate>
+@interface FileObject : NSObject <NSSecureCoding>
 
-@property (nonatomic,readonly) NSMutableSet<xpc_endpoint_t> *canConnectTable;
+@property (nonatomic) int fd;
 
-+ (NSXPCListenerEndpoint*)getTicket;
-- (BOOL)endpointUnregisterAndValidate:(xpc_endpoint_t)endpoint;
+- (instancetype)initWithPath:(NSString*)path;
+
+- (BOOL)writeOut:(NSString*)path;
+- (BOOL)writeIn:(NSString*)path;
 
 @end
 
-#endif /* PROCENVIRONMENT_SERVER_SERVER_H */
+#endif /* PROCENVIRONMENT_FILEOBJECT_H */

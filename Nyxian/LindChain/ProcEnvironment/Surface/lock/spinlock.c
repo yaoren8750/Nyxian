@@ -17,18 +17,23 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
-#define PROCENVIRONMENT_SERVER_SERVERDELEGATE_H
+#include <LindChain/ProcEnvironment/Surface/lock/spinlock.h>
+#include <LindChain/ProcEnvironment/Surface/extra/relax.h>
 
-#import <Foundation/Foundation.h>
-#import <LindChain/ProcEnvironment/Server/Server.h>
+void spinlock_init(spinlock_t *s)
+{
+    __atomic_store_n(&s->lock, 0, __ATOMIC_RELAXED);
+}
 
-@interface ServerDelegate : NSObject <NSXPCListenerDelegate>
+void spinlock_lock(spinlock_t *s)
+{
+    while(__atomic_exchange_n(&s->lock, 1, __ATOMIC_ACQUIRE) == 1)
+    {
+        relax();
+    }
+}
 
-@property (nonatomic,readonly) NSMutableSet *pidHistory;
-
-+ (NSXPCListenerEndpoint*)getEndpoint;
-
-@end
-
-#endif /* PROCENVIRONMENT_SERVER_SERVERDELEGATE_H */
+void spinlock_unlock(spinlock_t *s)
+{
+    __atomic_store_n(&s->lock, 0, __ATOMIC_RELEASE);
+}

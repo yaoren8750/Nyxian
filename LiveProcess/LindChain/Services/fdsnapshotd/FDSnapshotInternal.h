@@ -17,18 +17,4 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVER_H
-#define PROCENVIRONMENT_SERVER_SERVER_H
-
-#import <Foundation/Foundation.h>
-
-@interface Server : NSObject <NSXPCListenerDelegate>
-
-@property (nonatomic,readonly) NSMutableSet<xpc_endpoint_t> *canConnectTable;
-
-+ (NSXPCListenerEndpoint*)getTicket;
-- (BOOL)endpointUnregisterAndValidate:(xpc_endpoint_t)endpoint;
-
-@end
-
-#endif /* PROCENVIRONMENT_SERVER_SERVER_H */
+void FDSnapshotDaemonEntry(void);

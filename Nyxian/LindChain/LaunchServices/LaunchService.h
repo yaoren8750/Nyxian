@@ -17,18 +17,29 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SERVER_SERVER_H
-#define PROCENVIRONMENT_SERVER_SERVER_H
+#ifndef LAUNCHSERVICES_H
+#define LAUNCHSERVICES_H
 
 #import <Foundation/Foundation.h>
+#import <LindChain/Multitask/LDEProcessManager.h>
 
-@interface Server : NSObject <NSXPCListenerDelegate>
+@interface LaunchService : NSObject
 
-@property (nonatomic,readonly) NSMutableSet<xpc_endpoint_t> *canConnectTable;
+@property (nonatomic,strong) LDEProcess *process;
+@property (nonatomic,strong) NSDictionary *dictionary;
+@property (nonatomic,readonly) BOOL autorestart;
 
-+ (NSXPCListenerEndpoint*)getTicket;
-- (BOOL)endpointUnregisterAndValidate:(xpc_endpoint_t)endpoint;
+- (instancetype)initWithPlistPath:(NSString*)plistPath;
 
 @end
 
-#endif /* PROCENVIRONMENT_SERVER_SERVER_H */
+@interface LaunchServices : NSObject
+
+@property (nonatomic) NSMutableArray<LaunchService*> *launchServices;
+
+- (instancetype)init;
++ (instancetype)shared;
+
+@end
+
+#endif /* LAUNCHSERVICES_H */

@@ -89,6 +89,7 @@
 				LindChain/LiveContainer/zip.m,
 				LindChain/Services/applicationmgmtd/LDEApplicationObject.m,
 				LindChain/Services/applicationmgmtd/LDEApplicationWorkspaceInternal.m,
+				LindChain/Services/fdsnapshotd/FDSnapshotInternal.m,
 				main.m,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
@@ -114,10 +115,8 @@
 				LindChain/Init.mm,
 				LindChain/litehook/src/litehook.c,
 				LindChain/LiveContainer/dyld_bypass_validation.m,
-				LindChain/LiveContainer/LCAppInfo.m,
 				LindChain/LiveContainer/LCBootstrap.m,
 				LindChain/LiveContainer/LCMachOUtils.m,
-				LindChain/LiveContainer/LCUtils.m,
 				LindChain/LiveContainer/Localization.m,
 				LindChain/LiveContainer/main.c,
 				LindChain/LiveContainer/Tweaks/Dead10ccFix.m,
@@ -129,44 +128,33 @@
 				LindChain/LiveContainer/Tweaks/StoreKitHooks.m,
 				"LindChain/LiveContainer/Tweaks/UIKit+GuestHooksInit.m",
 				LindChain/LiveContainer/utils.m,
-				LindChain/LiveContainer/ZSign/archo.cpp,
-				LindChain/LiveContainer/ZSign/bundle.cpp,
-				LindChain/LiveContainer/ZSign/common/base64.cpp,
-				LindChain/LiveContainer/ZSign/common/fs.cpp,
-				LindChain/LiveContainer/ZSign/common/json.cpp,
-				LindChain/LiveContainer/ZSign/common/log.cpp,
-				LindChain/LiveContainer/ZSign/common/sha.cpp,
-				LindChain/LiveContainer/ZSign/common/timer.cpp,
-				LindChain/LiveContainer/ZSign/common/util.cpp,
-				LindChain/LiveContainer/ZSign/macho.cpp,
-				LindChain/LiveContainer/ZSign/openssl.cpp,
-				LindChain/LiveContainer/ZSign/signing.cpp,
-				LindChain/LiveContainer/ZSign/Utils.mm,
-				LindChain/LiveContainer/ZSign/zsign.mm,
-				LindChain/LiveContainer/ZSign/zsigner.m,
 				LindChain/LLVM.xcframework,
 				LindChain/ObjC/Swizzle.m,
-				LindChain/OpenSSL.xcframework,
+				LindChain/Private/mach/fileport.m,
 				LindChain/ProcEnvironment/application.m,
-				LindChain/ProcEnvironment/arbitary_signer.m,
 				LindChain/ProcEnvironment/cred.m,
 				LindChain/ProcEnvironment/environment.m,
 				LindChain/ProcEnvironment/fork.m,
 				LindChain/ProcEnvironment/libproc.m,
 				LindChain/ProcEnvironment/Object/FDMapObject.m,
+				LindChain/ProcEnvironment/Object/FileObject.m,
+				LindChain/ProcEnvironment/Object/MachOObject.m,
 				LindChain/ProcEnvironment/Object/MachPortObject.m,
 				LindChain/ProcEnvironment/Object/MappingPortObject.m,
 				LindChain/ProcEnvironment/posix_spawn.m,
 				LindChain/ProcEnvironment/proxy.m,
 				LindChain/ProcEnvironment/Surface/entitlement.m,
+				LindChain/ProcEnvironment/Surface/extra/relax.c,
+				LindChain/ProcEnvironment/Surface/lock/seqlock.c,
+				LindChain/ProcEnvironment/Surface/lock/spinlock.c,
 				LindChain/ProcEnvironment/Surface/memfd.c,
 				LindChain/ProcEnvironment/Surface/permit.m,
 				LindChain/ProcEnvironment/Surface/proc.m,
 				LindChain/ProcEnvironment/Surface/rusage.m,
-				LindChain/ProcEnvironment/Surface/spinlock.c,
 				LindChain/ProcEnvironment/Surface/surface.m,
 				LindChain/ProcEnvironment/sysctl.m,
 				LindChain/ProcEnvironment/tfp.m,
+				LindChain/ProcEnvironment/Utils/fd.c,
 			);
 			target = 79BF97F62E6291EE00C60D4C /* LiveProcess */;
 		};
@@ -177,12 +165,10 @@
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
 				LindChain/LLVM.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
-				LindChain/OpenSSL.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = 79BF9AC92E62BC2200C60D4C /* Embed Frameworks */;
 			membershipExceptions = (
 				LindChain/LLVM.xcframework,
-				LindChain/OpenSSL.xcframework,
 			);
 		};
 		AFF4DBDB2DCA5DEA00B1B5F9 /* Exceptions for "Nyxian" folder in "Embed Libraries" phase from "Nyxian" target */ = {

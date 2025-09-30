@@ -21,7 +21,6 @@
 #import <UIKit/UIKit.h>
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
-#import "serverDelegate.h"
 #import "LindChain/Services/applicationmgmtd/LDEApplicationWorkspaceInternal.h"
 #import <LindChain/litehook/src/litehook.h>
 #import <LindChain/ProcEnvironment/environment.h>
@@ -29,6 +28,7 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Object/FDMapObject.h>
+#import <LindChain/Services/fdsnapshotd/FDSnapshotInternal.h>
 
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
@@ -119,12 +119,12 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *appInfo = LiveProcessHandler.retrievedAppInfo;
     
     // MARK: New API that will overtake the previous one
-    NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
-    NSString* executablePath = appInfo[@"executablePath"];
-    NSString *mode = appInfo[@"mode"];
-    NSDictionary *environmentDictionary = appInfo[@"environment"];
-    NSArray *argumentDictionary = appInfo[@"arguments"];
-    FDMapObject *mapObject = appInfo[@"mapObject"];
+    NSXPCListenerEndpoint* endpoint = appInfo[@"LSEndpoint"];
+    NSString* executablePath = appInfo[@"LSExecutablePath"];
+    NSString *mode = appInfo[@"LSServiceMode"];
+    NSDictionary *environmentDictionary = appInfo[@"LSEnvironment"];
+    NSArray *argumentDictionary = appInfo[@"LSArguments"];
+    FDMapObject *mapObject = appInfo[@"LSMapObject"];
     
     // Setup fd map
     if(mapObject) [mapObject apply_fd_map];
@@ -142,6 +142,11 @@ int LiveProcessMain(int argc, char *argv[]) {
         environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
+    }
+    else if([mode isEqualToString:@"fdsnapshotd"])
+    {
+        environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
+        FDSnapshotDaemonEntry();
     }
     else if([mode isEqualToString:@"spawn"])
     {

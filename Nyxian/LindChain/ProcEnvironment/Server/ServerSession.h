@@ -17,20 +17,21 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SPINLOCK
-#define PROCENVIRONMENT_SPINLOCK
+#ifndef PROCENVIRONMENT_SERVER_SERVERSESSION_H
+#define PROCENVIRONMENT_SERVER_SERVERSESSION_H
 
-#include <stdbool.h>
+#import <Foundation/Foundation.h>
+#import <LindChain/Private/UIKitPrivate.h>
+#import <LindChain/ProcEnvironment/Server/ServerProtocol.h>
 
-typedef struct {
-    volatile int lock;
-    volatile unsigned long seq;
-} spinlock_t;
+@interface ServerSession: NSObject <ServerProtocol>
 
-void spinlock_lock(spinlock_t *s);
-void spinlock_unlock(spinlock_t *s);
-void spinlock_wait_for_unlock(const spinlock_t *s);
-unsigned long spinlock_read_begin(const spinlock_t *s);
-bool spinlock_read_retry(const spinlock_t *s, unsigned long start_seq);
+@property (nonatomic) pid_t processIdentifier;
+@property (nonatomic) dispatch_once_t handoffProcessIdentifierOnce;
+@property (nonatomic) dispatch_once_t handoffSurfaceOnce;
+@property (nonatomic) dispatch_once_t makeWindowVisibleOnce;
+@property (nonatomic) dispatch_once_t sendPortOnce;
 
-#endif /* PROCENVIRONMENT_SPINLOCK */
+@end
+
+#endif /* PROCENVIRONMENT_SERVER_SERVERSESSION_H */

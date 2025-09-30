@@ -19,7 +19,7 @@
 
 #import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Surface/proc.h>
-#include <LindChain/ProcEnvironment/Surface/spinlock.h>
+#include <LindChain/ProcEnvironment/Surface/lock/seqlock.h>
 #import <pthread.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -31,10 +31,9 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
     // Dont use if uninitilized
     if(surface == NULL) return cur;
     
-    unsigned long seq;
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seqlock_read_begin(&(surface->seqlock));
         for(uint32_t i = 0; i < surface->proc_count; i++)
         {
             kinfo_info_surface_t object = surface->proc_info[i];
@@ -45,7 +44,7 @@ kinfo_info_surface_t proc_object_for_pid(pid_t pid)
             }
         }
     }
-    while (spinlock_read_retry(spinface, seq));
+    while (seqlock_read_retry(&(surface->seqlock)));
     return cur;
 }
 
@@ -54,7 +53,7 @@ void proc_object_remove_for_pid(pid_t pid)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    spinlock_lock(spinface);
+    seqlock_lock(&(surface->seqlock));
 
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
@@ -71,7 +70,23 @@ void proc_object_remove_for_pid(pid_t pid)
         }
     }
 
-    spinlock_unlock(spinface);
+    seqlock_unlock(&(surface->seqlock));
+}
+
+BOOL proc_can_spawn(void)
+{
+    BOOL result = NO;
+    
+    // Dont use if uninitilized
+    if(surface == NULL) return result;
+    
+    seqlock_lock(&(surface->seqlock));
+    
+    result = (surface->proc_count < PROC_MAX);
+    
+    seqlock_unlock(&(surface->seqlock));
+    
+    return result;
 }
 
 void proc_object_insert(kinfo_info_surface_t object)
@@ -79,21 +94,21 @@ void proc_object_insert(kinfo_info_surface_t object)
     // Dont use if uninitilized
     if(surface == NULL) return;
     
-    spinlock_lock(spinface);
+    seqlock_lock(&(surface->seqlock));
     
     for(uint32_t i = 0; i < surface->proc_count; i++)
     {
         if(surface->proc_info[i].real.kp_proc.p_pid == object.real.kp_proc.p_pid)
         {
             memcpy(&surface->proc_info[i], &object, sizeof(kinfo_info_surface_t));
-            spinlock_unlock(spinface);
+            seqlock_unlock(&(surface->seqlock));
             return;
         }
     }
     
     memcpy(&surface->proc_info[surface->proc_count++], &object, sizeof(kinfo_info_surface_t));
     
-    spinlock_unlock(spinface);
+    seqlock_unlock(&(surface->seqlock));
 }
 
 kinfo_info_surface_t proc_object_at_index(uint32_t index)
@@ -103,14 +118,13 @@ kinfo_info_surface_t proc_object_at_index(uint32_t index)
     // Dont use if uninitilized
     if(surface == NULL) return cur;
     
-    unsigned long seq;
     do
     {
-        seq = spinlock_read_begin(spinface);
+        seqlock_read_begin(&(surface->seqlock));
         if(index < surface->proc_count)
             cur = surface->proc_info[index];
     }
-    while (spinlock_read_retry(spinface, seq));
+    while (seqlock_read_retry(&(surface->seqlock)));
     return cur;
 }
 
