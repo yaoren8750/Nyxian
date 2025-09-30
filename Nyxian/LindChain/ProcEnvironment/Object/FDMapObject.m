@@ -23,6 +23,13 @@
 
 @implementation FDMapObject
 
++ (instancetype)currentMap
+{
+    FDMapObject *map = [[FDMapObject alloc] init];
+    [map copy_fd_map];
+    return map;
+}
+
 #pragma mark - Copying and applying file descriptor map (Unlike NSFileHandle this is used to transfer entire file descriptor maps)
 
 - (void)copy_fd_map

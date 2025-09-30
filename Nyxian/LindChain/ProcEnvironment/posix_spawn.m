@@ -142,11 +142,7 @@ int environment_posix_spawn(pid_t *process_identifier,
         }
         
         // Create fd map object or take it
-        FDMapObject *mapObject = fa ? (*fa)->mapObject : [[FDMapObject alloc] init];
-        if(!fa)
-        {
-            [mapObject copy_fd_map];
-        }
+        FDMapObject *mapObject = fa ? (*fa)->mapObject : [FDMapObject currentMap];
         
         // Now since we have executable path we execute
         *process_identifier = environment_proxy_spawn_process_at_path([NSString stringWithCString:path encoding:NSUTF8StringEncoding],

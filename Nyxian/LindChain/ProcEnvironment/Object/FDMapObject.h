@@ -49,6 +49,12 @@
 @property (nonatomic) NSObject<OS_xpc_object> *fd_map;
 
 /*!
+ @method currentMap
+ @abstract Returns a instance that is referencing the current FD map of the process.
+ */
++ (instancetype)currentMap;
+
+/*!
  @method copy_fd_map
  @abstract Copies the file descriptor map of the current process.
  @discussion

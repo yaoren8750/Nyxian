@@ -306,8 +306,7 @@
         }
     }
     
-    FDMapObject *mapObject = [[FDMapObject alloc] init];
-    [mapObject copy_fd_map];
+    FDMapObject *mapObject = [FDMapObject currentMap];
     
     LDEProcess *process = nil;
     pid_t pid = [self spawnProcessWithPath:applicationObject.executablePath withArguments:@[applicationObject.executablePath] withEnvironmentVariables:@{

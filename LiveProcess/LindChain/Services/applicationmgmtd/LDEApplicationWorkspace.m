@@ -43,8 +43,7 @@
 
 - (BOOL)execute
 {
-    FDMapObject *mapObject = [[FDMapObject alloc] init];
-    [mapObject copy_fd_map];
+    FDMapObject *mapObject = [FDMapObject currentMap];
     LDEProcessManager *processManager = [LDEProcessManager shared];
     pid_t pid = [processManager spawnProcessWithItems:@{
         @"endpoint": [Server getTicket],
