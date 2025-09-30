@@ -119,12 +119,12 @@ int LiveProcessMain(int argc, char *argv[]) {
     NSDictionary *appInfo = LiveProcessHandler.retrievedAppInfo;
     
     // MARK: New API that will overtake the previous one
-    NSXPCListenerEndpoint* endpoint = appInfo[@"endpoint"];
-    NSString* executablePath = appInfo[@"executablePath"];
-    NSString *mode = appInfo[@"mode"];
-    NSDictionary *environmentDictionary = appInfo[@"environment"];
-    NSArray *argumentDictionary = appInfo[@"arguments"];
-    FDMapObject *mapObject = appInfo[@"mapObject"];
+    NSXPCListenerEndpoint* endpoint = appInfo[@"LSEndpoint"];
+    NSString* executablePath = appInfo[@"LSExecutablePath"];
+    NSString *mode = appInfo[@"LSServiceMode"];
+    NSDictionary *environmentDictionary = appInfo[@"LSEnvironment"];
+    NSArray *argumentDictionary = appInfo[@"LSArguments"];
+    FDMapObject *mapObject = appInfo[@"LSMapObject"];
     
     // Setup fd map
     if(mapObject) [mapObject apply_fd_map];

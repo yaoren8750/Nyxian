@@ -28,7 +28,7 @@ import UIKit
     @objc init(path: String) {
         RevertUI()
         
-        LDEApplicationWorkspace.shared()
+        LaunchServices.shared()
         Bootstrap.shared.bootstrap()
         
         self.path = path

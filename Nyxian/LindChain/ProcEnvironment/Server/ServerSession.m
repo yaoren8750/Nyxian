@@ -38,9 +38,11 @@
         connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
         connection.interruptionHandler = ^{
             NSLog(@"Connection to LDEApplicationWorkspaceProxy interrupted");
+            workspace.proxy = nil;
         };
         connection.invalidationHandler = ^{
             NSLog(@"Connection to LDEApplicationWorkspaceProxy invalidated");
+            workspace.proxy = nil;
         };
         
         [connection activate];

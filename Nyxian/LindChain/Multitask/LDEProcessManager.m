@@ -80,7 +80,7 @@
     if(!proc_can_spawn()) return nil;
     
     self.displayName = @"LiveProcess";
-    self.executablePath = items[@"executablePath"];
+    self.executablePath = items[@"LSExecutablePath"];
     if(self.executablePath == nil) return nil;
     else self.displayName = [[NSURL fileURLWithPath:self.executablePath] lastPathComponent];
     
@@ -149,12 +149,12 @@
            withConfiguration:(LDEProcessConfiguration*)configuration
 {
     self = [self initWithItems:@{
-        @"endpoint": [Server getTicket],
-        @"mode": @"spawn",
-        @"executablePath": binaryPath,
-        @"arguments": arguments,
-        @"environment": environment,
-        @"mapObject": mapObject
+        @"LSEndpoint": [Server getTicket],
+        @"LSServiceMode": @"spawn",
+        @"LSExecutablePath": binaryPath,
+        @"LSArguments": arguments,
+        @"LSEnvironment": environment,
+        @"LSMapObject": mapObject
     } withConfiguration:configuration];
     
     return self;
