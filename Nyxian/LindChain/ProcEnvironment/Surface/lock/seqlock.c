@@ -24,19 +24,19 @@ _Thread_local unsigned long local_seq;
 
 void seqlock_init(seqlock_t *s)
 {
-    spinlock_init(&(s->spinlock));
+    spinlock_init((spinlock_t*)s);
     __atomic_store_n(&s->seq, 0, __ATOMIC_RELAXED);
 }
 
 void seqlock_lock(seqlock_t *s)
 {
-    spinlock_lock(&(s->spinlock));
+    spinlock_lock((spinlock_t*)s);
     __atomic_add_fetch(&s->seq, 1, __ATOMIC_RELEASE);
 }
 
 void seqlock_unlock(seqlock_t *s)
 {
-    spinlock_unlock(&(s->spinlock));
+    spinlock_unlock((spinlock_t*)s);
     __atomic_add_fetch(&s->seq, 1, __ATOMIC_RELEASE);
 }
 

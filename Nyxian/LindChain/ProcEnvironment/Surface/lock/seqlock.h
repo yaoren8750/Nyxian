@@ -41,7 +41,7 @@
  */
 typedef struct {
     /*! Spinlock of the sequence lock, used mainly for robust synchronisation.  */
-    spinlock_t spinlock;
+    unsigned char lock;
     
     /*! Current sequence.  */
     unsigned long seq;
