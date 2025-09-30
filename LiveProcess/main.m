@@ -28,6 +28,7 @@
 #import <LindChain/ProcEnvironment/posix_spawn.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/Object/FDMapObject.h>
+#import <LindChain/Services/fdsnapshotd/FDSnapshotInternal.h>
 
 bool performHookDyldApi(const char* functionName, uint32_t adrpOffset, void** origFunction, void* hookFunction);
 
@@ -141,6 +142,11 @@ int LiveProcessMain(int argc, char *argv[]) {
         environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
         [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
         CFRunLoopRun();
+    }
+    else if([mode isEqualToString:@"fdsnapshotd"])
+    {
+        environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
+        FDSnapshotDaemonEntry();
     }
     else if([mode isEqualToString:@"spawn"])
     {
