@@ -36,11 +36,10 @@ int proc_libproc_listallpids(void *buffer, int buffersize)
     
     size_t n = 0;
     size_t needed_bytes = 0;
-    unsigned long seq;
 
     do
     {
-        seq = spinlock_read_begin(&(surface->spinlock));
+        seqlock_read_begin(&(surface->seqlock));
 
         uint32_t count = surface->proc_count;
         needed_bytes = (size_t)count * sizeof(pid_t);
@@ -56,7 +55,7 @@ int proc_libproc_listallpids(void *buffer, int buffersize)
         }
 
     }
-    while (spinlock_read_retry(&(surface->spinlock), seq));
+    while (seqlock_read_retry(&(surface->seqlock)));
     
     if(buffer == NULL || buffersize == 0)
     {

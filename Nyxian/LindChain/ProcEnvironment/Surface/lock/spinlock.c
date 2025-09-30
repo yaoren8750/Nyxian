@@ -17,20 +17,23 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCENVIRONMENT_SPINLOCK
-#define PROCENVIRONMENT_SPINLOCK
+#include <LindChain/ProcEnvironment/Surface/lock/spinlock.h>
+#include <LindChain/ProcEnvironment/Surface/extra/relax.h>
 
-#include <stdbool.h>
+void spinlock_init(spinlock_t *s)
+{
+    __atomic_store_n(&s->lock, 0, __ATOMIC_RELAXED);
+}
 
-typedef struct {
-    volatile int lock;
-    volatile unsigned long seq;
-} spinlock_t;
+void spinlock_lock(spinlock_t *s)
+{
+    while(__atomic_exchange_n(&s->lock, 1, __ATOMIC_ACQUIRE) == 1)
+    {
+        relax();
+    }
+}
 
-void spinlock_lock(spinlock_t *s);
-void spinlock_unlock(spinlock_t *s);
-void spinlock_wait_for_unlock(const spinlock_t *s);
-unsigned long spinlock_read_begin(const spinlock_t *s);
-bool spinlock_read_retry(const spinlock_t *s, unsigned long start_seq);
-
-#endif /* PROCENVIRONMENT_SPINLOCK */
+void spinlock_unlock(spinlock_t *s)
+{
+    __atomic_store_n(&s->lock, 0, __ATOMIC_RELEASE);
+}

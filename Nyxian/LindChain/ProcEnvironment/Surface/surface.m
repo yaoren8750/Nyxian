@@ -37,10 +37,9 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
     
     size_t needed_bytes = 0;
     int ret = 0;
-    unsigned long seq;
 
     do {
-        seq = spinlock_read_begin(&(surface->spinlock));
+        seqlock_read_begin(&(surface->seqlock));
 
         uint32_t count = surface->proc_count;
         needed_bytes = (size_t)count * sizeof(struct kinfo_proc);
@@ -72,7 +71,8 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 
         ret = (int)needed_bytes;
 
-    } while (spinlock_read_retry(&(surface->spinlock), seq));
+    }
+    while(seqlock_read_retry(&(surface->seqlock)));
 
     return ret;
 }
@@ -92,24 +92,22 @@ MappingPortObject *proc_surface_handoff(void)
 int environment_gethostname(char *buf,
                             size_t bufsize)
 {
-    unsigned long seq;
-
     do
     {
-        seq = spinlock_read_begin(&(surface->spinlock));
+        seqlock_read_begin(&(surface->seqlock));
         strlcpy(buf, surface->hostname, bufsize);
     }
-    while(spinlock_read_retry(&(surface->spinlock), seq));
+    while(seqlock_read_retry(&(surface->seqlock)));
     
     return 0;
 }
 
 void kern_sethostname(NSString *hostname)
 {
-    spinlock_lock(&(surface->spinlock));
+    seqlock_lock(&(surface->seqlock));
     hostname = hostname ?: @"localhost";
     strlcpy(surface->hostname, [hostname UTF8String], MAXHOSTNAMELEN);
-    spinlock_unlock(&(surface->spinlock));
+    seqlock_unlock(&(surface->seqlock));
 }
 
 void proc_surface_init(void)
@@ -131,8 +129,7 @@ void proc_surface_init(void)
             
             
             // Setup spinface
-            surface->spinlock.lock = false;
-            surface->spinlock.seq = 0;
+            seqlock_init(&(surface->seqlock));
         }
         else
         {

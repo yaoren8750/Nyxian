@@ -23,7 +23,7 @@
 #import <Foundation/Foundation.h>
 #include <sys/sysctl.h>
 #include <limits.h>
-#include <LindChain/ProcEnvironment/Surface/spinlock.h>
+#include <LindChain/ProcEnvironment/Surface/lock/seqlock.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
 #import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
 
@@ -109,7 +109,7 @@ typedef struct {
 /// Structure that holds surface information and other structures
 struct surface_map {
     /* Spinlock */
-    spinlock_t spinlock;
+    seqlock_t seqlock;
     
     /* System */
     uint32_t magic;
