@@ -25,30 +25,10 @@
 #import <LindChain/LiveContainer/LCUtils.h>
 #import <LindChain/ProcEnvironment/Surface/permit.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
+#import <LindChain/LaunchServices/LaunchService.h>
 #import <mach/mach.h>
 
 @implementation ServerSession
-
-- (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
-{
-    LDEApplicationWorkspace *workspace = [LDEApplicationWorkspace shared];
-    if(workspace.proxy == nil)
-    {
-        NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
-        connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
-        connection.interruptionHandler = ^{
-            NSLog(@"Connection to LDEApplicationWorkspaceProxy interrupted");
-            workspace.proxy = nil;
-        };
-        connection.invalidationHandler = ^{
-            NSLog(@"Connection to LDEApplicationWorkspaceProxy invalidated");
-            workspace.proxy = nil;
-        };
-        
-        [connection activate];
-        workspace.proxy = [connection remoteObjectProxy];
-    }
-}
 
 /*
  tfp_userspace
@@ -364,6 +344,19 @@
 {
     [object signAndWriteBack];
     reply();
+}
+
+/*
+ Server
+ */
+- (void)setEndpoint:(NSXPCListenerEndpoint*)endpoint forServiceIdentifier:(NSString*)serviceIdentifier
+{
+    [[LaunchServices shared] setEndpoint:endpoint forServiceIdentifier:serviceIdentifier];
+}
+
+- (void)getEndpointOfServiceIdentifier:(NSString*)serviceIdentifier withReply:(void (^)(NSXPCListenerEndpoint *result))reply
+{
+    reply([[LaunchServices shared] getEndpointForServiceIdentifier:serviceIdentifier]);
 }
 
 @end

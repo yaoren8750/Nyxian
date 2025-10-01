@@ -22,22 +22,9 @@
 #import <LindChain/ProcEnvironment/Server/Server.h>
 #import <LindChain/LiveContainer/zip.h>
 #import <LindChain/Multitask/LDEProcessManager.h>
-
-@interface LDEApplicationWorkspace ()
-
-@property (nonatomic,strong,readwrite) LDEProcess *process;
-@property (nonatomic,strong,readwrite) dispatch_semaphore_t sema;
-
-@end
+#import <LindChain/LaunchServices/LaunchService.h>
 
 @implementation LDEApplicationWorkspace
-
-- (instancetype)init
-{
-    self = [super init];
-    _sema = dispatch_semaphore_create(0);
-    return self;
-}
 
 + (LDEApplicationWorkspace*)shared
 {
@@ -51,88 +38,101 @@
 
 - (BOOL)installApplicationAtBundlePath:(NSString*)bundlePath
 {
-    if(!_proxy) return NO;
     __block BOOL result = NO;
     NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
-    if(zipDirectoryAtPath(bundlePath, temporaryPackage, YES)) {
-        [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
+    zipDirectoryAtPath(bundlePath, temporaryPackage, YES);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
             result = replyResult;
-            dispatch_semaphore_signal(self.sema);
+            dispatch_semaphore_signal(sema);
         }];
-        dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-        [[NSFileManager defaultManager] removeItemAtPath:temporaryPackage error:nil];
-    } 
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 
 - (BOOL)installApplicationAtPackagePath:(NSString *)packagePath
 {
-    if(!_proxy) return NO;
     __block BOOL result = NO;
-    [_proxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:packagePath] withReply:^(BOOL replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:packagePath] withReply:^(BOOL replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 
 - (BOOL)deleteApplicationWithBundleID:(NSString *)bundleID
 {
-    if(!_proxy) return NO;
     __block BOOL result = NO;
-    [_proxy deleteApplicationWithBundleID:bundleID withReply:^(BOOL replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy deleteApplicationWithBundleID:bundleID withReply:^(BOOL replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 
 - (BOOL)applicationInstalledWithBundleID:(NSString *)bundleID
 {
-    if(!_proxy) return NO;
     __block BOOL result = NO;
-    [_proxy applicationInstalledWithBundleID:bundleID withReply:^(BOOL replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy applicationInstalledWithBundleID:bundleID withReply:^(BOOL replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 
 - (LDEApplicationObject*)applicationObjectForBundleID:(NSString*)bundleID
 {
-    if(!_proxy) return [[LDEApplicationObject alloc] init];
     __block LDEApplicationObject *result = nil;
-    [_proxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy applicationObjectForBundleID:bundleID withReply:^(LDEApplicationObject *replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 
-- (NSArray<LDEApplicationObject*>*)allApplicationObjects {
-    if (!_proxy) return @[];
+- (NSArray<LDEApplicationObject*>*)allApplicationObjects
+{
     __block NSArray<LDEApplicationObject*> *result = nil;
-    [_proxy allApplicationObjectsWithReply:^(LDEApplicationObjectArray *replyResult) {
-        result = replyResult.applicationObjects;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
-    return result ? result : @[];
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy allApplicationObjectsWithReply:^(LDEApplicationObjectArray *replyResult) {
+            result = replyResult.applicationObjects;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
+    return result;
 }
 
 - (BOOL)clearContainerForBundleID:(NSString *)bundleID
 {
-    if(!_proxy) return NO;
     __block BOOL result = NO;
-    [_proxy clearContainerForBundleID:bundleID withReply:^(BOOL replyResult){
-        result = replyResult;
-        dispatch_semaphore_signal(self.sema);
-    }];
-    dispatch_semaphore_wait(self.sema, DISPATCH_TIME_FOREVER);
+    [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        [remoteProxy clearContainerForBundleID:bundleID withReply:^(BOOL replyResult){
+            result = replyResult;
+            dispatch_semaphore_signal(sema);
+        }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    } byEstablishingConnectionToServiceWithServiceIdentifier:@"com.cr4zy.appmanagementd" compliantToProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
     return result;
 }
 

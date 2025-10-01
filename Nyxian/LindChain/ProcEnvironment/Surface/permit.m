@@ -17,25 +17,50 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/ProcEnvironment/Surface/permit.h>
 #import <LindChain/ProcEnvironment/Surface/entitlement.h>
 
 BOOL permitive_over_process_allowed(pid_t callerPid,
                                     pid_t targetPid)
 {
+    // Only let host proceed
+    environment_must_be_role(EnvironmentRoleHost);
+    
     // Get the objects of both pids
     kinfo_info_surface_t callerObj = proc_object_for_pid(callerPid);
     kinfo_info_surface_t targetObj = proc_object_for_pid(targetPid);
     
     // Gets creds
-    uid_t caller_uid = callerObj.real.kp_eproc.e_ucred.cr_uid;
-    uid_t target_uid = targetObj.real.kp_eproc.e_ucred.cr_uid;
-    uid_t target_ruid = targetObj.real.kp_eproc.e_pcred.p_ruid;
+    uid_t caller_uid = proc_getuid(callerObj);
     
     // Gets if its allowed in the first place
-    BOOL allowed = (caller_uid == 0) ||
-                   (caller_uid == target_uid) ||
-                   (caller_uid == target_ruid);
+    if((caller_uid == 0) ||
+       (caller_uid == proc_getuid(targetObj)) ||
+       (caller_uid == proc_getruid(targetObj))) return YES;
     
-    return (allowed || (callerPid == targetObj.real.kp_eproc.e_ppid && proc_got_entitlement(callerPid, PEEntitlementChildSupervisor)));
+    // Check if process has `PEEntitlementChildSupervisor`
+    if(!entitlement_got_entitlement(proc_getentitlements(callerObj), PEEntitlementChildSupervisor)) return NO;
+    
+    // Since it got `PEEntitlementChildSupervisor`, we need to walk in the process tree
+    pid_t kern_pid = getpid();
+    while(1)
+    {
+        // Get ppid of target pid
+        targetObj = proc_object_for_pid(targetPid);
+        
+        // Get ppid
+        pid_t ppid = proc_getppid(targetObj);
+        
+        // In case ppid is kern_pid it is automatically a NO and if ppid is callerPid then its a yes because thats power over child process tree as a parent in the tree
+        if(ppid == 0 || ppid == kern_pid)
+            return NO;
+        else if(ppid == callerPid)
+            return YES;
+        
+        // This time not so we set targetPid to ppid
+        targetPid = ppid;
+    }
+    
+    return NO;
 }

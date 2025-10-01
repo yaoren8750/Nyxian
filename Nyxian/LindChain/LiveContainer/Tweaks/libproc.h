@@ -30,7 +30,65 @@
 #include <sys/mount.h>
 #include <stdint.h>
 
-#include "./proc_info.h"
+#include <LindChain/LiveContainer/Tweaks/proc_info.h>
+
+#ifndef PROC_PIDTASKINFO
+#define PROC_PIDTASKINFO     4
+#endif
+#ifndef PROC_PIDTASKALLINFO
+#define PROC_PIDTASKALLINFO  2
+#endif
+
+struct proc_taskinfo {
+    uint64_t        pti_virtual_size;
+    uint64_t        pti_resident_size;
+    uint64_t        pti_total_user;
+    uint64_t        pti_total_system;
+    uint64_t        pti_threads_user;
+    uint64_t        pti_threads_system;
+    int32_t         pti_policy;
+    int32_t         pti_faults;
+    int32_t         pti_pageins;
+    int32_t         pti_cow_faults;
+    int32_t         pti_messages_sent;
+    int32_t         pti_messages_received;
+    int32_t         pti_syscalls_mach;
+    int32_t         pti_syscalls_unix;
+    int32_t         pti_csw;
+    int32_t         pti_threadnum;
+    int32_t         pti_numrunning;
+    int32_t         pti_priority;
+};
+
+struct proc_bsdinfo {
+    uint32_t        pbi_flags;        /* 64bit; emulated etc */
+    uint32_t        pbi_status;
+    uint32_t        pbi_xstatus;
+    uint32_t        pbi_pid;
+    uint32_t        pbi_ppid;
+    uid_t            pbi_uid;
+    gid_t            pbi_gid;
+    uid_t            pbi_ruid;
+    gid_t            pbi_rgid;
+    uid_t            pbi_svuid;
+    gid_t            pbi_svgid;
+    uint32_t        rfu_1;            /* reserved */
+    char            pbi_comm[MAXCOMLEN];
+    char            pbi_name[2*MAXCOMLEN];    /* empty if no name is registered */
+    uint32_t        pbi_nfiles;
+    uint32_t        pbi_pgid;
+    uint32_t        pbi_pjobc;
+    uint32_t        e_tdev;            /* controlling tty dev */
+    uint32_t        e_tpgid;        /* tty process group id */
+    int32_t            pbi_nice;
+    uint64_t        pbi_start_tvsec;
+    uint64_t        pbi_start_tvusec;
+};
+
+struct proc_taskallinfo {
+    struct proc_bsdinfo   pbsd;
+    struct proc_taskinfo  ptinfo;
+};
 
 /*
  * This header file contains private interfaces to obtain process information.

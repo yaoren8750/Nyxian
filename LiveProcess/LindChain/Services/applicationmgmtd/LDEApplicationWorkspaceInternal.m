@@ -18,6 +18,7 @@
 */
 
 #import "LDEApplicationWorkspaceInternal.h"
+#import <LindChain/ProcEnvironment/environment.h>
 #import <LindChain/LiveContainer/zip.h>
 #import <Security/Security.h>
 
@@ -306,7 +307,8 @@ bool checkCodeSignature(const char* path);
 
 @end
 
-NSXPCListenerEndpoint *getLDEApplicationWorkspaceProxyEndpoint(void)
+void ApplicationManagementDaemonEntry(void)
 {
-    return [[LDEServerManager sharedManager] getEndpointForNewConnections];
+    environment_proxy_set_endpoint_for_service_identifier([[LDEServerManager sharedManager] getEndpointForNewConnections], @"com.cr4zy.appmanagementd");
+    CFRunLoopRun();
 }

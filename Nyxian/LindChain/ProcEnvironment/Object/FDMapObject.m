@@ -83,6 +83,20 @@
     });
 }
 
+// MARK: Experiment for fdsnapshot
+- (void)swapFDTable
+{
+    // Idea is that fdsnapshotd is getting this and is swapping it to its own ownership basically
+    if (!_fd_map) return;
+    xpc_array_apply(_fd_map, ^bool(size_t index, xpc_object_t entry){
+        int incoming_fd = xpc_dictionary_dup_fd(entry, "actual_fd");
+        xpc_dictionary_set_fd(entry, "actual_fd", incoming_fd);
+        close(incoming_fd);
+
+        return true;
+    });
+}
+
 #pragma mark - Handling file descriptors without affecting host (Used by fork() and posix_spawn() fix for example)
 
 // TODO: Only handle them as xpc dictionaries on encoding and decoding (will save power and time later on)

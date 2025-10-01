@@ -27,9 +27,20 @@
 
 @property (nonatomic,strong) LDEProcess *process;
 @property (nonatomic,strong) NSDictionary *dictionary;
-@property (nonatomic,readonly) BOOL autorestart;
+@property (nonatomic,strong) NSXPCListenerEndpoint *endpoint;
 
 - (instancetype)initWithPlistPath:(NSString*)plistPath;
+
+- (NSString*)serviceIdentifier;
+- (BOOL)isServiceWithServiceIdentifier:(NSString*)serviceIdentifier;
+- (BOOL)shouldAutorestart;
+- (NSString*)executablePath;
+- (NSString*)serviceMode;
+
+- (uid_t)userIdentifier;
+- (gid_t)groupIdentifier;
+
+- (NSString*)integratedServiceName;
 
 @end
 
@@ -39,6 +50,10 @@
 
 - (instancetype)init;
 + (instancetype)shared;
+
+- (NSXPCListenerEndpoint*)getEndpointForServiceIdentifier:(NSString*)serviceIdentifier;
+- (void)setEndpoint:(NSXPCListenerEndpoint*)endpoint forServiceIdentifier:(NSString*)serviceIdentifier;
+- (void)execute:(void (^)(NSObject *remoteProxy))block byEstablishingConnectionToServiceWithServiceIdentifier:(NSString *)serviceIdentifier compliantToProtocol:(Protocol *)protocol;
 
 @end
 

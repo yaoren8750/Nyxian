@@ -131,6 +131,7 @@
                         proc_object_remove_for_pid(strongSelf.pid);
                         [[LDEMultitaskManager shared] closeWindowForProcessIdentifier:strongSelf.pid];
                         [[LDEProcessManager shared] unregisterProcessWithProcessIdentifier:strongSelf.pid];
+                        if(strongSelf.exitingCallback) strongSelf.exitingCallback();
                     });
                 }
             }];
@@ -206,6 +207,11 @@
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback
 {
     [_extension setRequestInterruptionBlock:callback];
+}
+
+- (void)setExitingCallback:(void(^)(void))callback
+{
+    _exitingCallback = callback;
 }
 
 @end

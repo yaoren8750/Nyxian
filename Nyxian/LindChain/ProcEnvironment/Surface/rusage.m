@@ -17,6 +17,7 @@
  along with Nyxian. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#import <LindChain/LiveContainer/Tweaks/libproc.h>
 #import <LindChain/ProcEnvironment/Surface/surface.h>
 #import <LindChain/ProcEnvironment/libproc.h>
 #import <LindChain/ProcEnvironment/tfp.h>

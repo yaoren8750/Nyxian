@@ -83,6 +83,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 /// Returns a process surface file handle to perform a handoff over XPC
 MappingPortObject *proc_surface_handoff(void)
 {
+    environment_must_be_role(EnvironmentRoleHost);
     return [[MappingPortObject alloc] initWithAddr:surface withSize:sizeof(surface_map_t) withProt:VM_PROT_READ];
 }
 
