@@ -31,23 +31,24 @@
 
 - (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint
 {
+    // TODO: Implement
     LDEApplicationWorkspace *workspace = [LDEApplicationWorkspace shared];
-    if(workspace.proxy == nil)
-    {
+    //if(workspace.proxy == nil)
+    //{
         NSXPCConnection* connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
         connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(LDEApplicationWorkspaceProxyProtocol)];
         connection.interruptionHandler = ^{
             NSLog(@"Connection to LDEApplicationWorkspaceProxy interrupted");
-            workspace.proxy = nil;
+            //workspace.proxy = nil;
         };
         connection.invalidationHandler = ^{
             NSLog(@"Connection to LDEApplicationWorkspaceProxy invalidated");
-            workspace.proxy = nil;
+            //workspace.proxy = nil;
         };
         
         [connection activate];
         workspace.proxy = [connection remoteObjectProxy];
-    }
+    //}
 }
 
 /*

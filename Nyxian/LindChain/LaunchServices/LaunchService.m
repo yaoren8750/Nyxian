@@ -59,12 +59,7 @@
     if(_autorestart)
     {
         __weak typeof(self) weakSelf = self;
-        [_process setRequestCancellationBlock:^(NSUUID *identifier, NSError *error){
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [weakSelf ignition];
-            });
-        }];
-        [_process setRequestInterruptionBlock:^(NSUUID *identifier){
+        [_process setExitingCallback:^{
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [weakSelf ignition];
             });

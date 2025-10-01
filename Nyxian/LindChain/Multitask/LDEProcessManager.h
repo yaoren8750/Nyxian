@@ -75,8 +75,7 @@
 @property (nonatomic) dispatch_once_t removeOnce;
 
 // Callback
-@property (nonatomic, copy) void (^cancellationCallback)(NSUUID *uuid, NSError *error);
-@property (nonatomic, copy) void (^interruptionCallback)(NSUUID *uuid);
+@property (nonatomic, copy) void (^exitingCallback)(void);
 
 - (instancetype)initWithItems:(NSDictionary*)items withConfiguration:(LDEProcessConfiguration*)configuration;
 - (instancetype)initWithPath:(NSString*)binaryPath withArguments:(NSArray *)arguments withEnvironmentVariables:(NSDictionary*)environment withMapObject:(FDMapObject*)mapObject withConfiguration:(LDEProcessConfiguration*)configuration;
@@ -88,6 +87,7 @@
 
 - (void)setRequestCancellationBlock:(void(^)(NSUUID *uuid, NSError *error))callback;
 - (void)setRequestInterruptionBlock:(void(^)(NSUUID *uuid))callback;
+- (void)setExitingCallback:(void(^)(void))callback;
 
 @end
 
