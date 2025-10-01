@@ -45,7 +45,7 @@ kern_return_t mach_vm_map(
     kern_return_t kr = mach_make_memory_entry_64(mach_task_self(),
                                                  &entry_len,
                                                  (mach_vm_address_t)addr,
-                                                 VM_PROT_READ | MAP_MEM_VM_SHARE,
+                                                 prot | MAP_MEM_VM_SHARE,
                                                  &memport,
                                                  MACH_PORT_NULL);
     
