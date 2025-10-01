@@ -40,6 +40,7 @@
 {
     __block BOOL result = NO;
     NSString *temporaryPackage = [NSString stringWithFormat:@"%@%@.ipa", NSTemporaryDirectory(), [[NSUUID UUID] UUIDString]];
+    zipDirectoryAtPath(bundlePath, temporaryPackage, YES);
     [[LaunchServices shared] execute:^(NSObject<LDEApplicationWorkspaceProxyProtocol> *remoteProxy){
         dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         [remoteProxy installApplicationAtBundlePath:[NSFileHandle fileHandleForReadingAtPath:temporaryPackage] withReply:^(BOOL replyResult){
