@@ -38,14 +38,17 @@
 - (void)ignition
 {
     // Spawn process
-    NSNumber *userIdentifierObject = [_dictionary objectForKey:@"LDEUserIdentifier"];
-    NSNumber *groupIdentifierObject = [_dictionary objectForKey:@"LDEGroupIdentifier"];
+    NSNumber *userIdentifierObject = [_dictionary objectForKey:@"LSUserIdentifier"];
+    NSNumber *groupIdentifierObject = [_dictionary objectForKey:@"LSGroupIdentifier"];
+    
+    uid_t userIdentifier = (userIdentifierObject == nil) ? 501 : userIdentifierObject.unsignedIntValue;
+    gid_t groupIdentifier = (groupIdentifierObject == nil) ? 501 : groupIdentifierObject.unsignedIntValue;
     
     NSMutableDictionary *mutableDictionary = [_dictionary mutableCopy];
     [mutableDictionary setObject:[Server getTicket] forKey:@"LSEndpoint"];
     [mutableDictionary setObject:[FDMapObject currentMap] forKey:@"LSFDMapObject"];
     
-    pid_t pid = [[LDEProcessManager shared] spawnProcessWithItems:[mutableDictionary copy] withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:(userIdentifierObject == nil) ? 501: userIdentifierObject.unsignedIntValue withGroupIdentifier:(groupIdentifierObject != nil) ? 501 : groupIdentifierObject.unsignedIntValue withEntitlements:PEEntitlementDefaultSystemApplication]];
+    pid_t pid = [[LDEProcessManager shared] spawnProcessWithItems:[mutableDictionary copy] withConfiguration:[[LDEProcessConfiguration alloc] initWithParentProcessIdentifier:getpid() withUserIdentifier:userIdentifier withGroupIdentifier:groupIdentifier withEntitlements:PEEntitlementDefaultSystemApplication]];
     if(pid == 0) [self ignition];
     
     // Get process
