@@ -35,9 +35,6 @@ extern NSObject<ServerProtocol> *hostProcessProxy;
 
 // MARK: Helper symbols that are intended stabilizing the proc environment api proxy wise and reduce the amount of deadlocking in the future
 
-/// Sets the endpoint of applicationmgmtd in the host application, so it can manage applications and such
-void environment_proxy_set_ldeapplicationworkspace_endpoint(NSXPCListenerEndpoint *endpoint);
-
 /// Sends a task port to the host application to hand it to other requesting processes
 void environment_proxy_tfp_send_port_object(MachPortObject *port) API_AVAILABLE(ios(26.0));
 
@@ -82,5 +79,9 @@ int environment_proxy_setrgid(gid_t gid);
 
 /// Signs a MachO at a given path
 void environment_proxy_sign_macho(NSString *path);
+
+void environment_proxy_set_endpoint_for_service_identifier(NSXPCListenerEndpoint *endpoint, NSString *serviceIdentifier);
+
+NSXPCListenerEndpoint *environment_proxy_get_endpoint_for_service_identifier(NSString *serviceIdentifier);
 
 #endif /* PROCENVIRONMENT_PROXY_H */

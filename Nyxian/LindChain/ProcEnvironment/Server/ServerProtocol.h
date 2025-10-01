@@ -42,11 +42,6 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
 @protocol ServerProtocol
 
 /*
- sets lde application workspace endpoint
- */
-- (void)setLDEApplicationWorkspaceEndPoint:(NSXPCListenerEndpoint*)endpoint;
-
-/*
  tfp_userspace
  */
 - (void)sendPort:(MachPortObject*)machPort API_AVAILABLE(ios(26.0));
@@ -88,6 +83,12 @@ typedef NS_OPTIONS(uint64_t, CredentialSet) {
  Signer
  */
 - (void)signMachO:(MachOObject*)object withReply:(void (^)(void))reply;
+
+/*
+ Launch Services
+ */
+- (void)setEndpoint:(NSXPCListenerEndpoint*)endpoint forServiceIdentifier:(NSString*)serviceIdentifier;
+- (void)getEndpointOfServiceIdentifier:(NSString*)serviceIdentifier withReply:(void (^)(NSXPCListenerEndpoint *result))reply;
 
 @end
 

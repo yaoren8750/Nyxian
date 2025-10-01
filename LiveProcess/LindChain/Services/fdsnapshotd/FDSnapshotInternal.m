@@ -18,6 +18,9 @@
 */
 
 #import <Foundation/Foundation.h>
+#import <LindChain/ProcEnvironment/Object/FDMapObject.h>
+
+
 
 void FDSnapshotDaemonEntry(void)
 {

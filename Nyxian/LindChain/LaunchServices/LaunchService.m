@@ -27,8 +27,6 @@
 {
     self = [super init];
     _dictionary = [NSDictionary dictionaryWithContentsOfFile:plistPath];
-    NSNumber *num = [_dictionary valueForKey:@"LSShouldAutorestart"];
-    _autorestart = (num == nil) ? NO : num.boolValue;
     
     [self ignition];
     
@@ -56,7 +54,7 @@
     if(_process == nil) [self ignition];
     
     // Now assign handlers
-    if(_autorestart)
+    if([self shouldAutorestart])
     {
         __weak typeof(self) weakSelf = self;
         [_process setExitingCallback:^{
@@ -65,6 +63,61 @@
             });
         }];
     }
+}
+
+- (NSString*)serviceIdentifier
+{
+    NSString *serviceIdentifier = [[self dictionary] objectForKey:@"LSServiceIdentifier"];
+    if(!serviceIdentifier) serviceIdentifier = @"no-service";
+    return serviceIdentifier;
+}
+
+- (BOOL)isServiceWithServiceIdentifier:(NSString *)serviceIdentifier
+{
+    NSString *mustMatchServiceIdentifier = [[self dictionary] objectForKey:@"LSServiceIdentifier"];
+    if(!serviceIdentifier || !mustMatchServiceIdentifier || ![mustMatchServiceIdentifier isEqualToString:serviceIdentifier])
+        return NO;
+    else
+        return YES;
+}
+
+- (BOOL)shouldAutorestart
+{
+    NSNumber *num = [_dictionary valueForKey:@"LSShouldAutorestart"];
+    return (num == nil) ? NO : num.boolValue;
+}
+
+- (NSString*)executablePath
+{
+    NSString *executablePath = [[self dictionary] objectForKey:@"LSExecutablePath"];
+    if(!executablePath) executablePath = @"no-exec-path";
+    return executablePath;
+}
+
+- (NSString*)serviceMode
+{
+    NSString *serviceMode = [[self dictionary] objectForKey:@"LSServiceMode"];
+    if(!serviceMode) serviceMode = @"no-service-mode";
+    return serviceMode;
+}
+
+- (uid_t)userIdentifier
+{
+    NSNumber *userIdentifierObject = [_dictionary objectForKey:@"LSUserIdentifier"];
+    return (userIdentifierObject == nil) ? 501 : userIdentifierObject.unsignedIntValue;
+}
+
+- (gid_t)groupIdentifier
+{
+    NSNumber *groupIdentifierObject = [_dictionary objectForKey:@"LSGroupIdentifier"];
+    return (groupIdentifierObject == nil) ? 501 : groupIdentifierObject.unsignedIntValue;
+}
+
+- (NSString*)integratedServiceName
+{
+    NSString *integratedServiceName = [[self dictionary] objectForKey:@"LSIntegratedServiceName"];
+    if(!integratedServiceName) integratedServiceName = @"no-service-name";
+    return integratedServiceName;
 }
 
 @end
@@ -96,6 +149,47 @@
         launchServicesSingleton = [[LaunchServices alloc] init];
     });
     return launchServicesSingleton;
+}
+
+- (NSXPCListenerEndpoint*)getEndpointForServiceIdentifier:(NSString *)serviceIdentifier
+{
+    for(LaunchService *ls in _launchServices)
+    {
+        if([ls isServiceWithServiceIdentifier:serviceIdentifier])
+        {
+            return [ls endpoint];
+        }
+    }
+    return nil;
+}
+
+- (void)setEndpoint:(NSXPCListenerEndpoint *)endpoint forServiceIdentifier:(NSString *)serviceIdentifier
+{
+    for(LaunchService *ls in _launchServices)
+    {
+        if([ls isServiceWithServiceIdentifier:serviceIdentifier])
+        {
+            ls.endpoint = endpoint;
+        }
+    }
+}
+
+- (void)execute:(void (^)(NSObject *remoteProxy))block byEstablishingConnectionToServiceWithServiceIdentifier:(NSString *)serviceIdentifier compliantToProtocol:(Protocol *)protocol
+{
+    // Get endpoint
+    NSXPCListenerEndpoint *endpoint = [self getEndpointForServiceIdentifier:serviceIdentifier];
+    if(endpoint == nil) return;
+    
+    // Establish connection
+    NSXPCConnection *connection = [[NSXPCConnection alloc] initWithListenerEndpoint:endpoint];
+    connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:protocol];
+    [connection activate];
+    
+    // Execute block
+    block([connection remoteObjectProxy]);
+    
+    // Invalidate after usage
+    [connection invalidate];
 }
 
 @end

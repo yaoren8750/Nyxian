@@ -143,7 +143,7 @@ int LiveProcessMain(int argc, char *argv[]) {
         environment_init(EnvironmentRoleGuest, EnvironmentExecCustom, nil, 0, nil);
         if([service isEqualToString:@"appmanagementd"])
         {
-            [hostProcessProxy setLDEApplicationWorkspaceEndPoint:getLDEApplicationWorkspaceProxyEndpoint()];
+            environment_proxy_set_endpoint_for_service_identifier(getLDEApplicationWorkspaceProxyEndpoint(), @"com.cr4zy.appmanagementd");
             CFRunLoopRun();
         }
         else if([service isEqualToString:@"fdsnapshotd"])
