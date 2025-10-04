@@ -59,23 +59,8 @@ pid_t environment_proxy_spawn_process_at_path(NSString *path, NSArray *arguments
 /// Returns the proc surfaces handle
 MappingPortObject *environment_proxy_get_surface_mapping(void);
 
-/// Sets user identifier
-int environment_proxy_setuid(uid_t uid);
-
-/// Sets group identifier
-int environment_proxy_setgid(gid_t gid);
-
-/// Sets effective user identifier
-int environment_proxy_seteuid(uid_t uid);
-
-/// Sets effective group identifier
-int environment_proxy_setegid(gid_t gid);
-
-/// Sets real user identifier
-int environment_proxy_setruid(uid_t uid);
-
-/// Sets real group identifier
-int environment_proxy_setrgid(gid_t gid);
+/// Sets process credential
+int environment_proxy_setcred(CredentialSet credentialSet, uint32_t uid);
 
 /// Signs a MachO at a given path
 void environment_proxy_sign_macho(NSString *path);
