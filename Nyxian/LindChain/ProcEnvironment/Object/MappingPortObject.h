@@ -27,13 +27,18 @@
 
 @interface MappingPortObject : MachPortObject
 
+@property (nonatomic) void *addr;
+@property (nonatomic) BOOL isMapped;
 @property (nonatomic) vm_prot_t prot;
 @property (nonatomic) size_t size;
 
 - (instancetype)initWithAddr:(void*)addr withSize:(size_t)size withProt:(vm_prot_t)prot;
+- (instancetype)initWithSize:(size_t)size withProt:(vm_prot_t)prot;
 
 - (void*)map;
-- (void*)mapAndDestroy;
+
+- (instancetype)copy;
+- (instancetype)copyWithProt:(vm_prot_t)prot;
 
 @end
 

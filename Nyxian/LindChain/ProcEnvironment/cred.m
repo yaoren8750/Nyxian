@@ -23,30 +23,57 @@
 
 DEFINE_HOOK(getuid, uid_t, (void))
 {
-    // Get proc
-    kinfo_info_surface_t object = proc_object_for_pid(getpid());
-    return object.real.kp_eproc.e_ucred.cr_uid;
+    return proc_getuid(proc_object_for_pid(getpid()));
 }
 
 DEFINE_HOOK(getgid, uid_t, (void))
 {
-    // Get proc
-    kinfo_info_surface_t object = proc_object_for_pid(getpid());
-    return object.real.kp_eproc.e_ucred.cr_groups[0];
+    return proc_getgid(proc_object_for_pid(getpid()));
 }
 
 DEFINE_HOOK(geteuid, uid_t, (void))
 {
-    // Get proc
-    kinfo_info_surface_t object = proc_object_for_pid(getpid());
-    return object.real.kp_eproc.e_ucred.cr_uid;
+    return proc_getuid(proc_object_for_pid(getpid()));
 }
 
 DEFINE_HOOK(getegid, uid_t, (void))
 {
-    // Get proc
-    kinfo_info_surface_t object = proc_object_for_pid(getpid());
-    return object.real.kp_eproc.e_ucred.cr_groups[0];
+    return proc_getgid(proc_object_for_pid(getpid()));
+}
+
+DEFINE_HOOK(getppid, pid_t, (void))
+{
+    return proc_getppid(proc_object_for_pid(getpid()));
+}
+
+DEFINE_HOOK(setuid, int, (uid_t uid))
+{
+    return environment_proxy_setcred(CredentialSetUID, uid);
+}
+
+DEFINE_HOOK(seteuid, int, (uid_t uid))
+{
+    return environment_proxy_setcred(CredentialSetEUID, uid);
+}
+
+DEFINE_HOOK(setruid, int, (uid_t uid))
+{
+    return environment_proxy_setcred(CredentialSetRUID, uid);
+}
+
+DEFINE_HOOK(setgid, int, (gid_t gid))
+{
+    return environment_proxy_setcred(CredentialSetGID, gid);
+}
+
+DEFINE_HOOK(setegid, int, (gid_t gid))
+{
+    return environment_proxy_setcred(CredentialSetEGID, gid);
+}
+
+DEFINE_HOOK(setrgid, int, (gid_t gid))
+{
+    return environment_proxy_setcred(CredentialSetEGID, gid);
 }
 
 void environment_cred_init(void)
@@ -60,15 +87,13 @@ void environment_cred_init(void)
             DO_HOOK_GLOBAL(getgid);
             DO_HOOK_GLOBAL(geteuid);
             DO_HOOK_GLOBAL(getegid);
-            
-            
-            // Setting credentials
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, setuid, environment_proxy_setuid, nil);
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, setgid, environment_proxy_setgid, nil);
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, seteuid, environment_proxy_seteuid, nil);
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, seteuid, environment_proxy_setegid, nil);
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, setruid, environment_proxy_setruid, nil);
-            litehook_rebind_symbol(LITEHOOK_REBIND_GLOBAL, setruid, environment_proxy_setrgid, nil);
+            DO_HOOK_GLOBAL(getppid);
+            DO_HOOK_GLOBAL(setuid);
+            DO_HOOK_GLOBAL(setgid);
+            DO_HOOK_GLOBAL(setruid);
+            DO_HOOK_GLOBAL(setrgid);
+            DO_HOOK_GLOBAL(seteuid);
+            DO_HOOK_GLOBAL(setegid);
         }
     });
 }

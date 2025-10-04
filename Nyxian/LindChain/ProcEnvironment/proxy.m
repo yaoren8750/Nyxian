@@ -204,61 +204,12 @@ MappingPortObject *environment_proxy_get_surface_mapping(void)
     });
 }
 
-int environment_proxy_setuid(uid_t uid)
+int environment_proxy_setcred(CredentialSet credentialSet,
+                              uint32_t uid)
 {
     environment_must_be_role(EnvironmentRoleGuest);
     int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetUID withIdentifier:uid withReply:reply];
-    });
-    if(ret == -1) errno = EPERM;
-    return ret;
-}
-
-int environment_proxy_setgid(gid_t gid)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetGID withIdentifier:gid withReply:reply];
-    });
-    if(ret == -1) errno = EPERM;
-    return ret;
-}
-
-int environment_proxy_seteuid(uid_t uid)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetEUID withIdentifier:uid withReply:reply];
-    });
-    if(ret == -1) errno = EPERM;
-    return ret;
-}
-
-int environment_proxy_setegid(gid_t gid)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetEGID withIdentifier:gid withReply:reply];
-    });
-    if(ret == -1) errno = EPERM;
-    return ret;
-}
-
-int environment_proxy_setruid(uid_t uid)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetRUID withIdentifier:uid withReply:reply];
-    });
-    if(ret == -1) errno = EPERM;
-    return ret;
-}
-
-int environment_proxy_setrgid(gid_t gid)
-{
-    environment_must_be_role(EnvironmentRoleGuest);
-    int ret = sync_call_with_timeout_int(PROXY_TYPE_REPLY(int){
-        [hostProcessProxy setCredentialWithOption:CredentialSetRGID withIdentifier:gid withReply:reply];
+        [hostProcessProxy setCredentialWithOption:credentialSet withIdentifier:uid withReply:reply];
     });
     if(ret == -1) errno = EPERM;
     return ret;
