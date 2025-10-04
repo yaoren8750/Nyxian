@@ -28,6 +28,7 @@
 #import <mach-o/dyld.h>
 
 surface_map_t *surface = NULL;
+static MappingPortObject *surfaceMappingPortObject = NULL;
 
 /* sysctl */
 int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
@@ -84,7 +85,7 @@ int proc_sysctl_listproc(void *buffer, size_t buffersize, size_t *needed_out)
 MappingPortObject *proc_surface_handoff(void)
 {
     environment_must_be_role(EnvironmentRoleHost);
-    return [[MappingPortObject alloc] initWithAddr:surface withSize:sizeof(surface_map_t) withProt:VM_PROT_READ];
+    return [surfaceMappingPortObject copyWithProt:VM_PROT_READ];
 }
 
 /*
@@ -118,7 +119,8 @@ void proc_surface_init(void)
         if(environment_is_role(EnvironmentRoleHost))
         {
             // Allocate surface and spinface
-            surface = mmap(NULL, sizeof(surface_map_t), PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+            surfaceMappingPortObject = [[MappingPortObject alloc] initWithSize:sizeof(surface_map_t) withProt:VM_PROT_READ | VM_PROT_WRITE];
+            surface = surfaceMappingPortObject.addr;
             
             // Setup surface
             surface->magic = SURFACE_MAGIC;
@@ -140,7 +142,7 @@ void proc_surface_init(void)
             if(surfaceMapObject != nil)
             {
                 // Now map em
-                void *surfacePtr = [surfaceMapObject mapAndDestroy];
+                void *surfacePtr = [surfaceMapObject map];
                 
                 if(surfacePtr != MAP_FAILED)
                 {

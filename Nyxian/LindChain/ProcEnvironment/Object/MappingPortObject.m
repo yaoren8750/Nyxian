@@ -18,6 +18,7 @@
 */
 
 #import <LindChain/ProcEnvironment/Object/MappingPortObject.h>
+#include <sys/mman.h>
 
 kern_return_t mach_vm_map(
     vm_map_t                target,
@@ -52,9 +53,18 @@ kern_return_t mach_vm_map(
     if(kr != KERN_SUCCESS) return nil;
     
     self = [super initWithPort:memport];
+    self.addr = addr;
     self.prot = prot;
     self.size = size;
+    self.isMapped = YES;
     return self;
+}
+
+- (instancetype)initWithSize:(size_t)size
+                    withProt:(vm_prot_t)prot
+{
+    void *addr = mmap(NULL, size, prot, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    return (addr == MAP_FAILED) ? nil : [self initWithAddr:addr withSize:size withProt:prot];
 }
 
 - (void*)map
@@ -75,11 +85,14 @@ kern_return_t mach_vm_map(
     return (void*)addr;
 }
 
-- (void*)mapAndDestroy
+- (instancetype)copy
 {
-    void *ptr = [self map];
-    mach_port_deallocate(mach_task_self(), self.port);
-    return ptr;
+    return [self copyWithProt:_prot];
+}
+
+- (instancetype)copyWithProt:(vm_prot_t)prot
+{
+    return self.isMapped ? [[MappingPortObject alloc] initWithAddr:_addr withSize:_size withProt:prot] : nil;
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder
