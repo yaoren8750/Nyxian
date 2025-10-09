@@ -32,6 +32,7 @@
 @property (nonatomic, strong) CADisplayLink *resizeDisplayLink;
 @property (nonatomic, strong) NSTimer *resizeEndDebounceTimer;
 @property (nonatomic, strong) NSTimer *backgroundEnforcementTimer;
+@property (atomic) int resizeEndDebounceRefCnt;
 
 @end
 
@@ -47,6 +48,7 @@
     self.delegate = delegate;
     self.scaleRatio = 1.0;
     self.process = process;
+    _resizeEndDebounceRefCnt = 0;
     [self setUpAppPresenter];
     return self;
 }
@@ -222,19 +224,32 @@
 
 - (void)resizeActionStart
 {
-    [self.resizeEndDebounceTimer invalidate];
-    self.resizeEndDebounceTimer = nil;
-    self.resizeDisplayLink.paused = NO;
+    if(_resizeEndDebounceRefCnt == 0)
+    {
+        [self.resizeEndDebounceTimer invalidate];
+        self.resizeEndDebounceTimer = nil;
+        self.resizeDisplayLink.paused = NO;
+    }
+    
+    _resizeEndDebounceRefCnt += 1;
 }
 
 - (void)resizeActionEnd
 {
-    [self.resizeEndDebounceTimer invalidate];
-    __weak typeof(self) weakSelf = self;
-    self.resizeEndDebounceTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:NO block:^(NSTimer * _Nonnull timer) {
-        weakSelf.resizeDisplayLink.paused = YES;
-        weakSelf.resizeEndDebounceTimer = nil;
-    }];
+    if(_resizeEndDebounceRefCnt == 0)
+        return;
+    else
+        _resizeEndDebounceRefCnt -= 1;
+    
+    if(_resizeEndDebounceRefCnt == 0)
+    {
+        [self.resizeEndDebounceTimer invalidate];
+        __weak typeof(self) weakSelf = self;
+        self.resizeEndDebounceTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:NO block:^(NSTimer * _Nonnull timer) {
+            weakSelf.resizeDisplayLink.paused = YES;
+            weakSelf.resizeEndDebounceTimer = nil;
+        }];
+    }
 }
 
 - (void)setForegroundEnabled:(BOOL)foreground

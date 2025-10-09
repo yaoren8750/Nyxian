@@ -482,8 +482,9 @@ void UIKitFixesInit(void) {
 - (void)appSceneVC:(LDEAppScene*)vc didUpdateFromSettings:(UIMutableApplicationSceneSettings *)baseSettings transitionContext:(id)newContext {
     UIMutableApplicationSceneSettings *newSettings = [vc.presenter.scene.settings mutableCopy];
     newSettings.userInterfaceStyle = baseSettings.userInterfaceStyle;
-    //newSettings.interfaceOrientation = baseSettings.interfaceOrientation;
-    //newSettings.deviceOrientation = baseSettings.deviceOrientation;
+    newSettings.interfaceOrientation = baseSettings.interfaceOrientation;
+    newSettings.deviceOrientation = baseSettings.deviceOrientation;
+    
     //newSettings.foreground = YES;
     
     /*if(self.isMaximized) {
@@ -498,6 +499,9 @@ void UIKitFixesInit(void) {
     } else {
         newSettings.frame = CGRectMake(0, 0, newFrame.size.width, newFrame.size.height);
     }*/
+    
+    [self.appSceneVC resizeActionStart];
+    [self.appSceneVC resizeActionEnd];
     
     [_appSceneVC.presenter.scene updateSettings:newSettings withTransitionContext:newContext completion:nil];
 }
